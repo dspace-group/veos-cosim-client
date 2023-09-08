@@ -173,7 +173,6 @@ Result CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
     CheckResult(EnsureIsInResponderModeNonBlocking());
 
     SetCallbacks(callbacks);
-
     return Result::Ok;
 }
 
@@ -199,7 +198,7 @@ Result CoSimClient::FinishCommand() {
     CheckResult(EnsureIsInResponderModeNonBlocking());
 
     if (_currentCommand == Command::None) {
-        LogError("Call to GetNextCommand(...) is missing.");
+        LogError("Call to PollCommand(...) is missing.");
         return Result::Error;
     }
 
@@ -221,7 +220,6 @@ Result CoSimClient::GetIncomingSignals(uint32_t* incomingSignalsCount, const IoS
 
     *incomingSignalsCount = static_cast<uint32_t>(_incomingSignals.size());
     *incomingSignals = _incomingSignals.data();
-
     return Result::Ok;
 }
 
@@ -229,7 +227,6 @@ Result CoSimClient::GetIncomingSignals(std::vector<IoSignal>& incomingSignals) c
     CheckResult(EnsureIsConnected());
 
     incomingSignals = _incomingSignals;
-
     return Result::Ok;
 }
 
@@ -238,7 +235,6 @@ Result CoSimClient::GetOutgoingSignals(uint32_t* outgoingSignalsCount, const IoS
 
     *outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignals.size());
     *outgoingSignals = _outgoingSignals.data();
-
     return Result::Ok;
 }
 
@@ -246,7 +242,6 @@ Result CoSimClient::GetOutgoingSignals(std::vector<IoSignal>& outgoingSignals) c
     CheckResult(EnsureIsConnected());
 
     outgoingSignals = _outgoingSignals;
-
     return Result::Ok;
 }
 
@@ -267,7 +262,6 @@ Result CoSimClient::GetControllers(uint32_t* controllersCount, const CanControll
 
     *controllersCount = static_cast<uint32_t>(_canControllers.size());
     *controllers = _canControllers.data();
-
     return Result::Ok;
 }
 
@@ -275,7 +269,6 @@ Result CoSimClient::GetControllers(std::vector<CanController>& controllers) cons
     CheckResult(EnsureIsConnected());
 
     controllers = _canControllers;
-
     return Result::Ok;
 }
 
@@ -296,7 +289,6 @@ Result CoSimClient::GetControllers(uint32_t* controllersCount, const EthControll
 
     *controllersCount = static_cast<uint32_t>(_ethControllers.size());
     *controllers = _ethControllers.data();
-
     return Result::Ok;
 }
 
@@ -304,7 +296,6 @@ Result CoSimClient::GetControllers(std::vector<EthController>& controllers) cons
     CheckResult(EnsureIsConnected());
 
     controllers = _ethControllers;
-
     return Result::Ok;
 }
 
@@ -325,7 +316,6 @@ Result CoSimClient::GetControllers(uint32_t* controllersCount, const LinControll
 
     *controllersCount = static_cast<uint32_t>(_linControllers.size());
     *controllers = _linControllers.data();
-
     return Result::Ok;
 }
 
@@ -333,7 +323,6 @@ Result CoSimClient::GetControllers(std::vector<LinController>& controllers) cons
     CheckResult(EnsureIsConnected());
 
     controllers = _linControllers;
-
     return Result::Ok;
 }
 
@@ -358,14 +347,14 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     _channel.Disconnect();
     _incomingSignals.clear();
     _outgoingSignals.clear();
-    _incomingSignalNames.clear();
-    _outgoingSignalNames.clear();
+    _incomingSignalContainers.clear();
+    _outgoingSignalContainers.clear();
     _canControllers.clear();
     _ethControllers.clear();
     _linControllers.clear();
-    _canControllerNames.clear();
-    _ethControllerNames.clear();
-    _linControllerNames.clear();
+    _canControllerContainers.clear();
+    _ethControllerContainers.clear();
+    _linControllerContainers.clear();
 }
 
 void CoSimClient::CloseConnection() {
@@ -383,16 +372,31 @@ Result CoSimClient::ConnectOnAccepted() {
     CheckResult(Protocol::ReadAccepted(_channel,
                                        serverProtocolVersion,
                                        mode,
-                                       _incomingSignals,
-                                       _incomingSignalNames,
-                                       _outgoingSignals,
-                                       _outgoingSignalNames,
-                                       _canControllers,
-                                       _canControllerNames,
-                                       _ethControllers,
-                                       _ethControllerNames,
-                                       _linControllers,
-                                       _linControllerNames));
+                                       _incomingSignalContainers,
+                                       _outgoingSignalContainers,
+                                       _canControllerContainers,
+                                       _ethControllerContainers,
+                                       _linControllerContainers));
+
+    for (const auto& container : _incomingSignalContainers) {
+        _incomingSignals.push_back(container.signal);
+    }
+
+    for (const auto& container : _outgoingSignalContainers) {
+        _outgoingSignals.push_back(container.signal);
+    }
+
+    for (const auto& container : _canControllerContainers) {
+        _canControllers.push_back(container.controller);
+    }
+
+    for (const auto& container : _ethControllerContainers) {
+        _ethControllers.push_back(container.controller);
+    }
+
+    for (const auto& container : _linControllerContainers) {
+        _linControllers.push_back(container.controller);
+    }
 
     if (_serverName.empty()) {
         LogInfo("Connected to dSPACE VEOS CoSim server at " + _remoteIpAddress + ":" + std::to_string(_remotePort) + ".");
@@ -400,8 +404,8 @@ Result CoSimClient::ConnectOnAccepted() {
         LogInfo("Connected to dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + ":" + std::to_string(_remotePort) + ".");
     }
 
-    CheckResult(_ioBuffer.Initialize(_incomingSignals, _outgoingSignals));
-    CheckResult(_busBuffer.Initialize(_canControllers, _ethControllers, _linControllers));
+    CheckResult(_ioBuffer.Initialize(_incomingSignalContainers, _outgoingSignalContainers));
+    CheckResult(_busBuffer.Initialize(_canControllerContainers, _ethControllerContainers, _linControllerContainers));
 
     _isConnected = true;
     return Result::Ok;
@@ -430,7 +434,7 @@ Result CoSimClient::ReceiveConnectResponse() {
     }
 }
 
-Result CoSimClient::RunCallbackBasedCoSimulationInternal() {
+Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readability-function-cognitive-complexity)
     while (_isConnected) {
         FrameKind frameKind = FrameKind::Unknown;
         CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
@@ -472,7 +476,7 @@ Result CoSimClient::RunCallbackBasedCoSimulationInternal() {
     return Result::Disconnected;
 }
 
-Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime, Command& command) {
+Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime, Command& command) {  // NOLINT(readability-function-cognitive-complexity)
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 

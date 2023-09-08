@@ -13,7 +13,6 @@ class Channel {
 public:
     Channel();
     explicit Channel(Socket socket);
-    ~Channel() = default;
 
     Channel(const Channel&) = delete;
     Channel& operator=(Channel const&) = delete;
@@ -33,7 +32,7 @@ public:
         return Write(&value, sizeof(T));
     }
 
-    [[nodiscard]] Result Write(const void* source, uint32_t size);
+    [[nodiscard]] Result Write(const void* source, size_t size);
     [[nodiscard]] Result EndWrite();
 
     template <typename T>
@@ -43,7 +42,7 @@ public:
         return Read(&value, sizeof(T));
     }
 
-    [[nodiscard]] Result Read(void* destination, uint32_t size);
+    [[nodiscard]] Result Read(void* destination, size_t size);
 
 private:
     void Reset();
@@ -63,5 +62,26 @@ private:
 };
 
 Result ConnectToServer(std::string_view remoteIpAddress, uint16_t remotePort, uint16_t localPort, Channel& channel);
+
+class Server {
+public:
+    Server() = default;
+    ~Server() = default;
+
+    Server(const Server&) = delete;
+    Server& operator=(Server const&) = delete;
+
+    Server(Server&&) = default;
+    Server& operator=(Server&&) = default;
+
+    [[nodiscard]] Result Start(uint16_t& port, bool enableRemoteAccess);
+    void Stop();
+
+    [[nodiscard]] Result Accept(Channel& channel) const;
+
+private:
+    Socket _listenSocket;
+    bool _isRunning = false;
+};
 
 }  // namespace DsVeosCoSim

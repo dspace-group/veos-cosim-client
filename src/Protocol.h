@@ -9,7 +9,7 @@
 
 namespace DsVeosCoSim {
 
-constexpr uint32_t CoSimProtocolVersion = 0x10000u;
+constexpr uint32_t CoSimProtocolVersion = 0x10000U;
 
 enum class FrameKind : uint32_t {
     Unknown,
@@ -64,24 +64,19 @@ namespace Protocol {
 [[nodiscard]] Result SendAccepted(Channel& channel,
                                   uint32_t protocolVersion,
                                   Mode mode,
-                                  const std::vector<IoSignal>& incomingSignals,
-                                  const std::vector<IoSignal>& outgoingSignals,
-                                  const std::vector<CanController>& canControllers,
-                                  const std::vector<EthController>& ethControllers,
-                                  const std::vector<LinController>& linControllers);
+                                  const std::vector<IoSignalContainer>& incomingSignals,
+                                  const std::vector<IoSignalContainer>& outgoingSignals,
+                                  const std::vector<CanControllerContainer>& canControllers,
+                                  const std::vector<EthControllerContainer>& ethControllers,
+                                  const std::vector<LinControllerContainer>& linControllers);
 [[nodiscard]] Result ReadAccepted(Channel& channel,
                                   uint32_t& protocolVersion,
                                   Mode& mode,
-                                  std::vector<IoSignal>& incomingSignals,
-                                  std::vector<std::string>& incomingSignalStrings,
-                                  std::vector<IoSignal>& outgoingSignals,
-                                  std::vector<std::string>& outgoingSignalStrings,
-                                  std::vector<CanController>& canControllers,
-                                  std::vector<std::string>& canStrings,
-                                  std::vector<EthController>& ethControllers,
-                                  std::vector<std::string>& ethStrings,
-                                  std::vector<LinController>& linControllers,
-                                  std::vector<std::string>& linStrings);
+                                  std::vector<IoSignalContainer>& incomingSignals,
+                                  std::vector<IoSignalContainer>& outgoingSignals,
+                                  std::vector<CanControllerContainer>& canControllers,
+                                  std::vector<EthControllerContainer>& ethControllers,
+                                  std::vector<LinControllerContainer>& linControllers);
 
 [[nodiscard]] Result SendStart(Channel& channel, SimulationTime simulationTime);
 [[nodiscard]] Result ReadStart(Channel& channel, SimulationTime& simulationTime);
@@ -115,37 +110,6 @@ namespace Protocol {
 
 [[nodiscard]] Result SendUnsetPort(Channel& channel, std::string_view serverName);
 [[nodiscard]] Result ReadUnsetPort(Channel& channel, std::string& serverName);
-
-[[nodiscard]] Result WriteHeader(Channel& channel, FrameKind frameKind);
-
-[[nodiscard]] Result ReadString(Channel& channel, std::string& string);
-[[nodiscard]] Result WriteString(Channel& channel, std::string_view string);
-
-[[nodiscard]] Result ReadString(Channel& channel, const char*& string, std::vector<std::string>& strings);
-
-[[nodiscard]] Result ReadIoSignalInfo(Channel& channel, IoSignal& ioSignal, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteIoSignalInfo(Channel& channel, const IoSignal& ioSignal);
-
-[[nodiscard]] Result ReadIoSignalInfos(Channel& channel, std::vector<IoSignal>& ioSignals, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteIoSignalInfos(Channel& channel, const std::vector<IoSignal>& ioSignals);
-
-[[nodiscard]] Result ReadControllerInfo(Channel& channel, CanController& controller, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfo(Channel& channel, const CanController& controller);
-
-[[nodiscard]] Result ReadControllerInfos(Channel& channel, std::vector<CanController>& controllers, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfos(Channel& channel, const std::vector<CanController>& controllers);
-
-[[nodiscard]] Result ReadControllerInfo(Channel& channel, EthController& controller, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfo(Channel& channel, const EthController& controller);
-
-[[nodiscard]] Result ReadControllerInfos(Channel& channel, std::vector<EthController>& controllers, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfos(Channel& channel, const std::vector<EthController>& controllers);
-
-[[nodiscard]] Result ReadControllerInfo(Channel& channel, LinController& controller, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfo(Channel& channel, const LinController& controller);
-
-[[nodiscard]] Result ReadControllerInfos(Channel& channel, std::vector<LinController>& controllers, std::vector<std::string>& strings);
-[[nodiscard]] Result WriteControllerInfos(Channel& channel, const std::vector<LinController>& controllers);
 
 }  // namespace Protocol
 

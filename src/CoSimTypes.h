@@ -11,6 +11,7 @@
 
 namespace DsVeosCoSim {
 
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #define DEFINE_BITMASK_OPS(TEnum)                                                       \
     static_assert(std::is_enum_v<TEnum>);                                               \
                                                                                         \
@@ -29,13 +30,19 @@ namespace DsVeosCoSim {
         return lhs;                                                                     \
     }                                                                                   \
                                                                                         \
-    constexpr void setFlag(TEnum& flags, TEnum flag) noexcept { flags |= flag; }        \
+    constexpr void setFlag(TEnum& flags, TEnum flag) noexcept {                         \
+        flags |= flag;                                                                  \
+    }                                                                                   \
                                                                                         \
-    constexpr bool hasFlag(TEnum flags, TEnum testFlags) noexcept { return (flags & testFlags) == testFlags; }
+    constexpr bool hasFlag(TEnum flags, TEnum testFlags) noexcept {                     \
+        return (flags & testFlags) == testFlags;                                        \
+    }
+// NOLINTEND(bugprone-macro-parentheses)
 
-constexpr uint8_t CanMessageMaxLength = DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH;
-constexpr uint16_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;
-constexpr uint8_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;
+constexpr uint32_t CanMessageMaxLength = DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH;
+constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;
+constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;
+constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
 
 using IoSignalId = DsVeosCoSim_IoSignalId;
 using SimulationTime = DsVeosCoSim_SimulationTime;
@@ -389,51 +396,80 @@ DEFINE_BITMASK_OPS(LinMessageFlags);
 }
 
 struct IoSignal {
-    IoSignalId id;
-    uint32_t length;
-    DataType dataType;
-    SizeKind sizeKind;
-    const char* name;
+    IoSignalId id{};
+    uint32_t length{};
+    DataType dataType{};
+    SizeKind sizeKind{};
+    const char* name{};
+};
+
+struct IoSignalContainer {
+    IoSignal signal{};
+    std::string name;
 };
 
 using BusControllerId = DsVeosCoSim_BusControllerId;
 
 struct CanController {
-    BusControllerId id;
-    uint32_t queueSize;
-    uint64_t bitsPerSecond;
-    uint64_t flexibleDataRateBitsPerSecond;
-    const char* name;
-    const char* channelName;
-    const char* clusterName;
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    uint64_t flexibleDataRateBitsPerSecond{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+};
+
+struct CanControllerContainer {
+    CanController controller{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
 };
 
 struct CanMessage {
-    SimulationTime timestamp;
-    BusControllerId controllerId;
-    CanMessageFlags flags;
-    uint32_t id;
-    uint8_t length;
-    uint8_t reserved[3];
-    uint8_t data[CanMessageMaxLength];
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t id{};
+    CanMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+};
+
+struct CanMessageContainer {
+    CanMessage message{};
+    std::vector<uint8_t> data;
 };
 
 struct EthController {
-    BusControllerId id;
-    uint32_t queueSize;
-    uint64_t bitsPerSecond;
-    const char* macAddress;
-    const char* name;
-    const char* channelName;
-    const char* clusterName;
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    uint8_t macAddress[EthAddressLength]{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+};
+
+struct EthControllerContainer {
+    EthController controller{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
 };
 
 struct EthMessage {
-    SimulationTime timestamp;
-    BusControllerId controllerId;
-    EthMessageFlags flags;
-    uint16_t length;
-    uint8_t data[EthMessageMaxLength];
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    EthMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+};
+
+struct EthMessageContainer {
+    EthMessage message{};
+    std::vector<uint8_t> data;
 };
 
 enum class LinControllerType {
@@ -453,23 +489,34 @@ enum class LinControllerType {
 }
 
 struct LinController {
-    BusControllerId id;
-    uint32_t queueSize;
-    uint64_t bitsPerSecond;
-    LinControllerType type;
-    const char* name;
-    const char* channelName;
-    const char* clusterName;
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    LinControllerType type{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+};
+
+struct LinControllerContainer {
+    LinController controller{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
 };
 
 struct LinMessage {
-    SimulationTime timestamp;
-    BusControllerId controllerId;
-    LinMessageFlags flags;
-    uint8_t id;
-    uint8_t length;
-    uint8_t reserved[2];
-    uint8_t data[LinMessageMaxLength];
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint8_t id{};
+    LinMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+};
+
+struct LinMessageContainer {
+    LinMessage message{};
+    std::vector<uint8_t> data;
 };
 
 #define IsResultOk(expression) ((expression) == Result::Ok)

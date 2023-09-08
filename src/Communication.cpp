@@ -38,7 +38,7 @@ void Channel::Stop() {
     _socket.Close();
 }
 
-Result Channel::Write(const void* source, uint32_t size) {
+Result Channel::Write(const void* source, size_t size) {
     const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
     while (size > 0) {
@@ -61,7 +61,7 @@ Result Channel::EndWrite() {
     return FlushWriteBuffer();
 }
 
-Result Channel::Read(void* destination, uint32_t size) {
+Result Channel::Read(void* destination, size_t size) {
     auto* bufferPointer = static_cast<uint8_t*>(destination);
 
     while (size > 0) {
@@ -170,6 +170,42 @@ Result ConnectToServer(std::string_view remoteIpAddress, uint16_t remotePort, ui
     }
 
     CheckResult(socket.Connect(remoteIpAddress, remotePort));
+    CheckResult(socket.EnableNoDelay());
+
+    channel = Channel(std::move(socket));
+    return Result::Ok;
+}
+
+Result Server::Start(uint16_t& port, bool enableRemoteAccess) {
+    if (_isRunning) {
+        return Result::Ok;
+    }
+
+    CheckResult(StartupNetwork());
+
+    Socket socket;
+
+    CheckResult(socket.Create());
+
+    CheckResult(socket.EnableReuseAddress());
+    const std::string ipAddress = enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
+    CheckResult(socket.Bind(ipAddress, port));
+    CheckResult(socket.Listen());
+    CheckResult(socket.GetLocalPort(port));
+
+    _listenSocket = std::move(socket);
+    _isRunning = true;
+    return Result::Ok;
+}
+
+void Server::Stop() {
+    _listenSocket.Close();
+    _isRunning = false;
+}
+
+Result Server::Accept(Channel& channel) const {
+    Socket socket;
+    CheckResult(_listenSocket.Accept(socket));
     CheckResult(socket.EnableNoDelay());
 
     channel = Channel(std::move(socket));

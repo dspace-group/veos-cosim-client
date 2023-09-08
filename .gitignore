@@ -31,9 +31,11 @@
 *.out
 *.app
 
+.vscode/
 .cache/
 build/
 install/
 obj/
 
 compile_commands.json
+*.bat
