@@ -1,0 +1,33 @@
+---
+Checks:    'bugprone-*,
+            -bugprone-easily-swappable-parameters,
+            clang-diagnostic-*,
+            clang-analyzer-*,
+            google-readability-*,
+            -google-readability-casting,
+            google-runtime-operator,
+            misc-*,
+            -misc-const-correctness,
+            -misc-non-private-member-variables-in-classes,
+            -misc-no-recursion,
+            -misc-use-anonymous-namespace,
+            modernize-*,
+            -modernize-avoid-c-arrays,
+            -modernize-use-nodiscard,
+            -modernize-use-trailing-return-type,
+            performance-*,
+            portability-*,
+            readability-*,
+            -readability-redundant-access-specifiers,
+            -readability-magic-numbers,
+            -readability-identifier-length'
+
+CheckOptions:
+  - { key: readability-identifier-naming.ClassCase,                     value: CamelCase }
+  - { key: readability-identifier-naming.PublicMethodCase,              value: CamelCase }
+  - { key: readability-identifier-naming.ProtectedMethodCase,           value: CamelCase }
+  - { key: readability-identifier-naming.PrivateMethodCase,             value: CamelCase }
+  - { key: readability-identifier-naming.PrivateMemberCase,             value: camelBack }
+  - { key: readability-identifier-naming.PrivateMemberPrefix,           value: '_' }
+  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: 1}
+...

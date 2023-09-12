@@ -49,12 +49,17 @@
 /**
  * \brief Defines the maximum length of an ethernet message payload.
  */
-#define DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH 1518
+#define DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH 9018
 
 /**
  * \brief Defines the maximum length of a LIN message payload.
  */
 #define DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH 8
+
+/**
+ * \brief Defines the maximum length of an ethernet address (MAC address).
+ */
+#define DSVEOSCOSIM_ETH_ADDRESS_LENGTH 6
 
 /**
  * \brief Represents a handle to be used for communicating with a dSPACE VEOS CoSim server.
@@ -425,26 +430,24 @@ typedef struct DsVeosCoSim_CanMessage {
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
-     * \brief CAN message flags.
-     */
-    DsVeosCoSim_CanMessageFlags flags;
-
-    /**
      * \brief CAN message ID.
      */
     uint32_t id;
 
     /**
+     * \brief CAN message flags.
+     */
+    DsVeosCoSim_CanMessageFlags flags;
+
+    /**
      * \brief Payload length.
      */
-    uint8_t length;
-
-    uint8_t reserved[3];
+    uint32_t length;
 
     /**
      * \brief Payload.
      */
-    uint8_t data[DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH];
+    const uint8_t* data;
 } DsVeosCoSim_CanMessage;
 
 /**
@@ -469,7 +472,7 @@ typedef struct DsVeosCoSim_EthController {
     /**
      * \brief MAC address of the ethernet controller.
      */
-    const char* macAddress;
+    uint8_t macAddress[DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
 
     /**
      * \brief Name of the ethernet controller.
@@ -528,6 +531,11 @@ typedef struct DsVeosCoSim_EthMessage {
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
+     * \brief Reserved for future use.
+     */
+    uint32_t reserved;
+
+    /**
      * \brief Ethernet message flags.
      */
     DsVeosCoSim_EthMessageFlags flags;
@@ -535,12 +543,12 @@ typedef struct DsVeosCoSim_EthMessage {
     /**
      * \brief Payload length.
      */
-    uint16_t length;
+    uint32_t length;
 
     /**
      * \brief Payload.
      */
-    uint8_t data[DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH];
+    const uint8_t* data;
 } DsVeosCoSim_EthMessage;
 
 /**
@@ -695,26 +703,24 @@ typedef struct DsVeosCoSim_LinMessage {
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
+     * \brief LIN message ID.
+     */
+    uint32_t id;
+
+    /**
      * \brief LIN message flags.
      */
     DsVeosCoSim_LinMessageFlags flags;
 
     /**
-     * \brief LIN message ID.
-     */
-    uint8_t id;
-
-    /**
      * \brief Payload length.
      */
-    uint8_t length;
-
-    uint8_t reserved[2];
+    uint32_t length;
 
     /**
      * \brief Payload.
      */
-    uint8_t data[DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH];
+    const uint8_t* data;
 } DsVeosCoSim_LinMessage;
 
 /**

@@ -19,7 +19,6 @@ enum class ResponderMode {
 class CoSimClient final {
 public:
     CoSimClient() = default;
-    ~CoSimClient() = default;
 
     CoSimClient(const CoSimClient&) = delete;
     CoSimClient& operator=(CoSimClient const&) = delete;
@@ -31,7 +30,6 @@ public:
     void Disconnect();
     [[nodiscard]] ConnectionState GetConnectionState() const;
 
-    // Responder functions
     [[nodiscard]] Result RunCallbackBasedCoSimulation(const Callbacks& callbacks);
     [[nodiscard]] Result StartPollingBasedCoSimulation(const Callbacks& callbacks);
     [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command);
@@ -39,7 +37,6 @@ public:
 
     [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime);
 
-    // Data functions
     [[nodiscard]] Result GetIncomingSignals(uint32_t* incomingSignalsCount, const IoSignal** incomingSignals) const;
     [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& incomingSignals) const;
 
@@ -112,15 +109,15 @@ private:
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;
-    std::vector<std::string> _incomingSignalNames;
-    std::vector<std::string> _outgoingSignalNames;
+    std::vector<IoSignalContainer> _incomingSignalContainers;
+    std::vector<IoSignalContainer> _outgoingSignalContainers;
 
     std::vector<CanController> _canControllers;
     std::vector<EthController> _ethControllers;
     std::vector<LinController> _linControllers;
-    std::vector<std::string> _canControllerNames;
-    std::vector<std::string> _ethControllerNames;
-    std::vector<std::string> _linControllerNames;
+    std::vector<CanControllerContainer> _canControllerContainers;
+    std::vector<EthControllerContainer> _ethControllerContainers;
+    std::vector<LinControllerContainer> _linControllerContainers;
 
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;

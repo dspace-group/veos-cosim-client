@@ -13,7 +13,7 @@ namespace DsVeosCoSim {
 
 class IoBuffer {
     struct InternalIoBuffer {
-        IoSignal info{};
+        IoSignalContainer info{};
         uint32_t currentLength = 0;
         uint32_t dataTypeSize = 0;
         bool changed = false;
@@ -22,7 +22,6 @@ class IoBuffer {
 
 public:
     IoBuffer() = default;
-    ~IoBuffer() = default;
 
     IoBuffer(const IoBuffer&) = delete;
     IoBuffer& operator=(IoBuffer const&) = delete;
@@ -30,7 +29,7 @@ public:
     IoBuffer(IoBuffer&&) = default;
     IoBuffer& operator=(IoBuffer&&) = default;
 
-    [[nodiscard]] Result Initialize(const std::vector<IoSignal>& incomingSignals, const std::vector<IoSignal>& outgoingSignals);
+    [[nodiscard]] Result Initialize(const std::vector<IoSignalContainer>& incomingSignals, const std::vector<IoSignalContainer>& outgoingSignals);
     void Reset();
 
     void ClearData();
@@ -43,7 +42,7 @@ public:
     [[nodiscard]] Result Serialize(Channel& channel);
 
 private:
-    [[nodiscard]] static Result Initialize(const std::vector<IoSignal>& signals, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer);
+    [[nodiscard]] static Result Initialize(const std::vector<IoSignalContainer>& containers, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer);
     static void ClearData(std::unordered_map<IoSignalId, InternalIoBuffer>& buffer);
 
     [[nodiscard]] Result FindReadBuffer(IoSignalId signalId, InternalIoBuffer** readBuffer);

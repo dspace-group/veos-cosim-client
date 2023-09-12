@@ -31,6 +31,10 @@ namespace {
 
 #ifdef _WIN32
 using socklen_t = int;
+constexpr int ErrorCodeInterrupted = WSAEINTR;
+#define poll WSAPoll
+#else
+constexpr int ErrorCodeInterrupted = EINTR;
 #endif
 
 constexpr int SocketAddressLength = 65;
@@ -210,10 +214,25 @@ Result Socket::Listen() const {
 }
 
 Result Socket::Accept(Socket& acceptedSocket) const {
+    pollfd fdArray{};
+    fdArray.fd = _socket;
+    fdArray.events = POLLRDNORM;
+
+    const int result = poll(&fdArray, 1, 100);
+    if (result < 0) {
+        LogSystemError("Could not poll on socket.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    if (result == 0) {
+        acceptedSocket._socket = InvalidSocket;
+        return Result::TryAgain;
+    }
+
     acceptedSocket._socket = accept(_socket, nullptr, nullptr);
     if (acceptedSocket._socket == InvalidSocket) {
         const int errorCode = GetLastNetworkError();
-        if (_socket != InvalidSocket) {
+        if (errorCode != ErrorCodeInterrupted) {
             LogSystemError("Could not accept.", errorCode);
         }
 
