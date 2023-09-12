@@ -70,18 +70,22 @@ Result PortMapperServer::Start(bool enableRemoteAccess) {
 void PortMapperServer::Stop() {
     _isRunning = false;
 
-    _server.Stop();
-
     if (_thread.joinable()) {
         _thread.join();
     }
+
+    _server.Stop();
 }
 
 void PortMapperServer::RunPortMapperServer() {
     while (_isRunning) {
         const Result result = _server.Accept(_channel);
-        if (IsResultError(result)) {
+        if (result == Result::Error) {
             break;
+        }
+
+        if (result == Result::TryAgain) {
+            continue;
         }
 
         (void)HandleClient();

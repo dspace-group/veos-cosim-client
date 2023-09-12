@@ -57,8 +57,17 @@ enum class Result {
     Empty = DsVeosCoSim_Result_Empty,
     Full = DsVeosCoSim_Result_Full,
     InvalidArgument = DsVeosCoSim_Result_InvalidArgument,
-    Disconnected = DsVeosCoSim_Result_Disconnected
+    Disconnected = DsVeosCoSim_Result_Disconnected,
+    TryAgain
 };
+
+#define CheckResult(expression)      \
+    do {                             \
+        Result _result = expression; \
+        if (_result != Result::Ok) { \
+            return _result;          \
+        }                            \
+    } while (0)
 
 [[nodiscard]] inline std::string ToString(Result result) {
     switch (result) {
@@ -74,6 +83,8 @@ enum class Result {
             return "INVALID ARGUMENT";
         case Result::Disconnected:
             return "DISCONNECTED";
+        case Result::TryAgain:
+            return "TRY AGAIN";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(result));
     }
@@ -518,21 +529,6 @@ struct LinMessageContainer {
     LinMessage message{};
     std::vector<uint8_t> data;
 };
-
-#define IsResultOk(expression) ((expression) == Result::Ok)
-#define IsResultError(expression) ((expression) == Result::Error)
-#define IsResultEmpty(expression) ((expression) == Result::Empty)
-#define IsResultFull(expression) ((expression) == Result::Full)
-#define IsResultInvalidArgument(expression) ((expression) == Result::InvalidArgument)
-#define IsResultDisconnected(expression) ((expression) == Result::Disconnected)
-
-#define CheckResult(expression)      \
-    do {                             \
-        Result _result = expression; \
-        if (!IsResultOk(_result)) {  \
-            return _result;          \
-        }                            \
-    } while (0)
 
 using LogCallback = std::function<void(Severity, std::string_view)>;
 

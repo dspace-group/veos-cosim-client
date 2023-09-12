@@ -161,7 +161,7 @@ Result CoSimClient::RunCallbackBasedCoSimulation(const Callbacks& callbacks) {
     SetCallbacks(callbacks);
 
     const Result result = RunCallbackBasedCoSimulationInternal();
-    if (!IsResultOk(result)) {
+    if (result != Result::Ok) {
         CloseConnection();
     }
 
@@ -186,7 +186,7 @@ Result CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command
     }
 
     const Result result = PollCommandInternal(simulationTime, command);
-    if (!IsResultOk(result)) {
+    if (result != Result::Ok) {
         CloseConnection();
     }
 
@@ -203,7 +203,7 @@ Result CoSimClient::FinishCommand() {
     }
 
     const Result result = FinishCommandInternal();
-    if (!IsResultOk(result)) {
+    if (result != Result::Ok) {
         CloseConnection();
     }
 

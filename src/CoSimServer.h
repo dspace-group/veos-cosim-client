@@ -25,8 +25,6 @@ struct CoSimServerConfig {
     CanMessageReceivedCallback canMessageReceivedCallback;
     LinMessageReceivedCallback linMessageReceivedCallback;
     EthMessageReceivedCallback ethMessageReceivedCallback;
-    std::function<void()> clientConnected;
-    std::function<void()> clientDisconnected;
     std::vector<IoSignalContainer> incomingSignals;
     std::vector<IoSignalContainer> outgoingSignals;
     std::vector<CanControllerContainer> canControllers;
@@ -67,8 +65,6 @@ public:
     [[nodiscard]] Result BackgroundService();
 
 private:
-    void UpdateTime();
-
     [[nodiscard]] Result StartInternal(SimulationTime simulationTime);
     [[nodiscard]] Result StopInternal(SimulationTime simulationTime);
     [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason);
@@ -76,16 +72,16 @@ private:
     [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime);
     [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
 
+    [[nodiscard]] Result UpdateTime();
     [[nodiscard]] Result CloseConnection();
     [[nodiscard]] Result Ping();
     [[nodiscard]] Result OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort);
+    [[nodiscard]] Result CheckForNewClient();
+    [[nodiscard]] Result WaitForClient();
 
     [[nodiscard]] Result WaitForOkFrame();
     [[nodiscard]] Result WaitForConnectFrame(uint32_t& version, std::string& clientName);
     [[nodiscard]] Result WaitForStepResponseFrame(SimulationTime& simulationTime);
-
-    [[nodiscard]] Result StartAccepting();
-    [[nodiscard]] Result Accepting();
 
     Channel _channel;
 
@@ -98,8 +94,7 @@ private:
     Callbacks _callbacks{};
     bool _isClientOptional{};
     bool _enableRemoteAccess{};
-    std::function<void()> _clientConnected;
-    std::function<void()> _clientDisconnected;
+    bool _isPortKnownToPortMapper{};
 
     std::time_t _lastCommandSentOrReceived{};
 
@@ -110,9 +105,6 @@ private:
     std::vector<LinControllerContainer> _linControllers;
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;
-
-    bool _stopAcceptingThread{};
-    std::thread _acceptingThread;
 };
 
 }  // namespace DsVeosCoSim

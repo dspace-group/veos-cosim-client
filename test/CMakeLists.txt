@@ -2,9 +2,11 @@
 
 add_executable(
   ${PROJECT_NAME}Test
+  CoSimServerWrapper.cpp
   Program.cpp
   TestBusBuffer.cpp
   TestCommunication.cpp
+  TestCoSim.cpp
   TestHelper.cpp
   TestIoBuffer.cpp
   TestPortMapper.cpp
@@ -14,6 +16,7 @@ add_executable(
 target_include_directories(
   ${PROJECT_NAME}Test
   PUBLIC
+  ./
   ../include
   ../src
   ../ThirdParty/googletest/googletest/include

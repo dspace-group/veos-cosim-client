@@ -7,7 +7,7 @@
 using namespace DsVeosCoSim;
 
 int main(int argc, char** argv) {
-    if (!IsResultOk(StartupNetwork())) {
+    if (StartupNetwork() != Result::Ok) {
         return 1;
     }
 

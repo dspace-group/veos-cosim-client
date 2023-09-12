@@ -85,12 +85,14 @@ TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
 
     // Act
     for (uint32_t i = 0; i < container.controller.queueSize; i++) {
-        CanMessageContainer& sendMessage = sendMessages.emplace_back(CreateCanMessage(container.controller.id));
-        sendMessage.message.data = sendMessage.data.data();
+        CanMessageContainer& sendMessage = sendMessages.emplace_back();
+        CreateMessage(container.controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
-    ASSERT_FULL(senderBusBuffer.Transmit(CreateCanMessage(container.controller.id).message));
+    CanMessageContainer rejectedMessage{};
+    CreateMessage(container.controller.id, rejectedMessage);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
@@ -151,12 +153,14 @@ TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
 
     // Act
     for (uint32_t i = 0; i < container.controller.queueSize; i++) {
-        EthMessageContainer& sendMessage = sendMessages.emplace_back(CreateEthMessage(container.controller.id));
-        sendMessage.message.data = sendMessage.data.data();
+        EthMessageContainer& sendMessage = sendMessages.emplace_back();
+        CreateMessage(container.controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
-    ASSERT_FULL(senderBusBuffer.Transmit(CreateEthMessage(container.controller.id).message));
+    EthMessageContainer rejectedMessage{};
+    CreateMessage(container.controller.id, rejectedMessage);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
@@ -217,12 +221,14 @@ TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {
 
     // Act
     for (uint32_t i = 0; i < container.controller.queueSize; i++) {
-        LinMessageContainer& sendMessage = sendMessages.emplace_back(CreateLinMessage(container.controller.id));
-        sendMessage.message.data = sendMessage.data.data();
+        LinMessageContainer& sendMessage = sendMessages.emplace_back();
+        CreateMessage(container.controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
-    ASSERT_FULL(senderBusBuffer.Transmit(CreateLinMessage(container.controller.id).message));
+    LinMessageContainer rejectedMessage{};
+    CreateMessage(container.controller.id, rejectedMessage);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 

@@ -47,9 +47,9 @@ std::vector<CanControllerContainer> CreateCanControllers(uint32_t count);
 std::vector<EthControllerContainer> CreateEthControllers(uint32_t count);
 std::vector<LinControllerContainer> CreateLinControllers(uint32_t count);
 
-CanMessageContainer CreateCanMessage(uint32_t controllerId);
-EthMessageContainer CreateEthMessage(uint32_t controllerId);
-LinMessageContainer CreateLinMessage(uint32_t controllerId);
+void CreateMessage(uint32_t controllerId, CanMessageContainer& container);
+void CreateMessage(uint32_t controllerId, EthMessageContainer& container);
+void CreateMessage(uint32_t controllerId, LinMessageContainer& container);
 
 void AssertEq(const IoSignal& expected, const IoSignal& actual);
 void AssertEq(const IoSignalContainer& expected, const IoSignalContainer& actual);

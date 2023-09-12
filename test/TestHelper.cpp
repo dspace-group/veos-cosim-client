@@ -174,9 +174,8 @@ std::vector<LinControllerContainer> CreateLinControllers(uint32_t count) {
     return containers;
 }
 
-CanMessageContainer CreateCanMessage(uint32_t controllerId) {
+void CreateMessage(uint32_t controllerId, CanMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, CanMessageMaxLength);
-    CanMessageContainer container{};
     container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
@@ -184,24 +183,20 @@ CanMessageContainer CreateCanMessage(uint32_t controllerId) {
     container.message.timestamp = GenerateI64();
     container.message.length = length;
     container.message.data = container.data.data();
-    return container;
 }
 
-EthMessageContainer CreateEthMessage(uint32_t controllerId) {
+void CreateMessage(uint32_t controllerId, EthMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, EthMessageMaxLength);
-    EthMessageContainer container{};
     container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
     container.message.timestamp = GenerateI64();
     container.message.length = length;
     container.message.data = container.data.data();
-    return container;
 }
 
-LinMessageContainer CreateLinMessage(uint32_t controllerId) {
+void CreateMessage(uint32_t controllerId, LinMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, LinMessageMaxLength);
-    LinMessageContainer container{};
     container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
@@ -209,7 +204,6 @@ LinMessageContainer CreateLinMessage(uint32_t controllerId) {
     container.message.timestamp = GenerateI64();
     container.message.length = length;
     container.message.data = container.data.data();
-    return container;
 }
 
 void AssertEq(const IoSignal& expected, const IoSignal& actual) {

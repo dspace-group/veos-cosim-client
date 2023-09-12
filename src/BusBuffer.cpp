@@ -225,9 +225,9 @@ Result BusBuffer::Transmit(const CanMessage& message) {
     container.message = message;
     container.data.resize(message.length);
     std::memcpy(container.data.data(), message.data, message.length);
-    container.message.data = container.data.data();
 
-    _canTransmitBuffer.Push(container);
+    CanMessageContainer& tmp = _canTransmitBuffer.Push(container);
+    tmp.message.data = tmp.data.data();
     controller->transmitCount++;
     return Result::Ok;
 }
@@ -315,7 +315,8 @@ Result BusBuffer::Transmit(const EthMessage& message) {
     container.data.resize(message.length);
     std::memcpy(container.data.data(), message.data, message.length);
 
-    _ethTransmitBuffer.Push(container);
+    EthMessageContainer& tmp = _ethTransmitBuffer.Push(container);
+    tmp.message.data = tmp.data.data();
     extension->transmitCount++;
     return Result::Ok;
 }
@@ -398,9 +399,9 @@ Result BusBuffer::Transmit(const LinMessage& message) {
     container.message = message;
     container.data.resize(message.length);
     std::memcpy(container.data.data(), message.data, message.length);
-    container.message.data = container.data.data();
 
-    _linTransmitBuffer.Push(container);
+    LinMessageContainer& tmp = _linTransmitBuffer.Push(container);
+    tmp.message.data = tmp.data.data();
     extension->transmitCount++;
     return Result::Ok;
 }
