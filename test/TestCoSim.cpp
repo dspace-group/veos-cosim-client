@@ -6,6 +6,7 @@
 #include "CoSimClient.h"
 #include "CoSimServer.h"
 #include "CoSimServerWrapper.h"
+#include "Generator.h"
 #include "Logger.h"
 #include "TestHelper.h"
 

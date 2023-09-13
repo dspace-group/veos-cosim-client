@@ -2,6 +2,7 @@
 
 #include "BusBuffer.h"
 #include "Communication.h"
+#include "Generator.h"
 #include "Logger.h"
 #include "TestHelper.h"
 

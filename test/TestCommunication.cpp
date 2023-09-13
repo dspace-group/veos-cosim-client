@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "Communication.h"
+#include "Generator.h"
 #include "Logger.h"
 #include "Socket.h"
 #include "TestHelper.h"

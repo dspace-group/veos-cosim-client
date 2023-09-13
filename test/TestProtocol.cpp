@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Communication.h"
+#include "Generator.h"
 #include "Logger.h"
 #include "Protocol.h"
 #include "TestHelper.h"

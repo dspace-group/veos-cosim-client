@@ -3,6 +3,7 @@
 add_executable(
   ${PROJECT_NAME}Test
   CoSimServerWrapper.cpp
+  Generator.cpp
   Program.cpp
   TestBusBuffer.cpp
   TestCommunication.cpp

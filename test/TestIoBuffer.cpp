@@ -3,6 +3,7 @@
 #include <array>
 
 #include "Communication.h"
+#include "Generator.h"
 #include "IoBuffer.h"
 #include "Logger.h"
 #include "TestHelper.h"
