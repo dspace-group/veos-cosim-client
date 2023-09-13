@@ -45,7 +45,7 @@ Result WriteIoSignalInfo(Channel& channel, const IoSignalContainer& container) {
     CheckResult(channel.Write(container.signal.length));
     CheckResult(channel.Write(container.signal.dataType));
     CheckResult(channel.Write(container.signal.sizeKind));
-    return WriteString(channel, container.signal.name);
+    return WriteString(channel, container.name);
 }
 
 Result ReadIoSignalInfos(Channel& channel, std::vector<IoSignalContainer>& containers) {
@@ -84,9 +84,9 @@ Result WriteControllerInfo(Channel& channel, const CanControllerContainer& conta
     CheckResult(channel.Write(container.controller.queueSize));
     CheckResult(channel.Write(container.controller.bitsPerSecond));
     CheckResult(channel.Write(container.controller.flexibleDataRateBitsPerSecond));
-    CheckResult(WriteString(channel, container.controller.name));
-    CheckResult(WriteString(channel, container.controller.channelName));
-    return WriteString(channel, container.controller.clusterName);
+    CheckResult(WriteString(channel, container.name));
+    CheckResult(WriteString(channel, container.channelName));
+    return WriteString(channel, container.clusterName);
 }
 
 Result ReadControllerInfos(Channel& channel, std::vector<CanControllerContainer>& containers) {
@@ -125,9 +125,9 @@ Result WriteControllerInfo(Channel& channel, const EthControllerContainer& conta
     CheckResult(channel.Write(container.controller.queueSize));
     CheckResult(channel.Write(container.controller.bitsPerSecond));
     CheckResult(channel.Write(container.controller.macAddress));
-    CheckResult(WriteString(channel, container.controller.name));
-    CheckResult(WriteString(channel, container.controller.channelName));
-    return WriteString(channel, container.controller.clusterName);
+    CheckResult(WriteString(channel, container.name));
+    CheckResult(WriteString(channel, container.channelName));
+    return WriteString(channel, container.clusterName);
 }
 
 Result ReadControllerInfos(Channel& channel, std::vector<EthControllerContainer>& containers) {
@@ -166,9 +166,9 @@ Result WriteControllerInfo(Channel& channel, const LinControllerContainer& conta
     CheckResult(channel.Write(container.controller.queueSize));
     CheckResult(channel.Write(container.controller.bitsPerSecond));
     CheckResult(channel.Write(container.controller.type));
-    CheckResult(WriteString(channel, container.controller.name));
-    CheckResult(WriteString(channel, container.controller.channelName));
-    return WriteString(channel, container.controller.clusterName);
+    CheckResult(WriteString(channel, container.name));
+    CheckResult(WriteString(channel, container.channelName));
+    return WriteString(channel, container.clusterName);
 }
 
 Result ReadControllerInfos(Channel& channel, std::vector<LinControllerContainer>& containers) {
