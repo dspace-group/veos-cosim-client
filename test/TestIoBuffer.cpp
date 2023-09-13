@@ -3,6 +3,7 @@
 #include <array>
 
 #include "Communication.h"
+#include "Generator.h"
 #include "IoBuffer.h"
 #include "Logger.h"
 #include "TestHelper.h"
@@ -109,7 +110,7 @@ TEST_F(TestIoBuffer, ReadInvalidId) {
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({container}, {}));
 
-    const uint8_t readId = container.signal.id + 1;
+    const uint32_t readId = container.signal.id + 1;
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
     readValue.resize(GetDataTypeSize(container.signal.dataType));
@@ -130,8 +131,8 @@ TEST_F(TestIoBuffer, WriteInvalidId) {
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({}, {container}));
 
-    const uint8_t writeId = container.signal.id + 1;
-    uint32_t writeLength = container.signal.length;
+    const uint32_t writeId = container.signal.id + 1;
+    const uint32_t writeLength = container.signal.length;
     std::vector<uint8_t> writeValue;
     writeValue.resize(GetDataTypeSize(container.signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());

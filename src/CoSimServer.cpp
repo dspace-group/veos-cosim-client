@@ -41,29 +41,38 @@ Result CoSimServer::Load(const CoSimServerConfig& config) {
     CheckResult(_ioBuffer.Initialize(_outgoingSignals, _incomingSignals));
     CheckResult(_busBuffer.Initialize(_canControllers, _ethControllers, _linControllers));
 
+    CheckResult(StartAccepting());
+
     const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
     LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" + std::to_string(_localPort) + ".");
-    return BackgroundService();
+
+    return Result::Ok;
 }
 
 Result CoSimServer::Unload() {
+    _stopAcceptingThread = true;
+
+    if (_acceptingThread.joinable()) {
+        _acceptingThread.join();
+    }
+
     (void)PortMapper_UnsetPort(_serverName);
     _server.Stop();
+
     _channel.Disconnect();
     return Result::Ok;
 }
 
 Result CoSimServer::Start(SimulationTime simulationTime) {
-    // If the client recently disconnected, the background service will restart the server again
-    CheckResult(BackgroundService());
-
     if (!_isConnected) {
         if (_isClientOptional) {
             return Result::Ok;
         }
 
         LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '" + _serverName + "' ...");
-        CheckResult(WaitForClient());
+        if (_acceptingThread.joinable()) {
+            _acceptingThread.join();
+        }
     }
 
     const Result result = StartInternal(simulationTime);
@@ -180,34 +189,17 @@ Result CoSimServer::Transmit(const EthMessage& message) {
 }
 
 Result CoSimServer::BackgroundService() {
-    if (_isConnected) {
-        bool isStillConnected = true;
-        const time_t currentTime = std::time(nullptr);
-        if (currentTime > _lastCommandSentOrReceived) {
-            if (Ping() != Result::Ok) {
-                (void)CloseConnection();
-                isStillConnected = false;
-            }
-
-            (void)UpdateTime();
-        }
-
-        if (isStillConnected) {
-            return Result::Ok;
-        }
+    if (!_isConnected) {
+        return Result::Ok;
     }
 
-    // If the server is already running, this function call will return immediately
-    CheckResult(_server.Start(_localPort, _enableRemoteAccess));
+    const time_t currentTime = std::time(nullptr);
+    if (currentTime > _lastCommandSentOrReceived) {
+        if ((Ping()) != Result::Ok) {
+            return CloseConnection();
+        }
 
-    if (!_isPortKnownToPortMapper) {
-        CheckResult(PortMapper_SetPort(_serverName, _localPort));
-        _isPortKnownToPortMapper = true;
-    }
-
-    const Result result = CheckForNewClient();
-    if ((result != Result::Ok) && (result != Result::TryAgain)) {
-        return result;
+        return UpdateTime();
     }
 
     return Result::Ok;
@@ -259,8 +251,7 @@ Result CoSimServer::CloseConnection() {
         _callbacks.simulationStoppedCallback(0);
     }
 
-    // Starting server will be done by the background service
-    return Result::Ok;
+    return StartAccepting();
 }
 
 Result CoSimServer::Ping() {
@@ -291,36 +282,54 @@ Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t r
     return UpdateTime();
 }
 
-Result CoSimServer::CheckForNewClient() {
-    CheckResult(_server.Accept(_channel));
+Result CoSimServer::StartAccepting() {
+    CheckResult(_server.Start(_localPort, _enableRemoteAccess));
 
-    std::string acceptedIpAddress;
-    uint16_t acceptedPort = 0;
-    if (_channel.GetRemoteAddress(acceptedIpAddress, acceptedPort) != Result::Ok) {
-        _channel.Disconnect();
-        return Result::TryAgain;
+    CheckResult(PortMapper_SetPort(_serverName, _localPort));
+
+    if (_acceptingThread.joinable()) {
+        _acceptingThread.join();
     }
 
-    if (OnHandleConnect(acceptedIpAddress, acceptedPort) != Result::Ok) {
-        _channel.Disconnect();
-        return Result::TryAgain;
-    }
+    _stopAcceptingThread = false;
+    _acceptingThread = std::thread([this] {
+        (void)Accepting();
+    });
 
-    _isConnected = true;
-
-    _server.Stop();
     return Result::Ok;
 }
 
-Result CoSimServer::WaitForClient() {
-    while (true) {
-        const Result result = CheckForNewClient();
+Result CoSimServer::Accepting() {
+    while (!_stopAcceptingThread) {
+        const Result result = _server.Accept(_channel);
         if (result == Result::TryAgain) {
             continue;
         }
 
-        return result;
+        if (result != Result::Ok) {
+            return result;
+        }
+
+        std::string acceptedIpAddress;
+        uint16_t acceptedPort = 0;
+        if (_channel.GetRemoteAddress(acceptedIpAddress, acceptedPort) != Result::Ok) {
+            _channel.Disconnect();
+            continue;
+        }
+
+        if (OnHandleConnect(acceptedIpAddress, acceptedPort) != Result::Ok) {
+            _channel.Disconnect();
+            continue;
+        }
+
+        (void)PortMapper_UnsetPort(_serverName);
+        _server.Stop();
+
+        _isConnected = true;
+        return Result::Ok;
     }
+
+    return Result::Ok;
 }
 
 Result CoSimServer::WaitForOkFrame() {

@@ -2,6 +2,7 @@
 
 #include <chrono>
 
+#include "Generator.h"
 #include "Logger.h"
 #include "PortMapper.h"
 #include "TestHelper.h"

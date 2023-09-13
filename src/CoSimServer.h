@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "BusBuffer.h"
@@ -76,8 +77,8 @@ private:
     [[nodiscard]] Result CloseConnection();
     [[nodiscard]] Result Ping();
     [[nodiscard]] Result OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort);
-    [[nodiscard]] Result CheckForNewClient();
-    [[nodiscard]] Result WaitForClient();
+    [[nodiscard]] Result StartAccepting();
+    [[nodiscard]] Result Accepting();
 
     [[nodiscard]] Result WaitForOkFrame();
     [[nodiscard]] Result WaitForConnectFrame(uint32_t& version, std::string& clientName);
@@ -105,6 +106,9 @@ private:
     std::vector<LinControllerContainer> _linControllers;
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;
+
+    bool _stopAcceptingThread{};
+    std::thread _acceptingThread;
 };
 
 }  // namespace DsVeosCoSim
