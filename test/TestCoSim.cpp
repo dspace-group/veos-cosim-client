@@ -1,10 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <chrono>
-#include <memory>
 #include <string>
-#include <thread>
-#include <vector>
 
 #include "CoSimClient.h"
 #include "CoSimServer.h"
@@ -21,7 +18,6 @@ struct ConnectConfigContainer {
     ConnectConfig config{};
     std::string serverName;
     std::string clientName;
-    std::string ipAddress;
 };
 
 CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {

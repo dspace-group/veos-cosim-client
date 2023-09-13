@@ -28,7 +28,7 @@ namespace {
     return Result::Ok;
 }
 
-[[nodiscard]] Result LinMessageCheckMaxLength(uint8_t length) {
+[[nodiscard]] Result LinMessageCheckMaxLength(uint32_t length) {
     if (length > LinMessageMaxLength) {
         LogError("LIN message data exceeds maximum length.");
         return Result::InvalidArgument;
