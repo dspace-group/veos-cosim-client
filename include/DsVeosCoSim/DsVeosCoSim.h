@@ -766,7 +766,7 @@ typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_Simulation
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_ReceiveCanMessagedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_CanController* canController,
                                                        const DsVeosCoSim_CanMessage* message,
                                                        void* userData);
@@ -778,7 +778,7 @@ typedef void (*DsVeosCoSim_ReceiveCanMessagedCallback)(DsVeosCoSim_SimulationTim
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_ReceiveEthMessagedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_EthController* ethController,
                                                        const DsVeosCoSim_EthMessage* message,
                                                        void* userData);
@@ -790,7 +790,7 @@ typedef void (*DsVeosCoSim_ReceiveEthMessagedCallback)(DsVeosCoSim_SimulationTim
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_ReceiveLinMessagedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_LinController* linController,
                                                        const DsVeosCoSim_LinMessage* message,
                                                        void* userData);
@@ -843,19 +843,19 @@ typedef struct DsVeosCoSim_Callbacks {
      * \brief Will be called when a CAN message was received from dSPACE VEOS.
      *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessage will always return DsVeosCoSim_Result_Empty.
      */
-    DsVeosCoSim_ReceiveCanMessagedCallback canMessageReceivedCallback;
+    DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback;
 
     /**
      * \brief Will be called when an ethernet message was received from dSPACE VEOS.
      *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessage will always return DsVeosCoSim_Result_Empty.
      */
-    DsVeosCoSim_ReceiveEthMessagedCallback ethMessageReceivedCallback;
+    DsVeosCoSim_EthMessageReceivedCallback ethMessageReceivedCallback;
 
     /**
      * \brief Will be called when a LIN message was received from dSPACE VEOS.
      *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessage will always return DsVeosCoSim_Result_Empty.
      */
-    DsVeosCoSim_ReceiveLinMessagedCallback linMessageReceivedCallback;
+    DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback;
 
     /**
      * \brief An arbitrary object the will be passed to every callback.
