@@ -36,8 +36,8 @@ std::vector<CanController> CreateCanControllers(uint32_t count);
 std::vector<EthController> CreateEthControllers(uint32_t count);
 std::vector<LinController> CreateLinControllers(uint32_t count);
 
-void CreateMessage(uint32_t controllerId, CanMessageContainer& controller);
-void CreateMessage(uint32_t controllerId, EthMessageContainer& controller);
-void CreateMessage(uint32_t controllerId, LinMessageContainer& controller);
+void CreateMessage(uint32_t controllerId, CanMessageContainer& container);
+void CreateMessage(uint32_t controllerId, EthMessageContainer& container);
+void CreateMessage(uint32_t controllerId, LinMessageContainer& container);
 
 }  // namespace DsVeosCoSim
