@@ -45,7 +45,7 @@ namespace {
 
 }  // namespace
 
-Result IoBuffer::Initialize(const std::vector<IoSignalContainer>& incomingSignals, const std::vector<IoSignalContainer>& outgoingSignals) {
+Result IoBuffer::Initialize(const std::vector<IoSignal>& incomingSignals, const std::vector<IoSignal>& outgoingSignals) {
     Reset();
     CheckResult(Initialize(incomingSignals, _readBuffers));
     CheckResult(Initialize(outgoingSignals, _writeBuffers));
@@ -91,9 +91,9 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
     InternalIoBuffer* writeBuffer{};
     CheckResult(FindWriteBuffer(signalId, &writeBuffer));
 
-    const bool isVariableSized = writeBuffer->info.signal.sizeKind == SizeKind::Variable;
+    const bool isVariableSized = writeBuffer->info.sizeKind == SizeKind::Variable;
     if (isVariableSized) {
-        if (length > writeBuffer->info.signal.length) {
+        if (length > writeBuffer->info.length) {
             LogError("Length of variable sized IO signal '" + writeBuffer->info.name + "' exceeds max size.");
             return Result::Error;
         }
@@ -107,9 +107,9 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
 
         writeBuffer->currentLength = length;
     } else {
-        if (length != writeBuffer->info.signal.length) {
-            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " +
-                     std::to_string(writeBuffer->info.signal.length) + " but was " + std::to_string(length) + ".");
+        if (length != writeBuffer->info.length) {
+            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " + std::to_string(writeBuffer->info.length) +
+                     " but was " + std::to_string(length) + ".");
             return Result::Error;
         }
     }
@@ -143,11 +143,11 @@ Result IoBuffer::Deserialize(Channel& channel,  // NOLINT(readability-function-c
         InternalIoBuffer* readBuffer{};
         CheckResult(FindReadBuffer(signalId, &readBuffer));
 
-        const bool isVariableSized = readBuffer->info.signal.sizeKind == SizeKind::Variable;
+        const bool isVariableSized = readBuffer->info.sizeKind == SizeKind::Variable;
         if (isVariableSized) {
             uint32_t length = 0;
             CheckResult(channel.Read(length));
-            if (length > readBuffer->info.signal.length) {
+            if (length > readBuffer->info.length) {
                 LogError("Length of variable sized IO signal '" + readBuffer->info.name + "' exceeds max size.");
                 return Result::Error;
             }
@@ -160,7 +160,7 @@ Result IoBuffer::Deserialize(Channel& channel,  // NOLINT(readability-function-c
         CheckResult(channel.Read(readBuffer->data.data(), static_cast<uint32_t>(totalSize)));
 
         if (callbacks.incomingSignalChangedCallback) {
-            callbacks.incomingSignalChangedCallback(simulationTime, readBuffer->info.signal, readBuffer->currentLength, readBuffer->data.data());
+            callbacks.incomingSignalChangedCallback(simulationTime, readBuffer->info, readBuffer->currentLength, readBuffer->data.data());
         }
     }
 
@@ -175,9 +175,9 @@ Result IoBuffer::Serialize(Channel& channel) {
 
     while (!_changed.empty()) {
         InternalIoBuffer* internalBuffer = _changed.front();
-        CheckResult(channel.Write(internalBuffer->info.signal.id));
+        CheckResult(channel.Write(internalBuffer->info.id));
 
-        const bool isVariableSized = internalBuffer->info.signal.sizeKind == SizeKind::Variable;
+        const bool isVariableSized = internalBuffer->info.sizeKind == SizeKind::Variable;
         if (isVariableSized) {
             CheckResult(channel.Write(internalBuffer->currentLength));
         }
@@ -194,43 +194,43 @@ Result IoBuffer::Serialize(Channel& channel) {
     return Result::Ok;
 }
 
-Result IoBuffer::Initialize(const std::vector<IoSignalContainer>& containers, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
-    buffer.reserve(containers.size());
+Result IoBuffer::Initialize(const std::vector<IoSignal>& signals, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
+    buffer.reserve(signals.size());
 
-    for (const auto& container : containers) {
+    for (const auto& signal : signals) {
         InternalIoBuffer internalBuffer{};
-        internalBuffer.info = container;
+        internalBuffer.info = signal;
 
-        CheckResult(CheckDataType(container.signal.dataType, container.signal.name));
-        CheckResult(CheckSizeKind(container.signal.sizeKind, container.signal.name));
+        CheckResult(CheckDataType(signal.dataType, signal.name));
+        CheckResult(CheckSizeKind(signal.sizeKind, signal.name));
 
-        internalBuffer.dataTypeSize = GetDataTypeSize(container.signal.dataType);
+        internalBuffer.dataTypeSize = GetDataTypeSize(signal.dataType);
 
-        const bool isFixedSize = container.signal.sizeKind == SizeKind::Fixed;
+        const bool isFixedSize = signal.sizeKind == SizeKind::Fixed;
         if (isFixedSize) {
-            internalBuffer.currentLength = container.signal.length;
+            internalBuffer.currentLength = signal.length;
         }
 
-        if (container.signal.length == 0) {
-            LogError("Invalid length " + std::to_string(container.signal.length) + " for IO signal '" + container.name + "'.");
+        if (signal.length == 0) {
+            LogError("Invalid length " + std::to_string(signal.length) + " for IO signal '" + signal.name + "'.");
             return Result::Error;
         }
 
-        const size_t totalSize = static_cast<size_t>(container.signal.length) * internalBuffer.dataTypeSize;
+        const size_t totalSize = static_cast<size_t>(signal.length) * internalBuffer.dataTypeSize;
         if (totalSize > UINT32_MAX) {
-            LogError("Buffer size exceeds maximum for IO signal '" + container.name + "'.");
+            LogError("Buffer size exceeds maximum for IO signal '" + signal.name + "'.");
             return Result::Error;
         }
 
-        const auto search = buffer.find(container.signal.id);
+        const auto search = buffer.find(signal.id);
         if (search != buffer.end()) {
-            LogError("Duplicated IO signal id " + std::to_string(container.signal.id) + ".");
+            LogError("Duplicated IO signal id " + std::to_string(signal.id) + ".");
             return Result::Error;
         }
 
         internalBuffer.data.resize(totalSize);
 
-        buffer[container.signal.id] = internalBuffer;
+        buffer[signal.id] = internalBuffer;
     }
 
     return Result::Ok;
@@ -242,7 +242,7 @@ void IoBuffer::ClearData(std::unordered_map<IoSignalId, InternalIoBuffer>& buffe
 
         std::fill(internalBuffer.data.begin(), internalBuffer.data.end(), static_cast<uint8_t>(0));
 
-        if (internalBuffer.info.signal.sizeKind == SizeKind::Variable) {
+        if (internalBuffer.info.sizeKind == SizeKind::Variable) {
             internalBuffer.currentLength = 0;
         }
     }

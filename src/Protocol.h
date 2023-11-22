@@ -64,19 +64,19 @@ namespace Protocol {
 [[nodiscard]] Result SendAccepted(Channel& channel,
                                   uint32_t protocolVersion,
                                   Mode mode,
-                                  const std::vector<IoSignalContainer>& incomingSignals,
-                                  const std::vector<IoSignalContainer>& outgoingSignals,
-                                  const std::vector<CanControllerContainer>& canControllers,
-                                  const std::vector<EthControllerContainer>& ethControllers,
-                                  const std::vector<LinControllerContainer>& linControllers);
+                                  const std::vector<IoSignal>& incomingSignals,
+                                  const std::vector<IoSignal>& outgoingSignals,
+                                  const std::vector<CanController>& canControllers,
+                                  const std::vector<EthController>& ethControllers,
+                                  const std::vector<LinController>& linControllers);
 [[nodiscard]] Result ReadAccepted(Channel& channel,
                                   uint32_t& protocolVersion,
                                   Mode& mode,
-                                  std::vector<IoSignalContainer>& incomingSignals,
-                                  std::vector<IoSignalContainer>& outgoingSignals,
-                                  std::vector<CanControllerContainer>& canControllers,
-                                  std::vector<EthControllerContainer>& ethControllers,
-                                  std::vector<LinControllerContainer>& linControllers);
+                                  std::vector<IoSignal>& incomingSignals,
+                                  std::vector<IoSignal>& outgoingSignals,
+                                  std::vector<CanController>& canControllers,
+                                  std::vector<EthController>& ethControllers,
+                                  std::vector<LinController>& linControllers);
 
 [[nodiscard]] Result SendStart(Channel& channel, SimulationTime simulationTime);
 [[nodiscard]] Result ReadStart(Channel& channel, SimulationTime& simulationTime);

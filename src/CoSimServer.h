@@ -26,11 +26,11 @@ struct CoSimServerConfig {
     CanMessageReceivedCallback canMessageReceivedCallback;
     LinMessageReceivedCallback linMessageReceivedCallback;
     EthMessageReceivedCallback ethMessageReceivedCallback;
-    std::vector<IoSignalContainer> incomingSignals;
-    std::vector<IoSignalContainer> outgoingSignals;
-    std::vector<CanControllerContainer> canControllers;
-    std::vector<EthControllerContainer> ethControllers;
-    std::vector<LinControllerContainer> linControllers;
+    std::vector<IoSignal> incomingSignals;
+    std::vector<IoSignal> outgoingSignals;
+    std::vector<CanController> canControllers;
+    std::vector<EthController> ethControllers;
+    std::vector<LinController> linControllers;
 };
 
 class CoSimServer final {
@@ -99,11 +99,11 @@ private:
 
     std::time_t _lastCommandSentOrReceived{};
 
-    std::vector<IoSignalContainer> _incomingSignals;
-    std::vector<IoSignalContainer> _outgoingSignals;
-    std::vector<CanControllerContainer> _canControllers;
-    std::vector<EthControllerContainer> _ethControllers;
-    std::vector<LinControllerContainer> _linControllers;
+    std::vector<IoSignal> _incomingSignals;
+    std::vector<IoSignal> _outgoingSignals;
+    std::vector<CanController> _canControllers;
+    std::vector<EthController> _ethControllers;
+    std::vector<LinController> _linControllers;
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;
 

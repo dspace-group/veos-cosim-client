@@ -32,161 +32,161 @@ Result WriteString(Channel& channel, std::string_view string) {
     return channel.Write(string.data(), size);
 }
 
-Result ReadIoSignalInfo(Channel& channel, IoSignalContainer& container) {
-    CheckResult(channel.Read(container.signal.id));
-    CheckResult(channel.Read(container.signal.length));
-    CheckResult(channel.Read(container.signal.dataType));
-    CheckResult(channel.Read(container.signal.sizeKind));
-    return ReadString(channel, container.signal.name, container.name);
+Result ReadIoSignalInfo(Channel& channel, IoSignal& signal) {
+    CheckResult(channel.Read(signal.id));
+    CheckResult(channel.Read(signal.length));
+    CheckResult(channel.Read(signal.dataType));
+    CheckResult(channel.Read(signal.sizeKind));
+    return ReadString(channel, signal.name);
 }
 
-Result WriteIoSignalInfo(Channel& channel, const IoSignalContainer& container) {
-    CheckResult(channel.Write(container.signal.id));
-    CheckResult(channel.Write(container.signal.length));
-    CheckResult(channel.Write(container.signal.dataType));
-    CheckResult(channel.Write(container.signal.sizeKind));
-    return WriteString(channel, container.name);
+Result WriteIoSignalInfo(Channel& channel, const IoSignal& signal) {
+    CheckResult(channel.Write(signal.id));
+    CheckResult(channel.Write(signal.length));
+    CheckResult(channel.Write(signal.dataType));
+    CheckResult(channel.Write(signal.sizeKind));
+    return WriteString(channel, signal.name);
 }
 
-Result ReadIoSignalInfos(Channel& channel, std::vector<IoSignalContainer>& containers) {
-    uint32_t containersCount = 0;
-    CheckResult(channel.Read(containersCount));
-    containers.resize(containersCount);
+Result ReadIoSignalInfos(Channel& channel, std::vector<IoSignal>& signals) {
+    uint32_t signalsCount = 0;
+    CheckResult(channel.Read(signalsCount));
+    signals.resize(signalsCount);
 
-    for (uint32_t i = 0; i < containersCount; i++) {
-        CheckResult(ReadIoSignalInfo(channel, containers[i]));
+    for (uint32_t i = 0; i < signalsCount; i++) {
+        CheckResult(ReadIoSignalInfo(channel, signals[i]));
     }
 
     return Result::Ok;
 }
 
-Result WriteIoSignalInfos(Channel& channel, const std::vector<IoSignalContainer>& containers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(containers.size())));
-    for (const auto& container : containers) {
-        CheckResult(WriteIoSignalInfo(channel, container));
+Result WriteIoSignalInfos(Channel& channel, const std::vector<IoSignal>& signals) {
+    CheckResult(channel.Write(static_cast<uint32_t>(signals.size())));
+    for (const auto& signal : signals) {
+        CheckResult(WriteIoSignalInfo(channel, signal));
     }
 
     return Result::Ok;
 }
 
-Result ReadControllerInfo(Channel& channel, CanControllerContainer& container) {
-    CheckResult(channel.Read(container.controller.id));
-    CheckResult(channel.Read(container.controller.queueSize));
-    CheckResult(channel.Read(container.controller.bitsPerSecond));
-    CheckResult(channel.Read(container.controller.flexibleDataRateBitsPerSecond));
-    CheckResult(ReadString(channel, container.controller.name, container.name));
-    CheckResult(ReadString(channel, container.controller.channelName, container.channelName));
-    return ReadString(channel, container.controller.clusterName, container.clusterName);
+Result ReadControllerInfo(Channel& channel, CanController& controller) {
+    CheckResult(channel.Read(controller.id));
+    CheckResult(channel.Read(controller.queueSize));
+    CheckResult(channel.Read(controller.bitsPerSecond));
+    CheckResult(channel.Read(controller.flexibleDataRateBitsPerSecond));
+    CheckResult(ReadString(channel, controller.name));
+    CheckResult(ReadString(channel, controller.channelName));
+    return ReadString(channel, controller.clusterName);
 }
 
-Result WriteControllerInfo(Channel& channel, const CanControllerContainer& container) {
-    CheckResult(channel.Write(container.controller.id));
-    CheckResult(channel.Write(container.controller.queueSize));
-    CheckResult(channel.Write(container.controller.bitsPerSecond));
-    CheckResult(channel.Write(container.controller.flexibleDataRateBitsPerSecond));
-    CheckResult(WriteString(channel, container.name));
-    CheckResult(WriteString(channel, container.channelName));
-    return WriteString(channel, container.clusterName);
+Result WriteControllerInfo(Channel& channel, const CanController& controller) {
+    CheckResult(channel.Write(controller.id));
+    CheckResult(channel.Write(controller.queueSize));
+    CheckResult(channel.Write(controller.bitsPerSecond));
+    CheckResult(channel.Write(controller.flexibleDataRateBitsPerSecond));
+    CheckResult(WriteString(channel, controller.name));
+    CheckResult(WriteString(channel, controller.channelName));
+    return WriteString(channel, controller.clusterName);
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<CanControllerContainer>& containers) {
-    uint32_t containersCount = 0;
-    CheckResult(channel.Read(containersCount));
-    containers.resize(containersCount);
+Result ReadControllerInfos(Channel& channel, std::vector<CanController>& controllers) {
+    uint32_t controllersCount = 0;
+    CheckResult(channel.Read(controllersCount));
+    controllers.resize(controllersCount);
 
-    for (uint32_t i = 0; i < containersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, containers[i]));
+    for (uint32_t i = 0; i < controllersCount; i++) {
+        CheckResult(ReadControllerInfo(channel, controllers[i]));
     }
 
     return Result::Ok;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<CanControllerContainer>& containers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(containers.size())));
-    for (const auto& container : containers) {
-        CheckResult(WriteControllerInfo(channel, container));
+Result WriteControllerInfos(Channel& channel, const std::vector<CanController>& controllers) {
+    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+    for (const auto& controller : controllers) {
+        CheckResult(WriteControllerInfo(channel, controller));
     }
 
     return Result::Ok;
 }
 
-Result ReadControllerInfo(Channel& channel, EthControllerContainer& container) {
-    CheckResult(channel.Read(container.controller.id));
-    CheckResult(channel.Read(container.controller.queueSize));
-    CheckResult(channel.Read(container.controller.bitsPerSecond));
-    CheckResult(channel.Read(container.controller.macAddress));
-    CheckResult(ReadString(channel, container.controller.name, container.name));
-    CheckResult(ReadString(channel, container.controller.channelName, container.channelName));
-    return ReadString(channel, container.controller.clusterName, container.clusterName);
+Result ReadControllerInfo(Channel& channel, EthController& controller) {
+    CheckResult(channel.Read(controller.id));
+    CheckResult(channel.Read(controller.queueSize));
+    CheckResult(channel.Read(controller.bitsPerSecond));
+    CheckResult(channel.Read(controller.macAddress));
+    CheckResult(ReadString(channel, controller.name));
+    CheckResult(ReadString(channel, controller.channelName));
+    return ReadString(channel, controller.clusterName);
 }
 
-Result WriteControllerInfo(Channel& channel, const EthControllerContainer& container) {
-    CheckResult(channel.Write(container.controller.id));
-    CheckResult(channel.Write(container.controller.queueSize));
-    CheckResult(channel.Write(container.controller.bitsPerSecond));
-    CheckResult(channel.Write(container.controller.macAddress));
-    CheckResult(WriteString(channel, container.name));
-    CheckResult(WriteString(channel, container.channelName));
-    return WriteString(channel, container.clusterName);
+Result WriteControllerInfo(Channel& channel, const EthController& controller) {
+    CheckResult(channel.Write(controller.id));
+    CheckResult(channel.Write(controller.queueSize));
+    CheckResult(channel.Write(controller.bitsPerSecond));
+    CheckResult(channel.Write(controller.macAddress));
+    CheckResult(WriteString(channel, controller.name));
+    CheckResult(WriteString(channel, controller.channelName));
+    return WriteString(channel, controller.clusterName);
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<EthControllerContainer>& containers) {
-    uint32_t containersCount = 0;
-    CheckResult(channel.Read(containersCount));
-    containers.resize(containersCount);
+Result ReadControllerInfos(Channel& channel, std::vector<EthController>& controllers) {
+    uint32_t controllersCount = 0;
+    CheckResult(channel.Read(controllersCount));
+    controllers.resize(controllersCount);
 
-    for (uint32_t i = 0; i < containersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, containers[i]));
+    for (uint32_t i = 0; i < controllersCount; i++) {
+        CheckResult(ReadControllerInfo(channel, controllers[i]));
     }
 
     return Result::Ok;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<EthControllerContainer>& containers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(containers.size())));
-    for (const auto& container : containers) {
-        CheckResult(WriteControllerInfo(channel, container));
+Result WriteControllerInfos(Channel& channel, const std::vector<EthController>& controllers) {
+    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+    for (const auto& controller : controllers) {
+        CheckResult(WriteControllerInfo(channel, controller));
     }
 
     return Result::Ok;
 }
 
-Result ReadControllerInfo(Channel& channel, LinControllerContainer& container) {
-    CheckResult(channel.Read(container.controller.id));
-    CheckResult(channel.Read(container.controller.queueSize));
-    CheckResult(channel.Read(container.controller.bitsPerSecond));
-    CheckResult(channel.Read(container.controller.type));
-    CheckResult(ReadString(channel, container.controller.name, container.name));
-    CheckResult(ReadString(channel, container.controller.channelName, container.channelName));
-    return ReadString(channel, container.controller.clusterName, container.clusterName);
+Result ReadControllerInfo(Channel& channel, LinController& controller) {
+    CheckResult(channel.Read(controller.id));
+    CheckResult(channel.Read(controller.queueSize));
+    CheckResult(channel.Read(controller.bitsPerSecond));
+    CheckResult(channel.Read(controller.type));
+    CheckResult(ReadString(channel, controller.name));
+    CheckResult(ReadString(channel, controller.channelName));
+    return ReadString(channel, controller.clusterName);
 }
 
-Result WriteControllerInfo(Channel& channel, const LinControllerContainer& container) {
-    CheckResult(channel.Write(container.controller.id));
-    CheckResult(channel.Write(container.controller.queueSize));
-    CheckResult(channel.Write(container.controller.bitsPerSecond));
-    CheckResult(channel.Write(container.controller.type));
-    CheckResult(WriteString(channel, container.name));
-    CheckResult(WriteString(channel, container.channelName));
-    return WriteString(channel, container.clusterName);
+Result WriteControllerInfo(Channel& channel, const LinController& controller) {
+    CheckResult(channel.Write(controller.id));
+    CheckResult(channel.Write(controller.queueSize));
+    CheckResult(channel.Write(controller.bitsPerSecond));
+    CheckResult(channel.Write(controller.type));
+    CheckResult(WriteString(channel, controller.name));
+    CheckResult(WriteString(channel, controller.channelName));
+    return WriteString(channel, controller.clusterName);
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<LinControllerContainer>& containers) {
-    uint32_t containersCount = 0;
-    CheckResult(channel.Read(containersCount));
-    containers.resize(containersCount);
+Result ReadControllerInfos(Channel& channel, std::vector<LinController>& controllers) {
+    uint32_t controllersCount = 0;
+    CheckResult(channel.Read(controllersCount));
+    controllers.resize(controllersCount);
 
-    for (uint32_t i = 0; i < containersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, containers[i]));
+    for (uint32_t i = 0; i < controllersCount; i++) {
+        CheckResult(ReadControllerInfo(channel, controllers[i]));
     }
 
     return Result::Ok;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<LinControllerContainer>& containers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(containers.size())));
-    for (const auto& container : containers) {
-        CheckResult(WriteControllerInfo(channel, container));
+Result WriteControllerInfos(Channel& channel, const std::vector<LinController>& controllers) {
+    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+    for (const auto& controller : controllers) {
+        CheckResult(WriteControllerInfo(channel, controller));
     }
 
     return Result::Ok;
@@ -280,11 +280,11 @@ Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& mode, std:
 Result SendAccepted(Channel& channel,
                     uint32_t protocolVersion,
                     Mode mode,
-                    const std::vector<IoSignalContainer>& incomingSignals,
-                    const std::vector<IoSignalContainer>& outgoingSignals,
-                    const std::vector<CanControllerContainer>& canControllers,
-                    const std::vector<EthControllerContainer>& ethControllers,
-                    const std::vector<LinControllerContainer>& linControllers) {
+                    const std::vector<IoSignal>& incomingSignals,
+                    const std::vector<IoSignal>& outgoingSignals,
+                    const std::vector<CanController>& canControllers,
+                    const std::vector<EthController>& ethControllers,
+                    const std::vector<LinController>& linControllers) {
     CheckResult(WriteHeader(channel, FrameKind::Accepted));
     CheckResult(channel.Write(protocolVersion));
     CheckResult(channel.Write(mode));
@@ -299,11 +299,11 @@ Result SendAccepted(Channel& channel,
 Result ReadAccepted(Channel& channel,
                     uint32_t& protocolVersion,
                     Mode& mode,
-                    std::vector<IoSignalContainer>& incomingSignals,
-                    std::vector<IoSignalContainer>& outgoingSignals,
-                    std::vector<CanControllerContainer>& canControllers,
-                    std::vector<EthControllerContainer>& ethControllers,
-                    std::vector<LinControllerContainer>& linControllers) {
+                    std::vector<IoSignal>& incomingSignals,
+                    std::vector<IoSignal>& outgoingSignals,
+                    std::vector<CanController>& canControllers,
+                    std::vector<EthController>& ethControllers,
+                    std::vector<LinController>& linControllers) {
     CheckResult(channel.Read(protocolVersion));
     CheckResult(channel.Read(mode));
     CheckResult(ReadIoSignalInfos(channel, incomingSignals));

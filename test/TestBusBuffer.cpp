@@ -41,26 +41,26 @@ protected:
 
 TEST_F(TestBusBuffer, DuplicateCanIds) {
     // Arrange
-    CanControllerContainer container;
-    CreateController(container);
+    CanController controller;
+    CreateController(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({container, container}, {}, {});
+    const Result result = busBuffer.Initialize({controller, controller}, {}, {});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated CAN controller id " + std::to_string(container.controller.id) + ".");
+    AssertLastMessage("Duplicated CAN controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
     // Arrange
-    CanControllerContainer container;
-    CreateController(container);
+    CanController controller;
+    CreateController(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({container}, {}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({controller}, {}, {}));
 
     CanMessage receivedMessage{};
 
@@ -73,33 +73,33 @@ TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
 
 TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
     // Arrange
-    CanControllerContainer container;
-    CreateController(container);
+    CanController controller;
+    CreateController(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({container}, {}, {}));
-    ASSERT_OK(receiverBusBuffer.Initialize({container}, {}, {}));
+    ASSERT_OK(senderBusBuffer.Initialize({controller}, {}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({controller}, {}, {}));
 
     std::vector<CanMessageContainer> sendMessages;
 
     // Act
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         CanMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(container.controller.id, sendMessage);
+        CreateMessage(controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
     CanMessageContainer rejectedMessage{};
-    CreateMessage(container.controller.id, rejectedMessage);
+    CreateMessage(controller.id, rejectedMessage);
     ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
     // Assert
     CanMessage receivedMessage{};
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
         AssertEq(sendMessages[i].message, receivedMessage);
     }
@@ -109,26 +109,26 @@ TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
 
 TEST_F(TestBusBuffer, DuplicateEthIds) {
     // Arrange
-    EthControllerContainer container;
-    CreateController(container);
+    EthController controller;
+    CreateController(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({}, {container, container}, {});
+    const Result result = busBuffer.Initialize({}, {controller, controller}, {});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated ethernet controller id " + std::to_string(container.controller.id) + ".");
+    AssertLastMessage("Duplicated ethernet controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
     // Arrange
-    EthControllerContainer container;
-    CreateController(container);
+    EthController controller;
+    CreateController(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {container}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller}, {}));
 
     EthMessage receivedMessage{};
 
@@ -141,33 +141,33 @@ TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
 
 TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
     // Arrange
-    EthControllerContainer container;
-    CreateController(container);
+    EthController controller;
+    CreateController(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({}, {container}, {}));
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {container}, {}));
+    ASSERT_OK(senderBusBuffer.Initialize({}, {controller}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller}, {}));
 
     std::vector<EthMessageContainer> sendMessages;
 
     // Act
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         EthMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(container.controller.id, sendMessage);
+        CreateMessage(controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
     EthMessageContainer rejectedMessage{};
-    CreateMessage(container.controller.id, rejectedMessage);
+    CreateMessage(controller.id, rejectedMessage);
     ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
     // Assert
     EthMessage receivedMessage{};
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
         AssertEq(sendMessages[i].message, receivedMessage);
     }
@@ -177,26 +177,26 @@ TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
 
 TEST_F(TestBusBuffer, DuplicateLinIds) {
     // Arrange
-    LinControllerContainer container;
-    CreateController(container);
+    LinController controller;
+    CreateController(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({}, {}, {container, container});
+    const Result result = busBuffer.Initialize({}, {}, {controller, controller});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated LIN controller id " + std::to_string(container.controller.id) + ".");
+    AssertLastMessage("Duplicated LIN controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
     // Arrange
-    LinControllerContainer container;
-    CreateController(container);
+    LinController controller;
+    CreateController(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {container}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller}));
 
     LinMessage receivedMessage{};
 
@@ -209,33 +209,33 @@ TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
 
 TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {
     // Arrange
-    LinControllerContainer container;
-    CreateController(container);
+    LinController controller;
+    CreateController(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({}, {}, {container}));
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {container}));
+    ASSERT_OK(senderBusBuffer.Initialize({}, {}, {controller}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller}));
 
     std::vector<LinMessageContainer> sendMessages;
 
     // Act
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         LinMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(container.controller.id, sendMessage);
+        CreateMessage(controller.id, sendMessage);
         ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
     }
 
     LinMessageContainer rejectedMessage{};
-    CreateMessage(container.controller.id, rejectedMessage);
+    CreateMessage(controller.id, rejectedMessage);
     ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
     // Assert
     LinMessage receivedMessage{};
-    for (uint32_t i = 0; i < container.controller.queueSize; i++) {
+    for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
         AssertEq(sendMessages[i].message, receivedMessage);
     }

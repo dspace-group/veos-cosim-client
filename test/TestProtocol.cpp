@@ -102,40 +102,40 @@ TEST_F(TestProtocol, SendAndReceiveAccepted) {
     // Arrange
     const uint32_t sendProtocolVersion = GenerateU32();
     const Mode sendMode = GenerateRandom(Mode::None, Mode::Responder);
-    const std::vector<IoSignalContainer> sendIncomingSignals = CreateSignals(2);
-    const std::vector<IoSignalContainer> sendOutgoingSignals = CreateSignals(3);
-    const std::vector<CanControllerContainer> sendCanControllers = CreateCanControllers(4);
-    const std::vector<EthControllerContainer> sendEthControllers = CreateEthControllers(5);
-    const std::vector<LinControllerContainer> sendLinControllers = CreateLinControllers(6);
+    const std::vector<IoSignal> sendIncomingSignals = CreateSignals(2);
+    const std::vector<IoSignal> sendOutgoingSignals = CreateSignals(3);
+    const std::vector<CanController> sendCanControllers = CreateCanControllers(4);
+    const std::vector<EthController> sendEthControllers = CreateEthControllers(5);
+    const std::vector<LinController> sendLinControllers = CreateLinControllers(6);
 
     // Act
     ASSERT_OK(Protocol::SendAccepted(_senderChannel,
-                                    sendProtocolVersion,
-                                    sendMode,
-                                    sendIncomingSignals,
-                                    sendOutgoingSignals,
-                                    sendCanControllers,
-                                    sendEthControllers,
-                                    sendLinControllers));
+                                     sendProtocolVersion,
+                                     sendMode,
+                                     sendIncomingSignals,
+                                     sendOutgoingSignals,
+                                     sendCanControllers,
+                                     sendEthControllers,
+                                     sendLinControllers));
 
     // Assert
     AssertFrame(FrameKind::Accepted);
 
     uint32_t receiveProtocolVersion{};
     Mode receiveMode{};
-    std::vector<IoSignalContainer> receiveIncomingSignals;
-    std::vector<IoSignalContainer> receiveOutgoingSignals;
-    std::vector<CanControllerContainer> receiveCanControllers;
-    std::vector<EthControllerContainer> receiveEthControllers;
-    std::vector<LinControllerContainer> receiveLinControllers;
+    std::vector<IoSignal> receiveIncomingSignals;
+    std::vector<IoSignal> receiveOutgoingSignals;
+    std::vector<CanController> receiveCanControllers;
+    std::vector<EthController> receiveEthControllers;
+    std::vector<LinController> receiveLinControllers;
     ASSERT_OK(Protocol::ReadAccepted(_receiverChannel,
-                                    receiveProtocolVersion,
-                                    receiveMode,
-                                    receiveIncomingSignals,
-                                    receiveOutgoingSignals,
-                                    receiveCanControllers,
-                                    receiveEthControllers,
-                                    receiveLinControllers));
+                                     receiveProtocolVersion,
+                                     receiveMode,
+                                     receiveIncomingSignals,
+                                     receiveOutgoingSignals,
+                                     receiveCanControllers,
+                                     receiveEthControllers,
+                                     receiveLinControllers));
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ((int)sendMode, (int)receiveMode);
     AssertEq(sendIncomingSignals, receiveIncomingSignals);

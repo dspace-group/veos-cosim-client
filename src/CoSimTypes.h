@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -411,12 +412,7 @@ struct IoSignal {
     uint32_t length{};
     DataType dataType{};
     SizeKind sizeKind{};
-    const char* name{};
-};
-
-struct IoSignalContainer {
-    IoSignal signal{};
-    std::string name;
+    std::string name{};
 };
 
 using BusControllerId = DsVeosCoSim_BusControllerId;
@@ -426,13 +422,6 @@ struct CanController {
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
     uint64_t flexibleDataRateBitsPerSecond{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-};
-
-struct CanControllerContainer {
-    CanController controller{};
     std::string name;
     std::string channelName;
     std::string clusterName;
@@ -456,14 +445,7 @@ struct EthController {
     BusControllerId id{};
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
-    uint8_t macAddress[EthAddressLength]{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-};
-
-struct EthControllerContainer {
-    EthController controller{};
+    std::array<uint8_t, EthAddressLength> macAddress;
     std::string name;
     std::string channelName;
     std::string clusterName;
@@ -504,13 +486,6 @@ struct LinController {
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
     LinControllerType type{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-};
-
-struct LinControllerContainer {
-    LinController controller{};
     std::string name;
     std::string channelName;
     std::string clusterName;
@@ -519,7 +494,7 @@ struct LinControllerContainer {
 struct LinMessage {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
-    uint8_t id{};
+    uint32_t id{};
     LinMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};

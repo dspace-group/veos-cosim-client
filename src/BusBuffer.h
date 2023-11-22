@@ -117,9 +117,9 @@ public:
     BusBuffer(BusBuffer&&) = default;
     BusBuffer& operator=(BusBuffer&&) = default;
 
-    [[nodiscard]] Result Initialize(const std::vector<CanControllerContainer>& canControllers,
-                                    const std::vector<EthControllerContainer>& ethControllers,
-                                    const std::vector<LinControllerContainer>& linControllers);
+    [[nodiscard]] Result Initialize(const std::vector<CanController>& canControllers,
+                                    const std::vector<EthController>& ethControllers,
+                                    const std::vector<LinController>& linControllers);
 
     void ClearData();
 
@@ -135,17 +135,17 @@ public:
     [[nodiscard]] Result Serialize(Channel& channel);
 
 private:
-    [[nodiscard]] Result Initialize(const std::vector<CanControllerContainer>& containers);
-    [[nodiscard]] Result Initialize(const std::vector<EthControllerContainer>& containers);
-    [[nodiscard]] Result Initialize(const std::vector<LinControllerContainer>& containers);
+    [[nodiscard]] Result Initialize(const std::vector<CanController>& containers);
+    [[nodiscard]] Result Initialize(const std::vector<EthController>& containers);
+    [[nodiscard]] Result Initialize(const std::vector<LinController>& containers);
 
-    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<CanControllerContainer>& extension, const CanMessageContainer& container);
-    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<EthControllerContainer>& extension, const EthMessageContainer& container);
-    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<LinControllerContainer>& extension, const LinMessageContainer& container);
+    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<CanController>& extension, const CanMessageContainer& container);
+    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<EthController>& extension, const EthMessageContainer& container);
+    [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<LinController>& extension, const LinMessageContainer& container);
 
-    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<CanControllerContainer>** extension);
-    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<EthControllerContainer>** extension);
-    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<LinControllerContainer>** extension);
+    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<CanController>** extension);
+    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<EthController>** extension);
+    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerExtension<LinController>** extension);
 
     [[nodiscard]] Result DeserializeCanMessages(Channel& channel, SimulationTime simulationTime, const Callbacks& callbacks);
     [[nodiscard]] Result DeserializeEthMessages(Channel& channel, SimulationTime simulationTime, const Callbacks& callbacks);
@@ -155,9 +155,9 @@ private:
     [[nodiscard]] Result SerializeEthMessages(Channel& channel);
     [[nodiscard]] Result SerializeLinMessages(Channel& channel);
 
-    std::unordered_map<BusControllerId, ControllerExtension<CanControllerContainer>> _canControllers;
-    std::unordered_map<BusControllerId, ControllerExtension<EthControllerContainer>> _ethControllers;
-    std::unordered_map<BusControllerId, ControllerExtension<LinControllerContainer>> _linControllers;
+    std::unordered_map<BusControllerId, ControllerExtension<CanController>> _canControllers;
+    std::unordered_map<BusControllerId, ControllerExtension<EthController>> _ethControllers;
+    std::unordered_map<BusControllerId, ControllerExtension<LinController>> _linControllers;
 
     RingBuffer<CanMessageContainer> _canReceiveBuffer;
     RingBuffer<EthMessageContainer> _ethReceiveBuffer;

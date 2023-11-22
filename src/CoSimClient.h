@@ -37,28 +37,28 @@ public:
 
     [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime);
 
-    [[nodiscard]] Result GetIncomingSignals(uint32_t* incomingSignalsCount, const IoSignal** incomingSignals) const;
+    [[nodiscard]] Result GetIncomingSignals(uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) const;
     [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& incomingSignals) const;
 
-    [[nodiscard]] Result GetOutgoingSignals(uint32_t* outgoingSignalsCount, const IoSignal** outgoingSignals) const;
+    [[nodiscard]] Result GetOutgoingSignals(uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) const;
     [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& outgoingSignals) const;
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value);
     [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value);
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const CanController** controllers) const;
+    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<CanController>& controllers) const;
 
     [[nodiscard]] Result Receive(CanMessage& message);
     [[nodiscard]] Result Transmit(const CanMessage& message);
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const EthController** controllers) const;
+    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<EthController>& controllers) const;
 
     [[nodiscard]] Result Receive(EthMessage& message);
     [[nodiscard]] Result Transmit(const EthMessage& message);
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const LinController** controllers) const;
+    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<LinController>& controllers) const;
 
     [[nodiscard]] Result Receive(LinMessage& message);
@@ -109,15 +109,15 @@ private:
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;
-    std::vector<IoSignalContainer> _incomingSignalContainers;
-    std::vector<IoSignalContainer> _outgoingSignalContainers;
+    std::vector<DsVeosCoSim_IoSignal> _incomingSignals2;
+    std::vector<DsVeosCoSim_IoSignal> _outgoingSignals2;
 
     std::vector<CanController> _canControllers;
     std::vector<EthController> _ethControllers;
     std::vector<LinController> _linControllers;
-    std::vector<CanControllerContainer> _canControllerContainers;
-    std::vector<EthControllerContainer> _ethControllerContainers;
-    std::vector<LinControllerContainer> _linControllerContainers;
+    std::vector<DsVeosCoSim_CanController> _canControllers2;
+    std::vector<DsVeosCoSim_EthController> _ethControllers2;
+    std::vector<DsVeosCoSim_LinController> _linControllers2;
 
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;

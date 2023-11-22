@@ -46,92 +46,82 @@ std::string GenerateString(const std::string& prefix) {
     return prefix + std::to_string(GenerateU32());
 }
 
-void CreateSignal(IoSignalContainer& container) {
-    container.name = GenerateString("Signal");
-    container.signal.id = GenerateU32();
-    container.signal.length = GenerateRandom(1U, 10U);
-    container.signal.dataType = GenerateRandom(DataType::Bool, DataType::Float64);
-    container.signal.sizeKind = GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
-    container.signal.name = container.name.data();
+void CreateSignal(IoSignal& signal) {
+    signal.id = GenerateU32();
+    signal.length = GenerateRandom(1U, 10U);
+    signal.dataType = GenerateRandom(DataType::Bool, DataType::Float64);
+    signal.sizeKind = GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
+    signal.name = GenerateString("Signal");
 }
 
-void CreateController(CanControllerContainer& container) {
-    container.name = GenerateString("Controller");
-    container.channelName = GenerateString("Channel");
-    container.clusterName = GenerateString("Cluster");
-    container.controller.id = GenerateU32();
-    container.controller.queueSize = GenerateRandom(1U, 10U);
-    container.controller.bitsPerSecond = GenerateU32();
-    container.controller.flexibleDataRateBitsPerSecond = GenerateU32();
-    container.controller.name = container.name.data();
-    container.controller.channelName = container.channelName.data();
-    container.controller.clusterName = container.clusterName.data();
+void CreateController(CanController& controller) {
+    controller.id = GenerateU32();
+    controller.queueSize = GenerateRandom(1U, 10U);
+    controller.bitsPerSecond = GenerateU32();
+    controller.flexibleDataRateBitsPerSecond = GenerateU32();
+    controller.name = GenerateString("Controller");
+    controller.channelName = GenerateString("Channel");
+    controller.clusterName = GenerateString("Cluster");
 }
 
-void CreateController(EthControllerContainer& container) {
-    container.name = GenerateString("Controller");
-    container.channelName = GenerateString("Channel");
-    container.clusterName = GenerateString("Cluster");
-    container.controller.id = GenerateU32();
-    container.controller.queueSize = GenerateRandom(1U, 10U);
-    container.controller.bitsPerSecond = GenerateU32();
-    FillWithRandom(container.controller.macAddress, DSVEOSCOSIM_ETH_ADDRESS_LENGTH);
-    container.controller.name = container.name.data();
-    container.controller.channelName = container.channelName.data();
-    container.controller.clusterName = container.clusterName.data();
+void CreateController(EthController& controller) {
+    controller.id = GenerateU32();
+    controller.queueSize = GenerateRandom(1U, 10U);
+    controller.bitsPerSecond = GenerateU32();
+    FillWithRandom(controller.macAddress.data(), EthAddressLength);
+    controller.name = GenerateString("Controller");
+    controller.channelName = GenerateString("Channel");
+    controller.clusterName = GenerateString("Cluster");
 }
 
-void CreateController(LinControllerContainer& container) {
-    container.name = GenerateString("Controller");
-    container.channelName = GenerateString("Channel");
-    container.clusterName = GenerateString("Cluster");
-    container.controller.id = GenerateU32();
-    container.controller.queueSize = GenerateRandom(1U, 10U);
-    container.controller.bitsPerSecond = GenerateU32();
-    container.controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
-    container.controller.name = container.name.data();
-    container.controller.channelName = container.channelName.data();
-    container.controller.clusterName = container.clusterName.data();
+void CreateController(LinController& controller) {
+    controller.id = GenerateU32();
+    controller.queueSize = GenerateRandom(1U, 10U);
+    controller.bitsPerSecond = GenerateU32();
+    controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
+    controller.name = GenerateString("Controller");
+    controller.channelName = GenerateString("Channel");
+    controller.clusterName = GenerateString("Cluster");
 }
 
-std::vector<IoSignalContainer> CreateSignals(uint32_t count) {
-    std::vector<IoSignalContainer> containers;
-    containers.resize(count);
+std::vector<IoSignal> CreateSignals(uint32_t count) {
+    std::vector<IoSignal> signals;
+    signals.resize(count);
     for (uint32_t i = 0; i < count; i++) {
-        CreateSignal(containers[i]);
+        CreateSignal(signals[i]);
     }
 
-    return containers;
+    return signals;
 }
 
-std::vector<CanControllerContainer> CreateCanControllers(uint32_t count) {
-    std::vector<CanControllerContainer> containers;
-    containers.resize(count);
+std::vector<CanController> CreateCanControllers(uint32_t count) {
+    std::vector<CanController> controllers;
+    controllers.resize(count);
     for (uint32_t i = 0; i < count; i++) {
-        CreateController(containers[i]);
+        CreateController(controllers[i]);
     }
 
-    return containers;
+    return controllers;
 }
 
-std::vector<EthControllerContainer> CreateEthControllers(uint32_t count) {
-    std::vector<EthControllerContainer> containers;
-    containers.resize(count);
+std::vector<EthController> CreateEthControllers(uint32_t count) {
+    std::vector<EthController> controllers;
+    controllers.resize(count);
     for (uint32_t i = 0; i < count; i++) {
-        CreateController(containers[i]);
+        CreateController(controllers[i]);
     }
 
-    return containers;
+    return controllers;
 }
 
-std::vector<LinControllerContainer> CreateLinControllers(uint32_t count) {
-    std::vector<LinControllerContainer> containers;
-    containers.resize(count);
+std::vector<LinController> CreateLinControllers(uint32_t count) {
+    std::vector<LinController> controllers;
+    controllers.resize(count);
     for (uint32_t i = 0; i < count; i++) {
-        CreateController(containers[i]);
+        CreateController(controllers[i]);
     }
 
-    return containers;
+    return controllers;
 }
 
 void CreateMessage(uint32_t controllerId, CanMessageContainer& container) {
