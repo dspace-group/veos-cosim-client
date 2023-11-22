@@ -56,10 +56,6 @@ void AssertEq(const IoSignal& expected, const IoSignal& actual) {
     AssertEq(expected.name, actual.name);
 }
 
-void AssertEq(const IoSignalContainer& expected, const IoSignalContainer& actual) {
-    AssertEq(expected.signal, actual.signal);
-}
-
 void AssertEq(const CanController& expected, const CanController& actual) {
     ASSERT_EQ(expected.id, actual.id);
     ASSERT_EQ(expected.queueSize, actual.queueSize);
@@ -74,7 +70,7 @@ void AssertEq(const EthController& expected, const EthController& actual) {
     ASSERT_EQ(expected.id, actual.id);
     ASSERT_EQ(expected.queueSize, actual.queueSize);
     ASSERT_EQ(expected.bitsPerSecond, actual.bitsPerSecond);
-    AssertByteArray(expected.macAddress, actual.macAddress, EthAddressLength);
+    AssertByteArray(expected.macAddress.data(), actual.macAddress.data(), EthAddressLength);
     AssertEq(expected.name, actual.name);
     AssertEq(expected.channelName, actual.channelName);
     AssertEq(expected.clusterName, actual.clusterName);
@@ -88,18 +84,6 @@ void AssertEq(const LinController& expected, const LinController& actual) {
     AssertEq(expected.name, actual.name);
     AssertEq(expected.channelName, actual.channelName);
     AssertEq(expected.clusterName, actual.clusterName);
-}
-
-void AssertEq(const CanControllerContainer& expected, const CanControllerContainer& actual) {
-    AssertEq(expected.controller, actual.controller);
-}
-
-void AssertEq(const EthControllerContainer& expected, const EthControllerContainer& actual) {
-    AssertEq(expected.controller, actual.controller);
-}
-
-void AssertEq(const LinControllerContainer& expected, const LinControllerContainer& actual) {
-    AssertEq(expected.controller, actual.controller);
 }
 
 void AssertEq(const CanMessage& expected, const CanMessage& actual) {

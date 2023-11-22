@@ -24,20 +24,20 @@ uint64_t GenerateU64();
 int64_t GenerateI64();
 std::string GenerateString(const std::string& prefix);
 
-void CreateSignal(IoSignalContainer& container);
+void CreateSignal(IoSignal& signal);
 
-void CreateController(CanControllerContainer& container);
-void CreateController(EthControllerContainer& container);
-void CreateController(LinControllerContainer& container);
+void CreateController(CanController& controller);
+void CreateController(EthController& controller);
+void CreateController(LinController& controller);
 
-std::vector<IoSignalContainer> CreateSignals(uint32_t count);
+std::vector<IoSignal> CreateSignals(uint32_t count);
 
-std::vector<CanControllerContainer> CreateCanControllers(uint32_t count);
-std::vector<EthControllerContainer> CreateEthControllers(uint32_t count);
-std::vector<LinControllerContainer> CreateLinControllers(uint32_t count);
+std::vector<CanController> CreateCanControllers(uint32_t count);
+std::vector<EthController> CreateEthControllers(uint32_t count);
+std::vector<LinController> CreateLinControllers(uint32_t count);
 
-void CreateMessage(uint32_t controllerId, CanMessageContainer& container);
-void CreateMessage(uint32_t controllerId, EthMessageContainer& container);
-void CreateMessage(uint32_t controllerId, LinMessageContainer& container);
+void CreateMessage(uint32_t controllerId, CanMessageContainer& controller);
+void CreateMessage(uint32_t controllerId, EthMessageContainer& controller);
+void CreateMessage(uint32_t controllerId, LinMessageContainer& controller);
 
 }  // namespace DsVeosCoSim

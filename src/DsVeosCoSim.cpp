@@ -135,7 +135,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle handle, uin
 
     const auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetIncomingSignals(incomingSignalsCount, reinterpret_cast<const IoSignal**>(incomingSignals)));
+    return static_cast<DsVeosCoSim_Result>(client->GetIncomingSignals(incomingSignalsCount, incomingSignals));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle, DsVeosCoSim_IoSignalId incomingSignalId, uint32_t* length, void* value) {
@@ -155,7 +155,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle, uin
 
     const auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetOutgoingSignals(outgoingSignalsCount, reinterpret_cast<const IoSignal**>(outgoingSignals)));
+    return static_cast<DsVeosCoSim_Result>(client->GetOutgoingSignals(outgoingSignalsCount, outgoingSignals));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle, DsVeosCoSim_IoSignalId outgoingSignalId, uint32_t length, const void* value) {
@@ -176,7 +176,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle, uint
 
     const auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetControllers(canControllersCount, reinterpret_cast<const CanController**>(canControllers)));
+    return static_cast<DsVeosCoSim_Result>(client->GetControllers(canControllersCount, canControllers));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessage* message) {
@@ -204,7 +204,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle, uint
 
     const auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetControllers(ethControllersCount, reinterpret_cast<const EthController**>(ethControllers)));
+    return static_cast<DsVeosCoSim_Result>(client->GetControllers(ethControllersCount, ethControllers));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessage* message) {
@@ -232,7 +232,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle, uint
 
     const auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetControllers(linControllersCount, reinterpret_cast<const LinController**>(linControllers)));
+    return static_cast<DsVeosCoSim_Result>(client->GetControllers(linControllersCount, linControllers));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessage* message) {

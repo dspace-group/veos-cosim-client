@@ -100,9 +100,9 @@ namespace {
 
 }  // namespace
 
-Result BusBuffer::Initialize(const std::vector<CanControllerContainer>& canControllers,
-                             const std::vector<EthControllerContainer>& ethControllers,
-                             const std::vector<LinControllerContainer>& linControllers) {
+Result BusBuffer::Initialize(const std::vector<CanController>& canControllers,
+                             const std::vector<EthController>& ethControllers,
+                             const std::vector<LinController>& linControllers) {
     ClearData();
 
     CheckResult(Initialize(canControllers));
@@ -110,22 +110,22 @@ Result BusBuffer::Initialize(const std::vector<CanControllerContainer>& canContr
     return Initialize(linControllers);
 }
 
-Result BusBuffer::Initialize(const std::vector<CanControllerContainer>& containers) {
+Result BusBuffer::Initialize(const std::vector<CanController>& controllers) {
     _canControllers.clear();
-    _canControllers.reserve(containers.size());
+    _canControllers.reserve(controllers.size());
 
     size_t totalQueueSize = 0;
-    for (const auto& container : containers) {
-        const auto search = _canControllers.find(container.controller.id);
+    for (const auto& controller : controllers) {
+        const auto search = _canControllers.find(controller.id);
         if (search != _canControllers.end()) {
-            LogError("Duplicated CAN controller id " + std::to_string(container.controller.id) + ".");
+            LogError("Duplicated CAN controller id " + std::to_string(controller.id) + ".");
             return Result::Error;
         }
 
-        ControllerExtension<CanControllerContainer> controllerExtension{};
-        controllerExtension.info = container;
-        _canControllers[container.controller.id] = controllerExtension;
-        totalQueueSize += container.controller.queueSize;
+        ControllerExtension<CanController> controllerExtension{};
+        controllerExtension.info = controller;
+        _canControllers[controller.id] = controllerExtension;
+        totalQueueSize += controller.queueSize;
     }
 
     _canReceiveBuffer.Clear();
@@ -135,22 +135,22 @@ Result BusBuffer::Initialize(const std::vector<CanControllerContainer>& containe
     return Result::Ok;
 }
 
-Result BusBuffer::Initialize(const std::vector<EthControllerContainer>& containers) {
+Result BusBuffer::Initialize(const std::vector<EthController>& controllers) {
     _ethControllers.clear();
-    _ethControllers.reserve(containers.size());
+    _ethControllers.reserve(controllers.size());
 
     size_t totalQueueSize = 0;
-    for (const auto& container : containers) {
-        const auto search = _ethControllers.find(container.controller.id);
+    for (const auto& controller : controllers) {
+        const auto search = _ethControllers.find(controller.id);
         if (search != _ethControllers.end()) {
-            LogError("Duplicated ethernet controller id " + std::to_string(container.controller.id) + ".");
+            LogError("Duplicated ethernet controller id " + std::to_string(controller.id) + ".");
             return Result::Error;
         }
 
-        ControllerExtension<EthControllerContainer> controllerExtension{};
-        controllerExtension.info = container;
-        _ethControllers[container.controller.id] = controllerExtension;
-        totalQueueSize += container.controller.queueSize;
+        ControllerExtension<EthController> controllerExtension{};
+        controllerExtension.info = controller;
+        _ethControllers[controller.id] = controllerExtension;
+        totalQueueSize += controller.queueSize;
     }
 
     _ethReceiveBuffer.Clear();
@@ -160,22 +160,22 @@ Result BusBuffer::Initialize(const std::vector<EthControllerContainer>& containe
     return Result::Ok;
 }
 
-Result BusBuffer::Initialize(const std::vector<LinControllerContainer>& containers) {
+Result BusBuffer::Initialize(const std::vector<LinController>& controllers) {
     _linControllers.clear();
-    _linControllers.reserve(containers.size());
+    _linControllers.reserve(controllers.size());
 
     size_t totalQueueSize = 0;
-    for (const auto& container : containers) {
-        const auto search = _linControllers.find(container.controller.id);
+    for (const auto& controller : controllers) {
+        const auto search = _linControllers.find(controller.id);
         if (search != _linControllers.end()) {
-            LogError("Duplicated LIN controller id " + std::to_string(container.controller.id) + ".");
+            LogError("Duplicated LIN controller id " + std::to_string(controller.id) + ".");
             return Result::Error;
         }
 
-        ControllerExtension<LinControllerContainer> controllerExtension{};
-        controllerExtension.info = container;
-        _linControllers[container.controller.id] = controllerExtension;
-        totalQueueSize += container.controller.queueSize;
+        ControllerExtension<LinController> controllerExtension{};
+        controllerExtension.info = controller;
+        _linControllers[controller.id] = controllerExtension;
+        totalQueueSize += controller.queueSize;
     }
 
     _linReceiveBuffer.Clear();
@@ -209,10 +209,10 @@ void BusBuffer::ClearData() {
 Result BusBuffer::Transmit(const CanMessage& message) {
     CheckResult(CanMessageCheckMaxLength(message.length));
 
-    ControllerExtension<CanControllerContainer>* controller{};
+    ControllerExtension<CanController>* controller{};
     CheckResult(FindController(message.controllerId, &controller));
 
-    if (controller->transmitCount == controller->info.controller.queueSize) {
+    if (controller->transmitCount == controller->info.queueSize) {
         if (!controller->transmitWarningSent) {
             LogWarning("Queue for CAN controller '" + std::string(controller->info.name) + "' is full. Messages are dropped.");
             controller->transmitWarningSent = true;
@@ -238,14 +238,14 @@ Result BusBuffer::Receive(CanMessage& message) {
     }
 
     message = _canReceiveBuffer.Pop().message;
-    ControllerExtension<CanControllerContainer>* controller;
+    ControllerExtension<CanController>* controller;
     CheckResult(FindController(message.controllerId, &controller));
     controller->receiveCount--;
     return Result::Ok;
 }
 
-Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<CanControllerContainer>& extension, const CanMessageContainer& container) {
-    if (extension.receiveCount == extension.info.controller.queueSize) {
+Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<CanController>& extension, const CanMessageContainer& container) {
+    if (extension.receiveCount == extension.info.queueSize) {
         if (!extension.receiveWarningSent) {
             LogWarning("Receive buffer for CAN controller '" + extension.info.name + "' is full.");
             extension.receiveWarningSent = true;
@@ -268,11 +268,11 @@ Result BusBuffer::DeserializeCanMessages(Channel& channel, SimulationTime simula
         CanMessageContainer container{};
         CheckResult(DeserializeMessage(channel, container));
 
-        ControllerExtension<CanControllerContainer>* controller{};
+        ControllerExtension<CanController>* controller{};
         CheckResult(FindController(container.message.controllerId, &controller));
 
         if (callbacks.canMessageReceivedCallback) {
-            callbacks.canMessageReceivedCallback(simulationTime, controller->info.controller, container.message);
+            callbacks.canMessageReceivedCallback(simulationTime, controller->info, container.message);
             continue;
         }
 
@@ -298,10 +298,10 @@ Result BusBuffer::SerializeCanMessages(Channel& channel) {
 
 Result BusBuffer::Transmit(const EthMessage& message) {
     CheckResult(EthMessageCheckMaxLength(message.length));
-    ControllerExtension<EthControllerContainer>* extension{};
+    ControllerExtension<EthController>* extension{};
     CheckResult(FindController(message.controllerId, &extension));
 
-    if (extension->transmitCount == extension->info.controller.queueSize) {
+    if (extension->transmitCount == extension->info.queueSize) {
         if (!extension->transmitWarningSent) {
             LogWarning("Queue for ETH controller '" + extension->info.name + "' is full. Messages are dropped.");
             extension->transmitWarningSent = true;
@@ -327,14 +327,14 @@ Result BusBuffer::Receive(EthMessage& message) {
     }
 
     message = _ethReceiveBuffer.Pop().message;
-    ControllerExtension<EthControllerContainer>* extension{};
+    ControllerExtension<EthController>* extension{};
     CheckResult(FindController(message.controllerId, &extension));
     extension->receiveCount--;
     return Result::Ok;
 }
 
-Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<EthControllerContainer>& extension, const EthMessageContainer& container) {
-    if (extension.receiveCount == extension.info.controller.queueSize) {
+Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<EthController>& extension, const EthMessageContainer& container) {
+    if (extension.receiveCount == extension.info.queueSize) {
         if (!extension.receiveWarningSent) {
             LogWarning("Receive buffer for ETH controller '" + extension.info.name + "' is full.");
             extension.receiveWarningSent = true;
@@ -357,11 +357,11 @@ Result BusBuffer::DeserializeEthMessages(Channel& channel, SimulationTime simula
         EthMessageContainer container{};
         CheckResult(DeserializeMessage(channel, container));
 
-        ControllerExtension<EthControllerContainer>* extension{};
+        ControllerExtension<EthController>* extension{};
         CheckResult(FindController(container.message.controllerId, &extension));
 
         if (callbacks.ethMessageReceivedCallback) {
-            callbacks.ethMessageReceivedCallback(simulationTime, extension->info.controller, container.message);
+            callbacks.ethMessageReceivedCallback(simulationTime, extension->info, container.message);
             continue;
         }
 
@@ -387,10 +387,10 @@ Result BusBuffer::SerializeEthMessages(Channel& channel) {
 
 Result BusBuffer::Transmit(const LinMessage& message) {
     CheckResult(LinMessageCheckMaxLength(message.length));
-    ControllerExtension<LinControllerContainer>* extension{};
+    ControllerExtension<LinController>* extension{};
     CheckResult(FindController(message.controllerId, &extension));
 
-    if (extension->transmitCount == extension->info.controller.queueSize) {
+    if (extension->transmitCount == extension->info.queueSize) {
         if (!extension->transmitWarningSent) {
             LogWarning("Queue for LIN controller '" + extension->info.name + "' is full. Messages are dropped.");
             extension->transmitWarningSent = true;
@@ -416,14 +416,14 @@ Result BusBuffer::Receive(LinMessage& message) {
     }
 
     message = _linReceiveBuffer.Pop().message;
-    ControllerExtension<LinControllerContainer>* extension{};
+    ControllerExtension<LinController>* extension{};
     CheckResult(FindController(message.controllerId, &extension));
     extension->receiveCount--;
     return Result::Ok;
 }
 
-Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<LinControllerContainer>& extension, const LinMessageContainer& container) {
-    if (extension.receiveCount == extension.info.controller.queueSize) {
+Result BusBuffer::AddMessageToReceiveBuffer(ControllerExtension<LinController>& extension, const LinMessageContainer& container) {
+    if (extension.receiveCount == extension.info.queueSize) {
         if (!extension.receiveWarningSent) {
             LogWarning("Receive buffer for LIN controller '" + extension.info.name + "' is full.");
             extension.receiveWarningSent = true;
@@ -446,11 +446,11 @@ Result BusBuffer::DeserializeLinMessages(Channel& channel, SimulationTime simula
         LinMessageContainer container{};
         CheckResult(DeserializeMessage(channel, container));
 
-        ControllerExtension<LinControllerContainer>* extension{};
+        ControllerExtension<LinController>* extension{};
         CheckResult(FindController(container.message.controllerId, &extension));
 
         if (callbacks.linMessageReceivedCallback) {
-            callbacks.linMessageReceivedCallback(simulationTime, extension->info.controller, container.message);
+            callbacks.linMessageReceivedCallback(simulationTime, extension->info, container.message);
             continue;
         }
 
@@ -486,7 +486,7 @@ Result BusBuffer::Serialize(Channel& channel) {
     return SerializeLinMessages(channel);
 }
 
-Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<CanControllerContainer>** extension) {
+Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<CanController>** extension) {
     const auto search = _canControllers.find(controllerId);
     if (search != _canControllers.end()) {
         *extension = &search->second;
@@ -497,7 +497,7 @@ Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtensi
     return Result::InvalidArgument;
 }
 
-Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<EthControllerContainer>** extension) {
+Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<EthController>** extension) {
     const auto search = _ethControllers.find(controllerId);
     if (search != _ethControllers.end()) {
         *extension = &search->second;
@@ -508,7 +508,7 @@ Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtensi
     return Result::InvalidArgument;
 }
 
-Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<LinControllerContainer>** extension) {
+Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtension<LinController>** extension) {
     const auto search = _linControllers.find(controllerId);
     if (search != _linControllers.end()) {
         *extension = &search->second;

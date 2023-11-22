@@ -16,13 +16,9 @@ void AssertLastMessage(std::string_view message);
 void ClearLastMessage();
 
 void AssertEq(const IoSignal& expected, const IoSignal& actual);
-void AssertEq(const IoSignalContainer& expected, const IoSignalContainer& actual);
 void AssertEq(const CanController& expected, const CanController& actual);
 void AssertEq(const EthController& expected, const EthController& actual);
 void AssertEq(const LinController& expected, const LinController& actual);
-void AssertEq(const CanControllerContainer& expected, const CanControllerContainer& actual);
-void AssertEq(const EthControllerContainer& expected, const EthControllerContainer& actual);
-void AssertEq(const LinControllerContainer& expected, const LinControllerContainer& actual);
 void AssertEq(const CanMessage& expected, const CanMessage& actual);
 void AssertEq(const EthMessage& expected, const EthMessage& actual);
 void AssertEq(const LinMessage& expected, const LinMessage& actual);
