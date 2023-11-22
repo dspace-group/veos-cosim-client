@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Communication.h"
 #include "CoSimTypes.h"
+#include "Communication.h"
 
 #include <thread>
 

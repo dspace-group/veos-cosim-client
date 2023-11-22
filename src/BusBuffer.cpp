@@ -378,6 +378,10 @@ Result BusBuffer::SerializeEthMessages(Channel& channel) {
         CheckResult(SerializeMessage(channel, _ethTransmitBuffer.Pop()));
     }
 
+    for (auto& [id, controller] : _ethControllers) {
+        controller.transmitCount = 0;
+    }
+
     return Result::Ok;
 }
 
@@ -461,6 +465,10 @@ Result BusBuffer::SerializeLinMessages(Channel& channel) {
     CheckResult(channel.Write(count));
     for (uint32_t i = 0; i < count; i++) {
         CheckResult(SerializeMessage(channel, _linTransmitBuffer.Pop()));
+    }
+
+    for (auto& [id, controller] : _linControllers) {
+        controller.transmitCount = 0;
     }
 
     return Result::Ok;

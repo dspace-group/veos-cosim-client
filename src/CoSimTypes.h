@@ -457,6 +457,7 @@ struct EthController {
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
     uint8_t macAddress[EthAddressLength]{};
+    uint8_t reserved[8 % EthAddressLength]{};
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
@@ -519,7 +520,7 @@ struct LinControllerContainer {
 struct LinMessage {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
-    uint8_t id{};
+    uint32_t id{};
     LinMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};

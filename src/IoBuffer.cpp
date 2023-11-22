@@ -108,8 +108,8 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
         writeBuffer->currentLength = length;
     } else {
         if (length != writeBuffer->info.signal.length) {
-            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " +
-                     std::to_string(writeBuffer->info.signal.length) + " but was " + std::to_string(length) + ".");
+            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " + std::to_string(writeBuffer->info.signal.length) +
+                     " but was " + std::to_string(length) + ".");
             return Result::Error;
         }
     }

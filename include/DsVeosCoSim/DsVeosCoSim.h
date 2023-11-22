@@ -474,6 +474,8 @@ typedef struct DsVeosCoSim_EthController {
      */
     uint8_t macAddress[DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
 
+    uint8_t reserved[8 % DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
+
     /**
      * \brief Name of the ethernet controller.
      */

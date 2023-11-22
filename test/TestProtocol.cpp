@@ -110,13 +110,13 @@ TEST_F(TestProtocol, SendAndReceiveAccepted) {
 
     // Act
     ASSERT_OK(Protocol::SendAccepted(_senderChannel,
-                                    sendProtocolVersion,
-                                    sendMode,
-                                    sendIncomingSignals,
-                                    sendOutgoingSignals,
-                                    sendCanControllers,
-                                    sendEthControllers,
-                                    sendLinControllers));
+                                     sendProtocolVersion,
+                                     sendMode,
+                                     sendIncomingSignals,
+                                     sendOutgoingSignals,
+                                     sendCanControllers,
+                                     sendEthControllers,
+                                     sendLinControllers));
 
     // Assert
     AssertFrame(FrameKind::Accepted);
@@ -129,13 +129,13 @@ TEST_F(TestProtocol, SendAndReceiveAccepted) {
     std::vector<EthControllerContainer> receiveEthControllers;
     std::vector<LinControllerContainer> receiveLinControllers;
     ASSERT_OK(Protocol::ReadAccepted(_receiverChannel,
-                                    receiveProtocolVersion,
-                                    receiveMode,
-                                    receiveIncomingSignals,
-                                    receiveOutgoingSignals,
-                                    receiveCanControllers,
-                                    receiveEthControllers,
-                                    receiveLinControllers));
+                                     receiveProtocolVersion,
+                                     receiveMode,
+                                     receiveIncomingSignals,
+                                     receiveOutgoingSignals,
+                                     receiveCanControllers,
+                                     receiveEthControllers,
+                                     receiveLinControllers));
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ((int)sendMode, (int)receiveMode);
     AssertEq(sendIncomingSignals, receiveIncomingSignals);
