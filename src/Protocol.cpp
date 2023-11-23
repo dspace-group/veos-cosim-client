@@ -20,12 +20,6 @@ Result ReadString(Channel& channel, std::string& string) {
     return channel.Read(string.data(), size);
 }
 
-Result ReadString(Channel& channel, const char*& stringPointer, std::string& string) {
-    CheckResult(ReadString(channel, string));
-    stringPointer = string.c_str();
-    return Result::Ok;
-}
-
 Result WriteString(Channel& channel, std::string_view string) {
     const auto size = static_cast<uint32_t>(string.size());
     CheckResult(channel.Write(size));

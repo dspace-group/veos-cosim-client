@@ -3,6 +3,7 @@
 #include "CoSimClient.h"
 
 #include <chrono>
+#include <cstring>
 
 #include "Logger.h"
 #include "PortMapper.h"
@@ -374,14 +375,20 @@ Result CoSimClient::ConnectOnAccepted() {
 
     _incomingSignals2.reserve(_incomingSignals.size());
     for (const auto& signal : _incomingSignals) {
-        _incomingSignals2.push_back(
-            {signal.id, signal.length, (DsVeosCoSim_DataType)signal.dataType, (DsVeosCoSim_SizeKind)signal.sizeKind, signal.name.c_str()});
+        _incomingSignals2.push_back({signal.id,
+                                     signal.length,
+                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                     signal.name.c_str()});
     }
 
     _outgoingSignals2.reserve(_outgoingSignals.size());
     for (const auto& signal : _outgoingSignals) {
-        _outgoingSignals2.push_back(
-            {signal.id, signal.length, (DsVeosCoSim_DataType)signal.dataType, (DsVeosCoSim_SizeKind)signal.sizeKind, signal.name.c_str()});
+        _outgoingSignals2.push_back({signal.id,
+                                     signal.length,
+                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                     signal.name.c_str()});
     }
 
     _canControllers2.reserve(_canControllers.size());
@@ -405,7 +412,7 @@ Result CoSimClient::ConnectOnAccepted() {
                                               controller.name.c_str(),
                                               controller.channelName.c_str(),
                                               controller.clusterName.c_str()};
-        std::memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
+        memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
         _ethControllers2.push_back(controller2);
     }
 
@@ -414,7 +421,7 @@ Result CoSimClient::ConnectOnAccepted() {
         _linControllers2.push_back({controller.id,
                                     controller.queueSize,
                                     controller.bitsPerSecond,
-                                    (DsVeosCoSim_LinControllerType)controller.type,
+                                    static_cast<DsVeosCoSim_LinControllerType>(controller.type),
                                     controller.name.c_str(),
                                     controller.channelName.c_str(),
                                     controller.clusterName.c_str()});
