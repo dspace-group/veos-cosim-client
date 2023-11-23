@@ -185,7 +185,7 @@ TEST_F(TestIoBuffer, ScalarChanged) {
     ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> writeValue;
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
 
     ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
@@ -201,7 +201,7 @@ TEST_F(TestIoBuffer, ScalarChanged) {
             ASSERT_EQ(writeSimulationTime, simulationTime);
             ASSERT_EQ(signal.id, changedIoSignal.id);
             ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), (const uint8_t*)value, writeValue.size());
+            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
         };
 
     uint32_t readLength{};
@@ -230,7 +230,7 @@ TEST_F(TestIoBuffer, ScalarWrongLength) {
     ASSERT_OK(ioBuffer.Initialize({}, {signal}));
 
     std::vector<uint8_t> writeValue;
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
     const uint32_t writeLength = signal.length + 1;
 
@@ -254,7 +254,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
     ASSERT_OK(ioBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> initialValue;
-    initialValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
@@ -283,7 +283,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorChanged) {
     ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
     ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
     ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
@@ -297,7 +297,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorChanged) {
             ASSERT_EQ(writeSimulationTime, simulationTime);
             ASSERT_EQ(signal.id, changedIoSignal.id);
             ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), (const uint8_t*)value, writeValue.size());
+            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
         };
 
     uint32_t readLength{};
@@ -327,7 +327,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
 
     const uint32_t writeLength = signal.length + 1;
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
 
     // Act
@@ -349,7 +349,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
     ASSERT_OK(ioBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> initialValue;
-    initialValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
@@ -360,7 +360,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
 
     // Assert
     ASSERT_OK(result);
-    ASSERT_EQ(0, readLength);
+    ASSERT_EQ(0U, readLength);
 }
 
 TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
@@ -376,7 +376,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
     ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
     ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
     ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
@@ -390,7 +390,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
             ASSERT_EQ(writeSimulationTime, simulationTime);
             ASSERT_EQ(signal.id, changedIoSignal.id);
             ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), (const uint8_t*)value, writeValue.size());
+            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
         };
 
     uint32_t readLength{};
@@ -422,7 +422,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
     ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
 
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)(signal.length - 1) * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length - 1) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
     ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length - 1, writeValue.data()));
     ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
@@ -436,7 +436,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
             ASSERT_EQ(writeSimulationTime, simulationTime);
             ASSERT_EQ(signal.id, changedIoSignal.id);
             ASSERT_EQ(signal.length - 1, length);
-            AssertByteArray(writeValue.data(), (const uint8_t*)value, writeValue.size());
+            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
         };
 
     uint32_t readLength{};
@@ -468,7 +468,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {
 
     constexpr uint32_t writeLength = 0;  // No element should be written
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
 
     const SimulationTime writeSimulationTime = GenerateI64();
@@ -510,7 +510,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInvalidLength) {
 
     const uint32_t writeLength = signal.length + 1;
     std::vector<uint8_t> writeValue{};
-    writeValue.resize((size_t)signal.length * GetDataTypeSize(signal.dataType));
+    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
     FillWithRandom(writeValue.data(), writeValue.size());
 
     // Act
