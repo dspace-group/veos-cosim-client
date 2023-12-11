@@ -45,7 +45,7 @@ private:
     bool _stopBackgroundThread{};
     std::thread _backgroundThread;
 
-    std::mutex _mutex;
+    std::recursive_mutex _mutex;
 };
 
 }  // namespace DsVeosCoSim

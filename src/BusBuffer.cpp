@@ -118,7 +118,7 @@ Result BusBuffer::Initialize(const std::vector<CanController>& controllers) {
     for (const auto& controller : controllers) {
         const auto search = _canControllers.find(controller.id);
         if (search != _canControllers.end()) {
-            LogError("Duplicated CAN controller id " + std::to_string(controller.id) + ".");
+            LogError("Duplicated CAN controller id " + ToString(controller.id) + ".");
             return Result::Error;
         }
 
@@ -143,7 +143,7 @@ Result BusBuffer::Initialize(const std::vector<EthController>& controllers) {
     for (const auto& controller : controllers) {
         const auto search = _ethControllers.find(controller.id);
         if (search != _ethControllers.end()) {
-            LogError("Duplicated ethernet controller id " + std::to_string(controller.id) + ".");
+            LogError("Duplicated ethernet controller id " + ToString(controller.id) + ".");
             return Result::Error;
         }
 
@@ -168,7 +168,7 @@ Result BusBuffer::Initialize(const std::vector<LinController>& controllers) {
     for (const auto& controller : controllers) {
         const auto search = _linControllers.find(controller.id);
         if (search != _linControllers.end()) {
-            LogError("Duplicated LIN controller id " + std::to_string(controller.id) + ".");
+            LogError("Duplicated LIN controller id " + ToString(controller.id) + ".");
             return Result::Error;
         }
 
@@ -493,7 +493,7 @@ Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtensi
         return Result::Ok;
     }
 
-    LogError("CAN controller id " + std::to_string(controllerId) + " is unknown.");
+    LogError("CAN controller id " + ToString(controllerId) + " is unknown.");
     return Result::InvalidArgument;
 }
 
@@ -504,7 +504,7 @@ Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtensi
         return Result::Ok;
     }
 
-    LogError("Ethernet controller id " + std::to_string(controllerId) + " is unknown.");
+    LogError("Ethernet controller id " + ToString(controllerId) + " is unknown.");
     return Result::InvalidArgument;
 }
 
@@ -515,7 +515,7 @@ Result BusBuffer::FindController(BusControllerId controllerId, ControllerExtensi
         return Result::Ok;
     }
 
-    LogError("LIN controller id " + std::to_string(controllerId) + " is unknown.");
+    LogError("LIN controller id " + ToString(controllerId) + " is unknown.");
     return Result::InvalidArgument;
 }
 

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <vector>
 
 #include "CoSimTypes.h"
@@ -19,6 +20,7 @@ enum class ResponderMode {
 class CoSimClient final {
 public:
     CoSimClient() = default;
+    ~CoSimClient() = default;
 
     CoSimClient(const CoSimClient&) = delete;
     CoSimClient& operator=(CoSimClient const&) = delete;
@@ -30,12 +32,19 @@ public:
     void Disconnect();
     [[nodiscard]] ConnectionState GetConnectionState() const;
 
+    [[nodiscard]] Result GetStepSize(SimulationTime& stepSize) const;
+
     [[nodiscard]] Result RunCallbackBasedCoSimulation(const Callbacks& callbacks);
     [[nodiscard]] Result StartPollingBasedCoSimulation(const Callbacks& callbacks);
-    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command);
+    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing);
     [[nodiscard]] Result FinishCommand();
-
     [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime);
+
+    [[nodiscard]] Result Start();
+    [[nodiscard]] Result Stop();
+    [[nodiscard]] Result Terminate(TerminateReason terminateReason);
+    [[nodiscard]] Result Pause();
+    [[nodiscard]] Result Continue();
 
     [[nodiscard]] Result GetIncomingSignals(uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) const;
     [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& incomingSignals) const;
@@ -44,6 +53,7 @@ public:
     [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& outgoingSignals) const;
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value);
+    [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value);
     [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value);
 
     [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
@@ -70,12 +80,12 @@ private:
     void CloseConnection();
 
     [[nodiscard]] Result SendConnectRequest();
-    [[nodiscard]] Result ConnectOnAccepted();
-    [[nodiscard]] Result ConnectOnDeclined();
+    [[nodiscard]] Result OnConnectOk();
+    [[nodiscard]] Result OnConnectError();
     [[nodiscard]] Result ReceiveConnectResponse();
 
     [[nodiscard]] Result RunCallbackBasedCoSimulationInternal();
-    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command);
+    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing);
     [[nodiscard]] Result FinishCommandInternal();
 
     [[nodiscard]] Result OnStep();
@@ -84,9 +94,6 @@ private:
     [[nodiscard]] Result OnTerminate();
     [[nodiscard]] Result OnPause();
     [[nodiscard]] Result OnContinue();
-
-    [[nodiscard]] Result WaitForNextFrame(FrameKind& frameKind);
-    [[nodiscard]] Result WaitForOkFrame();
 
     [[nodiscard]] Result EnsureIsConnected() const;
     [[nodiscard]] Result EnsureIsInResponderModeBlocking();
@@ -99,6 +106,8 @@ private:
     SimulationTime _currentSimulationTime{};
     SimulationTime _nextSimulationTime{};
 
+    SimulationTime _stepSize{};
+
     std::string _remoteIpAddress;
     std::string _serverName;
     std::string _clientName;
@@ -106,6 +115,7 @@ private:
 
     ResponderMode _responderMode{};
     Command _currentCommand{};
+    std::atomic<Command> _nextCommand{};
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;

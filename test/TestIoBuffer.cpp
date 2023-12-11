@@ -75,7 +75,7 @@ TEST_F(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
 TEST_F(TestIoBuffer, DuplicatedReadIds) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
 
     IoBuffer ioBuffer;
 
@@ -84,13 +84,13 @@ TEST_F(TestIoBuffer, DuplicatedReadIds) {
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+    AssertLastMessage("Duplicated IO signal id " + ToString(signal.id) + ".");
 }
 
 TEST_F(TestIoBuffer, DuplicatedWriteIds) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
 
     IoBuffer ioBuffer;
 
@@ -99,18 +99,18 @@ TEST_F(TestIoBuffer, DuplicatedWriteIds) {
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+    AssertLastMessage("Duplicated IO signal id " + ToString(signal.id) + ".");
 }
 
 TEST_F(TestIoBuffer, ReadInvalidId) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
 
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({signal}, {}));
 
-    const uint32_t readId = signal.id + 1;
+    const IoSignalId readId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1u);
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
     readValue.resize(GetDataTypeSize(signal.dataType));
@@ -120,18 +120,18 @@ TEST_F(TestIoBuffer, ReadInvalidId) {
 
     // Assert
     ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + std::to_string(readId) + " is unknown.");
+    AssertLastMessage("IO signal id " + ToString(readId) + " is unknown.");
 }
 
 TEST_F(TestIoBuffer, WriteInvalidId) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
 
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({}, {signal}));
 
-    const uint32_t writeId = signal.id + 1;
+    const IoSignalId writeId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1u);
     const uint32_t writeLength = signal.length;
     std::vector<uint8_t> writeValue;
     writeValue.resize(GetDataTypeSize(signal.dataType));
@@ -142,13 +142,13 @@ TEST_F(TestIoBuffer, WriteInvalidId) {
 
     // Assert
     ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + std::to_string(writeId) + " is unknown.");
+    AssertLastMessage("IO signal id " + ToString(writeId) + " is unknown.");
 }
 
 TEST_F(TestIoBuffer, ScalarInitialData) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = 1;
 
@@ -174,7 +174,7 @@ TEST_F(TestIoBuffer, ScalarInitialData) {
 TEST_F(TestIoBuffer, ScalarChanged) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = 1;
 
@@ -222,7 +222,7 @@ TEST_F(TestIoBuffer, ScalarChanged) {
 TEST_F(TestIoBuffer, ScalarWrongLength) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = 1;
 
@@ -246,7 +246,7 @@ TEST_F(TestIoBuffer, ScalarWrongLength) {
 TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = GenerateRandom(2, 10);
 
@@ -272,7 +272,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
 TEST_F(TestIoBuffer, FixedSizedVectorChanged) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = GenerateRandom(2, 10);
 
@@ -318,7 +318,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorChanged) {
 TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Fixed;
     signal.length = GenerateRandom(2, 10);
 
@@ -342,7 +342,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
 TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Variable;
 
     IoBuffer ioBuffer;
@@ -366,7 +366,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
 TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Variable;
 
     IoBuffer senderIoBuffer;
@@ -411,7 +411,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
 TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Variable;
     signal.length = GenerateRandom(2, 10);
 
@@ -457,7 +457,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
 TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Variable;
 
     IoBuffer senderIoBuffer;
@@ -501,7 +501,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {
 TEST_F(TestIoBuffer, VariableSizedVectorInvalidLength) {
     // Arrange
     IoSignal signal{};
-    CreateSignal(signal);
+    CreateSignal(signal, GenerateU32());
     signal.sizeKind = SizeKind::Variable;
     signal.length = GenerateRandom(2, 10);
 

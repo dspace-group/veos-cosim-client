@@ -21,8 +21,13 @@ struct CoSimServerConfig {
     bool isClientOptional = false;
     bool enableRemoteAccess = true;
     bool startPortMapper = false;
+    SimulationTime stepSize{};
     LogCallback logCallback{};
+    SimulationCallback simulationStartedCallback;
     SimulationCallback simulationStoppedCallback;
+    SimulationTerminatedCallback simulationTerminatedCallback;
+    SimulationCallback simulationPausedCallback;
+    SimulationCallback simulationContinuedCallback;
     CanMessageReceivedCallback canMessageReceivedCallback;
     LinMessageReceivedCallback linMessageReceivedCallback;
     EthMessageReceivedCallback ethMessageReceivedCallback;
@@ -71,18 +76,20 @@ private:
     [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason);
     [[nodiscard]] Result PauseInternal(SimulationTime simulationTime);
     [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
+    [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command);
 
-    [[nodiscard]] Result UpdateTime();
     [[nodiscard]] Result CloseConnection();
-    [[nodiscard]] Result Ping();
+    [[nodiscard]] Result Ping(Command& command);
     [[nodiscard]] Result OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort);
     [[nodiscard]] Result StartAccepting();
     [[nodiscard]] Result Accepting();
 
     [[nodiscard]] Result WaitForOkFrame();
+    [[nodiscard]] Result WaitForPingOkFrame(Command& command);
     [[nodiscard]] Result WaitForConnectFrame(uint32_t& version, std::string& clientName);
-    [[nodiscard]] Result WaitForStepResponseFrame(SimulationTime& simulationTime);
+    [[nodiscard]] Result WaitForStepOkFrame(SimulationTime& simulationTime, Command& command);
+
+    void HandlePendingCommand(Command command) const;
 
     Channel _channel;
 
@@ -96,8 +103,7 @@ private:
     bool _isClientOptional{};
     bool _enableRemoteAccess{};
     bool _isPortKnownToPortMapper{};
-
-    std::time_t _lastCommandSentOrReceived{};
+    SimulationTime _stepSize{};
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;

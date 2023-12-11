@@ -33,9 +33,9 @@ protected:
     }
 
     void AssertFrame(FrameKind expected) {
-        FrameKind frameKind = FrameKind::Unknown;
+        FrameKind frameKind{};
         ASSERT_OK(Protocol::ReceiveHeader(_receiverChannel, frameKind));
-        ASSERT_EQ((int)expected, (int)frameKind);
+        ASSERT_EQ(static_cast<int>(expected), static_cast<int>(frameKind));
     }
 };
 
@@ -59,6 +59,21 @@ TEST_F(TestProtocol, SendAndReceivePing) {
     AssertFrame(FrameKind::Ping);
 }
 
+TEST_F(TestProtocol, SendAndReceivePingOk) {
+    // Arrange
+    const auto sendCommand = static_cast<Command>(GenerateU32());
+
+    // Act
+    ASSERT_OK(Protocol::SendPingOk(_senderChannel, sendCommand));
+
+    // Assert
+    AssertFrame(FrameKind::PingOk);
+
+    Command receiveCommand{};
+    ASSERT_OK(Protocol::ReadPingOk(_receiverChannel, receiveCommand));
+    ASSERT_EQ(sendCommand, receiveCommand);
+}
+
 TEST_F(TestProtocol, SendAndReceiveError) {
     // Arrange
     const std::string sendErrorMessage = GenerateString("ErrorMessage");
@@ -77,7 +92,7 @@ TEST_F(TestProtocol, SendAndReceiveError) {
 TEST_F(TestProtocol, SendAndReceiveConnect) {
     // Arrange
     const uint32_t sendVersion = GenerateU32();
-    const Mode sendMode = GenerateRandom(Mode::None, Mode::Responder);
+    constexpr Mode sendMode{};
     const std::string sendServerName = GenerateString("ServerName");
     const std::string sendClientName = GenerateString("ClientName");
 
@@ -93,15 +108,17 @@ TEST_F(TestProtocol, SendAndReceiveConnect) {
     std::string receiveClientName;
     ASSERT_OK(Protocol::ReadConnect(_receiverChannel, receiveVersion, receiveMode, receiveServerName, receiveClientName));
     ASSERT_EQ(sendVersion, receiveVersion);
-    ASSERT_EQ((int)sendMode, (int)receiveMode);
+    ASSERT_EQ(static_cast<int>(sendMode), static_cast<int>(receiveMode));
     AssertEq(sendServerName, receiveServerName);
     AssertEq(sendClientName, receiveClientName);
 }
 
-TEST_F(TestProtocol, SendAndReceiveAccepted) {
+TEST_F(TestProtocol, SendAndReceiveConnectOk) {
     // Arrange
     const uint32_t sendProtocolVersion = GenerateU32();
-    const Mode sendMode = GenerateRandom(Mode::None, Mode::Responder);
+    constexpr Mode sendMode{};
+    const SimulationTime sendStepSize = GenerateI64();
+    constexpr SimulationState sendSimulationState{};
     const std::vector<IoSignal> sendIncomingSignals = CreateSignals(2);
     const std::vector<IoSignal> sendOutgoingSignals = CreateSignals(3);
     const std::vector<CanController> sendCanControllers = CreateCanControllers(4);
@@ -109,9 +126,11 @@ TEST_F(TestProtocol, SendAndReceiveAccepted) {
     const std::vector<LinController> sendLinControllers = CreateLinControllers(6);
 
     // Act
-    ASSERT_OK(Protocol::SendAccepted(_senderChannel,
+    ASSERT_OK(Protocol::SendConnectOk(_senderChannel,
                                      sendProtocolVersion,
                                      sendMode,
+                                     sendStepSize,
+                                     sendSimulationState,
                                      sendIncomingSignals,
                                      sendOutgoingSignals,
                                      sendCanControllers,
@@ -119,25 +138,30 @@ TEST_F(TestProtocol, SendAndReceiveAccepted) {
                                      sendLinControllers));
 
     // Assert
-    AssertFrame(FrameKind::Accepted);
+    AssertFrame(FrameKind::ConnectOk);
 
     uint32_t receiveProtocolVersion{};
     Mode receiveMode{};
+    SimulationTime receiveStepSize{};
+    SimulationState receiveSimulationState{};
     std::vector<IoSignal> receiveIncomingSignals;
     std::vector<IoSignal> receiveOutgoingSignals;
     std::vector<CanController> receiveCanControllers;
     std::vector<EthController> receiveEthControllers;
     std::vector<LinController> receiveLinControllers;
-    ASSERT_OK(Protocol::ReadAccepted(_receiverChannel,
+    ASSERT_OK(Protocol::ReadConnectOk(_receiverChannel,
                                      receiveProtocolVersion,
                                      receiveMode,
+                                     receiveStepSize,
+                                     receiveSimulationState,
                                      receiveIncomingSignals,
                                      receiveOutgoingSignals,
                                      receiveCanControllers,
                                      receiveEthControllers,
                                      receiveLinControllers));
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
-    ASSERT_EQ((int)sendMode, (int)receiveMode);
+    ASSERT_EQ(static_cast<int>(sendMode), static_cast<int>(receiveMode));
+    ASSERT_EQ(sendStepSize, receiveStepSize);
     AssertEq(sendIncomingSignals, receiveIncomingSignals);
     AssertEq(sendOutgoingSignals, receiveOutgoingSignals);
     AssertEq(sendCanControllers, receiveCanControllers);
@@ -238,18 +262,18 @@ TEST_F(TestProtocol, SendAndReceiveGetPort) {
     AssertEq(sendServerName, receiveServerName);
 }
 
-TEST_F(TestProtocol, SendAndReceiveGetPortResponse) {
+TEST_F(TestProtocol, SendAndReceiveGetPortOk) {
     // Arrange
     const uint16_t sendPort = GenerateU16();
 
     // Act
-    ASSERT_OK(Protocol::SendGetPortResponse(_senderChannel, sendPort));
+    ASSERT_OK(Protocol::SendGetPortOk(_senderChannel, sendPort));
 
     // Assert
-    AssertFrame(FrameKind::GetPortResponse);
+    AssertFrame(FrameKind::GetPortOk);
 
     uint16_t receivePort{};
-    ASSERT_OK(Protocol::ReadGetPortResponse(_receiverChannel, receivePort));
+    ASSERT_OK(Protocol::ReadGetPortOk(_receiverChannel, receivePort));
     ASSERT_EQ(sendPort, receivePort);
 }
 

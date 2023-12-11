@@ -20,13 +20,18 @@ Result CoSimServer::Load(const CoSimServerConfig& config) {
     _serverName = config.serverName;
     _isClientOptional = config.isClientOptional;
     _enableRemoteAccess = config.enableRemoteAccess;
+    _stepSize = config.stepSize;
     _incomingSignals = config.incomingSignals;
     _outgoingSignals = config.outgoingSignals;
     _canControllers = config.canControllers;
     _ethControllers = config.ethControllers;
     _linControllers = config.linControllers;
 
+    _callbacks.simulationStartedCallback = config.simulationStartedCallback;
     _callbacks.simulationStoppedCallback = config.simulationStoppedCallback;
+    _callbacks.simulationPausedCallback = config.simulationPausedCallback;
+    _callbacks.simulationContinuedCallback = config.simulationContinuedCallback;
+    _callbacks.simulationTerminatedCallback = config.simulationTerminatedCallback;
     _callbacks.canMessageReceivedCallback = config.canMessageReceivedCallback;
     _callbacks.linMessageReceivedCallback = config.linMessageReceivedCallback;
     _callbacks.ethMessageReceivedCallback = config.ethMessageReceivedCallback;
@@ -80,7 +85,7 @@ Result CoSimServer::Start(SimulationTime simulationTime) {
         return CloseConnection();
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::Stop(SimulationTime simulationTime) {
@@ -93,7 +98,7 @@ Result CoSimServer::Stop(SimulationTime simulationTime) {
         return CloseConnection();
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
@@ -106,7 +111,7 @@ Result CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason rea
         return CloseConnection();
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::Pause(SimulationTime simulationTime) {
@@ -119,7 +124,7 @@ Result CoSimServer::Pause(SimulationTime simulationTime) {
         return CloseConnection();
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::Continue(SimulationTime simulationTime) {
@@ -132,7 +137,7 @@ Result CoSimServer::Continue(SimulationTime simulationTime) {
         return CloseConnection();
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
@@ -140,12 +145,14 @@ Result CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimu
         return Result::Ok;
     }
 
-    const Result result = StepInternal(simulationTime, nextSimulationTime);
+    Command command{};
+    const Result result = StepInternal(simulationTime, nextSimulationTime, command);
     if (result != Result::Ok) {
         return CloseConnection();
     }
 
-    return UpdateTime();
+    HandlePendingCommand(command);
+    return Result::Ok;
 }
 
 Result CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value) {
@@ -193,15 +200,12 @@ Result CoSimServer::BackgroundService() {
         return Result::Ok;
     }
 
-    const time_t currentTime = std::time(nullptr);
-    if (currentTime > _lastCommandSentOrReceived) {
-        if ((Ping()) != Result::Ok) {
-            return CloseConnection();
-        }
-
-        return UpdateTime();
+    Command command{};
+    if (Ping(command) != Result::Ok) {
+        return CloseConnection();
     }
 
+    HandlePendingCommand(command);
     return Result::Ok;
 }
 
@@ -230,14 +234,9 @@ Result CoSimServer::ContinueInternal(SimulationTime simulationTime) {
     return WaitForOkFrame();
 }
 
-Result CoSimServer::StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
+Result CoSimServer::StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command) {
     CheckResult(Protocol::SendStep(_channel, simulationTime, _ioBuffer, _busBuffer));
-    return WaitForStepResponseFrame(nextSimulationTime);
-}
-
-Result CoSimServer::UpdateTime() {
-    _lastCommandSentOrReceived = std::time(nullptr);
-    return Result::Ok;
+    return WaitForStepOkFrame(nextSimulationTime, command);
 }
 
 Result CoSimServer::CloseConnection() {
@@ -254,9 +253,9 @@ Result CoSimServer::CloseConnection() {
     return StartAccepting();
 }
 
-Result CoSimServer::Ping() {
+Result CoSimServer::Ping(Command& command) {
     CheckResult(Protocol::SendPing(_channel));
-    return WaitForOkFrame();
+    return WaitForPingOkFrame(command);
 }
 
 Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort) {
@@ -264,14 +263,16 @@ Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t r
     std::string clientName;
     CheckResult(WaitForConnectFrame(clientProtocolVersion, clientName));
 
-    CheckResult(Protocol::SendAccepted(_channel,
-                                       CoSimProtocolVersion,
-                                       Mode::None,
-                                       _incomingSignals,
-                                       _outgoingSignals,
-                                       _canControllers,
-                                       _ethControllers,
-                                       _linControllers));
+    CheckResult(Protocol::SendConnectOk(_channel,
+                                        CoSimProtocolVersion,
+                                        {},
+                                        _stepSize,
+                                        {},
+                                        _incomingSignals,
+                                        _outgoingSignals,
+                                        _canControllers,
+                                        _ethControllers,
+                                        _linControllers));
 
     if (clientName.empty()) {
         LogInfo("dSPACE VEOS CoSim client at " + std::string(remoteIpAddress) + ":" + std::to_string(remotePort) + " connected.");
@@ -279,7 +280,7 @@ Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t r
         LogInfo("dSPACE VEOS CoSim client '" + clientName + "' at " + std::string(remoteIpAddress) + ":" + std::to_string(remotePort) + " connected.");
     }
 
-    return UpdateTime();
+    return Result::Ok;
 }
 
 Result CoSimServer::StartAccepting() {
@@ -333,7 +334,7 @@ Result CoSimServer::Accepting() {
 }
 
 Result CoSimServer::WaitForOkFrame() {
-    FrameKind frameKind = FrameKind::Unknown;
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
@@ -351,8 +352,21 @@ Result CoSimServer::WaitForOkFrame() {
     }
 }
 
+Result CoSimServer::WaitForPingOkFrame(Command& command) {
+    FrameKind frameKind{};
+    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+
+    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+        case FrameKind::PingOk:
+            return Protocol::ReadPingOk(_channel, command);
+        default:
+            LogError("Received unexpected frame " + ToString(frameKind) + ".");
+            return Result::Error;
+    }
+}
+
 Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) {
-    FrameKind frameKind = FrameKind::Unknown;
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
@@ -373,13 +387,13 @@ Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientNa
     }
 }
 
-Result CoSimServer::WaitForStepResponseFrame(SimulationTime& simulationTime) {
-    FrameKind frameKind = FrameKind::Unknown;
+Result CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) {
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::StepResponse:
-            return Protocol::ReadStepResponse(_channel, simulationTime, _ioBuffer, _busBuffer, _callbacks);
+        case FrameKind::StepOk:
+            return Protocol::ReadStepOk(_channel, simulationTime, command, _ioBuffer, _busBuffer, _callbacks);
         case FrameKind::Error: {
             std::string errorMessage;
             CheckResult(Protocol::ReadError(_channel, errorMessage));
@@ -389,6 +403,33 @@ Result CoSimServer::WaitForStepResponseFrame(SimulationTime& simulationTime) {
         default:
             LogError("Received unexpected frame " + ToString(frameKind) + ".");
             return Result::Error;
+    }
+}
+
+void CoSimServer::HandlePendingCommand(Command command) const {
+    switch (command) {
+        case Command::Start:
+            _callbacks.simulationStartedCallback({});
+            break;
+        case Command::Stop:
+            _callbacks.simulationStoppedCallback({});
+            break;
+        case Command::Terminate:
+            _callbacks.simulationTerminatedCallback({}, TerminateReason::Error);
+            break;
+        case Command::Pause:
+            _callbacks.simulationPausedCallback({});
+            break;
+        case Command::Continue:
+            _callbacks.simulationContinuedCallback({});
+            break;
+        case Command::TerminateFinished:
+            _callbacks.simulationTerminatedCallback({}, TerminateReason::Finished);
+            break;
+        case Command::None:
+        case Command::Step:
+        default:  // NOLINT(clang-diagnostic-covered-switch-default)
+            break;
     }
 }
 

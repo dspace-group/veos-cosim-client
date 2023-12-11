@@ -11,38 +11,29 @@ namespace DsVeosCoSim {
 
 constexpr uint32_t CoSimProtocolVersion = 0x10000U;
 
-enum class FrameKind : uint32_t {
-    Unknown,
-
-    // Both directions
-    Ok,
+enum class FrameKind {
+    Ok = 1,
     Error,
+
+    Connect,
+    ConnectOk,
+
+    Ping,
+    PingOk,
+
     Start,
     Stop,
     Terminate,
     Pause,
     Continue,
+
     Step,
+    StepOk,
 
-    // Server -> client
-    Accepted,
-    Ping,
-
-    // Client -> server
-    Connect,
-    StepResponse,
-
-    // Port mapper
     GetPort,
-    GetPortResponse,
+    GetPortOk,
     SetPort,
     UnsetPort
-};
-
-enum class Mode : uint32_t {
-    None,
-    Commander,
-    Responder
 };
 
 std::string ToString(FrameKind frameKind);
@@ -53,30 +44,37 @@ namespace Protocol {
 
 [[nodiscard]] Result SendOk(Channel& channel);
 
-[[nodiscard]] Result SendPing(Channel& channel);
-
 [[nodiscard]] Result SendError(Channel& channel, std::string_view errorStr);
 [[nodiscard]] Result ReadError(Channel& channel, std::string& errorStr);
 
-[[nodiscard]] Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode mode, std::string_view serverName, std::string_view clientName);
-[[nodiscard]] Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& mode, std::string& serverName, std::string& clientName);
+[[nodiscard]] Result SendPing(Channel& channel);
 
-[[nodiscard]] Result SendAccepted(Channel& channel,
-                                  uint32_t protocolVersion,
-                                  Mode mode,
-                                  const std::vector<IoSignal>& incomingSignals,
-                                  const std::vector<IoSignal>& outgoingSignals,
-                                  const std::vector<CanController>& canControllers,
-                                  const std::vector<EthController>& ethControllers,
-                                  const std::vector<LinController>& linControllers);
-[[nodiscard]] Result ReadAccepted(Channel& channel,
-                                  uint32_t& protocolVersion,
-                                  Mode& mode,
-                                  std::vector<IoSignal>& incomingSignals,
-                                  std::vector<IoSignal>& outgoingSignals,
-                                  std::vector<CanController>& canControllers,
-                                  std::vector<EthController>& ethControllers,
-                                  std::vector<LinController>& linControllers);
+[[nodiscard]] Result SendPingOk(Channel& channel, Command command);
+[[nodiscard]] Result ReadPingOk(Channel& channel, Command& command);
+
+[[nodiscard]] Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode clientMode, std::string_view serverName, std::string_view clientName);
+[[nodiscard]] Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& clientMode, std::string& serverName, std::string& clientName);
+
+[[nodiscard]] Result SendConnectOk(Channel& channel,
+                                   uint32_t protocolVersion,
+                                   Mode clientMode,
+                                   SimulationTime stepSize,
+                                   SimulationState simulationState,
+                                   const std::vector<IoSignal>& incomingSignals,
+                                   const std::vector<IoSignal>& outgoingSignals,
+                                   const std::vector<CanController>& canControllers,
+                                   const std::vector<EthController>& ethControllers,
+                                   const std::vector<LinController>& linControllers);
+[[nodiscard]] Result ReadConnectOk(Channel& channel,
+                                   uint32_t& protocolVersion,
+                                   Mode& clientMode,
+                                   SimulationTime& stepSize,
+                                   SimulationState& simulationState,
+                                   std::vector<IoSignal>& incomingSignals,
+                                   std::vector<IoSignal>& outgoingSignals,
+                                   std::vector<CanController>& canControllers,
+                                   std::vector<EthController>& ethControllers,
+                                   std::vector<LinController>& linControllers);
 
 [[nodiscard]] Result SendStart(Channel& channel, SimulationTime simulationTime);
 [[nodiscard]] Result ReadStart(Channel& channel, SimulationTime& simulationTime);
@@ -96,14 +94,19 @@ namespace Protocol {
 [[nodiscard]] Result SendStep(Channel& channel, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer);
 [[nodiscard]] Result ReadStep(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks);
 
-[[nodiscard]] Result SendStepResponse(Channel& channel, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer);
-[[nodiscard]] Result ReadStepResponse(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks);
+[[nodiscard]] Result SendStepOk(Channel& channel, SimulationTime nextSimulationTime, Command command, IoBuffer& ioBuffer, BusBuffer& busBuffer);
+[[nodiscard]] Result ReadStepOk(Channel& channel,
+                                SimulationTime& nextSimulationTime,
+                                Command& command,
+                                IoBuffer& ioBuffer,
+                                BusBuffer& busBuffer,
+                                const Callbacks& callbacks);
 
 [[nodiscard]] Result SendGetPort(Channel& channel, std::string_view serverName);
 [[nodiscard]] Result ReadGetPort(Channel& channel, std::string& serverName);
 
-[[nodiscard]] Result SendGetPortResponse(Channel& channel, uint16_t port);
-[[nodiscard]] Result ReadGetPortResponse(Channel& channel, uint16_t& port);
+[[nodiscard]] Result SendGetPortOk(Channel& channel, uint16_t port);
+[[nodiscard]] Result ReadGetPortOk(Channel& channel, uint16_t& port);
 
 [[nodiscard]] Result SendSetPort(Channel& channel, std::string_view serverName, uint16_t port);
 [[nodiscard]] Result ReadSetPort(Channel& channel, std::string& serverName, uint16_t& port);

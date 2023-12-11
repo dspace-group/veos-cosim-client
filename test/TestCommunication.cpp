@@ -31,7 +31,7 @@ TEST_F(TestCommunication, ServerStartPortArgumentZero) {
     ASSERT_OK(server.Start(port, true));
 
     // Assert
-    ASSERT_NE((uint16_t)0, port);
+    ASSERT_NE(static_cast<uint16_t>(0), port);
 }
 
 TEST_F(TestCommunication, ConnectToServer) {
@@ -76,7 +76,7 @@ TEST_F(TestCommunication, AcceptClient) {
 
     ASSERT_OK(acceptedChannel.GetRemoteAddress(acceptedIpAddress, acceptedPort));
     AssertEq(acceptedIpAddress, "127.0.0.1");
-    ASSERT_NE((uint16_t)0, acceptedPort);
+    ASSERT_NE(static_cast<uint16_t>(0), acceptedPort);
 
     ASSERT_NE(port, acceptedPort);
 }
@@ -105,7 +105,7 @@ TEST_F(TestCommunication, AcceptAfterDisconnect) {
     ASSERT_OK(acceptedChannel.GetRemoteAddress(acceptedIpAddress, acceptedPort));
     AssertEq(acceptedIpAddress, "127.0.0.1");
 
-    ASSERT_NE((uint16_t)0, acceptedPort);
+    ASSERT_NE(static_cast<uint16_t>(0), acceptedPort);
     ASSERT_NE(port, acceptedPort);
 }
 
@@ -271,7 +271,7 @@ TEST_F(TestCommunication, SendDelayed) {
 
     std::thread thread(SendTwoMessagesDelayed, std::ref(acceptedChannel));
 
-    const uint8_t buffer[]{8, 0, 0, 0, 0x44, 0x33, 0x22, 0x11, 8, 0, 0, 0, 0x88, 0x77, 0x66, 0x55};
+    constexpr uint8_t buffer[]{8, 0, 0, 0, 0x44, 0x33, 0x22, 0x11, 8, 0, 0, 0, 0x88, 0x77, 0x66, 0x55};
     WriteExactly(socket, buffer, 1);
     std::this_thread::sleep_for(50ms);
     for (int i = 0; i < 7; i++) {

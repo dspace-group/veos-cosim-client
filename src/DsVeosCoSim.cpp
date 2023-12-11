@@ -56,7 +56,23 @@ DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_Co
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Connect(connectConfig));
+    ConnectConfig config{};
+    if (connectConfig.remoteIpAddress) {
+        config.remoteIpAddress = std::string(connectConfig.remoteIpAddress);
+    }
+
+    if (connectConfig.serverName) {
+        config.serverName = std::string(connectConfig.serverName);
+    }
+
+    if (connectConfig.clientName) {
+        config.clientName = std::string(connectConfig.clientName);
+    }
+
+    config.remotePort = connectConfig.remotePort;
+    config.localPort = connectConfig.localPort;
+
+    return static_cast<DsVeosCoSim_Result>(client->Connect(config));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_Disconnect(DsVeosCoSim_Handle handle) {
@@ -109,7 +125,7 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle, DsVeosCoSi
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->PollCommand(*simulationTime, *reinterpret_cast<Command*>(command)));
+    return static_cast<DsVeosCoSim_Result>(client->PollCommand(*simulationTime, *reinterpret_cast<Command*>(command), false));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {
@@ -126,6 +142,15 @@ DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle, 
     auto* const client = static_cast<CoSimClient*>(handle);
 
     return static_cast<DsVeosCoSim_Result>(client->SetNextSimulationTime(simulationTime));
+}
+
+DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* stepSize) {
+    CheckNotNull(handle);
+    CheckNotNull(stepSize);
+
+    const auto* const client = static_cast<CoSimClient*>(handle);
+
+    return static_cast<DsVeosCoSim_Result>(client->GetStepSize(*stepSize));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle handle, uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) {
@@ -145,7 +170,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle, DsV
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Read(incomingSignalId, *length, value));
+    return static_cast<DsVeosCoSim_Result>(client->Read(static_cast<IoSignalId>(incomingSignalId), *length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle, uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) {
@@ -166,7 +191,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle, Ds
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Write(outgoingSignalId, length, value));
+    return static_cast<DsVeosCoSim_Result>(client->Write(static_cast<IoSignalId>(outgoingSignalId), length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle, uint32_t* canControllersCount, const DsVeosCoSim_CanController** canControllers) {

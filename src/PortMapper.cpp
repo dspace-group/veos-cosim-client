@@ -51,7 +51,7 @@ bool IsPortMapperClientVerbose() {
 
 }  // namespace
 
-PortMapperServer::~PortMapperServer() {
+PortMapperServer::~PortMapperServer() noexcept {
     Stop();
 }
 
@@ -94,20 +94,36 @@ void PortMapperServer::RunPortMapperServer() {
 }
 
 Result PortMapperServer::HandleClient() {
-    FrameKind frameKind = FrameKind::Unknown;
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+        case FrameKind::GetPort:
+            return HandleGetPort();
         case FrameKind::SetPort:
             return HandleSetPort();
         case FrameKind::UnsetPort:
             return HandleUnsetPort();
-        case FrameKind::GetPort:
-            return HandleGetPort();
         default:
             LogError("Received unexpected frame " + ToString(frameKind) + ".");
             return Result::Error;
     }
+}
+
+Result PortMapperServer::HandleGetPort() {
+    std::string name;
+    CheckResult(Protocol::ReadGetPort(_channel, name));
+
+    if (IsPortMapperServerVerbose()) {
+        LogTrace("Get " + name);
+    }
+
+    const auto search = _ports.find(name);
+    if (search == _ports.end()) {
+        return Protocol::SendError(_channel, "Could not find port for dSPACE VEOS CoSim server '" + name + "'.");
+    }
+
+    return Protocol::SendGetPortOk(_channel, search->second);
 }
 
 Result PortMapperServer::HandleSetPort() {
@@ -145,22 +161,6 @@ Result PortMapperServer::HandleUnsetPort() {
     return Protocol::SendOk(_channel);
 }
 
-Result PortMapperServer::HandleGetPort() {
-    std::string name;
-    CheckResult(Protocol::ReadGetPort(_channel, name));
-
-    if (IsPortMapperServerVerbose()) {
-        LogTrace("Get " + name);
-    }
-
-    const auto search = _ports.find(name);
-    if (search == _ports.end()) {
-        return Protocol::SendError(_channel, "Could not find port for dSPACE VEOS CoSim server '" + name + "'.");
-    }
-
-    return Protocol::SendGetPortResponse(_channel, search->second);
-}
-
 void PortMapperServer::DumpEntries() {
     if (_ports.empty()) {
         LogTrace("No PortMapper Ports.");
@@ -173,13 +173,46 @@ void PortMapperServer::DumpEntries() {
     }
 }
 
+uint16_t GetPortMapperPort() {
+    static uint16_t port = GetPortMapperPortInitial();
+    return port;
+}
+
+Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
+    if (IsPortMapperClientVerbose()) {
+        LogTrace("PortMapper_GetPort(ipAddress: " + std::string(ipAddress) + ", serverName: " + std::string(serverName) + ", port: " + std::to_string(port) +
+                 ")");
+    }
+
+    Channel channel;
+    CheckResult(ConnectToServer(ipAddress, GetPortMapperPort(), 0, channel));
+    CheckResult(Protocol::SendGetPort(channel, serverName));
+
+    FrameKind frameKind{};
+    CheckResult(Protocol::ReceiveHeader(channel, frameKind));
+
+    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+        case FrameKind::GetPortOk:
+            return Protocol::ReadGetPortOk(channel, port);
+        case FrameKind::Error: {
+            std::string errorMessage;
+            CheckResult(Protocol::ReadError(channel, errorMessage));
+            LogError(errorMessage);
+            return Result::Error;
+        }
+        default:
+            LogError("PortMapper_GetPort: Received unexpected frame " + ToString(frameKind) + ".");
+            return Result::Error;
+    }
+}
+
 Result PortMapper_SetPort(std::string_view name, uint16_t port) {
     Channel channel;
     CheckResult(ConnectToServer("127.0.0.1", GetPortMapperPort(), 0, channel));
 
     CheckResult(Protocol::SendSetPort(channel, name, port));
 
-    FrameKind frameKind = FrameKind::Unknown;
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
@@ -203,7 +236,7 @@ Result PortMapper_UnsetPort(std::string_view name) {
 
     CheckResult(Protocol::SendUnsetPort(channel, name));
 
-    FrameKind frameKind = FrameKind::Unknown;
+    FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel, frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
@@ -217,39 +250,6 @@ Result PortMapper_UnsetPort(std::string_view name) {
         }
         default:
             LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
-    }
-}
-
-uint16_t GetPortMapperPort() {
-    static uint16_t port = GetPortMapperPortInitial();
-    return port;
-}
-
-Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
-    if (IsPortMapperClientVerbose()) {
-        LogTrace("PortMapper_GetPort(ipAddress: " + std::string(ipAddress) + ", serverName: " + std::string(serverName) + ", port: " + std::to_string(port) +
-                 ")");
-    }
-
-    Channel channel;
-    CheckResult(ConnectToServer(ipAddress, GetPortMapperPort(), 0, channel));
-    CheckResult(Protocol::SendGetPort(channel, serverName));
-
-    FrameKind frameKind = FrameKind::Unknown;
-    CheckResult(Protocol::ReceiveHeader(channel, frameKind));
-
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::GetPortResponse:
-            return Protocol::ReadGetPortResponse(channel, port);
-        case FrameKind::Error: {
-            std::string errorMessage;
-            CheckResult(Protocol::ReadError(channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
-        }
-        default:
-            LogError("PortMapper_GetPort: Received unexpected frame " + ToString(frameKind) + ".");
             return Result::Error;
     }
 }

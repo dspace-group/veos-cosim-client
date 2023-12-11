@@ -137,7 +137,7 @@ Result IoBuffer::Deserialize(Channel& channel,  // NOLINT(readability-function-c
     CheckResult(channel.Read(ioSignalChangedCount));
 
     for (uint32_t i = 0; i < ioSignalChangedCount; i++) {
-        uint32_t signalId = 0;
+        IoSignalId signalId{};
         CheckResult(channel.Read(signalId));
 
         InternalIoBuffer* readBuffer{};
@@ -224,7 +224,7 @@ Result IoBuffer::Initialize(const std::vector<IoSignal>& signals, std::unordered
 
         const auto search = buffer.find(signal.id);
         if (search != buffer.end()) {
-            LogError("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+            LogError("Duplicated IO signal id " + ToString(signal.id) + ".");
             return Result::Error;
         }
 
@@ -255,7 +255,7 @@ Result IoBuffer::FindReadBuffer(IoSignalId signalId, InternalIoBuffer** readBuff
         return Result::Ok;
     }
 
-    LogError("IO signal id " + std::to_string(signalId) + " is unknown.");
+    LogError("IO signal id " + ToString(signalId) + " is unknown.");
     return Result::InvalidArgument;
 }
 
@@ -266,7 +266,7 @@ Result IoBuffer::FindWriteBuffer(IoSignalId signalId, InternalIoBuffer** writeBu
         return Result::Ok;
     }
 
-    LogError("IO signal id " + std::to_string(signalId) + " is unknown.");
+    LogError("IO signal id " + ToString(signalId) + " is unknown.");
     return Result::InvalidArgument;
 }
 

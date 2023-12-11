@@ -34,7 +34,7 @@ TEST_F(TestPortMapper, SetAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -52,7 +52,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName");
 
     // Act
     uint16_t port{};
@@ -67,7 +67,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -86,7 +86,7 @@ TEST_F(TestPortMapper, SetTwiceAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName");
 
     const uint16_t setPort1 = GenerateU16();
     const uint16_t setPort2 = setPort1 + 1;

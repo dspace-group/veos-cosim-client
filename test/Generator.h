@@ -14,7 +14,7 @@ void FillWithRandom(uint8_t* data, size_t length);
 
 template <typename T>
 T GenerateRandom(T min, T max) {
-    return (T)Random((int)min, (int)max);
+    return static_cast<T>(Random(static_cast<int>(min), static_cast<int>(max)));
 }
 
 uint8_t GenerateU8();
@@ -24,11 +24,11 @@ uint64_t GenerateU64();
 int64_t GenerateI64();
 std::string GenerateString(const std::string& prefix);
 
-void CreateSignal(IoSignal& signal);
+void CreateSignal(IoSignal& signal, uint32_t index);
 
-void CreateController(CanController& controller);
-void CreateController(EthController& controller);
-void CreateController(LinController& controller);
+void CreateController(CanController& controller, uint32_t index);
+void CreateController(EthController& controller, uint32_t index);
+void CreateController(LinController& controller, uint32_t index);
 
 std::vector<IoSignal> CreateSignals(uint32_t count);
 
@@ -36,8 +36,8 @@ std::vector<CanController> CreateCanControllers(uint32_t count);
 std::vector<EthController> CreateEthControllers(uint32_t count);
 std::vector<LinController> CreateLinControllers(uint32_t count);
 
-void CreateMessage(uint32_t controllerId, CanMessageContainer& container);
-void CreateMessage(uint32_t controllerId, EthMessageContainer& container);
-void CreateMessage(uint32_t controllerId, LinMessageContainer& container);
+void CreateMessage(BusControllerId controllerId, CanMessageContainer& container);
+void CreateMessage(BusControllerId controllerId, EthMessageContainer& container);
+void CreateMessage(BusControllerId controllerId, LinMessageContainer& container);
 
 }  // namespace DsVeosCoSim
