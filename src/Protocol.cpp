@@ -190,8 +190,10 @@ Result WriteControllerInfos(Channel& channel, const std::vector<LinController>& 
 
 std::string ToString(FrameKind frameKind) {
     switch (frameKind) {
-        case FrameKind::Unknown:
-            return "Unknown";
+        case FrameKind::Ping:
+            return "Ping";
+        case FrameKind::PingOk:
+            return "PingOk";
         case FrameKind::Ok:
             return "Ok";
         case FrameKind::Error:
@@ -208,18 +210,16 @@ std::string ToString(FrameKind frameKind) {
             return "Continue";
         case FrameKind::Step:
             return "Step";
-        case FrameKind::Accepted:
-            return "Accepted";
-        case FrameKind::Ping:
-            return "Ping";
+        case FrameKind::StepOk:
+            return "StepOk";
         case FrameKind::Connect:
             return "Connect";
-        case FrameKind::StepResponse:
-            return "StepResponse";
+        case FrameKind::ConnectOk:
+            return "ConnectOk";
         case FrameKind::GetPort:
             return "GetPort";
-        case FrameKind::GetPortResponse:
-            return "GetPortResponse";
+        case FrameKind::GetPortOk:
+            return "GetPortOk";
         case FrameKind::SetPort:
             return "SetPort";
         case FrameKind::UnsetPort:
@@ -240,11 +240,6 @@ Result SendOk(Channel& channel) {
     return channel.EndWrite();
 }
 
-Result SendPing(Channel& channel) {
-    CheckResult(WriteHeader(channel, FrameKind::Ping));
-    return channel.EndWrite();
-}
-
 Result SendError(Channel& channel, std::string_view errorStr) {
     CheckResult(WriteHeader(channel, FrameKind::Error));
     CheckResult(WriteString(channel, errorStr));
@@ -255,33 +250,52 @@ Result ReadError(Channel& channel, std::string& errorStr) {
     return ReadString(channel, errorStr);
 }
 
-Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode mode, std::string_view serverName, std::string_view clientName) {
+Result SendPing(Channel& channel) {
+    CheckResult(WriteHeader(channel, FrameKind::Ping));
+    return channel.EndWrite();
+}
+
+Result SendPingOk(Channel& channel, Command command) {
+    CheckResult(WriteHeader(channel, FrameKind::PingOk));
+    CheckResult(channel.Write(command));
+    return channel.EndWrite();
+}
+
+Result ReadPingOk(Channel& channel, Command& command) {
+    return channel.Read(command);
+}
+
+Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode clientMode, std::string_view serverName, std::string_view clientName) {
     CheckResult(WriteHeader(channel, FrameKind::Connect));
     CheckResult(channel.Write(protocolVersion));
-    CheckResult(channel.Write(mode));
+    CheckResult(channel.Write(clientMode));
     CheckResult(WriteString(channel, serverName));
     CheckResult(WriteString(channel, clientName));
     return channel.EndWrite();
 }
 
-Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& mode, std::string& serverName, std::string& clientName) {
+Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& clientMode, std::string& serverName, std::string& clientName) {
     CheckResult(channel.Read(protocolVersion));
-    CheckResult(channel.Read(mode));
+    CheckResult(channel.Read(clientMode));
     CheckResult(ReadString(channel, serverName));
     return ReadString(channel, clientName);
 }
 
-Result SendAccepted(Channel& channel,
-                    uint32_t protocolVersion,
-                    Mode mode,
-                    const std::vector<IoSignal>& incomingSignals,
-                    const std::vector<IoSignal>& outgoingSignals,
-                    const std::vector<CanController>& canControllers,
-                    const std::vector<EthController>& ethControllers,
-                    const std::vector<LinController>& linControllers) {
-    CheckResult(WriteHeader(channel, FrameKind::Accepted));
+Result SendConnectOk(Channel& channel,
+                     uint32_t protocolVersion,
+                     Mode clientMode,
+                     SimulationTime stepSize,
+                     SimulationState simulationState,
+                     const std::vector<IoSignal>& incomingSignals,
+                     const std::vector<IoSignal>& outgoingSignals,
+                     const std::vector<CanController>& canControllers,
+                     const std::vector<EthController>& ethControllers,
+                     const std::vector<LinController>& linControllers) {
+    CheckResult(WriteHeader(channel, FrameKind::ConnectOk));
     CheckResult(channel.Write(protocolVersion));
-    CheckResult(channel.Write(mode));
+    CheckResult(channel.Write(clientMode));
+    CheckResult(channel.Write(stepSize));
+    CheckResult(channel.Write(simulationState));
     CheckResult(WriteIoSignalInfos(channel, incomingSignals));
     CheckResult(WriteIoSignalInfos(channel, outgoingSignals));
     CheckResult(WriteControllerInfos(channel, canControllers));
@@ -290,16 +304,20 @@ Result SendAccepted(Channel& channel,
     return channel.EndWrite();
 }
 
-Result ReadAccepted(Channel& channel,
-                    uint32_t& protocolVersion,
-                    Mode& mode,
-                    std::vector<IoSignal>& incomingSignals,
-                    std::vector<IoSignal>& outgoingSignals,
-                    std::vector<CanController>& canControllers,
-                    std::vector<EthController>& ethControllers,
-                    std::vector<LinController>& linControllers) {
+Result ReadConnectOk(Channel& channel,
+                     uint32_t& protocolVersion,
+                     Mode& clientMode,
+                     SimulationTime& stepSize,
+                     SimulationState& simulationState,
+                     std::vector<IoSignal>& incomingSignals,
+                     std::vector<IoSignal>& outgoingSignals,
+                     std::vector<CanController>& canControllers,
+                     std::vector<EthController>& ethControllers,
+                     std::vector<LinController>& linControllers) {
     CheckResult(channel.Read(protocolVersion));
-    CheckResult(channel.Read(mode));
+    CheckResult(channel.Read(clientMode));
+    CheckResult(channel.Read(stepSize));
+    CheckResult(channel.Read(simulationState));
     CheckResult(ReadIoSignalInfos(channel, incomingSignals));
     CheckResult(ReadIoSignalInfos(channel, outgoingSignals));
     CheckResult(ReadControllerInfos(channel, canControllers));
@@ -378,16 +396,18 @@ Result ReadStep(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBu
     return busBuffer.Deserialize(channel, simulationTime, callbacks);
 }
 
-Result SendStepResponse(Channel& channel, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
-    CheckResult(WriteHeader(channel, FrameKind::StepResponse));
+Result SendStepOk(Channel& channel, SimulationTime simulationTime, Command command, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
+    CheckResult(WriteHeader(channel, FrameKind::StepOk));
     CheckResult(channel.Write(simulationTime));
+    CheckResult(channel.Write(command));
     CheckResult(ioBuffer.Serialize(channel));
     CheckResult(busBuffer.Serialize(channel));
     return channel.EndWrite();
 }
 
-Result ReadStepResponse(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks) {
+Result ReadStepOk(Channel& channel, SimulationTime& simulationTime, Command& command, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks) {
     CheckResult(channel.Read(simulationTime));
+    CheckResult(channel.Read(command));
 
     if (callbacks.simulationBeginStepCallback) {
         callbacks.simulationBeginStepCallback(simulationTime);
@@ -429,13 +449,13 @@ Result ReadGetPort(Channel& channel, std::string& serverName) {
     return ReadString(channel, serverName);
 }
 
-Result SendGetPortResponse(Channel& channel, uint16_t port) {
-    CheckResult(WriteHeader(channel, FrameKind::GetPortResponse));
+Result SendGetPortOk(Channel& channel, uint16_t port) {
+    CheckResult(WriteHeader(channel, FrameKind::GetPortOk));
     CheckResult(channel.Write(port));
     return channel.EndWrite();
 }
 
-Result ReadGetPortResponse(Channel& channel, uint16_t& port) {
+Result ReadGetPortOk(Channel& channel, uint16_t& port) {
     return channel.Read(port);
 }
 

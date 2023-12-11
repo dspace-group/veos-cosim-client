@@ -110,6 +110,7 @@ class BusBuffer {
 
 public:
     BusBuffer() = default;
+    ~BusBuffer() = default;
 
     BusBuffer(const BusBuffer&) = delete;
     BusBuffer& operator=(BusBuffer const&) = delete;

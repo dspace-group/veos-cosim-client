@@ -15,12 +15,6 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-struct ConnectConfigContainer {
-    ConnectConfig config{};
-    std::string serverName;
-    std::string clientName;
-};
-
 CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     CoSimServerConfig config{};
     config.serverName = GenerateString("ServerName");
@@ -30,11 +24,9 @@ CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     return config;
 }
 
-void CreateConnectConfig(const std::string& serverName, ConnectConfigContainer& container) {
-    container.serverName = serverName;
-    container.clientName = GenerateString("ClientName");
-    container.config.serverName = container.serverName.c_str();
-    container.config.clientName = container.clientName.c_str();
+void CreateConnectConfig(const std::string& serverName, ConnectConfig& connectConfig) {
+    connectConfig.serverName = serverName;
+    connectConfig.clientName = GenerateString("ClientName");
 }
 
 }  // namespace
@@ -48,7 +40,7 @@ protected:
 
 TEST_F(TestCoSim, LoadServer) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig();
+    const CoSimServerConfig config = CreateServerConfig();
 
     CoSimServerWrapper server;
 
@@ -61,7 +53,7 @@ TEST_F(TestCoSim, LoadServer) {
 
 TEST_F(TestCoSim, StartServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -77,7 +69,7 @@ TEST_F(TestCoSim, StartServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, StopServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -94,7 +86,7 @@ TEST_F(TestCoSim, StopServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, PauseServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -111,7 +103,7 @@ TEST_F(TestCoSim, PauseServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, ContinueServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -129,7 +121,7 @@ TEST_F(TestCoSim, ContinueServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, TerminateServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -147,7 +139,7 @@ TEST_F(TestCoSim, TerminateServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
+    const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -166,13 +158,13 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, ConnectWithoutServer) {
     // Arrange
-    ConnectConfigContainer container{};
-    CreateConnectConfig(GenerateString("ServerName"), container);
+    ConnectConfig connectConfig{};
+    CreateConnectConfig(GenerateString("ServerName"), connectConfig);
 
     CoSimClient client;
 
     // Act
-    const Result result = client.Connect(container.config);
+    const Result result = client.Connect(connectConfig);
 
     // Assert
     ASSERT_ERROR(result);
@@ -180,12 +172,12 @@ TEST_F(TestCoSim, ConnectWithoutServer) {
 
 TEST_F(TestCoSim, ConnectWithoutServerNameAndPort) {
     // Arrange
-    ConnectConfigContainer container{};
+    const ConnectConfig connectConfig{};
 
     CoSimClient client;
 
     // Act
-    const Result result = client.Connect(container.config);
+    const Result result = client.Connect(connectConfig);
 
     // Assert
     ASSERT_INVALID_ARGUMENT(result);
@@ -193,9 +185,9 @@ TEST_F(TestCoSim, ConnectWithoutServerNameAndPort) {
 
 TEST_F(TestCoSim, ConnectToServer) {
     // Arrange
-    CoSimServerConfig config = CreateServerConfig(true);
-    ConnectConfigContainer container{};
-    CreateConnectConfig(config.serverName, container);
+    const CoSimServerConfig config = CreateServerConfig(true);
+    ConnectConfig connectConfig{};
+    CreateConnectConfig(config.serverName, connectConfig);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
@@ -203,7 +195,7 @@ TEST_F(TestCoSim, ConnectToServer) {
     CoSimClient client;
 
     // Act
-    const Result result = client.Connect(container.config);
+    const Result result = client.Connect(connectConfig);
 
     // Assert
     ASSERT_OK(result);

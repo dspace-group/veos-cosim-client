@@ -42,7 +42,7 @@ protected:
 TEST_F(TestBusBuffer, DuplicateCanIds) {
     // Arrange
     CanController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer busBuffer;
 
@@ -51,13 +51,13 @@ TEST_F(TestBusBuffer, DuplicateCanIds) {
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated CAN controller id " + std::to_string(controller.id) + ".");
+    AssertLastMessage("Duplicated CAN controller id " + ToString(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
     // Arrange
     CanController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer receiverBusBuffer;
     ASSERT_OK(receiverBusBuffer.Initialize({controller}, {}, {}));
@@ -74,7 +74,7 @@ TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
     // Arrange
     CanController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
@@ -110,7 +110,7 @@ TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
 TEST_F(TestBusBuffer, DuplicateEthIds) {
     // Arrange
     EthController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer busBuffer;
 
@@ -119,13 +119,13 @@ TEST_F(TestBusBuffer, DuplicateEthIds) {
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated ethernet controller id " + std::to_string(controller.id) + ".");
+    AssertLastMessage("Duplicated ethernet controller id " + ToString(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
     // Arrange
     EthController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer receiverBusBuffer;
     ASSERT_OK(receiverBusBuffer.Initialize({}, {controller}, {}));
@@ -142,7 +142,7 @@ TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
     // Arrange
     EthController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
@@ -178,7 +178,7 @@ TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
 TEST_F(TestBusBuffer, DuplicateLinIds) {
     // Arrange
     LinController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer busBuffer;
 
@@ -187,13 +187,13 @@ TEST_F(TestBusBuffer, DuplicateLinIds) {
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated LIN controller id " + std::to_string(controller.id) + ".");
+    AssertLastMessage("Duplicated LIN controller id " + ToString(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
     // Arrange
     LinController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer receiverBusBuffer;
     ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller}));
@@ -210,7 +210,7 @@ TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {
     // Arrange
     LinController controller;
-    CreateController(controller);
+    CreateController(controller, GenerateU32());
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;

@@ -14,7 +14,7 @@ using namespace std::chrono;
 namespace DsVeosCoSim {
 
 Result CoSimClient::Connect(const ConnectConfig& connectConfig) {
-    if (!connectConfig.serverName && (connectConfig.remotePort == 0)) {
+    if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
         LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
         return Result::InvalidArgument;
     }
@@ -25,19 +25,9 @@ Result CoSimClient::Connect(const ConnectConfig& connectConfig) {
 
     ResetDataFromPreviousConnect();
 
-    if (connectConfig.remoteIpAddress) {
-        _remoteIpAddress = std::string(connectConfig.remoteIpAddress);
-    } else {
-        _remoteIpAddress = "127.0.0.1";
-    }
-
-    if (connectConfig.serverName) {
-        _serverName = std::string(connectConfig.serverName);
-    }
-
-    if (connectConfig.clientName) {
-        _clientName = std::string(connectConfig.clientName);
-    }
+    _remoteIpAddress = connectConfig.remoteIpAddress.empty() ? "127.0.0.1" : connectConfig.remoteIpAddress;
+    _serverName = connectConfig.serverName;
+    _clientName = connectConfig.clientName;
 
     _remotePort = connectConfig.remotePort;
     if (_remotePort == 0) {
@@ -177,7 +167,7 @@ Result CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
     return Result::Ok;
 }
 
-Result CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command) {
+Result CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing) {
     CheckResult(EnsureIsConnected());
     CheckResult(EnsureIsInResponderModeNonBlocking());
 
@@ -186,7 +176,7 @@ Result CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command
         return Result::Error;
     }
 
-    const Result result = PollCommandInternal(simulationTime, command);
+    const Result result = PollCommandInternal(simulationTime, command, returnOnPing);
     if (result != Result::Ok) {
         CloseConnection();
     }
@@ -212,7 +202,62 @@ Result CoSimClient::FinishCommand() {
 }
 
 Result CoSimClient::SetNextSimulationTime(SimulationTime simulationTime) {
+    CheckResult(EnsureIsConnected());
+
     _nextSimulationTime = simulationTime;
+    return Result::Ok;
+}
+
+Result CoSimClient::Start() {
+    CheckResult(EnsureIsConnected());
+
+    _nextCommand.exchange(Command::Start);
+    return Result::Ok;
+}
+
+Result CoSimClient::Stop() {
+    CheckResult(EnsureIsConnected());
+
+    _nextCommand.exchange(Command::Stop);
+    return Result::Ok;
+}
+
+Result CoSimClient::Terminate(TerminateReason terminateReason) {
+    CheckResult(EnsureIsConnected());
+
+    switch (terminateReason) {
+        case TerminateReason::Finished:
+            _nextCommand.exchange(Command::TerminateFinished);
+            break;
+        case TerminateReason::Error:
+            _nextCommand.exchange(Command::Terminate);
+            break;
+        default:  // NOLINT(clang-diagnostic-covered-switch-default)
+            LogError("Unknown terminate reason " + ToString(terminateReason));
+            return Result::Error;
+    }
+
+    return Result::Ok;
+}
+
+Result CoSimClient::Pause() {
+    CheckResult(EnsureIsConnected());
+
+    _nextCommand.exchange(Command::Pause);
+    return Result::Ok;
+}
+
+Result CoSimClient::Continue() {
+    CheckResult(EnsureIsConnected());
+
+    _nextCommand.exchange(Command::Continue);
+    return Result::Ok;
+}
+
+Result CoSimClient::GetStepSize(SimulationTime& stepSize) const {
+    CheckResult(EnsureIsConnected());
+
+    stepSize = _stepSize;
     return Result::Ok;
 }
 
@@ -247,6 +292,12 @@ Result CoSimClient::GetOutgoingSignals(std::vector<IoSignal>& outgoingSignals) c
 }
 
 Result CoSimClient::Read(IoSignalId incomingSignalId, uint32_t& length, void* value) {
+    CheckResult(EnsureIsConnected());
+
+    return _ioBuffer.Read(incomingSignalId, length, value);
+}
+
+Result CoSimClient::Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) {
     CheckResult(EnsureIsConnected());
 
     return _ioBuffer.Read(incomingSignalId, length, value);
@@ -344,6 +395,8 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     _currentCommand = {};
     _isConnected = {};
     _currentSimulationTime = {};
+    _nextSimulationTime = {};
+    _nextCommand.exchange({});
     _callbacks = {};
     _channel.Disconnect();
     _incomingSignals.clear();
@@ -364,18 +417,27 @@ void CoSimClient::CloseConnection() {
 }
 
 Result CoSimClient::SendConnectRequest() {
-    return Protocol::SendConnect(_channel, CoSimProtocolVersion, Mode::None, _serverName, _clientName);
+    return Protocol::SendConnect(_channel, CoSimProtocolVersion, {}, _serverName, _clientName);
 }
 
-Result CoSimClient::ConnectOnAccepted() {
+Result CoSimClient::OnConnectOk() {
     uint32_t serverProtocolVersion{};
     Mode mode{};
-    CheckResult(
-        Protocol::ReadAccepted(_channel, serverProtocolVersion, mode, _incomingSignals, _outgoingSignals, _canControllers, _ethControllers, _linControllers));
+    SimulationState simulationState{};
+    CheckResult(Protocol::ReadConnectOk(_channel,
+                                        serverProtocolVersion,
+                                        mode,
+                                        _stepSize,
+                                        simulationState,
+                                        _incomingSignals,
+                                        _outgoingSignals,
+                                        _canControllers,
+                                        _ethControllers,
+                                        _linControllers));
 
     _incomingSignals2.reserve(_incomingSignals.size());
     for (const auto& signal : _incomingSignals) {
-        _incomingSignals2.push_back({signal.id,
+        _incomingSignals2.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
                                      signal.length,
                                      static_cast<DsVeosCoSim_DataType>(signal.dataType),
                                      static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
@@ -384,7 +446,7 @@ Result CoSimClient::ConnectOnAccepted() {
 
     _outgoingSignals2.reserve(_outgoingSignals.size());
     for (const auto& signal : _outgoingSignals) {
-        _outgoingSignals2.push_back({signal.id,
+        _outgoingSignals2.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
                                      signal.length,
                                      static_cast<DsVeosCoSim_DataType>(signal.dataType),
                                      static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
@@ -393,7 +455,7 @@ Result CoSimClient::ConnectOnAccepted() {
 
     _canControllers2.reserve(_canControllers.size());
     for (const auto& controller : _canControllers) {
-        _canControllers2.push_back({controller.id,
+        _canControllers2.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                     controller.queueSize,
                                     controller.bitsPerSecond,
                                     controller.flexibleDataRateBitsPerSecond,
@@ -404,7 +466,7 @@ Result CoSimClient::ConnectOnAccepted() {
 
     _ethControllers2.reserve(_ethControllers.size());
     for (const auto& controller : _ethControllers) {
-        DsVeosCoSim_EthController controller2{controller.id,
+        DsVeosCoSim_EthController controller2{static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                               controller.queueSize,
                                               controller.bitsPerSecond,
                                               {},
@@ -418,7 +480,7 @@ Result CoSimClient::ConnectOnAccepted() {
 
     _linControllers2.reserve(_linControllers.size());
     for (const auto& controller : _linControllers) {
-        _linControllers2.push_back({controller.id,
+        _linControllers2.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                     controller.queueSize,
                                     controller.bitsPerSecond,
                                     static_cast<DsVeosCoSim_LinControllerType>(controller.type),
@@ -440,7 +502,7 @@ Result CoSimClient::ConnectOnAccepted() {
     return Result::Ok;
 }
 
-Result CoSimClient::ConnectOnDeclined() {
+Result CoSimClient::OnConnectError() {
     std::string errorString;
     CheckResult(Protocol::ReadError(_channel, errorString));
     LogError(errorString);
@@ -448,15 +510,15 @@ Result CoSimClient::ConnectOnDeclined() {
 }
 
 Result CoSimClient::ReceiveConnectResponse() {
-    FrameKind frameKind = FrameKind::Unknown;
-    CheckResult(WaitForNextFrame(frameKind));
+    FrameKind frameKind{};
+    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
     switch (frameKind)  // NOLINT(clang-diagnostic-switch-enum)
     {
-        case FrameKind::Accepted:
-            return ConnectOnAccepted();
+        case FrameKind::ConnectOk:
+            return OnConnectOk();
         case FrameKind::Error:
-            return ConnectOnDeclined();
+            return OnConnectError();
         default:
             LogError("Received unexpected frame " + ToString(frameKind) + ".");
             return Result::Error;
@@ -465,14 +527,16 @@ Result CoSimClient::ReceiveConnectResponse() {
 
 Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readability-function-cognitive-complexity)
     while (_isConnected) {
-        FrameKind frameKind = FrameKind::Unknown;
+        FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
 
         switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-            case FrameKind::Step:
+            case FrameKind::Step: {
                 CheckResult(OnStep());
-                CheckResult(Protocol::SendStepResponse(_channel, _nextSimulationTime, _ioBuffer, _busBuffer));
+                const Command nextCommand = _nextCommand.exchange({});
+                CheckResult(Protocol::SendStepOk(_channel, _nextSimulationTime, nextCommand, _ioBuffer, _busBuffer));
                 break;
+            }
             case FrameKind::Start:
                 CheckResult(OnStart());
                 CheckResult(Protocol::SendOk(_channel));
@@ -493,9 +557,11 @@ Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readabil
                 CheckResult(OnContinue());
                 CheckResult(Protocol::SendOk(_channel));
                 break;
-            case FrameKind::Ping:
-                CheckResult(Protocol::SendOk(_channel));
+            case FrameKind::Ping: {
+                const Command nextCommand = _nextCommand.exchange({});
+                CheckResult(Protocol::SendPingOk(_channel, nextCommand));
                 break;
+            }
             default:
                 LogError("Received unexpected frame " + ToString(frameKind) + ".");
                 return Result::Error;
@@ -505,46 +571,60 @@ Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readabil
     return Result::Disconnected;
 }
 
-Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime, Command& command) {  // NOLINT(readability-function-cognitive-complexity)
+Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime,
+                                           Command& command,
+                                           bool returnOnPing) {  // NOLINT(readability-function-cognitive-complexity)
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 
-    FrameKind frameKind = FrameKind::Unknown;
-    CheckResult(WaitForNextFrame(frameKind));
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::Step:
-            CheckResult(OnStep());
-            _currentCommand = Command::Step;
-            break;
-        case FrameKind::Start:
-            CheckResult(OnStart());
-            _currentCommand = Command::Start;
-            break;
-        case FrameKind::Stop:
-            CheckResult(OnStop());
-            _currentCommand = Command::Stop;
-            break;
-        case FrameKind::Terminate:
-            CheckResult(OnTerminate());
-            _currentCommand = Command::Terminate;
-            break;
-        case FrameKind::Pause:
-            CheckResult(OnPause());
-            _currentCommand = Command::Pause;
-            break;
-        case FrameKind::Continue:
-            CheckResult(OnContinue());
-            _currentCommand = Command::Continue;
-            break;
-        case FrameKind::Error: {
-            std::string errorMessage;
-            CheckResult(Protocol::ReadError(_channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
+    while (true) {
+        FrameKind frameKind{};
+        CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+            case FrameKind::Step:
+                CheckResult(OnStep());
+                _currentCommand = Command::Step;
+                break;
+            case FrameKind::Start:
+                CheckResult(OnStart());
+                _currentCommand = Command::Start;
+                break;
+            case FrameKind::Stop:
+                CheckResult(OnStop());
+                _currentCommand = Command::Stop;
+                break;
+            case FrameKind::Terminate:
+                CheckResult(OnTerminate());
+                _currentCommand = Command::Terminate;
+                break;
+            case FrameKind::Pause:
+                CheckResult(OnPause());
+                _currentCommand = Command::Pause;
+                break;
+            case FrameKind::Continue:
+                CheckResult(OnContinue());
+                _currentCommand = Command::Continue;
+                break;
+            case FrameKind::Ping:
+                _currentCommand = Command::Ping;
+                break;
+            case FrameKind::Error: {
+                std::string errorMessage;
+                CheckResult(Protocol::ReadError(_channel, errorMessage));
+                LogError(errorMessage);
+                return Result::Error;
+            }
+            default:
+                LogError("Received unexpected frame " + ToString(frameKind) + ".");
+                return Result::Error;
         }
-        default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
+
+        if (returnOnPing || (_currentCommand != Command::Ping)) {
+            break;
+        }
+
+        const Command nextCommand = _nextCommand.exchange({});
+        CheckResult(Protocol::SendPingOk(_channel, nextCommand));
     }
 
     simulationTime = _currentSimulationTime;
@@ -561,9 +641,16 @@ Result CoSimClient::FinishCommandInternal() {
         case Command::Continue:
             CheckResult(Protocol::SendOk(_channel));
             break;
-        case Command::Step:
-            CheckResult(Protocol::SendStepResponse(_channel, _nextSimulationTime, _ioBuffer, _busBuffer));
+        case Command::Step: {
+            const Command nextCommand = _nextCommand.exchange({});
+            CheckResult(Protocol::SendStepOk(_channel, _nextSimulationTime, nextCommand, _ioBuffer, _busBuffer));
             break;
+        }
+        case Command::Ping: {
+            const Command nextCommand = _nextCommand.exchange({});
+            CheckResult(Protocol::SendPingOk(_channel, nextCommand));
+            break;
+        }
         default:
             break;
     }
@@ -635,37 +722,6 @@ Result CoSimClient::OnContinue() {
     }
 
     return Result::Ok;
-}
-
-Result CoSimClient::WaitForNextFrame(FrameKind& frameKind) {
-    while (true) {
-        CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
-
-        if (frameKind != FrameKind::Ping) {
-            return Result::Ok;
-        }
-
-        CheckResult(Protocol::SendOk(_channel));
-    }
-}
-
-Result CoSimClient::WaitForOkFrame() {
-    FrameKind frameKind = FrameKind::Unknown;
-    CheckResult(WaitForNextFrame(frameKind));
-
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::Ok:
-            return Result::Ok;
-        case FrameKind::Error: {
-            std::string errorMessage;
-            CheckResult(Protocol::ReadError(_channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
-        }
-        default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
-    }
 }
 
 Result CoSimClient::EnsureIsConnected() const {

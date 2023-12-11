@@ -975,6 +975,13 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime simulationTime);
 
 /**
+ * \brief Gets the step size of the dSPACE VEOS CoSim server.
+ * \param handle                The handle.
+ * \param stepSize              The step size.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* stepSize);
+
+/**
  * \brief Gets all available incoming signals.
  * \param handle                The handle.
  * \param incomingSignalsCount  The incoming signals count.

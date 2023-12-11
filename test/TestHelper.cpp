@@ -121,7 +121,7 @@ void AssertEq(const char* expected, const char* actual) {
 }
 
 void AssertEq(Result expected, Result actual) {
-    ASSERT_EQ((int)expected, (int)actual);
+    ASSERT_EQ(static_cast<int>(expected), static_cast<int>(actual));
 }
 
 }  // namespace DsVeosCoSim

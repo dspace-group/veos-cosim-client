@@ -22,6 +22,7 @@ class IoBuffer {
 
 public:
     IoBuffer() = default;
+    ~IoBuffer() = default;
 
     IoBuffer(const IoBuffer&) = delete;
     IoBuffer& operator=(IoBuffer const&) = delete;

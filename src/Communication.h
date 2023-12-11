@@ -13,6 +13,7 @@ class Channel {
 public:
     Channel();
     explicit Channel(Socket socket);
+    ~Channel() = default;
 
     Channel(const Channel&) = delete;
     Channel& operator=(Channel const&) = delete;

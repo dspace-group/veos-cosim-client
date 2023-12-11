@@ -45,7 +45,6 @@ constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;
 constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
 
-using IoSignalId = DsVeosCoSim_IoSignalId;
 using SimulationTime = DsVeosCoSim_SimulationTime;
 
 [[nodiscard]] inline double SimulationTimeToSeconds(SimulationTime simulationTime) {
@@ -98,25 +97,31 @@ enum class Command {
     Stop = DsVeosCoSim_Command_Stop,
     Terminate = DsVeosCoSim_Command_Terminate,
     Pause = DsVeosCoSim_Command_Pause,
-    Continue = DsVeosCoSim_Command_Continue
+    Continue = DsVeosCoSim_Command_Continue,
+    TerminateFinished,
+    Ping
 };
 
 [[nodiscard]] inline std::string ToString(Command command) {
     switch (command) {
         case Command::None:
-            return "none";
+            return "None";
         case Command::Step:
-            return "step";
+            return "Step";
         case Command::Start:
-            return "start";
+            return "Start";
         case Command::Stop:
-            return "stop";
+            return "Stop";
         case Command::Terminate:
-            return "terminate";
+            return "Terminate";
         case Command::Pause:
-            return "pause";
+            return "Pause";
         case Command::Continue:
-            return "continue";
+            return "Continue";
+        case Command::TerminateFinished:
+            return "TerminateFinished";
+        case Command::Ping:
+            return "Ping";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(command));
     }
@@ -152,9 +157,9 @@ enum class TerminateReason {
 [[nodiscard]] inline std::string ToString(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
-            return "finished";
+            return "Finished";
         case TerminateReason::Error:
-            return "error";
+            return "Error";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(terminateReason));
     }
@@ -168,9 +173,9 @@ enum class ConnectionState {
 [[nodiscard]] inline std::string ToString(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Connected:
-            return "connected";
+            return "Connected";
         case ConnectionState::Disconnected:
-            return "disconnected";
+            return "Disconnected";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(connectionState));
     }
@@ -193,27 +198,27 @@ enum class DataType {
 [[nodiscard]] inline std::string ToString(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
-            return "bool";
+            return "Bool";
         case DataType::Int8:
-            return "int8";
+            return "Int8";
         case DataType::Int16:
-            return "int16";
+            return "Int16";
         case DataType::Int32:
-            return "int32";
+            return "Int32";
         case DataType::Int64:
-            return "int64";
+            return "Int64";
         case DataType::UInt8:
-            return "uint8";
+            return "UInt8";
         case DataType::UInt16:
-            return "uint16";
+            return "UInt16";
         case DataType::UInt32:
-            return "uint32";
+            return "UInt32";
         case DataType::UInt64:
-            return "uint64";
+            return "UInt64";
         case DataType::Float32:
-            return "float32";
+            return "Float32";
         case DataType::Float64:
-            return "float64";
+            return "Float64";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(dataType));
     }
@@ -249,13 +254,19 @@ enum class SizeKind {
 [[nodiscard]] inline std::string ToString(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
-            return "fixed";
+            return "Fixed";
         case SizeKind::Variable:
-            return "variable";
+            return "Variable";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(sizeKind));
     }
 }
+
+enum class SimulationState {
+};
+
+enum class Mode {
+};
 
 enum class CanMessageFlags {
     Loopback = DsVeosCoSim_CanMessageFlags_Loopback,
@@ -407,6 +418,13 @@ DEFINE_BITMASK_OPS(LinMessageFlags);
     return flagsStr;
 }
 
+enum class IoSignalId : uint32_t {
+};
+
+[[nodiscard]] inline std::string ToString(IoSignalId signalId) {
+    return std::to_string(static_cast<uint32_t>(signalId));
+}
+
 struct IoSignal {
     IoSignalId id{};
     uint32_t length{};
@@ -415,7 +433,12 @@ struct IoSignal {
     std::string name{};
 };
 
-using BusControllerId = DsVeosCoSim_BusControllerId;
+enum class BusControllerId : uint32_t {
+};
+
+[[nodiscard]] inline std::string ToString(BusControllerId controllerId) {
+    return std::to_string(static_cast<uint32_t>(controllerId));
+}
 
 struct CanController {
     BusControllerId id{};
@@ -445,7 +468,7 @@ struct EthController {
     BusControllerId id{};
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
-    std::array<uint8_t, EthAddressLength> macAddress;
+    std::array<uint8_t, EthAddressLength> macAddress{};
     std::string name;
     std::string channelName;
     std::string clusterName;
@@ -473,9 +496,9 @@ enum class LinControllerType {
 [[nodiscard]] inline std::string ToString(LinControllerType type) {
     switch (type) {
         case LinControllerType::Responder:
-            return "responder";
+            return "Responder";
         case LinControllerType::Commander:
-            return "commander";
+            return "Commander";
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             return std::to_string(static_cast<int>(type));
     }
@@ -529,6 +552,12 @@ struct Callbacks {
     EthMessageReceivedCallback ethMessageReceivedCallback;
 };
 
-using ConnectConfig = DsVeosCoSim_ConnectConfig;
+struct ConnectConfig {
+    std::string remoteIpAddress;
+    std::string serverName;
+    std::string clientName;
+    uint16_t remotePort{};
+    uint16_t localPort{};
+};
 
 }  // namespace DsVeosCoSim
