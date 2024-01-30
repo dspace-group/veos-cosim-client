@@ -264,8 +264,8 @@ Result CoSimClient::GetStepSize(SimulationTime& stepSize) const {
 Result CoSimClient::GetIncomingSignals(uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) const {
     CheckResult(EnsureIsConnected());
 
-    *incomingSignalsCount = static_cast<uint32_t>(_incomingSignals2.size());
-    *incomingSignals = _incomingSignals2.data();
+    *incomingSignalsCount = static_cast<uint32_t>(_incomingSignalsForC.size());
+    *incomingSignals = _incomingSignalsForC.data();
     return Result::Ok;
 }
 
@@ -279,8 +279,8 @@ Result CoSimClient::GetIncomingSignals(std::vector<IoSignal>& incomingSignals) c
 Result CoSimClient::GetOutgoingSignals(uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) const {
     CheckResult(EnsureIsConnected());
 
-    *outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignals2.size());
-    *outgoingSignals = _outgoingSignals2.data();
+    *outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignalsForC.size());
+    *outgoingSignals = _outgoingSignalsForC.data();
     return Result::Ok;
 }
 
@@ -312,8 +312,8 @@ Result CoSimClient::Write(IoSignalId outgoingSignalId, uint32_t length, const vo
 Result CoSimClient::GetControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const {
     CheckResult(EnsureIsConnected());
 
-    *controllersCount = static_cast<uint32_t>(_canControllers2.size());
-    *controllers = _canControllers2.data();
+    *controllersCount = static_cast<uint32_t>(_canControllersForC.size());
+    *controllers = _canControllersForC.data();
     return Result::Ok;
 }
 
@@ -339,8 +339,8 @@ Result CoSimClient::Transmit(const CanMessage& message) {
 Result CoSimClient::GetControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const {
     CheckResult(EnsureIsConnected());
 
-    *controllersCount = static_cast<uint32_t>(_ethControllers2.size());
-    *controllers = _ethControllers2.data();
+    *controllersCount = static_cast<uint32_t>(_ethControllersForC.size());
+    *controllers = _ethControllersForC.data();
     return Result::Ok;
 }
 
@@ -366,8 +366,8 @@ Result CoSimClient::Transmit(const EthMessage& message) {
 Result CoSimClient::GetControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const {
     CheckResult(EnsureIsConnected());
 
-    *controllersCount = static_cast<uint32_t>(_linControllers2.size());
-    *controllers = _linControllers2.data();
+    *controllersCount = static_cast<uint32_t>(_linControllersForC.size());
+    *controllers = _linControllersForC.data();
     return Result::Ok;
 }
 
@@ -401,14 +401,14 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     _channel.Disconnect();
     _incomingSignals.clear();
     _outgoingSignals.clear();
-    _incomingSignals2.clear();
-    _outgoingSignals2.clear();
+    _incomingSignalsForC.clear();
+    _outgoingSignalsForC.clear();
     _canControllers.clear();
     _ethControllers.clear();
     _linControllers.clear();
-    _canControllers2.clear();
-    _ethControllers2.clear();
-    _linControllers2.clear();
+    _canControllersForC.clear();
+    _ethControllersForC.clear();
+    _linControllersForC.clear();
 }
 
 void CoSimClient::CloseConnection() {
@@ -435,27 +435,27 @@ Result CoSimClient::OnConnectOk() {
                                         _ethControllers,
                                         _linControllers));
 
-    _incomingSignals2.reserve(_incomingSignals.size());
+    _incomingSignalsForC.reserve(_incomingSignals.size());
     for (const auto& signal : _incomingSignals) {
-        _incomingSignals2.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
+        _incomingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
                                      signal.length,
                                      static_cast<DsVeosCoSim_DataType>(signal.dataType),
                                      static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
                                      signal.name.c_str()});
     }
 
-    _outgoingSignals2.reserve(_outgoingSignals.size());
+    _outgoingSignalsForC.reserve(_outgoingSignals.size());
     for (const auto& signal : _outgoingSignals) {
-        _outgoingSignals2.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
+        _outgoingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
                                      signal.length,
                                      static_cast<DsVeosCoSim_DataType>(signal.dataType),
                                      static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
                                      signal.name.c_str()});
     }
 
-    _canControllers2.reserve(_canControllers.size());
+    _canControllersForC.reserve(_canControllers.size());
     for (const auto& controller : _canControllers) {
-        _canControllers2.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
+        _canControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                     controller.queueSize,
                                     controller.bitsPerSecond,
                                     controller.flexibleDataRateBitsPerSecond,
@@ -464,7 +464,7 @@ Result CoSimClient::OnConnectOk() {
                                     controller.clusterName.c_str()});
     }
 
-    _ethControllers2.reserve(_ethControllers.size());
+    _ethControllersForC.reserve(_ethControllers.size());
     for (const auto& controller : _ethControllers) {
         DsVeosCoSim_EthController controller2{static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                               controller.queueSize,
@@ -475,12 +475,12 @@ Result CoSimClient::OnConnectOk() {
                                               controller.channelName.c_str(),
                                               controller.clusterName.c_str()};
         memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
-        _ethControllers2.push_back(controller2);
+        _ethControllersForC.push_back(controller2);
     }
 
-    _linControllers2.reserve(_linControllers.size());
+    _linControllersForC.reserve(_linControllers.size());
     for (const auto& controller : _linControllers) {
-        _linControllers2.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
+        _linControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
                                     controller.queueSize,
                                     controller.bitsPerSecond,
                                     static_cast<DsVeosCoSim_LinControllerType>(controller.type),

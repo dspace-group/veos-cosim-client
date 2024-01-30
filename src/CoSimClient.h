@@ -119,15 +119,15 @@ private:
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;
-    std::vector<DsVeosCoSim_IoSignal> _incomingSignals2;
-    std::vector<DsVeosCoSim_IoSignal> _outgoingSignals2;
+    std::vector<DsVeosCoSim_IoSignal> _incomingSignalsForC;
+    std::vector<DsVeosCoSim_IoSignal> _outgoingSignalsForC;
 
     std::vector<CanController> _canControllers;
     std::vector<EthController> _ethControllers;
     std::vector<LinController> _linControllers;
-    std::vector<DsVeosCoSim_CanController> _canControllers2;
-    std::vector<DsVeosCoSim_EthController> _ethControllers2;
-    std::vector<DsVeosCoSim_LinController> _linControllers2;
+    std::vector<DsVeosCoSim_CanController> _canControllersForC;
+    std::vector<DsVeosCoSim_EthController> _ethControllersForC;
+    std::vector<DsVeosCoSim_LinController> _linControllersForC;
 
     IoBuffer _ioBuffer;
     BusBuffer _busBuffer;
