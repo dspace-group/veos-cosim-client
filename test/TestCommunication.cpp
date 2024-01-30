@@ -10,7 +10,7 @@
 #include "Socket.h"
 #include "TestHelper.h"
 
-using namespace std::chrono;
+using namespace std::chrono_literals;
 using namespace DsVeosCoSim;
 
 class TestCommunication : public testing::Test {

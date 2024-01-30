@@ -110,12 +110,12 @@ class BusBuffer {
 
 public:
     BusBuffer() = default;
-    ~BusBuffer() = default;
+    ~BusBuffer() noexcept = default;
 
     BusBuffer(const BusBuffer&) = delete;
     BusBuffer& operator=(BusBuffer const&) = delete;
 
-    BusBuffer(BusBuffer&&) = default;
+    BusBuffer(BusBuffer&&) noexcept = default;
     BusBuffer& operator=(BusBuffer&&) = default;
 
     [[nodiscard]] Result Initialize(const std::vector<CanController>& canControllers,
@@ -136,9 +136,9 @@ public:
     [[nodiscard]] Result Serialize(Channel& channel);
 
 private:
-    [[nodiscard]] Result Initialize(const std::vector<CanController>& containers);
-    [[nodiscard]] Result Initialize(const std::vector<EthController>& containers);
-    [[nodiscard]] Result Initialize(const std::vector<LinController>& containers);
+    [[nodiscard]] Result Initialize(const std::vector<CanController>& controllers);
+    [[nodiscard]] Result Initialize(const std::vector<EthController>& controllers);
+    [[nodiscard]] Result Initialize(const std::vector<LinController>& controllers);
 
     [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<CanController>& extension, const CanMessageContainer& container);
     [[nodiscard]] Result AddMessageToReceiveBuffer(ControllerExtension<EthController>& extension, const EthMessageContainer& container);

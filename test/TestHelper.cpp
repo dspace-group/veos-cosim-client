@@ -4,8 +4,6 @@
 
 #include <string>
 
-#include "Generator.h"
-
 namespace DsVeosCoSim {
 
 namespace {

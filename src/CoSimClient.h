@@ -5,9 +5,10 @@
 #include <atomic>
 #include <vector>
 
+#include "BusBuffer.h"
 #include "CoSimTypes.h"
 #include "Communication.h"
-#include "Protocol.h"
+#include "IoBuffer.h"
 
 namespace DsVeosCoSim {
 
@@ -20,7 +21,7 @@ enum class ResponderMode {
 class CoSimClient final {
 public:
     CoSimClient() = default;
-    ~CoSimClient() = default;
+    ~CoSimClient() noexcept = default;
 
     CoSimClient(const CoSimClient&) = delete;
     CoSimClient& operator=(CoSimClient const&) = delete;

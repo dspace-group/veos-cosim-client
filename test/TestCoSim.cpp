@@ -1,6 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <chrono>
 #include <string>
 
 #include "CoSimClient.h"
@@ -10,7 +9,6 @@
 #include "Logger.h"
 #include "TestHelper.h"
 
-using namespace std::chrono_literals;
 using namespace DsVeosCoSim;
 
 namespace {

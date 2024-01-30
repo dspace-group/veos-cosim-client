@@ -2,16 +2,12 @@
 
 #include "CoSimServer.h"
 
-#include <chrono>
-
 #include "Logger.h"
 #include "Protocol.h"
 
-using namespace std::chrono;
-
 namespace DsVeosCoSim {
 
-CoSimServer::~CoSimServer() {
+CoSimServer::~CoSimServer() noexcept {
     (void)Unload();
 }
 

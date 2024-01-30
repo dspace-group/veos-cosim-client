@@ -2,14 +2,11 @@
 
 #include "CoSimClient.h"
 
-#include <chrono>
 #include <cstring>
 
 #include "Logger.h"
 #include "PortMapper.h"
 #include "Protocol.h"
-
-using namespace std::chrono;
 
 namespace DsVeosCoSim {
 

@@ -4,7 +4,6 @@
 
 #include "CoSimClient.h"
 #include "CoSimTypes.h"
-#include "Communication.h"
 #include "Logger.h"
 
 using namespace DsVeosCoSim;

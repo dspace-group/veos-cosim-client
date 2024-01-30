@@ -22,12 +22,12 @@ class IoBuffer {
 
 public:
     IoBuffer() = default;
-    ~IoBuffer() = default;
+    ~IoBuffer() noexcept = default;
 
     IoBuffer(const IoBuffer&) = delete;
     IoBuffer& operator=(IoBuffer const&) = delete;
 
-    IoBuffer(IoBuffer&&) = default;
+    IoBuffer(IoBuffer&&) noexcept = default;
     IoBuffer& operator=(IoBuffer&&) = default;
 
     [[nodiscard]] Result Initialize(const std::vector<IoSignal>& incomingSignals, const std::vector<IoSignal>& outgoingSignals);

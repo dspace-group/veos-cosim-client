@@ -1,8 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <gtest/gtest.h>
+
 #include "CoSimTypes.h"
 #include "Socket.h"
-#include "TestHelper.h"
 
 using namespace DsVeosCoSim;
 

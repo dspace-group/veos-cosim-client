@@ -1,7 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <array>
-
 #include "Communication.h"
 #include "Generator.h"
 #include "IoBuffer.h"

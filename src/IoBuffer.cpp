@@ -3,7 +3,6 @@
 #include "IoBuffer.h"
 
 #include <cstring>
-#include <stdexcept>
 
 #include "CoSimTypes.h"
 #include "Logger.h"

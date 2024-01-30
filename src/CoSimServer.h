@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -41,7 +40,7 @@ struct CoSimServerConfig {
 class CoSimServer final {
 public:
     CoSimServer() = default;
-    ~CoSimServer();
+    ~CoSimServer() noexcept;
 
     CoSimServer(const CoSimServer&) = delete;
     CoSimServer& operator=(CoSimServer const&) = delete;

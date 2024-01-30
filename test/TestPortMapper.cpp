@@ -1,13 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <chrono>
-
 #include "Generator.h"
 #include "Logger.h"
 #include "PortMapper.h"
 #include "TestHelper.h"
 
-using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 class TestPortMapper : public testing::Test {

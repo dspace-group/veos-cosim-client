@@ -2,6 +2,8 @@
 
 #include "Protocol.h"
 
+#include <bit>
+
 #include "CoSimTypes.h"
 #include "Communication.h"
 
@@ -460,5 +462,7 @@ Result ReadGetPortOk(Channel& channel, uint16_t& port) {
 }
 
 }  // namespace Protocol
+
+static_assert(std::endian::native == std::endian::little, "Only supported on little endian platforms.");
 
 }  // namespace DsVeosCoSim
