@@ -166,7 +166,7 @@ Result ConnectToServer(std::string_view remoteIpAddress, uint16_t remotePort, ui
     CheckResult(socket.Create());
     if (localPort != 0) {
         CheckResult(socket.EnableReuseAddress());
-        CheckResult(socket.Bind("127.0.0.1", localPort));
+        CheckResult(socket.Bind(localPort, false));
     }
 
     CheckResult(socket.Connect(remoteIpAddress, remotePort));
@@ -188,8 +188,7 @@ Result Server::Start(uint16_t& port, bool enableRemoteAccess) {
     CheckResult(socket.Create());
 
     CheckResult(socket.EnableReuseAddress());
-    const std::string ipAddress = enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
-    CheckResult(socket.Bind(ipAddress, port));
+    CheckResult(socket.Bind(port, enableRemoteAccess));
     CheckResult(socket.Listen());
     CheckResult(socket.GetLocalPort(port));
 

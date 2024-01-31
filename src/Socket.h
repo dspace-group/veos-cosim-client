@@ -33,8 +33,9 @@ public:
     [[nodiscard]] bool IsValid() const;
 
     [[nodiscard]] Result Connect(std::string_view ipAddress, uint16_t port) const;
-    [[nodiscard]] Result Bind(std::string_view ipAddress, uint16_t port) const;
+    [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess) const;
     [[nodiscard]] Result EnableReuseAddress() const;
+    [[nodiscard]] Result DisableIpv6Only() const;
     [[nodiscard]] Result EnableNoDelay() const;
     [[nodiscard]] Result Listen() const;
     [[nodiscard]] Result Accept(Socket& acceptedSocket) const;

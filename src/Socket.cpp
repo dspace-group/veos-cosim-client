@@ -47,22 +47,21 @@ constexpr int SocketAddressLength = 65;
 #endif
 }
 
-[[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, sockaddr_in& address) {
-    in_addr ipAddressInt{};
-    const int result = inet_pton(AF_INET, ipAddress.data(), &ipAddressInt);
-    switch (result) {
-        case 0:
-            LogError("Could not interpret IPv4 address. " + std::string(ipAddress) + " has an invalid format.");
-            return Result::Error;
-        case -1:
-            LogSystemError("Could not parse IP address.", GetLastNetworkError());
-            return Result::Error;
-        default:
-            address.sin_family = AF_INET;
-            address.sin_addr = ipAddressInt;
-            address.sin_port = htons(port);
-            return Result::Ok;
+[[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, addrinfo*& addressInfo) {
+    const std::string portString = std::to_string(port);
+
+    addrinfo hints{};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    const int errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
+    if (errorCode != 0) {
+        LogSystemError("Could not get address information.", errorCode);
+        return Result::Error;
     }
+
+    return Result::Ok;
 }
 
 [[nodiscard]] Result ConvertFromInternetAddress(const sockaddr_in& address, std::string& ipAddress, uint16_t& port) {
@@ -161,20 +160,27 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t port) const {
         return Result::Error;
     }
 
-    sockaddr_in internetAddress{};
-    CheckResult(ConvertToInternetAddress(ipAddress, port, internetAddress));
+    addrinfo* addressInfo{};
+    CheckResult(ConvertToInternetAddress(ipAddress, port, addressInfo));
 
-    if (connect(_socket, reinterpret_cast<sockaddr*>(&internetAddress), static_cast<socklen_t>(sizeof(internetAddress))) < 0) {
-        LogSystemError("Could not connect to server.", GetLastNetworkError());
-        return Result::Error;
+    while (addressInfo) {
+        if (connect(_socket, addressInfo->ai_addr, static_cast<socklen_t>(sizeof(*addressInfo->ai_addr))) < 0) {
+            LogSystemError("Could not connect to server.", GetLastNetworkError());
+            addressInfo = addressInfo->ai_next;
+            continue;
+        }
+
+        return Result::Ok;
     }
 
-    return Result::Ok;
+    return Result::Error;
 }
 
-Result Socket::Bind(std::string_view ipAddress, uint16_t port) const {
+Result Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
     sockaddr_in internetAddress{};
-    CheckResult(ConvertToInternetAddress(ipAddress, port, internetAddress));
+    internetAddress.sin_family = AF_INET;
+    internetAddress.sin_port = htons(port);
+    internetAddress.sin_addr = enableRemoteAccess ? in4addr_any : in4addr_loopback;
 
     if (bind(_socket, reinterpret_cast<sockaddr*>(&internetAddress), static_cast<socklen_t>(sizeof(internetAddress))) < 0) {
         LogSystemError("Could not bind socket.", GetLastNetworkError());
@@ -187,7 +193,17 @@ Result Socket::Bind(std::string_view ipAddress, uint16_t port) const {
 Result Socket::EnableReuseAddress() const {
     int flags = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
-        LogSystemError("Could not set socket option reuse address.", GetLastNetworkError());
+        LogSystemError("Could not enable socket option reuse address.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    return Result::Ok;
+}
+
+Result Socket::DisableIpv6Only() const {
+    int flags = 0;
+    if (setsockopt(_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
+        LogSystemError("Could not disable IPv6 option IPv6 only.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -197,7 +213,7 @@ Result Socket::EnableReuseAddress() const {
 Result Socket::EnableNoDelay() const {
     int flags = 1;
     if (setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
-        LogSystemError("Could not set socket option no delay.", GetLastNetworkError());
+        LogSystemError("Could not enable TCP option no delay.", GetLastNetworkError());
         return Result::Error;
     }
 

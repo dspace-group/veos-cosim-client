@@ -101,7 +101,6 @@ private:
     Callbacks _callbacks{};
     bool _isClientOptional{};
     bool _enableRemoteAccess{};
-    bool _isPortKnownToPortMapper{};
     SimulationTime _stepSize{};
 
     std::vector<IoSignal> _incomingSignals;
