@@ -13,13 +13,13 @@ class Channel {
 public:
     Channel();
     explicit Channel(Socket socket);
-    ~Channel() = default;
+    ~Channel() noexcept = default;
 
     Channel(const Channel&) = delete;
     Channel& operator=(Channel const&) = delete;
 
     Channel(Channel&&) = default;
-    Channel& operator=(Channel&&) = default;
+    Channel& operator=(Channel&&) noexcept = default;
 
     [[nodiscard]] Result GetRemoteAddress(std::string& ipAddress, uint16_t& port) const;
 
@@ -67,13 +67,13 @@ Result ConnectToServer(std::string_view remoteIpAddress, uint16_t remotePort, ui
 class Server {
 public:
     Server() = default;
-    ~Server() = default;
+    ~Server() noexcept = default;
 
     Server(const Server&) = delete;
     Server& operator=(Server const&) = delete;
 
     Server(Server&&) = default;
-    Server& operator=(Server&&) = default;
+    Server& operator=(Server&&) noexcept = default;
 
     [[nodiscard]] Result Start(uint16_t& port, bool enableRemoteAccess);
     void Stop();

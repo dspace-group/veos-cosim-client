@@ -1,13 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <chrono>
-
 #include "Generator.h"
 #include "Logger.h"
 #include "PortMapper.h"
 #include "TestHelper.h"
 
-using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 class TestPortMapper : public testing::Test {
@@ -34,7 +31,7 @@ TEST_F(TestPortMapper, SetAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName日本語");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -52,7 +49,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName日本語\xF0\x9F\x98\x80");
 
     // Act
     uint16_t port{};
@@ -67,7 +64,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName日本語");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -86,7 +83,7 @@ TEST_F(TestPortMapper, SetTwiceAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName");
+    const std::string serverName = GenerateString("ServerName日本語");
 
     const uint16_t setPort1 = GenerateU16();
     const uint16_t setPort2 = setPort1 + 1;

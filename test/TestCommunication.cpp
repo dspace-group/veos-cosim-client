@@ -10,7 +10,7 @@
 #include "Socket.h"
 #include "TestHelper.h"
 
-using namespace std::chrono;
+using namespace std::chrono_literals;
 using namespace DsVeosCoSim;
 
 class TestCommunication : public testing::Test {
@@ -34,7 +34,7 @@ TEST_F(TestCommunication, ServerStartPortArgumentZero) {
     ASSERT_NE(static_cast<uint16_t>(0), port);
 }
 
-TEST_F(TestCommunication, ConnectToServer) {
+TEST_F(TestCommunication, ConnectToServerIpv4) {
     // Arrange
     Server server;
     uint16_t port{};
@@ -57,6 +57,38 @@ TEST_F(TestCommunication, AcceptClient) {
 
     Channel connectedChannel;
     ASSERT_OK(ConnectToServer("127.0.0.1", port, 0, connectedChannel));
+
+    Channel acceptedChannel;
+
+    std::string clientIpAddress;
+    uint16_t clientPort{};
+
+    std::string acceptedIpAddress;
+    uint16_t acceptedPort{};
+
+    // Act
+    ASSERT_OK(server.Accept(acceptedChannel));
+
+    // Assert
+    ASSERT_OK(connectedChannel.GetRemoteAddress(clientIpAddress, clientPort));
+    AssertEq(clientIpAddress, "127.0.0.1");
+    ASSERT_EQ(port, clientPort);
+
+    ASSERT_OK(acceptedChannel.GetRemoteAddress(acceptedIpAddress, acceptedPort));
+    AssertEq(acceptedIpAddress, "127.0.0.1");
+    ASSERT_NE(static_cast<uint16_t>(0), acceptedPort);
+
+    ASSERT_NE(port, acceptedPort);
+}
+
+TEST_F(TestCommunication, AcceptClientWithHostName) {
+    // Arrange
+    Server server;
+    uint16_t port{};
+    ASSERT_OK(server.Start(port, true));
+
+    Channel connectedChannel;
+    ASSERT_OK(ConnectToServer("localhost", port, 0, connectedChannel));
 
     Channel acceptedChannel;
 
@@ -263,8 +295,7 @@ TEST_F(TestCommunication, SendDelayed) {
     ASSERT_OK(server.Start(port, true));
 
     Socket socket;
-    ASSERT_OK(socket.Create());
-    ASSERT_OK(socket.Connect("127.0.0.1", port));
+    ASSERT_OK(socket.Connect("127.0.0.1", port, 0));
 
     Channel acceptedChannel;
     ASSERT_OK(server.Accept(acceptedChannel));

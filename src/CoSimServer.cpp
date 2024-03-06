@@ -2,16 +2,12 @@
 
 #include "CoSimServer.h"
 
-#include <chrono>
-
 #include "Logger.h"
 #include "Protocol.h"
 
-using namespace std::chrono;
-
 namespace DsVeosCoSim {
 
-CoSimServer::~CoSimServer() {
+CoSimServer::~CoSimServer() noexcept {
     (void)Unload();
 }
 
@@ -374,12 +370,6 @@ Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientNa
             Mode mode{};
             std::string serverName;
             return Protocol::ReadConnect(_channel, version, mode, serverName, clientName);
-        }
-        case FrameKind::Error: {
-            std::string errorMessage;
-            CheckResult(Protocol::ReadError(_channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
         }
         default:
             LogError("Received unexpected frame " + ToString(frameKind) + ".");
