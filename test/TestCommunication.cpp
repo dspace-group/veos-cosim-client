@@ -49,21 +49,6 @@ TEST_F(TestCommunication, ConnectToServerIpv4) {
     ASSERT_OK(result);
 }
 
-// TEST_F(TestCommunication, ConnectToServerIpv6) {
-//     // Arrange
-//     Server server;
-//     uint16_t port{};
-//     ASSERT_OK(server.Start(port, true));
-
-//     Channel connectedChannel;
-
-//     // Act
-//     const Result result = ConnectToServer("::1", port, 0, connectedChannel);
-
-//     // Assert
-//     ASSERT_OK(result);
-// }
-
 TEST_F(TestCommunication, AcceptClient) {
     // Arrange
     Server server;
@@ -72,6 +57,38 @@ TEST_F(TestCommunication, AcceptClient) {
 
     Channel connectedChannel;
     ASSERT_OK(ConnectToServer("127.0.0.1", port, 0, connectedChannel));
+
+    Channel acceptedChannel;
+
+    std::string clientIpAddress;
+    uint16_t clientPort{};
+
+    std::string acceptedIpAddress;
+    uint16_t acceptedPort{};
+
+    // Act
+    ASSERT_OK(server.Accept(acceptedChannel));
+
+    // Assert
+    ASSERT_OK(connectedChannel.GetRemoteAddress(clientIpAddress, clientPort));
+    AssertEq(clientIpAddress, "127.0.0.1");
+    ASSERT_EQ(port, clientPort);
+
+    ASSERT_OK(acceptedChannel.GetRemoteAddress(acceptedIpAddress, acceptedPort));
+    AssertEq(acceptedIpAddress, "127.0.0.1");
+    ASSERT_NE(static_cast<uint16_t>(0), acceptedPort);
+
+    ASSERT_NE(port, acceptedPort);
+}
+
+TEST_F(TestCommunication, AcceptClientWithHostName) {
+    // Arrange
+    Server server;
+    uint16_t port{};
+    ASSERT_OK(server.Start(port, true));
+
+    Channel connectedChannel;
+    ASSERT_OK(ConnectToServer("localhost", port, 0, connectedChannel));
 
     Channel acceptedChannel;
 

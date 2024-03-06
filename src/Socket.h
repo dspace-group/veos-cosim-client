@@ -42,22 +42,15 @@ public:
     [[nodiscard]] Result Send(const void* source, int size, int& sentSize) const;
 
 private:
-    // [[nodiscard]] Result CreateForIpv6();
     [[nodiscard]] Result CreateForIpv4();
-    // [[nodiscard]] Result BindForIpv6(uint16_t port, bool enableRemoteAccess);
     [[nodiscard]] Result BindForIpv4(uint16_t port, bool enableRemoteAccess);
     [[nodiscard]] Result EnableReuseAddress() const;
 
-    // [[nodiscard]] Result GetLocalPortForIpv6(uint16_t& localPort) const;
     [[nodiscard]] Result GetLocalPortForIpv4(uint16_t& localPort) const;
 
-    // [[nodiscard]] Result GetRemoteIpv6Address(std::string& remoteIpAddress, uint16_t& remotePort) const;
     [[nodiscard]] Result GetRemoteIpv4Address(std::string& remoteIpAddress, uint16_t& remotePort) const;
 
-    // [[nodiscard]] Result DisableIpv6Only() const;
-
     socket_t _socket = InvalidSocket;
-    //bool _usingIpv6{};
 };
 
 }  // namespace DsVeosCoSim

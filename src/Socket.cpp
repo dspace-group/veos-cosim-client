@@ -176,11 +176,6 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
             if (localPort != 0) {
                 CheckResult(BindForIpv4(localPort, false));
             }
-        // } else if (currentAddressInfo->ai_family == AF_INET6) {
-        //     CheckResult(CreateForIpv6());
-        //     if (localPort != 0) {
-        //         CheckResult(BindForIpv6(localPort, false));
-        //     }
         } else {
             LogError("Address family is not supported.");
             currentAddressInfo = currentAddressInfo->ai_next;
@@ -202,38 +197,8 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
 }
 
 Result Socket::Bind(uint16_t port, bool enableRemoteAccess) {
-    // Result result = BindForIpv6(port, enableRemoteAccess);
-    // if (result == Result::Ok) {
-    //     _usingIpv6 = true;
-    //     return Result::Ok;
-    // }
-
-    // Close();
-    // LogInfo("Using IPv4 socket instead.");
-    // _usingIpv6 = false;
     return BindForIpv4(port, enableRemoteAccess);
 }
-
-// Result Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) {
-//     CheckResult(CreateForIpv6());
-
-//     if (EnableReuseAddress() != Result::Ok) {
-//         LogSystemError("Could not enable socket option reuse address for IPv6 socket.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     sockaddr_in6 ipv6Address{};
-//     ipv6Address.sin6_family = AF_INET6;
-//     ipv6Address.sin6_port = htons(port);
-//     ipv6Address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;
-
-//     if (bind(_socket, reinterpret_cast<sockaddr*>(&ipv6Address), static_cast<socklen_t>(sizeof(ipv6Address))) < 0) {
-//         LogSystemError("Could not bind IPv6 socket.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     return DisableIpv6Only();
-// }
 
 Result Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) {
     CheckResult(CreateForIpv4());
@@ -255,20 +220,6 @@ Result Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) {
 
     return Result::Ok;
 }
-
-// Result Socket::CreateForIpv6() {
-//     if (_socket != InvalidSocket) {
-//         return Result::Ok;
-//     }
-
-//     _socket = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-//     if (_socket == InvalidSocket) {
-//         LogSystemError("Could not create IPv6 socket.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     return Result::Ok;
-// }
 
 Result Socket::CreateForIpv4() {
     if (_socket != InvalidSocket) {
@@ -292,16 +243,6 @@ Result Socket::EnableReuseAddress() const {
 
     return Result::Ok;
 }
-
-// Result Socket::DisableIpv6Only() const {
-//     int flags = 0;
-//     if (setsockopt(_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
-//         LogSystemError("Could not disable IPv6 option IPv6 only.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     return Result::Ok;
-// }
 
 Result Socket::EnableNoDelay() const {
     int flags = 1;
@@ -352,26 +293,8 @@ Result Socket::Accept(Socket& acceptedSocket) const {
 }
 
 Result Socket::GetLocalPort(uint16_t& localPort) const {
-    // if (_usingIpv6) {
-    //     return GetLocalPortForIpv6(localPort);
-    // }
-
     return GetLocalPortForIpv4(localPort);
 }
-
-// Result Socket::GetLocalPortForIpv6(uint16_t& localPort) const {
-//     sockaddr_in6 ipv6Address{};
-//     auto ipv6AddressLength = static_cast<socklen_t>(sizeof(ipv6Address));
-//     ipv6Address.sin6_family = AF_INET6;
-
-//     if (getsockname(_socket, reinterpret_cast<sockaddr*>(&ipv6Address), &ipv6AddressLength) != 0) {
-//         LogSystemError("Could not get local IPv6 socket address.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     std::string ipAddress;
-//     return ConvertFromInternetAddress(ipv6Address, ipAddress, localPort);
-// }
 
 Result Socket::GetLocalPortForIpv4(uint16_t& localPort) const {
     sockaddr_in ipv4Address{};
@@ -388,25 +311,8 @@ Result Socket::GetLocalPortForIpv4(uint16_t& localPort) const {
 }
 
 Result Socket::GetRemoteAddress(std::string& remoteIpAddress, uint16_t& remotePort) const {
-    // if (_usingIpv6) {
-    //     return GetRemoteIpv6Address(remoteIpAddress, remotePort);
-    // }
-
     return GetRemoteIpv4Address(remoteIpAddress, remotePort);
 }
-
-// Result Socket::GetRemoteIpv6Address(std::string& remoteIpAddress, uint16_t& remotePort) const {
-//     sockaddr_in6 ipv6Address{};
-//     auto ipv6AddressLength = static_cast<socklen_t>(sizeof(ipv6Address));
-//     ipv6Address.sin6_family = AF_INET6;
-
-//     if (getpeername(_socket, reinterpret_cast<sockaddr*>(&ipv6Address), &ipv6AddressLength) != 0) {
-//         LogSystemError("Could not get remote IPv6 socket address.", GetLastNetworkError());
-//         return Result::Error;
-//     }
-
-//     return ConvertFromInternetAddress(ipv6Address, remoteIpAddress, remotePort);
-// }
 
 Result Socket::GetRemoteIpv4Address(std::string& remoteIpAddress, uint16_t& remotePort) const {
     sockaddr_in ipv4Address{};
