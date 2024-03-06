@@ -108,7 +108,7 @@ TEST_F(TestIoBuffer, ReadInvalidId) {
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({signal}, {}));
 
-    const IoSignalId readId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1u);
+    const IoSignalId readId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
     readValue.resize(GetDataTypeSize(signal.dataType));
@@ -129,7 +129,7 @@ TEST_F(TestIoBuffer, WriteInvalidId) {
     IoBuffer ioBuffer;
     ASSERT_OK(ioBuffer.Initialize({}, {signal}));
 
-    const IoSignalId writeId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1u);
+    const IoSignalId writeId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
     const uint32_t writeLength = signal.length;
     std::vector<uint8_t> writeValue;
     writeValue.resize(GetDataTypeSize(signal.dataType));

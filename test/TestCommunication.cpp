@@ -34,7 +34,7 @@ TEST_F(TestCommunication, ServerStartPortArgumentZero) {
     ASSERT_NE(static_cast<uint16_t>(0), port);
 }
 
-TEST_F(TestCommunication, ConnectToServer) {
+TEST_F(TestCommunication, ConnectToServerIpv4) {
     // Arrange
     Server server;
     uint16_t port{};
@@ -48,6 +48,21 @@ TEST_F(TestCommunication, ConnectToServer) {
     // Assert
     ASSERT_OK(result);
 }
+
+// TEST_F(TestCommunication, ConnectToServerIpv6) {
+//     // Arrange
+//     Server server;
+//     uint16_t port{};
+//     ASSERT_OK(server.Start(port, true));
+
+//     Channel connectedChannel;
+
+//     // Act
+//     const Result result = ConnectToServer("::1", port, 0, connectedChannel);
+
+//     // Assert
+//     ASSERT_OK(result);
+// }
 
 TEST_F(TestCommunication, AcceptClient) {
     // Arrange
@@ -263,8 +278,7 @@ TEST_F(TestCommunication, SendDelayed) {
     ASSERT_OK(server.Start(port, true));
 
     Socket socket;
-    ASSERT_OK(socket.Create());
-    ASSERT_OK(socket.Connect("127.0.0.1", port));
+    ASSERT_OK(socket.Connect("127.0.0.1", port, 0));
 
     Channel acceptedChannel;
     ASSERT_OK(server.Accept(acceptedChannel));

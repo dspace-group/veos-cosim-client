@@ -27,25 +27,37 @@ public:
     Socket(Socket&&) noexcept;
     Socket& operator=(Socket&&) noexcept;
 
-    [[nodiscard]] Result Create();
     void Close();
 
     [[nodiscard]] bool IsValid() const;
 
-    [[nodiscard]] Result Connect(std::string_view ipAddress, uint16_t port) const;
-    [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess) const;
-    [[nodiscard]] Result EnableReuseAddress() const;
-    [[nodiscard]] Result DisableIpv6Only() const;
+    [[nodiscard]] Result Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t localPort);
+    [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess);
     [[nodiscard]] Result EnableNoDelay() const;
     [[nodiscard]] Result Listen() const;
     [[nodiscard]] Result Accept(Socket& acceptedSocket) const;
-    [[nodiscard]] Result GetLocalPort(uint16_t& port) const;
-    [[nodiscard]] Result GetRemoteAddress(std::string& ipAddress, uint16_t& port) const;
+    [[nodiscard]] Result GetLocalPort(uint16_t& localPort) const;
+    [[nodiscard]] Result GetRemoteAddress(std::string& remoteIpAddress, uint16_t& remotePort) const;
     [[nodiscard]] Result Receive(void* destination, int size, int& receivedSize) const;
     [[nodiscard]] Result Send(const void* source, int size, int& sentSize) const;
 
 private:
+    // [[nodiscard]] Result CreateForIpv6();
+    [[nodiscard]] Result CreateForIpv4();
+    // [[nodiscard]] Result BindForIpv6(uint16_t port, bool enableRemoteAccess);
+    [[nodiscard]] Result BindForIpv4(uint16_t port, bool enableRemoteAccess);
+    [[nodiscard]] Result EnableReuseAddress() const;
+
+    // [[nodiscard]] Result GetLocalPortForIpv6(uint16_t& localPort) const;
+    [[nodiscard]] Result GetLocalPortForIpv4(uint16_t& localPort) const;
+
+    // [[nodiscard]] Result GetRemoteIpv6Address(std::string& remoteIpAddress, uint16_t& remotePort) const;
+    [[nodiscard]] Result GetRemoteIpv4Address(std::string& remoteIpAddress, uint16_t& remotePort) const;
+
+    // [[nodiscard]] Result DisableIpv6Only() const;
+
     socket_t _socket = InvalidSocket;
+    //bool _usingIpv6{};
 };
 
 }  // namespace DsVeosCoSim

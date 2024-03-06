@@ -25,15 +25,15 @@ void FillWithRandom(uint8_t* data, size_t length) {
 }
 
 uint8_t GenerateU8() {
-    return GenerateRandom(static_cast<uint8_t>(0u), static_cast<uint8_t>(UINT8_MAX));
+    return GenerateRandom(static_cast<uint8_t>(0U), static_cast<uint8_t>(UINT8_MAX));
 }
 
 uint16_t GenerateU16() {
-    return GenerateRandom(static_cast<uint16_t>(0u), static_cast<uint16_t>(UINT16_MAX));
+    return GenerateRandom(static_cast<uint16_t>(0U), static_cast<uint16_t>(UINT16_MAX));
 }
 
 uint32_t GenerateU32() {
-    return GenerateRandom(0u, 123456789u);
+    return GenerateRandom(0U, 123456789U);
 }
 
 uint64_t GenerateU64() {
@@ -53,7 +53,7 @@ void CreateSignal(IoSignal& signal, uint32_t index) {
     signal.length = GenerateRandom(1U, 10U);
     signal.dataType = GenerateRandom(DataType::Bool, DataType::Float64);
     signal.sizeKind = GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
-    signal.name = "Signal" + std::to_string(index);
+    signal.name = "Signal日本語" + std::to_string(index);
 }
 
 void CreateController(CanController& controller, uint32_t index) {
@@ -61,9 +61,9 @@ void CreateController(CanController& controller, uint32_t index) {
     controller.queueSize = 100;
     controller.bitsPerSecond = 500000;
     controller.flexibleDataRateBitsPerSecond = 2000000;
-    controller.name = "CanController" + std::to_string(index);
-    controller.channelName = GenerateString("Channel");
-    controller.clusterName = GenerateString("Cluster");
+    controller.name = "CanController日本語" + std::to_string(index);
+    controller.channelName = GenerateString("Channel日本語");
+    controller.clusterName = GenerateString("Cluster日本語");
 }
 
 void CreateController(EthController& controller, uint32_t index) {
@@ -71,9 +71,9 @@ void CreateController(EthController& controller, uint32_t index) {
     controller.queueSize = 100;
     controller.bitsPerSecond = 1000000000;
     FillWithRandom(controller.macAddress.data(), EthAddressLength);
-    controller.name = "EthController" + std::to_string(index);
-    controller.channelName = GenerateString("Channel");
-    controller.clusterName = GenerateString("Cluster");
+    controller.name = "EthController日本語" + std::to_string(index);
+    controller.channelName = GenerateString("Channel日本語");
+    controller.clusterName = GenerateString("Cluster日本語");
 }
 
 void CreateController(LinController& controller, uint32_t index) {
@@ -81,9 +81,9 @@ void CreateController(LinController& controller, uint32_t index) {
     controller.queueSize = 100;
     controller.bitsPerSecond = 19200;
     controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
-    controller.name = "LinController" + std::to_string(index);
-    controller.channelName = GenerateString("Channel");
-    controller.clusterName = GenerateString("Cluster");
+    controller.name = "LinController日本語" + std::to_string(index);
+    controller.channelName = GenerateString("Channel日本語");
+    controller.clusterName = GenerateString("Cluster日本語");
 }
 
 std::vector<IoSignal> CreateSignals(uint32_t count) {

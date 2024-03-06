@@ -15,7 +15,7 @@ namespace {
 
 CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     CoSimServerConfig config{};
-    config.serverName = GenerateString("ServerName");
+    config.serverName = GenerateString("ServerName日本語");
     config.startPortMapper = true;
     config.isClientOptional = isClientOptional;
     config.logCallback = OnLogCallback;
@@ -24,7 +24,7 @@ CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
 
 void CreateConnectConfig(const std::string& serverName, ConnectConfig& connectConfig) {
     connectConfig.serverName = serverName;
-    connectConfig.clientName = GenerateString("ClientName");
+    connectConfig.clientName = GenerateString("ClientName日本語");
 }
 
 }  // namespace
@@ -157,7 +157,7 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
 TEST_F(TestCoSim, ConnectWithoutServer) {
     // Arrange
     ConnectConfig connectConfig{};
-    CreateConnectConfig(GenerateString("ServerName"), connectConfig);
+    CreateConnectConfig(GenerateString("ServerName日本語"), connectConfig);
 
     CoSimClient client;
 
