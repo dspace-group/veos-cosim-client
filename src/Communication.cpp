@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Logger.h"
+#include "Socket.h"
 
 namespace DsVeosCoSim {
 
@@ -177,28 +178,84 @@ Result Server::Start(uint16_t& port, bool enableRemoteAccess) {
 
     CheckResult(StartupNetwork());
 
-    Socket socket;
-    CheckResult(socket.Bind(port, enableRemoteAccess));
-    CheckResult(socket.Listen());
-    CheckResult(socket.GetLocalPort(port));
+    if (Socket::IsIpv4Supported()) {
+        CheckResult(StartForIpv4(port, enableRemoteAccess));
+    }
 
-    _listenSocket = std::move(socket);
+    if (Socket::IsIpv6Supported()) {
+        CheckResult(StartForIpv6(port, enableRemoteAccess));
+    }
+
+    if (!Socket::IsIpv4Supported() && !Socket::IsIpv6Supported()) {
+        LogError("Neither IPv4 nor IPv6 are supported.");
+        return Result::Error;
+    }
+
     _isRunning = true;
     return Result::Ok;
 }
 
+Result Server::StartForIpv4(uint16_t& port, bool enableRemoteAccess) {
+    Socket socket;
+    CheckResult(socket.Create(AddressFamily::Ipv4));
+    CheckResult(socket.EnableReuseAddress());
+    CheckResult(socket.Bind(port, enableRemoteAccess));
+    CheckResult(socket.Listen());
+    CheckResult(socket.GetLocalPort(port));
+
+    _listenSocketForIpv4 = std::move(socket);
+    return Result::Ok;
+}
+
+Result Server::StartForIpv6(uint16_t& port, bool enableRemoteAccess) {
+    Socket socket;
+    CheckResult(socket.Create(AddressFamily::Ipv6));
+    CheckResult(socket.EnableIpv6Only());
+    CheckResult(socket.EnableReuseAddress());
+    CheckResult(socket.Bind(port, enableRemoteAccess));
+    CheckResult(socket.Listen());
+    CheckResult(socket.GetLocalPort(port));
+
+    _listenSocketForIpv6 = std::move(socket);
+    return Result::Ok;
+}
+
 void Server::Stop() {
-    _listenSocket.Close();
+    _listenSocketForIpv4.Close();
+    _listenSocketForIpv6.Close();
     _isRunning = false;
 }
 
 Result Server::Accept(Channel& channel) const {
     Socket socket;
-    CheckResult(_listenSocket.Accept(socket));
-    CheckResult(socket.EnableNoDelay());
 
-    channel = Channel(std::move(socket));
-    return Result::Ok;
+    if (_listenSocketForIpv4.IsValid()) {
+        const Result result = _listenSocketForIpv4.Accept(socket);
+        if (result == Result::Ok) {
+            CheckResult(socket.EnableNoDelay());
+            channel = Channel(std::move(socket));
+            return Result::Ok;
+        }
+
+        if (result == Result::Error) {
+            return result;
+        }
+    }
+
+    if (_listenSocketForIpv6.IsValid()) {
+        const Result result = _listenSocketForIpv6.Accept(socket);
+        if (result == Result::Ok) {
+            CheckResult(socket.EnableNoDelay());
+            channel = Channel(std::move(socket));
+            return Result::Ok;
+        }
+
+        if (result == Result::Error) {
+            return result;
+        }
+    }
+
+    return Result::TryAgain;
 }
 
 }  // namespace DsVeosCoSim

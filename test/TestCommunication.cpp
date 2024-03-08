@@ -2,6 +2,7 @@
 
 #include <array>
 #include <chrono>
+#include <string_view>
 #include <thread>
 
 #include "Communication.h"
@@ -49,7 +50,7 @@ TEST_F(TestCommunication, ConnectToServerIpv4) {
     ASSERT_OK(result);
 }
 
-TEST_F(TestCommunication, AcceptClient) {
+TEST_F(TestCommunication, AcceptClientIpv4) {
     // Arrange
     Server server;
     uint16_t port{};
@@ -81,14 +82,19 @@ TEST_F(TestCommunication, AcceptClient) {
     ASSERT_NE(port, acceptedPort);
 }
 
-TEST_F(TestCommunication, AcceptClientWithHostName) {
+TEST_F(TestCommunication, AcceptClientIpv6) {
+    if (!Socket::IsIpv6Supported()) {
+        LogInfo("IPv6 is not supported.");
+        return;
+    }
+
     // Arrange
     Server server;
     uint16_t port{};
     ASSERT_OK(server.Start(port, true));
 
     Channel connectedChannel;
-    ASSERT_OK(ConnectToServer("localhost", port, 0, connectedChannel));
+    ASSERT_OK(ConnectToServer("::1", port, 0, connectedChannel));
 
     Channel acceptedChannel;
 
@@ -103,14 +109,29 @@ TEST_F(TestCommunication, AcceptClientWithHostName) {
 
     // Assert
     ASSERT_OK(connectedChannel.GetRemoteAddress(clientIpAddress, clientPort));
-    AssertEq(clientIpAddress, "127.0.0.1");
+    AssertEq(clientIpAddress, "::1");
     ASSERT_EQ(port, clientPort);
 
     ASSERT_OK(acceptedChannel.GetRemoteAddress(acceptedIpAddress, acceptedPort));
-    AssertEq(acceptedIpAddress, "127.0.0.1");
+    AssertEq(acceptedIpAddress, "::1");
     ASSERT_NE(static_cast<uint16_t>(0), acceptedPort);
 
     ASSERT_NE(port, acceptedPort);
+}
+
+TEST_F(TestCommunication, AcceptClientWithHostName) {
+    // Arrange
+    Server server;
+    uint16_t port{};
+    ASSERT_OK(server.Start(port, true));
+
+    Channel connectedChannel;
+    ASSERT_OK(ConnectToServer("localhost", port, 0, connectedChannel));
+
+    Channel acceptedChannel;
+
+    // Act
+    ASSERT_OK(server.Accept(acceptedChannel));
 }
 
 TEST_F(TestCommunication, AcceptAfterDisconnect) {
