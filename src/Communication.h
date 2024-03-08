@@ -81,7 +81,11 @@ public:
     [[nodiscard]] Result Accept(Channel& channel) const;
 
 private:
-    Socket _listenSocket;
+    [[nodiscard]] Result StartForIpv4(uint16_t& port, bool enableRemoteAccess);
+    [[nodiscard]] Result StartForIpv6(uint16_t& port, bool enableRemoteAccess);
+
+    Socket _listenSocketForIpv4;
+    Socket _listenSocketForIpv6;
     bool _isRunning = false;
 };
 

@@ -12,6 +12,8 @@
 #endif
 #else
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
 #include <pthread.h>
@@ -32,9 +34,11 @@ namespace {
 #ifdef _WIN32
 using socklen_t = int;
 constexpr int ErrorCodeInterrupted = WSAEINTR;
+constexpr int ErrorCodeNotSupported = WSAEAFNOSUPPORT;
 #define poll WSAPoll
 #else
 constexpr int ErrorCodeInterrupted = EINTR;
+constexpr int ErrorCodeNotSupported = EAFNOSUPPORT;
 #endif
 
 [[nodiscard]] int GetLastNetworkError() {
@@ -43,6 +47,14 @@ constexpr int ErrorCodeInterrupted = EINTR;
 #else
     return errno;
 #endif
+}
+
+[[nodiscard]] int GetInt(AddressFamily addressFamily) {
+    if (addressFamily == AddressFamily::Ipv4) {
+        return AF_INET;
+    }
+
+    return AF_INET6;
 }
 
 [[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, addrinfo*& addressInfo) {
@@ -85,7 +97,7 @@ constexpr int ErrorCodeInterrupted = EINTR;
     port = ntohs(ipv6Address.sin6_port);
 
     char ipAddressArray[INET6_ADDRSTRLEN]{};
-    const char* result = inet_ntop(AF_INET, &ipv6Address.sin6_addr, ipAddressArray, INET6_ADDRSTRLEN);
+    const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddressArray, INET6_ADDRSTRLEN);
     if (!result) {
         LogSystemError("Could not convert IPv6 address.", GetLastNetworkError());
         return Result::Error;
@@ -125,15 +137,59 @@ Socket::Socket(Socket&& other) noexcept {
     Close();
 
     _socket = other._socket;
+    _addressFamily = other._addressFamily;
     other._socket = InvalidSocket;
+    other._addressFamily = {};
 }
 
 Socket& Socket::operator=(Socket&& other) noexcept {
     Close();
 
     _socket = other._socket;
+    _addressFamily = other._addressFamily;
     other._socket = InvalidSocket;
+    other._addressFamily = {};
     return *this;
+}
+
+bool Socket::IsIpv4Supported() {
+    static bool hasValue = false;
+    static bool isSupported = false;
+
+    if (!hasValue) {
+        socket_t sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+        isSupported = (sock != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
+
+#ifdef _WIN32
+        (void)closesocket(sock);
+#else
+        (void)close(sock);
+#endif
+        hasValue = true;
+    }
+
+    return isSupported;
+}
+
+bool Socket::IsIpv6Supported() {
+    static bool hasValue = false;
+    static bool isSupported = false;
+
+    if (!hasValue) {
+        socket_t sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+
+        isSupported = (sock != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
+
+#ifdef _WIN32
+        (void)closesocket(sock);
+#else
+        (void)close(sock);
+#endif
+        hasValue = true;
+    }
+
+    return isSupported;
 }
 
 void Socket::Close() {
@@ -143,6 +199,7 @@ void Socket::Close() {
     }
 
     _socket = InvalidSocket;
+    _addressFamily = {};
 
 #ifdef _WIN32
     (void)shutdown(sock, SD_BOTH);
@@ -155,6 +212,37 @@ void Socket::Close() {
 
 bool Socket::IsValid() const {
     return _socket != InvalidSocket;
+}
+
+Result Socket::Create(AddressFamily addressFamily) {
+    if (_socket != InvalidSocket) {
+        return Result::Ok;
+    }
+
+    const int af = GetInt(addressFamily);
+
+    _socket = socket(af, SOCK_STREAM, IPPROTO_TCP);
+    if (_socket == InvalidSocket) {
+        LogSystemError("Could not create socket.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    _addressFamily = af;
+    return Result::Ok;
+}
+
+Result Socket::EnableIpv6Only() const {
+    // On windows, IPv6 only is enabled by default
+#ifndef _WIN32
+    int flags = 1;
+    if (setsockopt(_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
+        LogSystemError("Could not enable IPv6 only.", GetLastNetworkError());
+
+        return Result::Error;
+    }
+#endif
+
+    return Result::Ok;
 }
 
 Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t localPort) {
@@ -171,18 +259,26 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
     while (currentAddressInfo) {
         Close();
 
-        if (currentAddressInfo->ai_family == AF_INET) {
-            CheckResult(CreateForIpv4());
-            if (localPort != 0) {
-                CheckResult(BindForIpv4(localPort, false));
-            }
-        } else {
-            LogError("Address family is not supported.");
+        _socket = socket(currentAddressInfo->ai_family, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
+        if (_socket == InvalidSocket) {
+            LogSystemError("Could not create socket.", GetLastNetworkError());
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
         }
 
-        if (connect(_socket, currentAddressInfo->ai_addr, static_cast<socklen_t>(sizeof(*currentAddressInfo->ai_addr))) < 0) {
+        if (localPort != 0) {
+            if (EnableReuseAddress() != Result::Ok) {
+                currentAddressInfo = currentAddressInfo->ai_next;
+                continue;
+            }
+
+            if (Bind(localPort, false) != Result::Ok) {
+                currentAddressInfo = currentAddressInfo->ai_next;
+                continue;
+            }
+        }
+
+        if (connect(_socket, currentAddressInfo->ai_addr, static_cast<socklen_t>(currentAddressInfo->ai_addrlen)) < 0) {
             LogSystemError("Could not connect to server.", GetLastNetworkError());
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
@@ -196,39 +292,36 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
     return Result::Error;
 }
 
-Result Socket::Bind(uint16_t port, bool enableRemoteAccess) {
-    return BindForIpv4(port, enableRemoteAccess);
-}
-
-Result Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) {
-    CheckResult(CreateForIpv4());
-
-    if (EnableReuseAddress() != Result::Ok) {
-        LogSystemError("Could not enable socket option reuse address for IPv4 socket.", GetLastNetworkError());
-        return Result::Error;
+Result Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
+    if (_addressFamily == AF_INET) {
+        return BindForIpv4(port, enableRemoteAccess);
     }
 
-    sockaddr_in ipv4Address{};
-    ipv4Address.sin_family = AF_INET;
-    ipv4Address.sin_port = htons(port);
-    ipv4Address.sin_addr = enableRemoteAccess ? in4addr_any : in4addr_loopback;
+    return BindForIpv6(port, enableRemoteAccess);
+}
 
-    if (bind(_socket, reinterpret_cast<sockaddr*>(&ipv4Address), static_cast<socklen_t>(sizeof(ipv4Address))) < 0) {
-        LogSystemError("Could not bind IPv4 socket.", GetLastNetworkError());
+Result Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) const {
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = enableRemoteAccess ? INADDR_ANY : htonl(INADDR_LOOPBACK);
+
+    if (bind(_socket, reinterpret_cast<sockaddr*>(&address), static_cast<socklen_t>(sizeof(address))) < 0) {
+        LogSystemError("Could not bind socket.", GetLastNetworkError());
         return Result::Error;
     }
 
     return Result::Ok;
 }
 
-Result Socket::CreateForIpv4() {
-    if (_socket != InvalidSocket) {
-        return Result::Ok;
-    }
+Result Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
+    sockaddr_in6 address{};
+    address.sin6_family = AF_INET6;
+    address.sin6_port = htons(port);
+    address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;
 
-    _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (_socket == InvalidSocket) {
-        LogSystemError("Could not create IPv4 socket.", GetLastNetworkError());
+    if (bind(_socket, reinterpret_cast<sockaddr*>(&address), static_cast<socklen_t>(sizeof(address))) < 0) {
+        LogSystemError("Could not bind socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -238,6 +331,7 @@ Result Socket::CreateForIpv4() {
 Result Socket::EnableReuseAddress() const {
     int flags = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
+        LogSystemError("Could not enable socket option reuse address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -289,42 +383,82 @@ Result Socket::Accept(Socket& acceptedSocket) const {
         return Result::Error;
     }
 
+    acceptedSocket._addressFamily = _addressFamily;
     return Result::Ok;
 }
 
 Result Socket::GetLocalPort(uint16_t& localPort) const {
-    return GetLocalPortForIpv4(localPort);
+    if (_addressFamily == AF_INET) {
+        return GetLocalPortForIpv4(localPort);
+    }
+
+    return GetLocalPortForIpv6(localPort);
 }
 
 Result Socket::GetLocalPortForIpv4(uint16_t& localPort) const {
-    sockaddr_in ipv4Address{};
-    auto ipv4AddressLength = static_cast<socklen_t>(sizeof(ipv4Address));
-    ipv4Address.sin_family = AF_INET;
+    sockaddr_in address{};
+    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    address.sin_family = AF_INET;
 
-    if (getsockname(_socket, reinterpret_cast<sockaddr*>(&ipv4Address), &ipv4AddressLength) != 0) {
-        LogSystemError("Could not get local IPv4 socket address.", GetLastNetworkError());
+    if (getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+        LogSystemError("Could not get local socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
     std::string ipAddress;
-    return ConvertFromInternetAddress(ipv4Address, ipAddress, localPort);
+    return ConvertFromInternetAddress(address, ipAddress, localPort);
 }
 
-Result Socket::GetRemoteAddress(std::string& remoteIpAddress, uint16_t& remotePort) const {
-    return GetRemoteIpv4Address(remoteIpAddress, remotePort);
-}
+Result Socket::GetLocalPortForIpv6(uint16_t& localPort) const {
+    sockaddr_in6 address{};
+    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    address.sin6_family = AF_INET6;
 
-Result Socket::GetRemoteIpv4Address(std::string& remoteIpAddress, uint16_t& remotePort) const {
-    sockaddr_in ipv4Address{};
-    auto ipv4AddressLength = static_cast<socklen_t>(sizeof(ipv4Address));
-    ipv4Address.sin_family = AF_INET;
-
-    if (getpeername(_socket, reinterpret_cast<sockaddr*>(&ipv4Address), &ipv4AddressLength) != 0) {
-        LogSystemError("Could not get remote IPv4 socket address.", GetLastNetworkError());
+    if (getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+        LogSystemError("Could not get local socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
-    return ConvertFromInternetAddress(ipv4Address, remoteIpAddress, remotePort);
+    std::string ipAddress;
+    return ConvertFromInternetAddress(address, ipAddress, localPort);
+}
+
+Result Socket::GetRemoteAddress(std::string& remoteIpAddress, uint16_t& remotePort) const {
+    if (_addressFamily == AF_INET) {
+        return GetRemoteAddressForIpv4(remoteIpAddress, remotePort);
+    }
+
+    return GetRemoteAddressForIpv6(remoteIpAddress, remotePort);
+}
+
+Result Socket::GetRemoteAddressForIpv4(std::string& remoteIpAddress, uint16_t& remotePort) const {
+    sockaddr_in address{};
+    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    address.sin_family = AF_INET;
+
+    if (getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+        LogSystemError("Could not get remote socket address.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    return ConvertFromInternetAddress(address, remoteIpAddress, remotePort);
+}
+
+Result Socket::GetRemoteAddressForIpv6(std::string& remoteIpAddress, uint16_t& remotePort) const {
+    sockaddr_in6 address{};
+    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    address.sin6_family = AF_INET6;
+
+    if (getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+        LogSystemError("Could not get remote socket address.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    if (address.sin6_family == AF_INET) {
+        return GetRemoteAddressForIpv4(remoteIpAddress, remotePort);
+    }
+
+    return ConvertFromInternetAddress(address, remoteIpAddress, remotePort);
 }
 
 Result Socket::Receive(void* destination, int size, int& receivedSize) const {
