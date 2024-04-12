@@ -21,7 +21,7 @@ if(BUILD_SHARED_LIBS)
   set(DSVEOSCOSIM_TYPE SHARED)
 endif()
 
-add_subdirectory(ThirdParty)
+add_subdirectory(third_party)
 add_subdirectory(src)
 if(DSVEOSCOSIM_BUILD_TESTS)
   add_subdirectory(test)

@@ -36,6 +36,7 @@
 build/
 install/
 obj/
+tmplin/
 
 compile_commands.json
 *.bat

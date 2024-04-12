@@ -6,4 +6,4 @@
 -Iinclude
 -Isrc
 -Itest
--IThirdParty/googletest/googletest/include
+-Ithird_party/googletest/googletest/include
