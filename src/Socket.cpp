@@ -231,7 +231,7 @@ Result Socket::Create(AddressFamily addressFamily) {
     return Result::Ok;
 }
 
-Result Socket::EnableIpv6Only() const {
+Result Socket::EnableIpv6Only() const {  // NOLINT(readability-convert-member-functions-to-static)
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int flags = 1;

@@ -435,30 +435,30 @@ Result CoSimClient::OnConnectOk() {
     _incomingSignalsForC.reserve(_incomingSignals.size());
     for (const auto& signal : _incomingSignals) {
         _incomingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
-                                     signal.length,
-                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
-                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
-                                     signal.name.c_str()});
+                                        signal.length,
+                                        static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                        static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                        signal.name.c_str()});
     }
 
     _outgoingSignalsForC.reserve(_outgoingSignals.size());
     for (const auto& signal : _outgoingSignals) {
         _outgoingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
-                                     signal.length,
-                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
-                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
-                                     signal.name.c_str()});
+                                        signal.length,
+                                        static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                        static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                        signal.name.c_str()});
     }
 
     _canControllersForC.reserve(_canControllers.size());
     for (const auto& controller : _canControllers) {
         _canControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
-                                    controller.queueSize,
-                                    controller.bitsPerSecond,
-                                    controller.flexibleDataRateBitsPerSecond,
-                                    controller.name.c_str(),
-                                    controller.channelName.c_str(),
-                                    controller.clusterName.c_str()});
+                                       controller.queueSize,
+                                       controller.bitsPerSecond,
+                                       controller.flexibleDataRateBitsPerSecond,
+                                       controller.name.c_str(),
+                                       controller.channelName.c_str(),
+                                       controller.clusterName.c_str()});
     }
 
     _ethControllersForC.reserve(_ethControllers.size());
@@ -478,12 +478,12 @@ Result CoSimClient::OnConnectOk() {
     _linControllersForC.reserve(_linControllers.size());
     for (const auto& controller : _linControllers) {
         _linControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
-                                    controller.queueSize,
-                                    controller.bitsPerSecond,
-                                    static_cast<DsVeosCoSim_LinControllerType>(controller.type),
-                                    controller.name.c_str(),
-                                    controller.channelName.c_str(),
-                                    controller.clusterName.c_str()});
+                                       controller.queueSize,
+                                       controller.bitsPerSecond,
+                                       static_cast<DsVeosCoSim_LinControllerType>(controller.type),
+                                       controller.name.c_str(),
+                                       controller.channelName.c_str(),
+                                       controller.clusterName.c_str()});
     }
 
     if (_serverName.empty()) {
@@ -568,9 +568,9 @@ Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readabil
     return Result::Disconnected;
 }
 
-Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime,
-                                           Command& command,
-                                           bool returnOnPing) {  // NOLINT(readability-function-cognitive-complexity)
+Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime,  // NOLINT(readability-function-cognitive-complexity)
+                                        Command& command,
+                                        bool returnOnPing) {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 

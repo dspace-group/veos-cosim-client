@@ -127,15 +127,15 @@ TEST_F(TestProtocol, SendAndReceiveConnectOk) {
 
     // Act
     ASSERT_OK(Protocol::SendConnectOk(_senderChannel,
-                                     sendProtocolVersion,
-                                     sendMode,
-                                     sendStepSize,
-                                     sendSimulationState,
-                                     sendIncomingSignals,
-                                     sendOutgoingSignals,
-                                     sendCanControllers,
-                                     sendEthControllers,
-                                     sendLinControllers));
+                                      sendProtocolVersion,
+                                      sendMode,
+                                      sendStepSize,
+                                      sendSimulationState,
+                                      sendIncomingSignals,
+                                      sendOutgoingSignals,
+                                      sendCanControllers,
+                                      sendEthControllers,
+                                      sendLinControllers));
 
     // Assert
     AssertFrame(FrameKind::ConnectOk);
@@ -150,15 +150,15 @@ TEST_F(TestProtocol, SendAndReceiveConnectOk) {
     std::vector<EthController> receiveEthControllers;
     std::vector<LinController> receiveLinControllers;
     ASSERT_OK(Protocol::ReadConnectOk(_receiverChannel,
-                                     receiveProtocolVersion,
-                                     receiveMode,
-                                     receiveStepSize,
-                                     receiveSimulationState,
-                                     receiveIncomingSignals,
-                                     receiveOutgoingSignals,
-                                     receiveCanControllers,
-                                     receiveEthControllers,
-                                     receiveLinControllers));
+                                      receiveProtocolVersion,
+                                      receiveMode,
+                                      receiveStepSize,
+                                      receiveSimulationState,
+                                      receiveIncomingSignals,
+                                      receiveOutgoingSignals,
+                                      receiveCanControllers,
+                                      receiveEthControllers,
+                                      receiveLinControllers));
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ(static_cast<int>(sendMode), static_cast<int>(receiveMode));
     ASSERT_EQ(sendStepSize, receiveStepSize);

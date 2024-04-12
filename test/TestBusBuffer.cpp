@@ -71,7 +71,7 @@ TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
     ASSERT_EMPTY(result);
 }
 
-TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {
+TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     CanController controller;
     CreateController(controller, GenerateU32());
@@ -139,7 +139,7 @@ TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
     ASSERT_EMPTY(result);
 }
 
-TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {
+TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     EthController controller;
     CreateController(controller, GenerateU32());
@@ -207,7 +207,7 @@ TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
     ASSERT_EMPTY(result);
 }
 
-TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {
+TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     LinController controller;
     CreateController(controller, GenerateU32());

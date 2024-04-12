@@ -1,7 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <array>
+#ifndef _WIN32
 #include <chrono>
+#endif
 #include <string_view>
 #include <thread>
 
@@ -50,7 +52,7 @@ TEST_F(TestCommunication, ConnectToServerIpv4) {
     ASSERT_OK(result);
 }
 
-TEST_F(TestCommunication, AcceptClientIpv4) {
+TEST_F(TestCommunication, AcceptClientIpv4) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     Server server;
     uint16_t port{};
@@ -82,7 +84,7 @@ TEST_F(TestCommunication, AcceptClientIpv4) {
     ASSERT_NE(port, acceptedPort);
 }
 
-TEST_F(TestCommunication, AcceptClientIpv6) {
+TEST_F(TestCommunication, AcceptClientIpv6) {  // NOLINT(readability-function-cognitive-complexity)
     if (!Socket::IsIpv6Supported()) {
         LogInfo("IPv6 is not supported.");
         return;
@@ -178,7 +180,7 @@ TEST_F(TestCommunication, ConnectAfterServerStopped) {
     ASSERT_ERROR(result);
 }
 
-TEST_F(TestCommunication, SendByClientAndReceiveByServer) {
+TEST_F(TestCommunication, SendByClientAndReceiveByServer) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     Server server;
     uint16_t port{};
@@ -203,7 +205,7 @@ TEST_F(TestCommunication, SendByClientAndReceiveByServer) {
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-TEST_F(TestCommunication, SendByServerAndReceiveByClient) {
+TEST_F(TestCommunication, SendByServerAndReceiveByClient) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     Server server;
     uint16_t port{};
@@ -228,7 +230,7 @@ TEST_F(TestCommunication, SendByServerAndReceiveByClient) {
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-TEST_F(TestCommunication, PingPong) {
+TEST_F(TestCommunication, PingPong) {  // NOLINT(readability-function-cognitive-complexity)
     Server server;
     uint16_t port = 0;
     ASSERT_OK(server.Start(port, true));
@@ -259,7 +261,7 @@ TEST_F(TestCommunication, PingPong) {
     }
 }
 
-TEST_F(TestCommunication, SendTwoFramesAtOnce) {
+TEST_F(TestCommunication, SendTwoFramesAtOnce) {  // NOLINT(readability-function-cognitive-complexity)
     Server server;
     uint16_t port = 0;
     ASSERT_OK(server.Start(port, true));
