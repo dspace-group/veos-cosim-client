@@ -224,7 +224,7 @@ Result BusBuffer::Transmit(const CanMessage& message) {
     CanMessageContainer container{};
     container.message = message;
     container.data.resize(message.length);
-    std::memcpy(container.data.data(), message.data, message.length);
+    (void)std::memcpy(container.data.data(), message.data, message.length);
 
     CanMessageContainer& tmp = _canTransmitBuffer.Push(container);
     tmp.message.data = tmp.data.data();
@@ -313,7 +313,7 @@ Result BusBuffer::Transmit(const EthMessage& message) {
     EthMessageContainer container{};
     container.message = message;
     container.data.resize(message.length);
-    std::memcpy(container.data.data(), message.data, message.length);
+    (void)std::memcpy(container.data.data(), message.data, message.length);
 
     EthMessageContainer& tmp = _ethTransmitBuffer.Push(container);
     tmp.message.data = tmp.data.data();
@@ -402,7 +402,7 @@ Result BusBuffer::Transmit(const LinMessage& message) {
     LinMessageContainer container{};
     container.message = message;
     container.data.resize(message.length);
-    std::memcpy(container.data.data(), message.data, message.length);
+    (void)std::memcpy(container.data.data(), message.data, message.length);
 
     LinMessageContainer& tmp = _linTransmitBuffer.Push(container);
     tmp.message.data = tmp.data.data();

@@ -1,7 +1,16 @@
+:: Copyright dSPACE GmbH. All rights reserved.
+
 @echo off
 
 setlocal
 
-set config=Debug
+set currentDir=%~dp0.
 
-build\test\DsVeosCoSimTest.exe
+echo Testing ...
+
+for /f %%x in ('dir /s /b %currentDir%\DsVeosCoSimTest.exe') do (
+    echo Running tests in "%%x" ...
+    "%%x" || exit /b 1
+)
+
+echo Testing finished successfully.

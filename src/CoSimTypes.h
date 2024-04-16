@@ -3,7 +3,6 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 #include <functional>
 #include <string>
 #include <string_view>

@@ -471,7 +471,7 @@ Result CoSimClient::OnConnectOk() {
                                               controller.name.c_str(),
                                               controller.channelName.c_str(),
                                               controller.clusterName.c_str()};
-        memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
+        (void)std::memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
         _ethControllersForC.push_back(controller2);
     }
 

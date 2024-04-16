@@ -41,8 +41,6 @@ private:
     bool _isRunning = false;
 };
 
-[[nodiscard]] uint16_t GetPortMapperPort();
-
 [[nodiscard]] Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port);
 [[nodiscard]] Result PortMapper_SetPort(std::string_view name, uint16_t port);
 [[nodiscard]] Result PortMapper_UnsetPort(std::string_view name);

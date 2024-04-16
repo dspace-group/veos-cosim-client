@@ -6,12 +6,8 @@ setlocal
 
 echo Cleaning ...
 
-set currentDir=%~dp0
-set baseDir=%currentDir%.
+set currentDir=%~dp0.
 
-del /s /q "%baseDir%\*.user" >nul 2>&1
-del /s /q "%baseDir%\launchSettings.json" >nul 2>&1
-rmdir /s /q "%baseDir%\tmpwin" >nul 2>&1
-rmdir /s /q "%baseDir%\tmplin" >nul 2>&1
+rmdir /s /q "%currentDir%\tmpwin" >nul 2>&1
 
 echo Cleaning finished successfully.
