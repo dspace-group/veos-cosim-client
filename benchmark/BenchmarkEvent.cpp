@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef _WIN32
+
 #include <benchmark/benchmark.h>
 
 #include "BenchmarkHelper.h"
@@ -73,3 +75,5 @@ void EventRoundtrip(benchmark::State& state) {
 BENCHMARK(EventSet);
 BENCHMARK(EventSetAndWait);
 BENCHMARK(EventRoundtrip);
+
+#endif

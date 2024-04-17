@@ -1,9 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <array>
-#ifndef _WIN32
-#include <chrono>
-#endif
 #include <string_view>
 #include <thread>
 

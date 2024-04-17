@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef _WIN32
+
 #include "SharedMemory.h"
 #include "Generator.h"
 #include "Logger.h"
@@ -61,3 +63,5 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
     // Assert
     ASSERT_EQ(writeValue, readValue);
 }
+
+#endif

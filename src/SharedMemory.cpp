@@ -1,8 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "SharedMemory.h"
-
 #ifdef _WIN32
+
+#include "SharedMemory.h"
 
 #include <Windows.h>
 #undef min

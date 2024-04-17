@@ -3,6 +3,7 @@
 #include <benchmark/benchmark.h>
 
 #include "BenchmarkHelper.h"
+#include "Generator.h"
 #include "Socket.h"
 
 #include <thread>
@@ -14,26 +15,22 @@ using namespace std::chrono_literals;
 
 namespace {
 
-void Send(const Socket& socket, const std::vector<uint8_t>& buffer) {
-    int length = (int)buffer.size();
-    const uint8_t* bufferPointer = buffer.data();
-
+void SendExactly(const Socket& socket, const void* buffer, size_t length) {
+    const auto* bufferPointer = (const uint8_t*)buffer;
     while (length > 0) {
         int sentSize = 0;
-        ASSERT_OK(socket.Send(bufferPointer, length, sentSize));
+        ASSERT_OK(socket.Send(bufferPointer, (int)length, sentSize));
 
         length -= sentSize;
         bufferPointer += sentSize;
     }
 }
 
-void Receive(const Socket& socket, std::vector<uint8_t>& buffer) {
-    int length = (int)buffer.size();
-    uint8_t* bufferPointer = buffer.data();
-
+void ReceiveExactly(const Socket& socket, void* buffer, size_t length) {
+    auto* bufferPointer = (uint8_t*)buffer;
     while (length > 0) {
         int receivedSize = 0;
-        ASSERT_OK(socket.Receive(bufferPointer, length, receivedSize));
+        ASSERT_OK(socket.Receive(bufferPointer, (int)length, receivedSize));
 
         length -= receivedSize;
         bufferPointer += receivedSize;
@@ -42,7 +39,7 @@ void Receive(const Socket& socket, std::vector<uint8_t>& buffer) {
 
 bool stopThread;
 
-void ReceiveAndSend(uint16_t port, size_t size) {
+void ReceiveAndSendTcp(uint16_t port, size_t size) {
     Socket client;
     ASSERT_OK(client.Create(AddressFamily::Ipv4));
 
@@ -52,13 +49,15 @@ void ReceiveAndSend(uint16_t port, size_t size) {
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
+    ReceiveExactly(client, buffer.data(), buffer.size());
+
     while (!stopThread) {
-        Receive(client, buffer);
-        Send(client, buffer);
+        SendExactly(client, buffer.data(), buffer.size());
+        ReceiveExactly(client, buffer.data(), buffer.size());
     }
 }
 
-void SocketRoundtrip(benchmark::State& state) {  // NOLINT(readability-function-cognitive-complexity)
+void SocketTcpRoundtrip(benchmark::State& state) {  // NOLINT(readability-function-cognitive-complexity)
     ASSERT_OK(StartupNetwork());
 
     Socket server;
@@ -72,7 +71,63 @@ void SocketRoundtrip(benchmark::State& state) {  // NOLINT(readability-function-
     size_t size = state.range(0);
 
     stopThread = false;
-    std::jthread thread(ReceiveAndSend, port, size);
+    std::jthread thread(ReceiveAndSendTcp, port, size);
+
+    Socket client;
+    while (true) {
+        Result result = server.Accept(client);
+        if (result == Result::TryAgain) {
+            continue;
+        }
+
+        ASSERT_OK(result);
+        break;
+    }
+
+    ASSERT_OK(client.EnableNoDelay());
+
+    std::vector<uint8_t> buffer;
+    buffer.resize(size);
+
+    for (auto _ : state) {
+        SendExactly(client, buffer.data(), buffer.size());
+        ReceiveExactly(client, buffer.data(), buffer.size());
+    }
+
+    stopThread = true;
+    SendExactly(client, buffer.data(), buffer.size());
+}
+
+void ReceiveAndSendUds(const std::string& path, size_t size) {
+    Socket client;
+    ASSERT_OK(client.Create(AddressFamily::Uds));
+
+    ASSERT_OK(client.Connect(path));
+
+    std::vector<uint8_t> buffer;
+    buffer.resize(size);
+
+    ReceiveExactly(client, buffer.data(), buffer.size());
+
+    while (!stopThread) {
+        SendExactly(client, buffer.data(), buffer.size());
+        ReceiveExactly(client, buffer.data(), buffer.size());
+    }
+}
+
+void SocketUdsRoundtrip(benchmark::State& state) {  // NOLINT(readability-function-cognitive-complexity)
+    ASSERT_OK(StartupNetwork());
+
+    std::string path = GenerateString("Path");
+    Socket server;
+    ASSERT_OK(server.Create(AddressFamily::Uds));
+    ASSERT_OK(server.Bind(path));
+    ASSERT_OK(server.Listen());
+
+    size_t size = state.range(0);
+
+    stopThread = false;
+    std::jthread thread(ReceiveAndSendUds, path, size);
 
     Socket client;
     while (true) {
@@ -89,14 +144,15 @@ void SocketRoundtrip(benchmark::State& state) {  // NOLINT(readability-function-
     buffer.resize(size);
 
     for (auto _ : state) {
-        Send(client, buffer);
-        Receive(client, buffer);
+        SendExactly(client, buffer.data(), buffer.size());
+        ReceiveExactly(client, buffer.data(), buffer.size());
     }
 
     stopThread = true;
-    Send(client, buffer);
+    SendExactly(client, buffer.data(), buffer.size());
 }
 
 }  // namespace
 
-BENCHMARK(SocketRoundtrip)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000);
+BENCHMARK(SocketTcpRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
+BENCHMARK(SocketUdsRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);

@@ -14,6 +14,7 @@ add_executable(
   #TestPortMapper.cpp
   #TestProtocol.cpp
   TestSharedMemory.cpp
+  TestSocket.cpp
 )
 
 target_include_directories(

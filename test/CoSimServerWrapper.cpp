@@ -2,10 +2,6 @@
 
 #include "CoSimServerWrapper.h"
 
-#ifndef _WIN32
-#include <chrono>
-#endif
-
 using namespace std::chrono_literals;
 
 namespace DsVeosCoSim {

@@ -5,6 +5,8 @@ add_executable(
   Program.cpp
   BenchmarkEvent.cpp
   BenchmarkHelper.cpp
+  BenchmarkLocalChannel.cpp
+  BenchmarkRemoteChannel.cpp
   BenchmarkSocket.cpp
   ../test/Generator.cpp
 )

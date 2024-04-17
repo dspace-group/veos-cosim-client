@@ -1,8 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "Event.h"
-
 #ifdef _WIN32
+
+#include "Event.h"
 
 #include <Windows.h>
 #undef min

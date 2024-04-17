@@ -13,4 +13,10 @@ do
     "$executableFile" || exit 1
 done
 
+for executableFile in $(find "$currentDir" -name DsVeosCoSimBenchmark -type f -executable | xargs realpath)
+do
+    echo Running tests in "$executableFile" ...
+    "$executableFile" || exit 1
+done
+
 echo Testing finished successfully.

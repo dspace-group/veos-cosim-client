@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef _WIN32
+
 #include "Event.h"
 #include "Generator.h"
 #include "Logger.h"
@@ -104,3 +106,5 @@ TEST_F(TestEvent, SetAndWaitOnDifferentThreads) {
     ASSERT_OK(result1);
     ASSERT_OK(result2);
 }
+
+#endif
