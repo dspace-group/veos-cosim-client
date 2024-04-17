@@ -8,10 +8,12 @@ add_library(
   CoSimClient.cpp
   CoSimServer.cpp
   DsVeosCoSim.cpp
+  Event.cpp
   IoBuffer.cpp
   Logger.cpp
   PortMapper.cpp
   Protocol.cpp
+  SharedMemory.cpp
   Socket.cpp
 )
 

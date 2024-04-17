@@ -7,3 +7,4 @@
 -Isrc
 -Itest
 -Ithird_party/googletest/googletest/include
+-Ithird_party/benchmark/include

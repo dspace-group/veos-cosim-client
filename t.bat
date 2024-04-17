@@ -13,4 +13,9 @@ for /f %%x in ('dir /s /b %currentDir%\DsVeosCoSimTest.exe') do (
     "%%x" || exit /b 1
 )
 
+for /f %%x in ('dir /s /b %currentDir%\DsVeosCoSimBenchmark.exe') do (
+    echo Running tests in "%%x" ...
+    "%%x" || exit /b 1
+)
+
 echo Testing finished successfully.

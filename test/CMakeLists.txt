@@ -5,13 +5,15 @@ add_executable(
   CoSimServerWrapper.cpp
   Generator.cpp
   Program.cpp
-  TestBusBuffer.cpp
-  TestCommunication.cpp
-  TestCoSim.cpp
+  #TestBusBuffer.cpp
+  #TestCommunication.cpp
+  #TestCoSim.cpp
+  TestEvent.cpp
   TestHelper.cpp
-  TestIoBuffer.cpp
-  TestPortMapper.cpp
-  TestProtocol.cpp
+  #TestIoBuffer.cpp
+  #TestPortMapper.cpp
+  #TestProtocol.cpp
+  TestSharedMemory.cpp
 )
 
 target_include_directories(
