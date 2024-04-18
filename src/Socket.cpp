@@ -26,9 +26,6 @@
 #include <cerrno>
 #endif
 
-#include <filesystem>
-namespace fs = std::filesystem;
-
 #include "Logger.h"
 
 namespace DsVeosCoSim {
@@ -351,8 +348,6 @@ Result Socket::Bind(std::string_view path) {
     }
 
     _path = path;
-
-    fs::remove(path);
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
