@@ -2,8 +2,6 @@
 
 #include "CoSimServerWrapper.h"
 
-#include <chrono>
-
 using namespace std::chrono_literals;
 
 namespace DsVeosCoSim {
@@ -64,19 +62,23 @@ Result CoSimServerWrapper::Write(IoSignalId signalId, uint32_t length, const voi
     return _server.Write(signalId, length, value);
 }
 
-Result CoSimServerWrapper::Transmit(const CanMessage& message) {
+Result CoSimServerWrapper::Transmit(const DsVeosCoSim_CanMessage& message) {
     std::lock_guard lock(_mutex);
     return _server.Transmit(message);
 }
 
-Result CoSimServerWrapper::Transmit(const LinMessage& message) {
+Result CoSimServerWrapper::Transmit(const DsVeosCoSim_LinMessage& message) {
     std::lock_guard lock(_mutex);
     return _server.Transmit(message);
 }
 
-Result CoSimServerWrapper::Transmit(const EthMessage& message) {
+Result CoSimServerWrapper::Transmit(const DsVeosCoSim_EthMessage& message) {
     std::lock_guard lock(_mutex);
     return _server.Transmit(message);
+}
+
+uint16_t CoSimServerWrapper::GetLocalPort() const {
+    return _server.GetLocalPort();
 }
 
 void CoSimServerWrapper::RunBackground() {

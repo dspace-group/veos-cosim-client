@@ -283,7 +283,7 @@ Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& clientMode
     return ReadString(channel, clientName);
 }
 
-Result SendConnectOk(Channel& channel,
+Result SendConnectOk(Channel& channel,  // NOLINT(readability-function-cognitive-complexity)
                      uint32_t protocolVersion,
                      Mode clientMode,
                      SimulationTime stepSize,

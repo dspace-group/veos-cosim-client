@@ -38,7 +38,7 @@ bool IsPortMapperClientVerbose() {
 [[nodiscard]] uint16_t GetPortMapperPortInitial() {
     constexpr uint16_t defaultPort = 27027;
 
-    const char* portString = getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
+    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
     if (portString) {
         const int port = std::atoi(portString);  // NOLINT(cert-err34-c)
         if (port > 0 && port <= UINT16_MAX) {
@@ -47,6 +47,11 @@ bool IsPortMapperClientVerbose() {
     }
 
     return defaultPort;
+}
+
+uint16_t GetPortMapperPort() {
+    static uint16_t port = GetPortMapperPortInitial();
+    return port;
 }
 
 }  // namespace
@@ -171,11 +176,6 @@ void PortMapperServer::DumpEntries() {
             LogTrace("  " + name + ": " + std::to_string(port));
         }
     }
-}
-
-uint16_t GetPortMapperPort() {
-    static uint16_t port = GetPortMapperPortInitial();
-    return port;
 }
 
 Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {

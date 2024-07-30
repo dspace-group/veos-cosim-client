@@ -20,8 +20,9 @@ struct CoSimServerConfig {
     bool isClientOptional = false;
     bool enableRemoteAccess = true;
     bool startPortMapper = false;
+    bool registerAtPortMapper = true;
     SimulationTime stepSize{};
-    LogCallback logCallback{};
+    LogCallback logCallback;
     SimulationCallback simulationStartedCallback;
     SimulationCallback simulationStoppedCallback;
     SimulationTerminatedCallback simulationTerminatedCallback;
@@ -43,7 +44,7 @@ public:
     ~CoSimServer() noexcept;
 
     CoSimServer(const CoSimServer&) = delete;
-    CoSimServer& operator=(CoSimServer const&) = delete;
+    CoSimServer& operator=(const CoSimServer&) = delete;
 
     CoSimServer(CoSimServer&&) = delete;
     CoSimServer& operator=(CoSimServer&&) = delete;
@@ -63,11 +64,13 @@ public:
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value);
     [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value);
 
-    [[nodiscard]] Result Transmit(const CanMessage& message);
-    [[nodiscard]] Result Transmit(const LinMessage& message);
-    [[nodiscard]] Result Transmit(const EthMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
 
     [[nodiscard]] Result BackgroundService();
+
+    [[nodiscard]] uint16_t GetLocalPort() const;
 
 private:
     [[nodiscard]] Result StartInternal(SimulationTime simulationTime);
@@ -96,12 +99,14 @@ private:
     Server _server;
 
     bool _isConnected{};
-    uint16_t _localPort{};
+    uint16_t _actualLocalPort{};
+    uint16_t _givenLocalPort{};
     std::string _serverName;
     Callbacks _callbacks{};
     bool _isClientOptional{};
     bool _enableRemoteAccess{};
     SimulationTime _stepSize{};
+    bool _registerAtPortMapper{};
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;

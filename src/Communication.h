@@ -16,9 +16,9 @@ public:
     ~Channel() noexcept = default;
 
     Channel(const Channel&) = delete;
-    Channel& operator=(Channel const&) = delete;
+    Channel& operator=(const Channel&) = delete;
 
-    Channel(Channel&&) = default;
+    Channel(Channel&&) noexcept = default;
     Channel& operator=(Channel&&) noexcept = default;
 
     [[nodiscard]] Result GetRemoteAddress(std::string& ipAddress, uint16_t& port) const;
@@ -72,7 +72,7 @@ public:
     Server(const Server&) = delete;
     Server& operator=(Server const&) = delete;
 
-    Server(Server&&) = default;
+    Server(Server&&) noexcept = default;
     Server& operator=(Server&&) noexcept = default;
 
     [[nodiscard]] Result Start(uint16_t& port, bool enableRemoteAccess);

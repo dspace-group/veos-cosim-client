@@ -12,6 +12,7 @@ add_executable(
   TestIoBuffer.cpp
   TestPortMapper.cpp
   TestProtocol.cpp
+  TestSocket.cpp
 )
 
 target_include_directories(
@@ -20,7 +21,7 @@ target_include_directories(
   ./
   ../include
   ../src
-  ../ThirdParty/googletest/googletest/include
+  ../third_party/googletest/googletest/include
 )
 
 target_compile_definitions(${PROJECT_NAME}Test PRIVATE _CRT_SECURE_NO_WARNINGS DSVEOSCOSIM_EXPORT WIN32_LEAN_AND_MEAN)

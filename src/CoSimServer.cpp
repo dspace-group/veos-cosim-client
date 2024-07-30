@@ -12,11 +12,12 @@ CoSimServer::~CoSimServer() noexcept {
 }
 
 Result CoSimServer::Load(const CoSimServerConfig& config) {
-    _localPort = config.localPort;
+    _givenLocalPort = config.localPort;
     _serverName = config.serverName;
     _isClientOptional = config.isClientOptional;
     _enableRemoteAccess = config.enableRemoteAccess;
     _stepSize = config.stepSize;
+    _registerAtPortMapper = config.registerAtPortMapper;
     _incomingSignals = config.incomingSignals;
     _outgoingSignals = config.outgoingSignals;
     _canControllers = config.canControllers;
@@ -45,7 +46,7 @@ Result CoSimServer::Load(const CoSimServerConfig& config) {
     CheckResult(StartAccepting());
 
     const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
-    LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" + std::to_string(_localPort) + ".");
+    LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" + std::to_string(_actualLocalPort) + ".");
 
     return Result::Ok;
 }
@@ -57,7 +58,10 @@ Result CoSimServer::Unload() {
         _acceptingThread.join();
     }
 
-    (void)PortMapper_UnsetPort(_serverName);
+    if (_registerAtPortMapper) {
+        (void)PortMapper_UnsetPort(_serverName);
+    }
+
     _server.Stop();
 
     _channel.Disconnect();
@@ -167,7 +171,7 @@ Result CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* valu
     return _ioBuffer.Write(signalId, length, value);
 }
 
-Result CoSimServer::Transmit(const CanMessage& message) {
+Result CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) {
     if (!_isConnected) {
         return Result::Ok;
     }
@@ -175,7 +179,7 @@ Result CoSimServer::Transmit(const CanMessage& message) {
     return _busBuffer.Transmit(message);
 }
 
-Result CoSimServer::Transmit(const LinMessage& message) {
+Result CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) {
     if (!_isConnected) {
         return Result::Ok;
     }
@@ -183,7 +187,7 @@ Result CoSimServer::Transmit(const LinMessage& message) {
     return _busBuffer.Transmit(message);
 }
 
-Result CoSimServer::Transmit(const EthMessage& message) {
+Result CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) {
     if (!_isConnected) {
         return Result::Ok;
     }
@@ -203,6 +207,10 @@ Result CoSimServer::BackgroundService() {
 
     HandlePendingCommand(command);
     return Result::Ok;
+}
+
+uint16_t CoSimServer::GetLocalPort() const {
+    return _actualLocalPort;
 }
 
 Result CoSimServer::StartInternal(SimulationTime simulationTime) {
@@ -280,9 +288,12 @@ Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t r
 }
 
 Result CoSimServer::StartAccepting() {
-    CheckResult(_server.Start(_localPort, _enableRemoteAccess));
+    _actualLocalPort = _givenLocalPort;
+    CheckResult(_server.Start(_actualLocalPort, _enableRemoteAccess));
 
-    CheckResult(PortMapper_SetPort(_serverName, _localPort));
+    if (_registerAtPortMapper) {
+        CheckResult(PortMapper_SetPort(_serverName, _actualLocalPort));
+    }
 
     if (_acceptingThread.joinable()) {
         _acceptingThread.join();

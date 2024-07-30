@@ -5,6 +5,7 @@
 #ifdef _WIN32
 #include <WS2tcpip.h>
 #include <WinSock2.h>
+#include <afunix.h>
 #undef min
 #undef max
 #ifdef _MSC_VER
@@ -21,6 +22,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <cerrno>
 #endif
@@ -50,11 +52,16 @@ constexpr int ErrorCodeNotSupported = EAFNOSUPPORT;
 }
 
 [[nodiscard]] int GetInt(AddressFamily addressFamily) {
-    if (addressFamily == AddressFamily::Ipv4) {
-        return AF_INET;
+    switch (addressFamily) {
+        case AddressFamily::Ipv4:
+            return AF_INET;
+        case AddressFamily::Ipv6:
+            return AF_INET6;
+        case AddressFamily::Uds:
+            return AF_UNIX;
     }
 
-    return AF_INET6;
+    return AF_INET;
 }
 
 [[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, addrinfo*& addressInfo) {
@@ -138,8 +145,10 @@ Socket::Socket(Socket&& other) noexcept {
 
     _socket = other._socket;
     _addressFamily = other._addressFamily;
+    _path = other._path;
     other._socket = InvalidSocket;
     other._addressFamily = {};
+    other._path = {};
 }
 
 Socket& Socket::operator=(Socket&& other) noexcept {
@@ -147,8 +156,10 @@ Socket& Socket::operator=(Socket&& other) noexcept {
 
     _socket = other._socket;
     _addressFamily = other._addressFamily;
+    _path = other._path;
     other._socket = InvalidSocket;
     other._addressFamily = {};
+    other._path = {};
     return *this;
 }
 
@@ -202,9 +213,19 @@ void Socket::Close() {
     _addressFamily = {};
 
 #ifdef _WIN32
+    if (!_path.empty()) {
+        (void)_unlink(_path.c_str());
+        _path = {};
+    }
+
     (void)shutdown(sock, SD_BOTH);
     (void)closesocket(sock);
 #else
+    if (!_path.empty()) {
+        (void)unlink(_path.c_str());
+        _path = {};
+    }
+
     (void)shutdown(sock, SHUT_RDWR);
     (void)close(sock);
 #endif
@@ -220,8 +241,10 @@ Result Socket::Create(AddressFamily addressFamily) {
     }
 
     const int af = GetInt(addressFamily);
+    const int protocol = addressFamily == AddressFamily::Uds ? 0 : IPPROTO_TCP;
 
-    _socket = socket(af, SOCK_STREAM, IPPROTO_TCP);
+    _socket = socket(af, SOCK_STREAM, protocol);
+
     if (_socket == InvalidSocket) {
         LogSystemError("Could not create socket.", GetLastNetworkError());
         return Result::Error;
@@ -231,7 +254,7 @@ Result Socket::Create(AddressFamily addressFamily) {
     return Result::Ok;
 }
 
-Result Socket::EnableIpv6Only() const {
+Result Socket::EnableIpv6Only() const {  // NOLINT(readability-convert-member-functions-to-static)
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int flags = 1;
@@ -258,6 +281,7 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
 
     while (currentAddressInfo) {
         Close();
+        _addressFamily = currentAddressInfo->ai_family;
 
         _socket = socket(currentAddressInfo->ai_family, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (_socket == InvalidSocket) {
@@ -292,12 +316,63 @@ Result Socket::Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t
     return Result::Error;
 }
 
+Result Socket::Connect(std::string_view path) const {
+    if (path.empty()) {
+        LogError("Empty path is not valid.");
+        return Result::Error;
+    }
+
+    sockaddr_un address{};
+    address.sun_family = AF_UNIX;
+    strncpy(address.sun_path, path.data(), sizeof(address.sun_path) - 1);
+
+#ifndef _WIN32
+    address.sun_path[0] = '\0';
+#endif
+
+    if (connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) < 0) {
+        LogSystemError("Could not connect to server.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    return Result::Ok;
+}
+
 Result Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
     if (_addressFamily == AF_INET) {
         return BindForIpv4(port, enableRemoteAccess);
     }
 
-    return BindForIpv6(port, enableRemoteAccess);
+    if (_addressFamily == AF_INET6) {
+        return BindForIpv6(port, enableRemoteAccess);
+    }
+
+    LogError("Not supported for address family.");
+    return Result::Error;
+}
+
+Result Socket::Bind(std::string_view path) {
+    if (_addressFamily != AF_UNIX) {
+        LogError("Not supported for address family.");
+        return Result::Error;
+    }
+
+    _path = path;
+
+    sockaddr_un address{};
+    address.sun_family = AF_UNIX;
+    strncpy(address.sun_path, path.data(), sizeof(address.sun_path) - 1);
+
+#ifndef _WIN32
+    address.sun_path[0] = '\0';
+#endif
+
+    if (bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) < 0) {
+        LogSystemError("Could not bind socket.", GetLastNetworkError());
+        return Result::Error;
+    }
+
+    return Result::Ok;
 }
 
 Result Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) const {
@@ -329,6 +404,11 @@ Result Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
 }
 
 Result Socket::EnableReuseAddress() const {
+    if (_addressFamily == AF_UNIX) {
+        LogError("Not supported for address family.");
+        return Result::Error;
+    }
+
     int flags = 1;
     if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
         LogSystemError("Could not enable socket option reuse address.", GetLastNetworkError());
@@ -339,6 +419,11 @@ Result Socket::EnableReuseAddress() const {
 }
 
 Result Socket::EnableNoDelay() const {
+    if (_addressFamily == AF_UNIX) {
+        LogError("Not supported for address family.");
+        return Result::Error;
+    }
+
     int flags = 1;
     if (setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), static_cast<socklen_t>(sizeof(flags))) < 0) {
         LogSystemError("Could not enable TCP option no delay.", GetLastNetworkError());
@@ -362,7 +447,7 @@ Result Socket::Accept(Socket& acceptedSocket) const {
     fdArray.fd = _socket;
     fdArray.events = POLLRDNORM;
 
-    const int result = poll(&fdArray, 1, 100);
+    const int result = poll(&fdArray, 1, 10);
     if (result < 0) {
         LogSystemError("Could not poll on socket.", GetLastNetworkError());
         return Result::Error;
@@ -384,6 +469,7 @@ Result Socket::Accept(Socket& acceptedSocket) const {
     }
 
     acceptedSocket._addressFamily = _addressFamily;
+    acceptedSocket._path = _path;
     return Result::Ok;
 }
 
@@ -392,7 +478,12 @@ Result Socket::GetLocalPort(uint16_t& localPort) const {
         return GetLocalPortForIpv4(localPort);
     }
 
-    return GetLocalPortForIpv6(localPort);
+    if (_addressFamily == AF_INET6) {
+        return GetLocalPortForIpv6(localPort);
+    }
+
+    localPort = 0;
+    return Result::Ok;
 }
 
 Result Socket::GetLocalPortForIpv4(uint16_t& localPort) const {
@@ -428,7 +519,13 @@ Result Socket::GetRemoteAddress(std::string& remoteIpAddress, uint16_t& remotePo
         return GetRemoteAddressForIpv4(remoteIpAddress, remotePort);
     }
 
-    return GetRemoteAddressForIpv6(remoteIpAddress, remotePort);
+    if (_addressFamily == AF_INET6) {
+        return GetRemoteAddressForIpv6(remoteIpAddress, remotePort);
+    }
+
+    remoteIpAddress = "127.0.0.1";
+    remotePort = 0;
+    return Result::Ok;
 }
 
 Result Socket::GetRemoteAddressForIpv4(std::string& remoteIpAddress, uint16_t& remotePort) const {

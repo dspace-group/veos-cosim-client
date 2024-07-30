@@ -209,7 +209,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(*reinterpret_cast<CanMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Receive(*message));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessage* message) {
@@ -218,7 +218,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, con
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(*reinterpret_cast<const CanMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Transmit(*message));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle, uint32_t* ethControllersCount, const DsVeosCoSim_EthController** ethControllers) {
@@ -237,7 +237,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(*reinterpret_cast<EthMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Receive(*message));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessage* message) {
@@ -246,7 +246,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, con
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(*reinterpret_cast<const EthMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Transmit(*message));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle, uint32_t* linControllersCount, const DsVeosCoSim_LinController** linControllers) {
@@ -265,7 +265,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(*reinterpret_cast<LinMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Receive(*message));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessage* message) {
@@ -274,5 +274,5 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, con
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(*reinterpret_cast<const LinMessage*>(message)));
+    return static_cast<DsVeosCoSim_Result>(client->Transmit(*message));
 }

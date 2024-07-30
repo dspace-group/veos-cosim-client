@@ -24,7 +24,7 @@ public:
     ~CoSimClient() noexcept = default;
 
     CoSimClient(const CoSimClient&) = delete;
-    CoSimClient& operator=(CoSimClient const&) = delete;
+    CoSimClient& operator=(const CoSimClient&) = delete;
 
     CoSimClient(CoSimClient&&) = delete;
     CoSimClient& operator=(CoSimClient&&) = delete;
@@ -60,20 +60,20 @@ public:
     [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<CanController>& controllers) const;
 
-    [[nodiscard]] Result Receive(CanMessage& message);
-    [[nodiscard]] Result Transmit(const CanMessage& message);
+    [[nodiscard]] Result Receive(DsVeosCoSim_CanMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
 
     [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<EthController>& controllers) const;
 
-    [[nodiscard]] Result Receive(EthMessage& message);
-    [[nodiscard]] Result Transmit(const EthMessage& message);
+    [[nodiscard]] Result Receive(DsVeosCoSim_EthMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
 
     [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const;
     [[nodiscard]] Result GetControllers(std::vector<LinController>& controllers) const;
 
-    [[nodiscard]] Result Receive(LinMessage& message);
-    [[nodiscard]] Result Transmit(const LinMessage& message);
+    [[nodiscard]] Result Receive(DsVeosCoSim_LinMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
 
 private:
     void SetCallbacks(const Callbacks& callbacks);
@@ -116,7 +116,7 @@ private:
 
     ResponderMode _responderMode{};
     Command _currentCommand{};
-    std::atomic<Command> _nextCommand{};
+    std::atomic<Command> _nextCommand;
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;

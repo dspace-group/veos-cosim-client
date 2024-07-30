@@ -8,6 +8,21 @@
 
 namespace DsVeosCoSim {
 
+struct CanMessageContainer {
+    DsVeosCoSim_CanMessage message{};
+    std::array<uint8_t, CanMessageMaxLength> data{};
+};
+
+struct EthMessageContainer {
+    DsVeosCoSim_EthMessage message{};
+    std::array<uint8_t, EthMessageMaxLength> data{};
+};
+
+struct LinMessageContainer {
+    DsVeosCoSim_LinMessage message{};
+    std::array<uint8_t, LinMessageMaxLength> data{};
+};
+
 int Random(int min, int max);
 
 void FillWithRandom(uint8_t* data, size_t length);
