@@ -63,30 +63,33 @@ void CoSimClient::SetCallbacks(const Callbacks& callbacks) {
     _callbacks = callbacks;
 
     if (_callbacks.callbacks.canMessageReceivedCallback) {
-        _callbacks.canMessageReceivedCallback = [this](SimulationTime simulationTime, const CanController& canController, const CanMessage& message) {
-            _callbacks.callbacks.canMessageReceivedCallback(simulationTime,
-                                                            reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
-                                                            reinterpret_cast<const DsVeosCoSim_CanMessage*>(&message),
-                                                            _callbacks.callbacks.userData);
-        };
+        _callbacks.canMessageReceivedCallback =
+            [this](SimulationTime simulationTime, const CanController& canController, const DsVeosCoSim_CanMessage& message) {
+                _callbacks.callbacks.canMessageReceivedCallback(simulationTime,
+                                                                reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
+                                                                reinterpret_cast<const DsVeosCoSim_CanMessage*>(&message),
+                                                                _callbacks.callbacks.userData);
+            };
     }
 
     if (_callbacks.callbacks.ethMessageReceivedCallback) {
-        _callbacks.ethMessageReceivedCallback = [this](SimulationTime simulationTime, const EthController& ethController, const EthMessage& message) {
-            _callbacks.callbacks.ethMessageReceivedCallback(simulationTime,
-                                                            reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
-                                                            reinterpret_cast<const DsVeosCoSim_EthMessage*>(&message),
-                                                            _callbacks.callbacks.userData);
-        };
+        _callbacks.ethMessageReceivedCallback =
+            [this](SimulationTime simulationTime, const EthController& ethController, const DsVeosCoSim_EthMessage& message) {
+                _callbacks.callbacks.ethMessageReceivedCallback(simulationTime,
+                                                                reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
+                                                                reinterpret_cast<const DsVeosCoSim_EthMessage*>(&message),
+                                                                _callbacks.callbacks.userData);
+            };
     }
 
     if (_callbacks.callbacks.linMessageReceivedCallback) {
-        _callbacks.linMessageReceivedCallback = [this](SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
-            _callbacks.callbacks.linMessageReceivedCallback(simulationTime,
-                                                            reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
-                                                            reinterpret_cast<const DsVeosCoSim_LinMessage*>(&message),
-                                                            _callbacks.callbacks.userData);
-        };
+        _callbacks.linMessageReceivedCallback =
+            [this](SimulationTime simulationTime, const LinController& linController, const DsVeosCoSim_LinMessage& message) {
+                _callbacks.callbacks.linMessageReceivedCallback(simulationTime,
+                                                                reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
+                                                                reinterpret_cast<const DsVeosCoSim_LinMessage*>(&message),
+                                                                _callbacks.callbacks.userData);
+            };
     }
 
     if (_callbacks.callbacks.incomingSignalChangedCallback) {
@@ -321,13 +324,13 @@ Result CoSimClient::GetControllers(std::vector<CanController>& controllers) cons
     return Result::Ok;
 }
 
-Result CoSimClient::Receive(CanMessage& message) {
+Result CoSimClient::Receive(DsVeosCoSim_CanMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Receive(message);
 }
 
-Result CoSimClient::Transmit(const CanMessage& message) {
+Result CoSimClient::Transmit(const DsVeosCoSim_CanMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Transmit(message);
@@ -348,13 +351,13 @@ Result CoSimClient::GetControllers(std::vector<EthController>& controllers) cons
     return Result::Ok;
 }
 
-Result CoSimClient::Receive(EthMessage& message) {
+Result CoSimClient::Receive(DsVeosCoSim_EthMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Receive(message);
 }
 
-Result CoSimClient::Transmit(const EthMessage& message) {
+Result CoSimClient::Transmit(const DsVeosCoSim_EthMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Transmit(message);
@@ -375,13 +378,13 @@ Result CoSimClient::GetControllers(std::vector<LinController>& controllers) cons
     return Result::Ok;
 }
 
-Result CoSimClient::Receive(LinMessage& message) {
+Result CoSimClient::Receive(DsVeosCoSim_LinMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Receive(message);
 }
 
-Result CoSimClient::Transmit(const LinMessage& message) {
+Result CoSimClient::Transmit(const DsVeosCoSim_LinMessage& message) {
     CheckResult(EnsureIsConnected());
 
     return _busBuffer.Transmit(message);
@@ -435,30 +438,30 @@ Result CoSimClient::OnConnectOk() {
     _incomingSignalsForC.reserve(_incomingSignals.size());
     for (const auto& signal : _incomingSignals) {
         _incomingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
-                                     signal.length,
-                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
-                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
-                                     signal.name.c_str()});
+                                        signal.length,
+                                        static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                        static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                        signal.name.c_str()});
     }
 
     _outgoingSignalsForC.reserve(_outgoingSignals.size());
     for (const auto& signal : _outgoingSignals) {
         _outgoingSignalsForC.push_back({static_cast<DsVeosCoSim_IoSignalId>(signal.id),
-                                     signal.length,
-                                     static_cast<DsVeosCoSim_DataType>(signal.dataType),
-                                     static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
-                                     signal.name.c_str()});
+                                        signal.length,
+                                        static_cast<DsVeosCoSim_DataType>(signal.dataType),
+                                        static_cast<DsVeosCoSim_SizeKind>(signal.sizeKind),
+                                        signal.name.c_str()});
     }
 
     _canControllersForC.reserve(_canControllers.size());
     for (const auto& controller : _canControllers) {
         _canControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
-                                    controller.queueSize,
-                                    controller.bitsPerSecond,
-                                    controller.flexibleDataRateBitsPerSecond,
-                                    controller.name.c_str(),
-                                    controller.channelName.c_str(),
-                                    controller.clusterName.c_str()});
+                                       controller.queueSize,
+                                       controller.bitsPerSecond,
+                                       controller.flexibleDataRateBitsPerSecond,
+                                       controller.name.c_str(),
+                                       controller.channelName.c_str(),
+                                       controller.clusterName.c_str()});
     }
 
     _ethControllersForC.reserve(_ethControllers.size());
@@ -467,23 +470,22 @@ Result CoSimClient::OnConnectOk() {
                                               controller.queueSize,
                                               controller.bitsPerSecond,
                                               {},
-                                              {},
                                               controller.name.c_str(),
                                               controller.channelName.c_str(),
                                               controller.clusterName.c_str()};
-        memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
+        (void)std::memcpy(controller2.macAddress, controller.macAddress.data(), EthAddressLength);
         _ethControllersForC.push_back(controller2);
     }
 
     _linControllersForC.reserve(_linControllers.size());
     for (const auto& controller : _linControllers) {
         _linControllersForC.push_back({static_cast<DsVeosCoSim_BusControllerId>(controller.id),
-                                    controller.queueSize,
-                                    controller.bitsPerSecond,
-                                    static_cast<DsVeosCoSim_LinControllerType>(controller.type),
-                                    controller.name.c_str(),
-                                    controller.channelName.c_str(),
-                                    controller.clusterName.c_str()});
+                                       controller.queueSize,
+                                       controller.bitsPerSecond,
+                                       static_cast<DsVeosCoSim_LinControllerType>(controller.type),
+                                       controller.name.c_str(),
+                                       controller.channelName.c_str(),
+                                       controller.clusterName.c_str()});
     }
 
     if (_serverName.empty()) {
@@ -568,9 +570,9 @@ Result CoSimClient::RunCallbackBasedCoSimulationInternal() {  // NOLINT(readabil
     return Result::Disconnected;
 }
 
-Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime,
-                                           Command& command,
-                                           bool returnOnPing) {  // NOLINT(readability-function-cognitive-complexity)
+Result CoSimClient::PollCommandInternal(SimulationTime& simulationTime,  // NOLINT(readability-function-cognitive-complexity)
+                                        Command& command,
+                                        bool returnOnPing) {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 

@@ -10,8 +10,22 @@ namespace DsVeosCoSim {
 
 enum class AddressFamily {
     Ipv4 = 1,
-    Ipv6
+    Ipv6,
+    Uds
 };
+
+[[nodiscard]] inline std::string ToString(AddressFamily addressFamily) {
+    switch (addressFamily) {
+        case AddressFamily::Ipv4:
+            return "Ipv4";
+        case AddressFamily::Ipv6:
+            return "Ipv6";
+        case AddressFamily::Uds:
+            return "Uds";
+    }
+
+    return std::to_string(static_cast<int>(addressFamily));
+}
 
 class Socket {
 #ifdef _WIN32
@@ -27,7 +41,7 @@ public:
     ~Socket() noexcept;
 
     Socket(const Socket&) = delete;
-    Socket& operator=(Socket const&) = delete;
+    Socket& operator=(const Socket&) = delete;
 
     Socket(Socket&&) noexcept;
     Socket& operator=(Socket&&) noexcept;
@@ -42,7 +56,9 @@ public:
     [[nodiscard]] Result Create(AddressFamily addressFamily);
     [[nodiscard]] Result EnableIpv6Only() const;
     [[nodiscard]] Result Connect(std::string_view ipAddress, uint16_t remotePort, uint16_t localPort);
+    [[nodiscard]] Result Connect(std::string_view path) const;
     [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess) const;
+    [[nodiscard]] Result Bind(std::string_view path);
     [[nodiscard]] Result EnableReuseAddress() const;
     [[nodiscard]] Result EnableNoDelay() const;
     [[nodiscard]] Result Listen() const;
@@ -64,6 +80,7 @@ private:
 
     socket_t _socket = InvalidSocket;
     int _addressFamily{};
+    std::string _path;
 };
 
 }  // namespace DsVeosCoSim

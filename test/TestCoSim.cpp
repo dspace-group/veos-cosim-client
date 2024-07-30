@@ -16,15 +16,18 @@ namespace {
 CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     CoSimServerConfig config{};
     config.serverName = GenerateString("ServerName日本語");
-    config.startPortMapper = true;
+    config.startPortMapper = false;
+    config.registerAtPortMapper = false;
     config.isClientOptional = isClientOptional;
     config.logCallback = OnLogCallback;
     return config;
 }
 
-void CreateConnectConfig(const std::string& serverName, ConnectConfig& connectConfig) {
+ConnectConfig CreateConnectConfig(const std::string& serverName) {
+    ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("ClientName日本語");
+    return connectConfig;
 }
 
 }  // namespace
@@ -156,8 +159,7 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
 
 TEST_F(TestCoSim, ConnectWithoutServer) {
     // Arrange
-    ConnectConfig connectConfig{};
-    CreateConnectConfig(GenerateString("ServerName日本語"), connectConfig);
+    ConnectConfig connectConfig = CreateConnectConfig(GenerateString("ServerName日本語"));
 
     CoSimClient client;
 
@@ -184,12 +186,14 @@ TEST_F(TestCoSim, ConnectWithoutServerNameAndPort) {
 TEST_F(TestCoSim, ConnectToServer) {
     // Arrange
     const CoSimServerConfig config = CreateServerConfig(true);
-    ConnectConfig connectConfig{};
-    CreateConnectConfig(config.serverName, connectConfig);
 
     CoSimServerWrapper server;
     ASSERT_OK(server.Load(config));
 
+    uint16_t localPort = server.GetLocalPort();
+
+    ConnectConfig connectConfig = CreateConnectConfig(config.serverName);
+    connectConfig.remotePort = localPort;
     CoSimClient client;
 
     // Act

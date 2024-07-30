@@ -84,7 +84,7 @@ void AssertEq(const LinController& expected, const LinController& actual) {
     AssertEq(expected.clusterName, actual.clusterName);
 }
 
-void AssertEq(const CanMessage& expected, const CanMessage& actual) {
+void AssertEq(const DsVeosCoSim_CanMessage& expected, const DsVeosCoSim_CanMessage& actual) {
     ASSERT_EQ(expected.timestamp, actual.timestamp);
     ASSERT_EQ(expected.controllerId, actual.controllerId);
     ASSERT_EQ(expected.id, actual.id);
@@ -93,7 +93,7 @@ void AssertEq(const CanMessage& expected, const CanMessage& actual) {
     AssertByteArray(expected.data, actual.data, expected.length);
 }
 
-void AssertEq(const EthMessage& expected, const EthMessage& actual) {
+void AssertEq(const DsVeosCoSim_EthMessage& expected, const DsVeosCoSim_EthMessage& actual) {
     ASSERT_EQ(expected.timestamp, actual.timestamp);
     ASSERT_EQ(expected.controllerId, actual.controllerId);
     ASSERT_EQ(expected.flags, actual.flags);
@@ -101,7 +101,7 @@ void AssertEq(const EthMessage& expected, const EthMessage& actual) {
     AssertByteArray(expected.data, actual.data, expected.length);
 }
 
-void AssertEq(const LinMessage& expected, const LinMessage& actual) {
+void AssertEq(const DsVeosCoSim_LinMessage& expected, const DsVeosCoSim_LinMessage& actual) {
     ASSERT_EQ(expected.timestamp, actual.timestamp);
     ASSERT_EQ(expected.controllerId, actual.controllerId);
     ASSERT_EQ(expected.id, actual.id);

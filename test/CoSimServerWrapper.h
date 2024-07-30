@@ -33,9 +33,11 @@ public:
 
     // Data functions
     [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value);
-    [[nodiscard]] Result Transmit(const CanMessage& message);
-    [[nodiscard]] Result Transmit(const LinMessage& message);
-    [[nodiscard]] Result Transmit(const EthMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
+
+    [[nodiscard]] uint16_t GetLocalPort() const;
 
 private:
     void RunBackground();

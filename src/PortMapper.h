@@ -15,7 +15,7 @@ public:
     ~PortMapperServer() noexcept;
 
     PortMapperServer(const PortMapperServer&) = delete;
-    PortMapperServer& operator=(PortMapperServer const&) = delete;
+    PortMapperServer& operator=(const PortMapperServer&) = delete;
 
     PortMapperServer(PortMapperServer&&) = delete;
     PortMapperServer& operator=(PortMapperServer&&) = delete;
@@ -40,8 +40,6 @@ private:
 
     bool _isRunning = false;
 };
-
-[[nodiscard]] uint16_t GetPortMapperPort();
 
 [[nodiscard]] Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port);
 [[nodiscard]] Result PortMapper_SetPort(std::string_view name, uint16_t port);

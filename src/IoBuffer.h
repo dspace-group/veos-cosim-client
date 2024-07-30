@@ -25,10 +25,10 @@ public:
     ~IoBuffer() noexcept = default;
 
     IoBuffer(const IoBuffer&) = delete;
-    IoBuffer& operator=(IoBuffer const&) = delete;
+    IoBuffer& operator=(const IoBuffer&) = delete;
 
     IoBuffer(IoBuffer&&) noexcept = default;
-    IoBuffer& operator=(IoBuffer&&) = default;
+    IoBuffer& operator=(IoBuffer&&) noexcept = default;
 
     [[nodiscard]] Result Initialize(const std::vector<IoSignal>& incomingSignals, const std::vector<IoSignal>& outgoingSignals);
     void Reset();

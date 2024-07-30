@@ -128,7 +128,6 @@ std::vector<LinController> CreateLinControllers(uint32_t count) {
 
 void CreateMessage(BusControllerId controllerId, CanMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, CanMessageMaxLength);
-    container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
     container.message.id = GenerateU32();
@@ -139,7 +138,6 @@ void CreateMessage(BusControllerId controllerId, CanMessageContainer& container)
 
 void CreateMessage(BusControllerId controllerId, EthMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, EthMessageMaxLength);
-    container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
     container.message.timestamp = GenerateI64();
@@ -149,7 +147,6 @@ void CreateMessage(BusControllerId controllerId, EthMessageContainer& container)
 
 void CreateMessage(BusControllerId controllerId, LinMessageContainer& container) {
     const uint32_t length = GenerateRandom(1U, LinMessageMaxLength);
-    container.data.resize(length);
     FillWithRandom(container.data.data(), length);
     container.message.controllerId = controllerId;
     container.message.id = GenerateU8();

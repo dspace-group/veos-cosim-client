@@ -169,7 +169,7 @@ TEST_F(TestIoBuffer, ScalarInitialData) {
     AssertByteArray(initialValue.data(), readValue.data(), initialValue.size());
 }
 
-TEST_F(TestIoBuffer, ScalarChanged) {
+TEST_F(TestIoBuffer, ScalarChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     IoSignal signal{};
     CreateSignal(signal, GenerateU32());
@@ -267,7 +267,7 @@ TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
     AssertByteArray(initialValue.data(), readValue.data(), initialValue.size());
 }
 
-TEST_F(TestIoBuffer, FixedSizedVectorChanged) {
+TEST_F(TestIoBuffer, FixedSizedVectorChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     IoSignal signal{};
     CreateSignal(signal, GenerateU32());
@@ -361,7 +361,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
     ASSERT_EQ(0U, readLength);
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
+TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     IoSignal signal{};
     CreateSignal(signal, GenerateU32());
@@ -406,7 +406,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {
     AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
+TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     IoSignal signal{};
     CreateSignal(signal, GenerateU32());
@@ -452,7 +452,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {
     AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {
+TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     IoSignal signal{};
     CreateSignal(signal, GenerateU32());

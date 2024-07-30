@@ -49,7 +49,7 @@ Result Channel::Write(const void* source, size_t size) {
             continue;
         }
 
-        memcpy(&_writeBuffer[_writeBufferWriteIndex], bufferPointer, sizeToCopy);
+        (void)std::memcpy(&_writeBuffer[_writeBufferWriteIndex], bufferPointer, sizeToCopy);
         _writeBufferWriteIndex += sizeToCopy;
         bufferPointer += sizeToCopy;
         size -= sizeToCopy;
@@ -72,7 +72,7 @@ Result Channel::Read(void* destination, size_t size) {
             continue;
         }
 
-        memcpy(bufferPointer, &_readBuffer[_readBufferReadIndex], sizeToCopy);
+        (void)std::memcpy(bufferPointer, &_readBuffer[_readBufferReadIndex], sizeToCopy);
         _readBufferReadIndex += sizeToCopy;
         bufferPointer += sizeToCopy;
         size -= sizeToCopy;
@@ -95,7 +95,7 @@ Result Channel::FlushWriteBuffer() {
     uint8_t* sourcePtr = _writeBuffer.data();
 
     // Write header
-    memcpy(sourcePtr, &_writeBufferWriteIndex, sizeof _writeBufferWriteIndex);
+    (void)std::memcpy(sourcePtr, &_writeBufferWriteIndex, sizeof _writeBufferWriteIndex);
 
     while (_writeBufferWriteIndex > 0) {
         int size = 0;
@@ -117,14 +117,14 @@ Result Channel::FillReadBuffer() {
     // Did we read more than one frame the last time?
     if (_readBufferWriteIndex > _readBufferEndFrameIndex) {
         const int bytesToMove = _readBufferWriteIndex - _readBufferEndFrameIndex;
-        memmove(_readBuffer.data(), &_readBuffer[_readBufferEndFrameIndex], bytesToMove);
+        (void)std::memcpy(_readBuffer.data(), &_readBuffer[_readBufferEndFrameIndex], bytesToMove);
 
         _readBufferWriteIndex -= _readBufferEndFrameIndex;
 
         // Did we read at least HeaderSize bytes more?
         if (bytesToMove >= HeaderSize) {
             readHeader = false;
-            memcpy(&_readBufferEndFrameIndex, _readBuffer.data(), HeaderSize);
+            (void)std::memcpy(&_readBufferEndFrameIndex, _readBuffer.data(), HeaderSize);
 
             // Did we read at least an entire second frame?
             if (_readBufferWriteIndex >= _readBufferEndFrameIndex) {
@@ -146,7 +146,7 @@ Result Channel::FillReadBuffer() {
 
         if (readHeader && _readBufferWriteIndex >= HeaderSize) {
             readHeader = false;
-            memcpy(&_readBufferEndFrameIndex, _readBuffer.data(), HeaderSize);
+            (void)std::memcpy(&_readBufferEndFrameIndex, _readBuffer.data(), HeaderSize);
 
             if (_readBufferEndFrameIndex > BufferSize) {
                 LogError("Protocol error. The buffer size is too small.");

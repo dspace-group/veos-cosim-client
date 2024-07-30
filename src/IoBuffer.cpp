@@ -73,7 +73,7 @@ Result IoBuffer::Read(IoSignalId signalId, uint32_t& length, void* value) {
 
     length = readBuffer->currentLength;
     const size_t totalSize = static_cast<size_t>(readBuffer->currentLength) * readBuffer->dataTypeSize;
-    memcpy(value, readBuffer->data.data(), totalSize);
+    (void)std::memcpy(value, readBuffer->data.data(), totalSize);
     return Result::Ok;
 }
 
@@ -107,19 +107,19 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
         writeBuffer->currentLength = length;
     } else {
         if (length != writeBuffer->info.length) {
-            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " + std::to_string(writeBuffer->info.length) +
-                     " but was " + std::to_string(length) + ".");
+            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " + std::to_string(writeBuffer->info.length) + " but was " +
+                     std::to_string(length) + ".");
             return Result::Error;
         }
     }
 
     const size_t totalSize = static_cast<size_t>(writeBuffer->currentLength) * writeBuffer->dataTypeSize;
 
-    if (memcmp(writeBuffer->data.data(), value, totalSize) == 0) {
+    if (std::memcmp(writeBuffer->data.data(), value, totalSize) == 0) {
         return Result::Ok;
     }
 
-    memcpy(writeBuffer->data.data(), value, totalSize);
+    (void)std::memcpy(writeBuffer->data.data(), value, totalSize);
 
     if (!writeBuffer->changed) {
         writeBuffer->changed = true;

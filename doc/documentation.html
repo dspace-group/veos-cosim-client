@@ -367,108 +367,106 @@ code {
   </script>
 <h1 id="table-of-contents">Table of Contents</h1>
 <ul>
-<li><a href="#BasicsOnCoSimulationWithVeos">Basics on Co-Simulation with VEOS</a>
+<li><a href="#basics-on-co-simulation">Basics on Co-Simulation</a>
 <ul>
-<li><a href="#BasicsOnCoSimulationWithVeos2">Basics on Co-Simulation with VEOS</a></li>
-<li><a href="#BasicsOnCoSimServers">Basics on CoSim Servers</a></li>
-<li><a href="#BasicsOnCoSimClients">Basics on CoSim Clients</a></li>
+<li><a href="#basics-on-co-simulation-with-veos">Basics on Co-Simulation with VEOS</a></li>
+<li><a href="#basics-on-cosim-servers">Basics on CoSim Servers</a></li>
+<li><a href="#basics-on-cosim-clients">Basics on CoSim Clients</a></li>
 </ul>
 </li>
-<li><a href="#WorkingWithTheVeosCoSimDemo">Working with the VEOS CoSim Demo</a>
+<li><a href="#working-with-the-veos-cosim-demo">Working with the VEOS CoSim Demo</a>
 <ul>
-<li><a href="#OverviewOfTheVeosCoSimDemo">Overview of the VEOS CoSim Demo</a></li>
-<li><a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a></li>
-<li><a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a></li>
-<li><a href="#ExampleImplementingSimulationStateChangeCallbacks">Example: Implementing Simulation State Change Callbacks</a></li>
-<li><a href="#ExampleAccessingTheDataInterface">Example: Accessing the Data Interface</a></li>
-<li><a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCanBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a></li>
-<li><a href="#ExampleSendingData">Example: Sending Data</a></li>
-<li><a href="#ExampleReceivingData">Example: Receiving Data</a></li>
-<li><a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a></li>
-<li><a href="#ExampleHandlingIOSignals">Example: Handling I/O Signals</a></li>
-<li><a href="#ExampleOptionalClient">Example: Optional Client</a></li>
+<li><a href="#overview-of-the-veos-cosim-demo">Overview of the VEOS CoSim Demo</a></li>
+<li><a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a></li>
+<li><a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a></li>
+<li><a href="#example-implementing-simulation-state-change-callbacks">Example: Implementing Simulation State Change Callbacks</a></li>
+<li><a href="#example-accessing-the-data-interface">Example: Accessing the Data Interface</a></li>
+<li><a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a></li>
+<li><a href="#example-sending-data">Example: Sending Data</a></li>
+<li><a href="#example-receiving-data">Example: Receiving Data</a></li>
+<li><a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a></li>
+<li><a href="#example-handling-io-signals">Example: Handling I/O Signals</a></li>
+<li><a href="#example-optional-client">Example: Optional Client</a></li>
 </ul>
 </li>
-<li><a href="#ApiReference">DsVeosCoSim Client API Reference</a>
+<li><a href="#dsveoscosim-client-api-reference">DsVeosCoSim Client API Reference</a>
 <ul>
-<li><a href="#Enumerations">Enumerations</a>
+<li><a href="#enumerations">Enumerations</a>
 <ul>
-<li><a href="#DsVeosCoSim_CanMessageFlags">DsVeosCoSim_CanMessageFlags</a></li>
-<li><a href="#DsVeosCoSim_Command">DsVeosCoSim_Command</a></li>
-<li><a href="#DsVeosCoSim_ConnectionState">DsVeosCoSim_ConnectionState</a></li>
-<li><a href="#DsVeosCoSim_DataType">DsVeosCoSim_DataType</a></li>
-<li><a href="#DsVeosCoSim_EthMessageFlags">DsVeosCoSim_EthMessageFlags</a></li>
-<li><a href="#DsVeosCoSim_LinControllerType">DsVeosCoSim_LinControllerType</a></li>
-<li><a href="#DsVeosCoSim_LinMessageFlags">DsVeosCoSim_LinMessageFlags</a></li>
-<li><a href="#DsVeosCoSim_Result">DsVeosCoSim_Result</a></li>
-<li><a href="#DsVeosCoSim_Severity">DsVeosCoSim_Severity</a></li>
-<li><a href="#DsVeosCoSim_SizeKind">DsVeosCoSim_SizeKind</a></li>
-<li><a href="#DsVeosCoSim_TerminateReason">DsVeosCoSim_TerminateReason</a></li>
+<li><a href="#dsveoscosim_canmessageflags-enumeration">DsVeosCoSim_CanMessageFlags</a></li>
+<li><a href="#dsveoscosim_command-enumeration">DsVeosCoSim_Command</a></li>
+<li><a href="#dsveoscosim_connectionstate-enumeration">DsVeosCoSim_ConnectionState</a></li>
+<li><a href="#dsveoscosim_datatype-enumeration">DsVeosCoSim_DataType</a></li>
+<li><a href="#dsveoscosim_ethmessageflags-enumeration">DsVeosCoSim_EthMessageFlags</a></li>
+<li><a href="#dsveoscosim_lincontrollertype-enumeration">DsVeosCoSim_LinControllerType</a></li>
+<li><a href="#dsveoscosim_linmessageflags-enumeration">DsVeosCoSim_LinMessageFlags</a></li>
+<li><a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result</a></li>
+<li><a href="#dsveoscosim_severity-enumeration">DsVeosCoSim_Severity</a></li>
+<li><a href="#dsveoscosim_sizekind-enumeration">DsVeosCoSim_SizeKind</a></li>
+<li><a href="#dsveoscosim_terminatereason-enumeration">DsVeosCoSim_TerminateReason</a></li>
 </ul>
 </li>
-<li><a href="#Functions">Functions</a>
+<li><a href="#functions">Functions</a>
 <ul>
-<li><a href="#DsVeosCoSim_CanMessageReceivedCallback">DsVeosCoSim_CanMessageReceivedCallback</a></li>
-<li><a href="#DsVeosCoSim_Connect">DsVeosCoSim_Connect</a></li>
-<li><a href="#DsVeosCoSim_Destroy">DsVeosCoSim_Destroy</a></li>
-<li><a href="#DsVeosCoSim_Disconnect">DsVeosCoSim_Disconnect</a></li>
-<li><a href="#DsVeosCoSim_EthMessageReceivedCallback">DsVeosCoSim_EthMessageReceivedCallback</a></li>
-<li><a href="#DsVeosCoSim_FinishCommand">DsVeosCoSim_FinishCommand</a></li>
-<li><a href="#DsVeosCoSim_GetCanControllers">DsVeosCoSim_GetCanControllers</a></li>
-<li><a href="#DsVeosCoSim_GetConnectionState">DsVeosCoSim_GetConnectionState</a></li>
-<li><a href="#DsVeosCoSim_GetEthControllers">DsVeosCoSim_GetEthControllers</a></li>
-<li><a href="#DsVeosCoSim_GetIncomingSignals">DsVeosCoSim_GetIncomingSignals</a></li>
-<li><a href="#DsVeosCoSim_GetLinControllers">DsVeosCoSim_GetLinControllers</a></li>
-<li><a href="#DsVeosCoSim_GetOutgoingSignals">DsVeosCoSim_GetOutgoingSignals</a></li>
-<li><a href="#DsVeosCoSim_IncomingSignalChangedCallback">DsVeosCoSim_IncomingSignalChangedCallback</a></li>
-<li><a href="#DsVeosCoSim_LinMessageReceivedCallback">DsVeosCoSim_LinMessageReceivedCallback</a></li>
-<li><a href="#DsVeosCoSim_LogCallback">DsVeosCoSim_LogCallback</a></li>
-<li><a href="#DsVeosCoSim_PollCommand">DsVeosCoSim_PollCommand</a></li>
-<li><a href="#DsVeosCoSim_ReadIncomingSignal">DsVeosCoSim_ReadIncomingSignal</a></li>
-<li><a href="#DsVeosCoSim_ReceiveCanMessage">DsVeosCoSim_ReceiveCanMessage</a></li>
-<li><a href="#DsVeosCoSim_ReceiveEthMessage">DsVeosCoSim_ReceiveEthMessage</a></li>
-<li><a href="#DsVeosCoSim_ReceiveLinMessage">DsVeosCoSim_ReceiveLinMessage</a></li>
-<li><a href="#DsVeosCoSim_RunCallbackBasedCoSimulation">DsVeosCoSim_RunCallbackBasedCoSimulation</a></li>
-<li><a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a></li>
-<li><a href="#DsVeosCoSim_SetLogCallback">DsVeosCoSim_SetLogCallback</a></li>
-<li><a href="#DsVeosCoSim_SetNextSimulationTime">DsVeosCoSim_SetNextSimulationTime</a></li>
-<li><a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback</a></li>
-<li><a href="#DsVeosCoSim_SimulationTerminatedCallback">DsVeosCoSim_SimulationTerminatedCallback</a></li>
-<li><a href="#DsVeosCoSim_StartPollingBasedCoSimulation">DsVeosCoSim_StartPollingBasedCoSimulation</a></li>
-<li><a href="#DsVeosCoSim_TransmitCanMessage">DsVeosCoSim_TransmitCanMessage</a></li>
-<li><a href="#DsVeosCoSim_TransmitEthMessage">DsVeosCoSim_TransmitEthMessage</a></li>
-<li><a href="#DsVeosCoSim_TransmitLinMessage">DsVeosCoSim_TransmitLinMessage</a></li>
-<li><a href="#DsVeosCoSim_WriteOutgoingSignal">DsVeosCoSim_WriteOutgoingSignal</a></li>
+<li><a href="#dsveoscosim_canmessagereceivedcallback-function-pointer">DsVeosCoSim_CanMessageReceivedCallback</a></li>
+<li><a href="#dsveoscosim_connect-function">DsVeosCoSim_Connect</a></li>
+<li><a href="#dsveoscosim_destroy-function">DsVeosCoSim_Destroy</a></li>
+<li><a href="#dsveoscosim_disconnect-function">DsVeosCoSim_Disconnect</a></li>
+<li><a href="#dsveoscosim_ethmessagereceivedcallback-function-pointer">DsVeosCoSim_EthMessageReceivedCallback</a></li>
+<li><a href="#dsveoscosim_finishcommand-function">DsVeosCoSim_FinishCommand</a></li>
+<li><a href="#dsveoscosim_getcancontrollers-function">DsVeosCoSim_GetCanControllers</a></li>
+<li><a href="#dsveoscosim_getconnectionstate-function">DsVeosCoSim_GetConnectionState</a></li>
+<li><a href="#dsveoscosim_getethcontrollers-function">DsVeosCoSim_GetEthControllers</a></li>
+<li><a href="#dsveoscosim_getincomingsignals-function">DsVeosCoSim_GetIncomingSignals</a></li>
+<li><a href="#dsveoscosim_getlincontrollers-function">DsVeosCoSim_GetLinControllers</a></li>
+<li><a href="#dsveoscosim_getoutgoingsignals-function">DsVeosCoSim_GetOutgoingSignals</a></li>
+<li><a href="#dsveoscosim_incomingsignalchangedcallback-function-pointer">DsVeosCoSim_IncomingSignalChangedCallback</a></li>
+<li><a href="#dsveoscosim_linmessagereceivedcallback-function-pointer">DsVeosCoSim_LinMessageReceivedCallback</a></li>
+<li><a href="#dsveoscosim_logcallback-function-pointer">DsVeosCoSim_LogCallback</a></li>
+<li><a href="#dsveoscosim_pollcommand-function">DsVeosCoSim_PollCommand</a></li>
+<li><a href="#dsveoscosim_readincomingsignal-function">DsVeosCoSim_ReadIncomingSignal</a></li>
+<li><a href="#dsveoscosim_receivecanmessage-function">DsVeosCoSim_ReceiveCanMessage</a></li>
+<li><a href="#dsveoscosim_receiveethmessage-function">DsVeosCoSim_ReceiveEthMessage</a></li>
+<li><a href="#dsveoscosim_receivelinmessage-function">DsVeosCoSim_ReceiveLinMessage</a></li>
+<li><a href="#dsveoscosim_runcallbackbasedcosimulation-function">DsVeosCoSim_RunCallbackBasedCoSimulation</a></li>
+<li><a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks</a></li>
+<li><a href="#dsveoscosim_setlogcallback-function">DsVeosCoSim_SetLogCallback</a></li>
+<li><a href="#dsveoscosim_setnextsimulationtime-function">DsVeosCoSim_SetNextSimulationTime</a></li>
+<li><a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback</a></li>
+<li><a href="#dsveoscosim_simulationterminatedcallback-function-pointer">DsVeosCoSim_SimulationTerminatedCallback</a></li>
+<li><a href="#dsveoscosim_startpollingbasedcosimulation-function">DsVeosCoSim_StartPollingBasedCoSimulation</a></li>
+<li><a href="#dsveoscosim_transmitcanmessage-function">DsVeosCoSim_TransmitCanMessage</a></li>
+<li><a href="#dsveoscosim_transmitethmessage-function">DsVeosCoSim_TransmitEthMessage</a></li>
+<li><a href="#dsveoscosim_transmitlinmessage-function">DsVeosCoSim_TransmitLinMessage</a></li>
+<li><a href="#dsveoscosim_writeoutgoingsignal-function">DsVeosCoSim_WriteOutgoingSignal</a></li>
 </ul>
 </li>
-<li><a href="#Structures">Structures</a>
+<li><a href="#structures">Structures</a>
 <ul>
-<li><a href="#DsVeosCoSim_Callbacks">DsVeosCoSim_Callbacks</a></li>
-<li><a href="#DsVeosCoSim_CanController">DsVeosCoSim_CanController</a></li>
-<li><a href="#DsVeosCoSim_CanMessage">DsVeosCoSim_CanMessage</a></li>
-<li><a href="#DsVeosCoSim_ConnectConfig">DsVeosCoSim_ConnectConfig</a></li>
-<li><a href="#DsVeosCoSim_EthController">DsVeosCoSim_EthController</a></li>
-<li><a href="#DsVeosCoSim_EthMessage">DsVeosCoSim_EthMessage</a></li>
-<li><a href="#DsVeosCoSim_IoSignal">DsVeosCoSim_IoSignal</a></li>
-<li><a href="#DsVeosCoSim_LinController">DsVeosCoSim_LinController</a></li>
-<li><a href="#DsVeosCoSim_LinMessage">DsVeosCoSim_LinMessage</a></li>
+<li><a href="#dsveoscosim_callbacks-structure">DsVeosCoSim_Callbacks</a></li>
+<li><a href="#dsveoscosim_cancontroller-structure">DsVeosCoSim_CanController</a></li>
+<li><a href="#dsveoscosim_canmessage-structure">DsVeosCoSim_CanMessage</a></li>
+<li><a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig</a></li>
+<li><a href="#dsveoscosim_ethcontroller-structure">DsVeosCoSim_EthController</a></li>
+<li><a href="#dsveoscosim_ethmessage-structure">DsVeosCoSim_EthMessage</a></li>
+<li><a href="#dsveoscosim_iosignal-structure">DsVeosCoSim_IoSignal</a></li>
+<li><a href="#dsveoscosim_lincontroller-structure">DsVeosCoSim_LinController</a></li>
+<li><a href="#dsveoscosim_linmessage-structure">DsVeosCoSim_LinMessage</a></li>
 </ul>
 </li>
-<li><a href="#SimpleTypes">Simple Types</a>
+<li><a href="#simple-types">Simple Types</a>
 <ul>
-<li><a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId</a></li>
-<li><a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle</a></li>
-<li><a href="#DsVeosCoSim_IoSignalId">DsVeosCoSim_IoSignalId</a></li>
-<li><a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime</a></li>
+<li><a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId</a></li>
+<li><a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle</a></li>
+<li><a href="#dsveoscosim_iosignalid-type">DsVeosCoSim_IoSignalId</a></li>
+<li><a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime</a></li>
 </ul>
 </li>
-<li><a href="#Macros">Macros</a></li>
+<li><a href="#macros">Macros</a></li>
 </ul>
 </li>
 </ul>
-<div id="BasicsOnCoSimulationWithVeos" />
-<h1 id="basics-on-co-simulation-with-veos">Basics on Co-Simulation with VEOS</h1>
-<div id="BasicsOnCoSimulationWithVeos2" />
+<h1 id="basics-on-co-simulation">Basics on Co-Simulation</h1>
 <h2 id="basics-on-co-simulation-with-veos">Basics on Co-Simulation with VEOS</h2>
 <h3 id="introduction">Introduction</h3>
 <p>dSPACE provides the VEOS co-simulation interface for implementing co-simulations with VEOS. This lets you couple VEOS with domain-specific simulators,
@@ -508,18 +506,17 @@ such as data replay tools and sensor signal simulators.</p>
 <p><strong>CoSim server</strong>
 A CoSim server provides the co-simulation interface for the VEOS Simulator.</p>
 <p>Each CoSim server is generated from a JSON interface description file.</p>
-<p>For more information, refer to <a href="#BasicsOnCoSimServers">Basics on CoSim Servers</a>.</p>
+<p>For more information, refer to <a href="#basics-on-cosim-servers">Basics on CoSim Servers</a>.</p>
 <p><strong>CoSim client</strong>
 Each co-simulation participant uses a CoSim client to connect to one or more CoSim servers. The CoSim client is set up via C++ source code and CMake.
 Alternatively, it can be set up as a dynamic library if you want to work with the co-simulation interface via Python, for example.</p>
-<p>For more information, refer to <a href="#BasicsOnCoSimClients">Basics on CoSim Clients</a>.</p>
+<p>For more information, refer to <a href="#basics-on-cosim-clients">Basics on CoSim Clients</a>.</p>
 <h3 id="compatibility-and-licensing">Compatibility and licensing</h3>
 <p>The VEOS co-simulation interface is compatible with VEOS 2023-B and later.</p>
 <p>It requires the license for the VEOS - AAP (AUTOSAR Adaptive Platform) module.</p>
 <p>The VEOS co-simulation client interface is licensed as Open Source under the permissive Apache 2.0 license.</p>
 <h3 id="limitation">Limitation</h3>
 <p>You cannot access variables of a co-simulation with experiment software such as ControlDesk.</p>
-<div id="BasicsOnCoSimServers" />
 <h2 id="basics-on-cosim-servers">Basics on CoSim Servers</h2>
 <h3 id="introduction">Introduction</h3>
 <p>A CoSim server provides the co-simulation interface of the VEOS Simulator that controls the simulation.</p>
@@ -564,7 +561,7 @@ By default, the CoSim server provides a dynamic TCP port and a port mapper. The 
 </div></code></pre>
 <blockquote>
 <p><strong>Note</strong></p>
-<p>When you specify a static TCP port, you have to provide this to the related client. Refer to <a href="#ConnectingToACoSimServer">Connecting to a CoSim server</a>.</p>
+<p>When you specify a static TCP port, you have to provide this to the related client. Refer to <a href="#connecting-to-a-cosim-server">Connecting to a CoSim server</a>.</p>
 </blockquote>
 <p>Each VeosCoSim server starts its own TCP server at the TCP port specified in the JSON file and registers this port with the port mapper.</p>
 <p>The default TCP port of the port mapper is 27027. You can reconfigure it using the <code>VEOS_COSIM_PORTMAPPER_PORT</code> environment variable. You have to do this for the CoSim servers and the CoSim clients.</p>
@@ -574,11 +571,10 @@ By default, the CoSim server provides a dynamic TCP port and a port mapper. The 
 <p>The following listing shows an example of using the VEOS Model Console on Linux to import the <code>CosimServer.json</code> description file into the newly created <code>CoSimOsa.osa</code> in the current working directory.</p>
 <pre class="hljs"><code><div>/opt/dspace/veos2023b/bin/veos model import -n ./CoSimOsa.osa -p ./CoSimServer.json
 </div></code></pre>
-<p>For a working example, refer to <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>For a working example, refer to <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 <p><strong>Connecting a CoSim server to other VPUs</strong>
 To connect the I/O signals and controllers of the CoSim server to other VPUs in the same OSA, you can use drag &amp; drop in the VEOS Player (only on Windows) or the VEOS Model Console (on Windows and Linux).</p>
-<p>In many cases, you can also use the autoconnect functionality of VEOS. You can find an example of this in the CoSim demo. Refer to <a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
-<div id="BasicsOnCoSimClients" />
+<p>In many cases, you can also use the auto-connect functionality of VEOS. You can find an example of this in the CoSim demo. Refer to <a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
 <h2 id="basics-on-cosim-clients">Basics on CoSim Clients</h2>
 <h3 id="introduction">Introduction</h3>
 <p>You have to implement a CoSim client in C++ code that uses the CoSim API to interact with the CoSim server.</p>
@@ -588,7 +584,7 @@ To connect the I/O signals and controllers of the CoSim server to other VPUs in 
 <p>The following steps outline the workflow for creating a CoSim client:</p>
 <ol>
 <li>
-<p>Download the latest <code>veos-cosim-client-&lt;version&gt;.zip</code> archive from https://github.com/dspace-group/veos-cosim-client and extract it to a dedicated folder, e.g., <code>DsVeosCoSim/ThirdParty/veos-cosim-client</code> in your home directory.</p>
+<p>Download the latest <code>veos-cosim-client-&lt;version&gt;.zip</code> archive from <a href="https://github.com/dspace-group/veos-cosim-client">veos-cosim-client</a> and extract it to a dedicated folder, e.g., <code>DsVeosCoSim/ThirdParty/veos-cosim-client</code> in your home directory.</p>
 </li>
 <li>
 <p>Depending on your use case, take the following steps:</p>
@@ -620,16 +616,15 @@ cmake --install . --config Debug --prefix ../install
 </ul>
 </li>
 </ol>
-<div id="ConnectingToACoSimServer" />
 <h3 id="connecting-to-a-cosim-server">Connecting to a CoSim server</h3>
-<p>By default, a CoSim client asks the CoSim port mapper for the actual TCP port of the related CoSim server and then connects to this port. For this to work, you have to specify the server name via <code>DsVeosCoSim_ConnectConfig.serverName</code>.</p>
-<p>However, if you specified a static TCP port for the CoSim server, you have to explicitly connect to this port by providing it via <code>DsVeosCoSim_ConnectConfig.remotePort</code> in the implementation of your client.</p>
+<p>By default, a CoSim client asks the CoSim port mapper for the actual TCP port of the related CoSim server and then connects to this port. For this to work, you have to specify the server name via <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig.serverName</a>.</p>
+<p>However, if you specified a static TCP port for the CoSim server, you have to explicitly connect to this port by providing it via <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig.remotePort</a> in the implementation of your client.</p>
 <p>If you specify both <code>serverName</code> and <code>remotePort</code>, <code>remotePort</code> is used to establish the connection.</p>
-<p>If the server is running on a different host, you must specify the IP address using <code>DsVeosCoSim_ConnectConfig.remotepAddress</code>.</p>
-<p>The local port is also created dynamically by default. For special cases like creating a tunnel between client and server, you can overwrite this with a specific port using <code>DsVeosCoSim_ConnectConfig.localPort</code>.</p>
+<p>If the server is running on a different host, you must specify the IP address using <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig.remoteIpAddress</a>.</p>
+<p>The local port is also created dynamically by default. For special cases like creating a tunnel between client and server, you can overwrite this with a specific port using <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig.localPort</a>.</p>
 <blockquote>
 <p><strong>Tip</strong></p>
-<p>You can use <code>DsVeosCoSim_ConnectConfig.clientName</code> to provide a name for the client that can be used in VEOS messages for better readability. For example, if you set <code>DsVeosCoSim_ConnectConfig.clientName = &quot;CustomClient&quot;</code>, a message might look like this: <code>dSPACE VEOS CoSim client 'CustomClient' at 127.0.0.1:56248 connected.</code>.</p>
+<p>You can use <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig.clientName</a> to provide a name for the client that can be used in VEOS messages for better readability. For example, if you set <code>DsVeosCoSim_ConnectConfig.clientName = &quot;CustomClient&quot;</code>, a message might look like this: <code>dSPACE VEOS CoSim client 'CustomClient' at 127.0.0.1:56248 connected.</code>.</p>
 </blockquote>
 <h3 id="callback-based-vs-polling-based-co-simulation">Callback-based vs. polling-based co-simulation</h3>
 <p>You can configure the CoSim client for two different co-simulation modes:</p>
@@ -638,12 +633,12 @@ cmake --install . --config Debug --prefix ../install
 <p>Callback-based: This is a blocking simulation which only stops when the client is disconnected from the server. While it is running, the registered callbacks are processed for each simulation step.</p>
 <p>During each callback, VEOS does not advance the simulation until the callback is finished.</p>
 <p>In the absence of errors, a callback-based co-simulation only returns when the client is disconnected from the server.</p>
-<p>For a basic example, refer to <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>For a basic example, refer to <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 <li>
 <p>Polling-based: The simulation polls for commands and performs the actions that are specified in the implementation for each command. This can also include callbacks, which are received in the same order as for a callback-based co-simulation.</p>
 <p>This mode can be useful in cases where the CoSim server has to communicate with another API that is callback-based so you do not have to take care of synchronizing the callbacks.</p>
-<p>For an example of implementing a polling-based co-simulation, refer to <a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a>.</p>
+<p>For an example of implementing a polling-based co-simulation, refer to <a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a>.</p>
 <blockquote>
 <p><strong>Note</strong></p>
 <p>Once one of these modi is selected, it cannot be changed until the client is disconnected from the server.</p>
@@ -682,12 +677,10 @@ cmake --install . --config Debug --prefix ../install
 <h3 id="basics-on-timing">Basics on timing</h3>
 <p>Each time VEOS receives the simulation start or continue command, the server begins to send steps to the client and stops when a simulation stop, pause, or terminate command is received.</p>
 <p>The first step always takes place at simulation time 0. After that, the simulation is advanced by a step after each time interval specified in the StepSize property in the CoSim server JSON file.</p>
-<p>The client can intervene via the <code>DsVeosCoSim_SetNextSimulationTime</code> function, which specifies the condition for the server to send the next step. This can be done for each step or just from time to time. Once the server no longer receives this condition, it proceeds with the predefined step size. If the time specified via the <code>DsVeosCoSim_SetNextSimulationTime</code> function is in the past or equal to the present time, it is ignored.</p>
-<p>If no step size is specified in the JSON file, the server sends only one step at simulation time 0. The simulation is only advanced if the client executes the <code>DsVeosCoSim_SetNextSimulationTime</code> function. Otherwise, the simulation in VEOS continues without the co-simulator.</p>
+<p>The client can intervene via the <a href="#dsveoscosim_setnextsimulationtime-function">DsVeosCoSim_SetNextSimulationTime Function</a>, which specifies the condition for the server to send the next step. This can be done for each step or just from time to time. Once the server no longer receives this condition, it proceeds with the predefined step size. If the time specified via the <a href="#dsveoscosim_setnextsimulationtime-function">DsVeosCoSim_SetNextSimulationTime Function</a> is in the past or equal to the present time, it is ignored.</p>
+<p>If no step size is specified in the JSON file, the server sends only one step at simulation time 0. The simulation is only advanced if the client executes the <a href="#dsveoscosim_setnextsimulationtime-function">DsVeosCoSim_SetNextSimulationTime Function</a>. Otherwise, the simulation in VEOS continues without the co-simulator.</p>
 <p>Bus messages and I/O signals are always sent between server and client in the context of a step.</p>
-<div id="WorkingWithTheVeosCoSimDemo" />
 <h1 id="working-with-the-veos-cosim-demo">Working with the VEOS CoSim Demo</h1>
-<div id="OverviewOfTheVeosCoSimDemo" />
 <h2 id="overview-of-the-veos-cosim-demo">Overview of the VEOS CoSim Demo</h2>
 <h3 id="introduction">Introduction</h3>
 <p>The VEOS CoSim demo provides instructions for setting up a simple example CoSim server and implementing several kinds of CoSim clients to illustrate the basic co-simulation functionalities.</p>
@@ -708,7 +701,7 @@ cmake --install . --config Debug --prefix ../install
 </li>
 </ul>
 <h3 id="overview-of-the-examples">Overview of the examples</h3>
-<p>Before starting with any of the examples listed below, you must make the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>Before starting with any of the examples listed below, you must make the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 <table>
 <thead>
 <tr>
@@ -721,47 +714,47 @@ cmake --install . --config Debug --prefix ../install
 <tr>
 <td>Basic co-simulation</td>
 <td>Enable basic logging</td>
-<td><a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a></td>
+<td><a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a></td>
 </tr>
 <tr>
 <td>Implementing simulation state change callbacks</td>
 <td>Tracking simulation state changes</td>
-<td><a href="#ExampleImplementingSimulationStateChangeCallbacks">Example: Implementing Simulation State Change Callbacks</a></td>
+<td><a href="#example-implementing-simulation-state-change-callbacks">Example: Implementing Simulation State Change Callbacks</a></td>
 </tr>
 <tr>
 <td>Accessing the data interface</td>
 <td>Getting information on available bus controllers and I/O signals</td>
-<td><a href="#ExampleAccessingTheDataInterface">Example: Accessing the Data Interface</a></td>
+<td><a href="#example-accessing-the-data-interface">Example: Accessing the Data Interface</a></td>
 </tr>
 <tr>
 <td>Using data callbacks</td>
 <td>Getting information on newly received bus messages</td>
-<td><a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCanBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a></td>
+<td><a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a></td>
 </tr>
 <tr>
 <td>Sending data</td>
 <td>Sending data to VEOS</td>
-<td><a href="#ExampleSendingData">Example: Sending Data</a></td>
+<td><a href="#example-sending-data">Example: Sending Data</a></td>
 </tr>
 <tr>
 <td>Receiving data</td>
 <td>Receiving data from VEOS</td>
-<td><a href="#ExampleReceivingData">Example: Receiving Data</a></td>
+<td><a href="#example-receiving-data">Example: Receiving Data</a></td>
 </tr>
 <tr>
 <td>Running a polling-based co-simulation</td>
 <td>Running a polling-based co-simulation</td>
-<td><a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a></td>
+<td><a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a></td>
 </tr>
 <tr>
 <td>Handling I/O signals</td>
 <td>Handling I/O signal communication for two client-server pairs.</td>
-<td><a href="#ExampleHandlingIOSignals">Example: Handling I/O Signals</a></td>
+<td><a href="#example-handling-io-signals">Example: Handling I/O Signals</a></td>
 </tr>
 <tr>
 <td>Optional clients</td>
 <td>Simulation behavior for a CoSim server for which a client is optional.</td>
-<td><a href="#ExampleOptionalClient">Example: Optional Client</a></td>
+<td><a href="#example-optional-client">Example: Optional Client</a></td>
 </tr>
 </tbody>
 </table>
@@ -787,7 +780,6 @@ cmake --install . --config Debug --prefix ../install
 </ul>
 </li>
 </ul>
-<div id="HowToPrepareTheCoSimDemo" />
 <h2 id="how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</h2>
 <h3 id="objective">Objective</h3>
 <p>To prepare the CoSim demo by performing the following tasks:</p>
@@ -874,7 +866,7 @@ cmake --install . --config Debug --prefix ../install
 <h3 id="part-2-to-set-up-a-cosim-test-client">Part 2: To set up a CoSim test client</h3>
 <ol>
 <li>
-<p>Download the latest <code>veos-cosim-client-&lt;version&gt;.zip</code> archive from https://github.com/dspacegroup/veos-cosim-client.</p>
+<p>Download the latest <code>veos-cosim-client-&lt;version&gt;.zip</code> archive from <a href="https://github.com/dspacegroup/veos-cosim-client">veos-cosim-client</a>.</p>
 </li>
 <li>
 <p>Create the <code>ThirdParty/veos-cosim-client</code> subdirectory in the DsVeosCoSimDemo directory and extract the ZIP archive to this subfolder.</p>
@@ -940,13 +932,12 @@ cmake --build .
 <p>You set up a basic CoSim server in VEOS and set up a build project for CoSim clients. You also created a simple test executable to confirm the build project was configured correctly.</p>
 <h3 id="next-steps">Next steps</h3>
 <p>You can now proceed to build a simple example CoSim client and use it in a co-simulation with the CoSim server you set up in Part 1.</p>
-<p>Refer to <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
-<div id="ExampleSettingUpABasicCoSimulation" />
+<p>Refer to <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 <h2 id="example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example shows how to create a basic CoSim client which connects to the CoSim server in VEOS and reports on its progress via log callbacks.</p>
 <h3 id="precondition">Precondition</h3>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1019,7 +1010,7 @@ cmake --build .
 <ul>
 <li>
 <p>The <code>OnLogCallback</code> function prints log messages corresponding to the severity level. It is registered by the
-<a href="#DsVeosCoSim_SetLogCallback">DsVeosCoSim_SetLogCallback</a> function in <code>Step 1</code>.</p>
+<a href="#dsveoscosim_setlogcallback-function">DsVeosCoSim_SetLogCallback Function</a> in <code>Step 1</code>.</p>
 </li>
 <li>
 <p>In <code>Step 2</code>, a handle for the client is created which is used by all the other functions.</p>
@@ -1027,7 +1018,7 @@ cmake --build .
 servers on the same or other VEOS simulators.</p>
 </li>
 <li>
-<p>In <code>Step 3</code>, a connection to the Example server running in VEOS is established via the <a href="#DsVeosCoSim_Connect">DsVeosCoSim_Connect</a> function.</p>
+<p>In <code>Step 3</code>, a connection to the Example server running in VEOS is established via the <a href="#dsveoscosim_connect-function">DsVeosCoSim_Connect Function</a>.</p>
 <p><strong>Tip:</strong></p>
 <ul>
 <li>
@@ -1036,24 +1027,24 @@ servers on the same or other VEOS simulators.</p>
 </li>
 <li>
 <p>The Example server uses a dynamic TCP port and a port mapper. However, if you specified a static TCP port, you have to provide this to the client via
-<code>DsVeosCoSim_ConnectConfig.remotePort</code>. For more information, refer to <a href="#ConnectingToACoSimServer">Connecting to a CoSim server</a>.</p>
+<code>DsVeosCoSim_ConnectConfig.remotePort</code>. For more information, refer to <a href="#connecting-to-a-cosim-server">Connecting to a CoSim server</a>.</p>
 </li>
 </ul>
 </li>
 <li>
-<p>In <code>Step 4</code> a callback-based co-simulation is started. The <a href="#DsVeosCoSim_RunCallbackBasedCoSimulation">DsVeosCoSim_RunCallbackBasedCoSimulation</a> blocks
-until either <a href="#DsVeosCoSim_Disconnect">DsVeosCoSim_Disconnect</a> is called by a callback function or the simulation is unloaded in VEOS. Therefore, the
-expected return value is <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Disconnected</a> instead of <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Ok</a>.</p>
+<p>In <code>Step 4</code> a callback-based co-simulation is started. The <a href="#dsveoscosim_runcallbackbasedcosimulation-function">DsVeosCoSim_RunCallbackBasedCoSimulation Function</a> blocks
+until either <a href="#dsveoscosim_disconnect-function">DsVeosCoSim_Disconnect Function</a> is called by a callback function or the simulation is unloaded in VEOS. Therefore, the
+expected return value is <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Disconnected</a> instead of <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Ok</a>.</p>
 <p>In this example, the <code>simulationEndStepCallback</code> is called at the end of each simulation step and prints the corresponding simulation time in seconds as
 specified in the OnEndStep function definition.</p>
 <p><strong>Tip:</strong>
-You can also run polling-based co-simulations. Refer to <a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a> for an example.</p>
+You can also run polling-based co-simulations. Refer to <a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a> for an example.</p>
 </li>
 </ul>
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
-<p>Load the VeosCoSim.osa you created in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
+<p>Load the VeosCoSim.osa you created in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
 </li>
 <li>
 <p>From the <code>DsVeosCoSimDemo/build</code> subdirectory, run the executable you built in How to set up the client via</p>
@@ -1091,20 +1082,18 @@ Step callback received at 0.002 s.
 Step callback received at 0.003 s.
 ...
 </div></code></pre>
-<div id="ExampleImplementingSimulationStateChangeCallbacks" />
 <h2 id="example-implementing-simulation-state-change-callbacks">Example: Implementing Simulation State Change Callbacks</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example shows how to implement simulation state change callbacks in a CoSim client.</p>
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 </ul>
-<div id="ExampleImplementingSimulationStateChangeCallbacksHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1152,11 +1141,11 @@ callbacks.simulationContinuedCallback = OnContinued;
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
-<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
+<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
 </li>
 <li>
 <p>From the <code>DsVeosCoSimDemo/build</code> subdirectory, run the executable you built in
-<a href="#ExampleImplementingSimulationStateChangeCallbacksHowToSetUpTheClient">How to set up the client</a> via</p>
+<a href="#example-implementing-simulation-state-change-callbacks">Example: Implementing Simulation State Change Callbacks</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1195,20 +1184,18 @@ Simulation continued at 3.51 s.
 Simulation paused at 3.511 s.
 Simulation stopped at 3.511 s.
 </div></code></pre>
-<div id="ExampleAccessingTheDataInterface" />
 <h2 id="example-accessing-the-data-interface">Example: Accessing the Data Interface</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example shows how to access the VEOS CoSim data interface to get information on available bus controllers and I/O signals.</p>
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#owToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 </ul>
-<div id="ExampleAccessingTheDataInterfaceHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1249,7 +1236,7 @@ Simulation stopped at 3.511 s.
 <h3 id="what-it-does">What it does</h3>
 <ul>
 <li>
-<p>First, the client collects information on the available CAN controllers via the <a href="#DsVeosCoSim_GetCanControllers">DsVeosCoSim_GetCanControllers</a> function.</p>
+<p>First, the client collects information on the available CAN controllers via the <a href="#dsveoscosim_getcancontrollers-function">DsVeosCoSim_GetCanControllers Function</a>.</p>
 </li>
 <li>
 <p>It then prints the name of each CAN controller.</p>
@@ -1261,11 +1248,11 @@ Simulation stopped at 3.511 s.
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
-<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#owToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
+<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a> to the VEOS simulator.</p>
 </li>
 <li>
 <p>From the <code>DsVeosCoSimDemo/build</code> subdirectory, run the executable you built in
-<a href="#ExampleAccessingTheDataInterfaceHowToSetUpTheClient">How to set up the client</a> via</p>
+<a href="#example-accessing-the-data-interface">Example: Accessing The Data Interface</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1294,7 +1281,6 @@ Simulation stopped at 3.511 s.
 <pre class="hljs"><code><div>Found CAN controller 'CanController'
 Found outgoing signal 'Port1/Signal1'
 </div></code></pre>
-<div id="ExampleUsingDataCallbackFunctionsToGetInformationOnCanBusMessages" />
 <h2 id="example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example demonstrates how to use data callbacks to get information on received CAN bus messages.</p>
@@ -1303,7 +1289,7 @@ a CAN controller so that there are CAN bus messages for the CoSim server to rece
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
 <p>You must have created the basic CoSim client described in Example: Setting Up a Basic Co-Simulation.</p>
@@ -1318,7 +1304,6 @@ of the Windows VEOS installation to the Linux system and build it like this (ass
 </div></code></pre>
 </li>
 </ul>
-<div id="ExampleUsingDataCallbackFunctionsToGetInformationOnCanBusMessagesHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1417,7 +1402,7 @@ the name of the CAN controller from which the message was received, and the corr
 </li>
 <li>
 <p>In your <code>DsVeosCoSimDemo/build</code> directory, run the executable you built in
-<a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCanBusMessagesHowToSetUpTheClient">How to set up the client</a> via</p>
+<a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1448,28 +1433,26 @@ Received CAN message with ID 10 and data 00-00 from bus controller CanController
 Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.042 s.
 Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.062 s.
 </div></code></pre>
-<div id="ExampleSendingData" />
 <h2 id="example-sending-data">Example: Sending Data</h2>
 <h3 id="introduction">Introduction</h3>
 <p>The CoSim client can send data to other co-simulation participants via the CoSim server. This example demonstrates how to send a simple CAN message.</p>
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 <li>
 <p>You must have modified the basic <code>DsVeosCoSim.osa</code> as described in
-<a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
+<a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
 </li>
 </ul>
-<div id="ExampleSendingDataHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
-<p>In the <code>main.cpp</code> code of <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>, change the <code>OnEndStep</code> function definition to
+<p>In the <code>main.cpp</code> code of <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>, change the <code>OnEndStep</code> function definition to
 this:</p>
 <pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">OnEndStep</span><span class="hljs-params">(DsVeosCoSim_SimulationTime simulationTime, <span class="hljs-keyword">void</span>* userData)</span> </span>{
     <span class="hljs-keyword">const</span> <span class="hljs-keyword">uint8_t</span> data[<span class="hljs-number">1</span>]{<span class="hljs-number">42</span>};
@@ -1493,7 +1476,6 @@ this:</p>
 <p>Save the <code>main.cpp</code> file and call <code>cmake --build .</code> to build the executable.</p>
 </li>
 </ol>
-<div id="ExampleSendingDataWhatItDoes" />
 <h3 id="what-it-does">What it does</h3>
 <p>When the <code>OnEndStep</code> function is called, it specifies a CAN message with the following characteristics:</p>
 <ul>
@@ -1510,8 +1492,7 @@ this:</p>
 <p>Payload <code>42</code></p>
 </li>
 </ul>
-<p>The function then calls the <a href="#DsVeosCoSim_TransmitCanMessage">DsVeosCoSim_TransmitCanMessage</a> function, which transmits the message to the <code>Controller</code> VPU via
-the CoSim server.</p>
+<p>The function then calls the <a href="#dsveoscosim_transmitcanmessage-function">DsVeosCoSim_TransmitCanMessage Function</a>, which transmits the message to the <code>Controller</code> VPU via the CoSim server.</p>
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
@@ -1520,24 +1501,24 @@ the CoSim server.</p>
 <li>
 <p>On Windows, enable the checkbox <strong>Generate bus log files</strong> in <strong>File</strong> - <strong>Preferences</strong> - <strong>Log Options</strong> in the VEOS Player.</p>
 <p>Alternatively, you can use the VEOS Simulator Console in the command-line:</p>
-<pre class="hljs"><code><div>&lt;VEOS installation directory&gt;/bin/veos.exe sim config --<span class="hljs-built_in">enable</span>-bus-log
+<pre class="hljs"><code><div>&lt;VEOS installation directory&gt;/bin/veos.exe sim config --enable-bus-log
 </div></code></pre>
 </li>
 <li>
 <p>On Linux:</p>
-<pre class="hljs"><code><div>/opt/dspace/veos2023b/bin/veos sim config --<span class="hljs-built_in">enable</span>-bus-log
+<pre class="hljs"><code><div>/opt/dspace/veos2023b/bin/veos sim config --enable-bus-log
 </div></code></pre>
 </li>
 </ul>
 </li>
 <li>
 <p>Load the <code>DsVeosCoSim.osa</code> you created in
-<a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the
+<a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the
 VEOS simulator.</p>
 <p>VEOS displays a message to inform you that bus logging was enabled. In the VEOS Player, direct links to the files are displayed in the <strong>Messages</strong> pane.</p>
 </li>
 <li>
-<p>In your DsVeosCoSimDemo/build directory, run the executable you built before in <a href="#ExampleSendingDataHowToSetUpTheClient">How to set up the client</a> via</p>
+<p>In your DsVeosCoSimDemo/build directory, run the executable you built before in <a href="#example-sending-data">Example: Sending Data</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1558,7 +1539,7 @@ excerpt:</p>
 0000.0013,0000.0002,1,10,0,2,00-00,C,-1
 </div></code></pre>
 <p>The first two messages are transmitted messages, which you can see by comparing the MsgID, DataLen, and Data columns with the settings listed in
-<a href="#ExampleSendingDataWhatItDoes">What it does</a>. <code>2A</code> is the hexadecimal representation of <code>42</code>. Additionally, the Dir column displays <code>1</code> for transmitted
+<a href="#example-sending-data">Example: Sending Data</a>. <code>2A</code> is the hexadecimal representation of <code>42</code>. Additionally, the Dir column displays <code>1</code> for transmitted
 messages and <code>0</code> for received messages.</p>
 <p>The third message is a received message from the Controller V-ECU.</p>
 <p>You can compare the <code>CoSimExample.BusTransfer.log</code> file to the <code>Controller.BusTransfer.log</code> log file, which shows the same entries except for the Dir column:</p>
@@ -1567,24 +1548,22 @@ messages and <code>0</code> for received messages.</p>
 0000.0011,0000.0001,0,12,0,1,2A,C,-1
 0000.0013,0000.0002,0,10,1,2,00-00,C,-1
 </div></code></pre>
-<div id="ExampleReceivingData" />
 <h2 id="example-receiving-data">Example: Receiving Data</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example shows how to receive data from other co-simulation participants using receive functions instead of data callbacks.</p>
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 <li>
 <p>You must have modified the <code>DsVeosCoSim.osa</code> as described in
-<a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
+<a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
 </li>
 </ul>
-<div id="ExampleReceivingDataHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1613,22 +1592,20 @@ messages and <code>0</code> for received messages.</p>
 </li>
 </ol>
 <h3 id="what-it-does">What it does</h3>
-<p>When the <code>OnEndStep</code> function is called at the end of each simulation step, it calls the <a href="#DsVeosCoSim_ReceiveCanMessage">DsVeosCoSim_ReceiveCanMessage</a>
-function repeatedly until this function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Empty</a>. For each received message, information on the message ID and
-the simulation time is printed.</p>
+<p>When the <code>OnEndStep</code> function is called at the end of each simulation step, it calls the <a href="#dsveoscosim_receivecanmessage-function">DsVeosCoSim_ReceiveCanMessage Function</a> repeatedly until this function returns <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Empty</a>. For each received message, information on the message ID and the simulation time is printed.</p>
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
-<p>Enable the generation of bus log files as described in <a href="#ExampleSendingData">Example: Sending Data</a>.</p>
+<p>Enable the generation of bus log files as described in <a href="#example-sending-data">Example: Sending Data</a>.</p>
 </li>
 <li>
 <p>Load the <code>DsVeosCoSim.osa</code> you created in
-<a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the VEOS
+<a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the VEOS
 simulator.</p>
 <p>VEOS displays a message to inform you that bus logging was enabled. In the VEOS Player, direct links to the files are displayed in the <strong>Messages</strong> pane.</p>
 </li>
 <li>
-<p>From your <code>DsVeosCoSimDemo/build</code> directory, run the executable you built in <a href="#ExampleReceivingDataHowToSetUpTheClient">How to set up the client</a> via</p>
+<p>From your <code>DsVeosCoSimDemo/build</code> directory, run the executable you built in <a href="#example-receiving-data">Example: Receiving Data</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1664,7 +1641,6 @@ Received CAN message with ID 10 at 0.042 s.
 0000.0212,0000.0002,1,10,0,2,00-00,C,-1
 0000.0412,0000.0002,1,10,0,2,00-00,C,-1
 </div></code></pre>
-<div id="ExampleRunningAPollingBasedSimulation" />
 <h2 id="example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</h2>
 <h3 id="introduction">Introduction</h3>
 <p>You can configure the CoSim client to operate in polling mode. In this case, the client continually polls for commands from VEOS and performs the actions that are specified for each command.</p>
@@ -1672,16 +1648,15 @@ Received CAN message with ID 10 at 0.042 s.
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 <li>
-<p>You must have modified the <code>DsVeosCoSim.osa</code> as described in <a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
+<p>You must have modified the <code>DsVeosCoSim.osa</code> as described in <a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a>.</p>
 </li>
 </ul>
-<div id="ExampleRunningAPollingBasedSimulationHowToSetUpTheClient" />
 <h3 id="how-to-set-up-the-client">How to set up the client</h3>
 <ol>
 <li>
@@ -1764,19 +1739,19 @@ callbacks.userData = handle; <span class="hljs-comment">// Pass the handle to ev
 </ol>
 <h3 id="what-it-does">What it does</h3>
 <p>First, a callback function for CAN messages is defined. This is passed to the <code>DsVeosCoSim_StartPollingBasedCoSimulation</code> function that starts the polling-based co-simulation.</p>
-<p>The simulation then proceeds according to the command that is passed via <a href="#DsVeosCoSim_PollCommand">DsVeosCoSim_PollCommand</a> and continues polling for commands and executing them until the simulation is unloaded or the <a href="#DsVeosCoSim_Disconnect">DsVeosCoSim_Disconnect</a> function is called.</p>
-<p>Each time the Step command is received, a CAN message is sent as specified in the <code>DsVeosCoSim_Command_Step</code> case. This is identical to the CAN message specified in <a href="#ExampleSendingData">Example: Sending Data</a>.</p>
+<p>The simulation then proceeds according to the command that is passed via <a href="#dsveoscosim_pollcommand-function">DsVeosCoSim_PollCommand Function</a> and continues polling for commands and executing them until the simulation is unloaded or the <a href="#dsveoscosim_disconnect-function">DsVeosCoSim_Disconnect Function</a> is called.</p>
+<p>Each time the Step command is received, a CAN message is sent as specified in the <code>DsVeosCoSim_Command_Step</code> case. This is identical to the CAN message specified in <a href="#example-sending-data">Example: Sending Data</a>.</p>
 <h3 id="running-the-co-simulation">Running the co-simulation</h3>
 <ol>
 <li>
-<p>Enable the generation of bus log files as described in <a href="#ExampleSendingData">Example: Sending Data</a>.</p>
+<p>Enable the generation of bus log files as described in <a href="#example-sending-data">Example: Sending Data</a>.</p>
 </li>
 <li>
-<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#ExampleUsingDataCallbackFunctionsToGetInformationOnCANBusMessages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the VEOS simulator.</p>
+<p>Load the <code>DsVeosCoSim.osa</code> you created in <a href="#example-using-data-callback-functions-to-get-information-on-can-bus-messages">Example: Using Data Callback Functions to Get Information on CAN Bus Messages</a> to the VEOS simulator.</p>
 <p>VEOS displays a message to inform you that bus logging was enabled. In the VEOS Player, direct links to the files are displayed in the <strong>Messages</strong> pane.</p>
 </li>
 <li>
-<p>From your <code>DsVeosCoSimDemo/build</code> directory, run the executable you built in <a href="#ExampleRunningAPollingBasedSimulationHowToSetUpTheClient">How to set up the client</a> via</p>
+<p>From your <code>DsVeosCoSimDemo/build</code> directory, run the executable you built in <a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a> via</p>
 <pre class="hljs"><code><div>.\Debug\DsVeosCoSimDemo.exe
 </div></code></pre>
 <p>on Windows or</p>
@@ -1801,23 +1776,22 @@ callbacks.userData = handle; <span class="hljs-comment">// Pass the handle to ev
 </li>
 </ol>
 <h3 id="client-output-and-bus-log-files">Client output and bus log files</h3>
-<p>The client produces the same output as in <a href="#ExampleImplementingSimulationStateChangeCallbacks">Example: Implementing Simulation State Change Callbacks</a>.</p>
-<p>The bus log files correspond to the bus log files produced by <a href="#ExampleSendingData">Example: Sending Data</a>.</p>
-<div id="ExampleHandlingIOSignals" />
+<p>The client produces the same output as in <a href="#example-implementing-simulation-state-change-callbacks">Example: Implementing Simulation State Change Callbacks</a>.</p>
+<p>The bus log files correspond to the bus log files produced by <a href="#example-sending-data">Example: Sending Data</a>.</p>
 <h2 id="example-handling-io-signals">Example: Handling I/O Signals</h2>
 <h3 id="introduction">Introduction</h3>
 <p>This example illustrates how to handle I/O signals in a co-simulation using a modification of
-<a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a> and an additional CoSim server-client pair.</p>
+<a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a> and an additional CoSim server-client pair.</p>
 <p>The polling-based co-simulation is modified to change the value of the outgoing signal at specified times when the simulation is advanced by a step. The second
 client reads the signal from the first one and reports on each signal value change.</p>
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>
-and modified it as described in <a href="#ExampleRunningAPollingBasedSimulation">Example: Running a Polling-Based Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>
+and modified it as described in <a href="#example-running-a-polling-based-simulation">Example: Running a Polling-Based Simulation</a>.</p>
 </li>
 </ul>
 <h3 id="how-to-modify-the-polling-based-client">How to modify the polling-based client</h3>
@@ -2094,7 +2068,6 @@ Signal has the value 0.01 at 0.019 s.
 Signal has the value 0.01 at 0.02 s.
 Signal changed to the value 0.02 at 0.021 s.
 </div></code></pre>
-<div id="ExampleOptionalClient" />
 <h2 id="example-optional-client">Example: Optional Client</h2>
 <h3 id="introduction">Introduction</h3>
 <p>By default, a co-simulation can only be started if a CoSim client is connected to a server in VEOS. However, by marking a client as optional in the JSON
@@ -2102,10 +2075,10 @@ interface description file of the CoSim server, the simulation can be started ev
 <h3 id="preconditions">Preconditions</h3>
 <ul>
 <li>
-<p>You must have made the preparations described in <a href="#HowToPrepareTheCoSimDemo">How to Prepare the CoSim Demo</a>.</p>
+<p>You must have made the preparations described in <a href="#how-to-prepare-the-cosim-demo">How to Prepare the CoSim Demo</a>.</p>
 </li>
 <li>
-<p>You must have created the basic CoSim client described in <a href="#ExampleSettingUpABasicCoSimulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
+<p>You must have created the basic CoSim client described in <a href="#example-setting-up-a-basic-co-simulation">Example: Setting Up a Basic Co-Simulation</a>.</p>
 </li>
 </ul>
 <h3 id="modifying-the-cosim-server">Modifying the CoSim server</h3>
@@ -2127,10 +2100,14 @@ interface description file of the CoSim server, the simulation can be started ev
 <li>
 <p>Start the simulation in VEOS:</p>
 <ul>
-<li>On Windows, click <strong>Simulation</strong> - <strong>Start</strong> in the VEOS Player or use the VEOS Simulator Console in the command-line:<pre class="hljs"><code><div>&lt;VEOS installation directory&gt;\bin\veos.exe sim start
+<li>
+<p>On Windows, click <strong>Simulation</strong> - <strong>Start</strong> in the VEOS Player or use the VEOS Simulator Console in the command-line:</p>
+<pre class="hljs"><code><div>&lt;VEOS installation directory&gt;\bin\veos.exe sim start
 </div></code></pre>
 </li>
-<li>On Linux:<pre class="hljs"><code><div>/opt/dspace/veos2023b/bin/veos sim start
+<li>
+<p>On Linux:</p>
+<pre class="hljs"><code><div>/opt/dspace/veos2023b/bin/veos sim start
 </div></code></pre>
 </li>
 </ul>
@@ -2151,23 +2128,22 @@ interface description file of the CoSim server, the simulation can be started ev
 <p>The simulation continues without the client.</p>
 </li>
 </ol>
-<div id="ApiReference" />
 <h1 id="dsveoscosim-client-api-reference">DsVeosCoSim Client API Reference</h1>
-<div id="Enumerations" />
 <h2 id="enumerations">Enumerations</h2>
-<div id="DsVeosCoSim_CanMessageFlags" />
 <h3 id="dsveoscosimcanmessageflags-enumeration">DsVeosCoSim_CanMessageFlags Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of a CAN message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_CanMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_CanMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_CanMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_CanMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_CanMessageFlags_Drop = <span class="hljs-number">4</span>,
     DsVeosCoSim_CanMessageFlags_ExtendedId = <span class="hljs-number">8</span>,
     DsVeosCoSim_CanMessageFlags_BitRateSwitch = <span class="hljs-number">16</span>,
     DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = <span class="hljs-number">32</span>,
-} DsVeosCoSim_CanMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
@@ -2204,7 +2180,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_Command" />
 <h3 id="dsveoscosimcommand-enumeration">DsVeosCoSim_Command Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains commands for controlling the co-simulation in polling mode.</p>
@@ -2258,7 +2233,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_ConnectionState" />
 <h3 id="dsveoscosimconnectionstate-enumeration">DsVeosCoSim_ConnectionState Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible connection states.</p>
@@ -2287,7 +2261,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_DataType" />
 <h3 id="dsveoscosimdatatype-enumeration">DsVeosCoSim_DataType Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains valid data types for I/O signals.</p>
@@ -2361,16 +2334,17 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_EthMessageFlags" />
 <h3 id="dsveoscosimethmessageflags-enumeration">DsVeosCoSim_EthMessageFlags Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of an Ethernet message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_EthMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_EthMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_EthMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_EthMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_EthMessageFlags_Drop = <span class="hljs-number">4</span>,
-} DsVeosCoSim_EthMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
@@ -2395,7 +2369,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_LinControllerType" />
 <h3 id="dsveoscosimlincontrollertype-enumeration">DsVeosCoSim_LinControllerType Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the LIN controller type.</p>
@@ -2424,12 +2397,13 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_LinMessageFlags" />
 <h3 id="dsveoscosimlinmessageflags-enumeration">DsVeosCoSim_LinMessageFlags Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of a LIN message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_LinMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_LinMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_LinMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_LinMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_LinMessageFlags_Drop = <span class="hljs-number">4</span>,
@@ -2442,7 +2416,7 @@ interface description file of the CoSim server, the simulation can be started ev
     DsVeosCoSim_LinMessageFlags_ParityFailure = <span class="hljs-number">512</span>,
     DsVeosCoSim_LinMessageFlags_Collision = <span class="hljs-number">1024</span>,
     DsVeosCoSim_LinMessageFlags_NoResponse = <span class="hljs-number">2048</span>,
-} DsVeosCoSim_LinMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
@@ -2521,7 +2495,6 @@ interface description file of the CoSim server, the simulation can be started ev
 <p>DsVeosCoSim_LinMessageFlags_WakeEvent and DsVeosCoSim_LinMessageFlags_SleepEvent cannot be combined with each other or with DsVeosCoSim_LinMessageFlags_Header and DsVeosCoSim_LinMessageFlags_Response</p>
 </li>
 </ul>
-<div id="DsVeosCoSim_Result" />
 <h3 id="dsveoscosimresult-enumeration">DsVeosCoSim_Result Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible return values of VEOS CoSim functions.</p>
@@ -2550,7 +2523,7 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 <tr>
 <td>DsVeosCoSim_Result_Error</td>
-<td>The function call failed with an error. In this case, a log message is sent via the DsVeosCoSim_LogCallback function. Refer to <a href="#DsVeosCoSim_LogCallback">DsVeosCoSim_LogCallback Function Pointer</a>.</td>
+<td>The function call failed with an error. In this case, a log message is sent via the DsVeosCoSim_LogCallback function. Refer to <a href="#dsveoscosim_logcallback-function-pointer">DsVeosCoSim_LogCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>DsVeosCoSim_Result_Empty</td>
@@ -2570,7 +2543,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_Severity" />
 <h3 id="dsveoscosimseverity-enumeration">DsVeosCoSim_Severity Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains all possible severity levels of a log message in descending order of severity.</p>
@@ -2609,7 +2581,6 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_SizeKind" />
 <h3 id="dsveoscosimsizekind-enumeration">DsVeosCoSim_SizeKind Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains information on the I/O signal length type.</p>
@@ -2634,11 +2605,10 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 <tr>
 <td>DsVeosCoSim_SizeKind_Variable</td>
-<td>Indicates that the I/O signal has a variable length in the range of 0 to <a href="#DsVeosCoSim_IoSignalInfo">DsVeosCoSim_IoSignalInfo.length</a>.</td>
+<td>Indicates that the I/O signal has a variable length in the range of 0 to <a href="#dsveoscosim_iosignal-structure">DsVeosCoSim_IoSignal.length</a>.</td>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_TerminateReason" />
 <h3 id="dsveoscosimterminatereason-enumeration">DsVeosCoSim_TerminateReason Enumeration</h3>
 <h4 id="description">Description</h4>
 <p>Contains the possible reasons for a termination of the co-simulation.</p>
@@ -2667,15 +2637,13 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 </tbody>
 </table>
-<div id="Functions" />
 <h2 id="functions">Functions</h2>
-<div id="DsVeosCoSim_CanMessageReceivedCallback" />
 <h3 id="dsveoscosimcanmessagereceivedcallback-function-pointer">DsVeosCoSim_CanMessageReceivedCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called when a new CAN message is received from the VEOS CoSim server.</p>
 <p><strong>Note:</strong>
 If <code>DsVeosCoSim_CanMessageReceivedCallback</code> is registered, you cannot collect CAN messages using the
-<a href="#DsVeosCoSim_ReceiveCanMessage">DsVeosCoSim_ReceiveCanMessage</a> function.</p>
+<a href="#dsveoscosim_receivecanmessage-function">DsVeosCoSim_ReceiveCanMessage Function</a>.</p>
 <p>However, if the callback is not registered, each received message is buffered. Currently, the buffer size is 512 messages. If the buffer is full, new messages
 are discarded.</p>
 <h4 id="syntax">Syntax</h4>
@@ -2697,25 +2665,24 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>canController</td>
-<td>The CAN controller that sent the message. Refer to <a href="#DsVeosCoSim_CanController">DsVeosCoSim_CanController Structure</a>.</td>
+<td>The CAN controller that sent the message. Refer to <a href="#dsveoscosim_cancontroller-structure">DsVeosCoSim_CanController Structure</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the received CAN message. Refer to <a href="#DsVeosCoSim_CanMessage">DsVeosCoSim_CanMessage Structure</a>.</td>
+<td>A pointer to the received CAN message. Refer to <a href="#dsveoscosim_canmessage-structure">DsVeosCoSim_CanMessage Structure</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed to the co-simulation function via the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function. Can be NULL.</td>
+<td>The user data passed to the co-simulation function via the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>. Can be NULL.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_Connect" />
 <h3 id="dsveoscosimconnect-function">DsVeosCoSim_Connect Function</h3>
 <h4 id="description">Description</h4>
 <p>Connects the dSPACE VEOS CoSim client to the dSPACE VEOS CoSim server.</p>
@@ -2736,17 +2703,16 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>connectConfig</td>
-<td>The data used for connecting to the dSPACE VEOS CoSim sever. Refer to <a href="#DsVeosCoSim_ConnectConfig">DsVeosCoSim_ConnectConfig Structure</a>.</td>
+<td>The data used for connecting to the dSPACE VEOS CoSim sever. Refer to <a href="#dsveoscosim_connectconfig-structure">DsVeosCoSim_ConnectConfig Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_Destroy" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimdestroy-function">DsVeosCoSim_Destroy Function</h3>
 <h4 id="description">Description</h4>
 <p>Destroys the given handle.</p>
@@ -2764,13 +2730,12 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_Disconnect" />
 <h3 id="dsveoscosimdisconnect-function">DsVeosCoSim_Disconnect Function</h3>
 <h4 id="description">Description</h4>
 <p>Disconnects the VEOS CoSim client from the VEOS CoSim server.</p>
@@ -2792,20 +2757,19 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_EthMessageReceivedCallback" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimethmessagereceivedcallback-function-pointer">DsVeosCoSim_EthMessageReceivedCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called when a new Ethernet message is received from the VEOS CoSim server.</p>
-<p><code>VeosCoSim_EthMessageReceivedCallback</code> can be registered with the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function.</p>
+<p><code>VeosCoSim_EthMessageReceivedCallback</code> can be registered with the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>.</p>
 <p><strong>Note:</strong>
 If the <code>DsVeosCoSim_EthMessageReceivedCallback</code> is registered, you cannot collect Ethernet messages using the
-<a href="#DsVeosCoSim_ReceiveEthMessage">DsVeosCoSim_ReceiveEthMessage</a> function.</p>
+<a href="#dsveoscosim_receiveethmessage-function">DsVeosCoSim_ReceiveEthMessage Function</a>.</p>
 <p>However, if the callback is not registered, each received message is buffered. Currently, the buffer size is 512 messages. If the buffer is full, new messages
 are discarded.</p>
 <h4 id="syntax">Syntax</h4>
@@ -2827,25 +2791,24 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>ethController</td>
-<td>The Ethernet controller that sent the message. Refer to <a href="#DsVeosCoSim_EthController">DsVeosCoSim_EthController Structure</a>.</td>
+<td>The Ethernet controller that sent the message. Refer to <a href="#dsveoscosim_ethcontroller-structure">DsVeosCoSim_EthController Structure</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the received Ethernet message. Refer to <a href="#DsVeosCoSim_EthMessage">DsVeosCoSim_EthMessage Structure</a>.</td>
+<td>A pointer to the received Ethernet message. Refer to <a href="#dsveoscosim_ethmessage-structure">DsVeosCoSim_EthMessage Structure</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed to the co-simulation function via the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function. Can be NULL.</td>
+<td>The user data passed to the co-simulation function via the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>. Can be NULL.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_FinishCommand" />
 <h3 id="dsveoscosimfinishcommand-function">DsVeosCoSim_FinishCommand Function</h3>
 <h4 id="description">Description</h4>
 <p>Can be used to ensure that a command in a polling-based simulation has finished.</p>
@@ -2865,13 +2828,12 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetCanControllers" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetcancontrollers-function">DsVeosCoSim_GetCanControllers Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets all available CAN controllers in the co-simulation.</p>
@@ -2893,7 +2855,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>canControllersCount</td>
@@ -2901,13 +2863,12 @@ are discarded.</p>
 </tr>
 <tr>
 <td>canControllers</td>
-<td>A pointer to the array of CAN controllers. Refer to <a href="#DsVeosCoSim_CanController">DsVeosCoSim_CanController Structure</a>.</td>
+<td>A pointer to the array of CAN controllers. Refer to <a href="#dsveoscosim_cancontroller-structure">DsVeosCoSim_CanController Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetConnectionState" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetconnectionstate-function">DsVeosCoSim_GetConnectionState Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets the connection state for a given client handle.</p>
@@ -2928,17 +2889,16 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>connectionState</td>
-<td>The connection state. Refer to <a href="#DsVeosCoSim_ConnectionState">DsVeosCoSim_ConnectionState Enumeration</a>.</td>
+<td>The connection state. Refer to <a href="#dsveoscosim_connectionstate-enumeration">DsVeosCoSim_ConnectionState Enumeration</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetEthControllers" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetethcontrollers-function">DsVeosCoSim_GetEthControllers Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets all available Ethernet controllers in the co-simulation.</p>
@@ -2960,7 +2920,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>ethControllersCount</td>
@@ -2968,13 +2928,12 @@ are discarded.</p>
 </tr>
 <tr>
 <td>ethControllers</td>
-<td>A pointer to the array of Ethernet controllers. Refer to <a href="#DsVeosCoSim_EthController">DsVeosCoSim_EthController Structure</a>.</td>
+<td>A pointer to the array of Ethernet controllers. Refer to <a href="#dsveoscosim_ethcontroller-structure">DsVeosCoSim_EthController Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetIncomingSignals" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetincomingsignals-function">DsVeosCoSim_GetIncomingSignals Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets all available incoming signals.</p>
@@ -2996,7 +2955,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle</a> Type.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>incomingSignalsCount</td>
@@ -3004,13 +2963,12 @@ are discarded.</p>
 </tr>
 <tr>
 <td>incomingSignals</td>
-<td>A pointer to the array of incoming signals. Refer to <a href="#DsVeosCoSim_IoSignal">DsVeosCoSim_IoSignal</a></td>
+<td>A pointer to the array of incoming signals. Refer to <a href="#dsveoscosim_iosignal-structure">DsVeosCoSim_IoSignal Structure</a></td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetLinControllers" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetlincontrollers-function">DsVeosCoSim_GetLinControllers Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets all available LIN controllers in the co-simulation.</p>
@@ -3032,7 +2990,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle</a> Type.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>linControllersCount</td>
@@ -3040,13 +2998,12 @@ are discarded.</p>
 </tr>
 <tr>
 <td>linControllers</td>
-<td>A pointer to the array of LIN controllers. Refer to <a href="#DsVeosCoSim_LinController">DsVeosCoSim_LinController</a> Structure.</td>
+<td>A pointer to the array of LIN controllers. Refer to <a href="#dsveoscosim_lincontroller-structure">DsVeosCoSim_LinController Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_GetOutgoingSignals" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimgetoutgoingsignals-function">DsVeosCoSim_GetOutgoingSignals Function</h3>
 <h4 id="description">Description</h4>
 <p>Gets all available outgoing signals.</p>
@@ -3068,7 +3025,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle</a> Type.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>outgoingSignalsCount</td>
@@ -3076,13 +3033,12 @@ are discarded.</p>
 </tr>
 <tr>
 <td>outgoingSignals</td>
-<td>A pointer to the array of outgoing signals. Refer to <a href="#DsVeosCoSim_IoSignal">DsVeosCoSim_IoSignal</a> Structure.</td>
+<td>A pointer to the array of outgoing signals. Refer to <a href="#dsveoscosim_iosignal-structure">DsVeosCoSim_IoSignal Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_IncomingSignalChangedCallback" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimincomingsignalchangedcallback-function-pointer">DsVeosCoSim_IncomingSignalChangedCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called when the value of an incoming I/O signal has changed.</p>
@@ -3106,11 +3062,11 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>ioSignal</td>
-<td>The ID of the I/O signal that changed its value. Refer to <a href="#DsVeosCoSim_IoSignalId">DsVeosCoSim_IoSignalId</a> Type.</td>
+<td>The ID of the I/O signal that changed its value. Refer to <a href="#dsveoscosim_iosignalid-type">DsVeosCoSim_IoSignalId Type</a>.</td>
 </tr>
 <tr>
 <td>value</td>
@@ -3118,20 +3074,18 @@ are discarded.</p>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed via the DsVeosCoSim_SetCallbacks function. Refer to <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> Function.</td>
+<td>The user data passed via the DsVeosCoSim_SetCallbacks function. Refer to <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_LinMessageReceivedCallback" />
 <h3 id="dsveoscosimlinmessagereceivedcallback-function-pointer">DsVeosCoSim_LinMessageReceivedCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called when a new LIN message is received from the VEOS CoSim server.</p>
-<p><code>DsVeosCoSim_LinMessageReceivedCallback</code> can be registered with <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function.</p>
+<p><code>DsVeosCoSim_LinMessageReceivedCallback</code> can be registered with <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>.</p>
 <p><strong>Note:</strong>
-If <code>DsVeosCoSim_LinMessageReceivedCallback</code> is registered, you cannot collect LIN messages using <a href="#DsVeosCoSim_ReceiveLinMessage">DsVeosCoSim_ReceiveLinMessage</a>
-function.</p>
+If <code>DsVeosCoSim_LinMessageReceivedCallback</code> is registered, you cannot collect LIN messages using <a href="#dsveoscosim_receivelinmessage-function">DsVeosCoSim_ReceiveLinMessage Function</a>.</p>
 <p>However, if the callback is not registered, each received message is buffered. Currently, the buffer size is 512 messages. If the buffer is full, new messages
 are discarded.</p>
 <h4 id="syntax">Syntax</h4>
@@ -3153,29 +3107,28 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>linController</td>
-<td>The LIN controller transmitting the message. Refer to <a href="#DsVeosCoSim_LinController">DsVeosCoSim_LinController Structure</a>.</td>
+<td>The LIN controller transmitting the message. Refer to <a href="#dsveoscosim_lincontroller-structure">DsVeosCoSim_LinController Structure</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the received LIN message. Refer to <a href="#DsVeosCoSim_LinMessage">DsVeosCoSim_LinMessage Structure</a>.</td>
+<td>A pointer to the received LIN message. Refer to <a href="#dsveoscosim_linmessage-structure">DsVeosCoSim_LinMessage Structure</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed to the co-simulation function via the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function. Can be NULL.</td>
+<td>The user data passed to the co-simulation function via the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>. Can be NULL.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_LogCallback" />
 <h3 id="dsveoscosimlogcallback-function-pointer">DsVeosCoSim_LogCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called each time the dSPACE VEOS CoSim client receives a log message.</p>
-<p>You can register the <code>DsVeosCoSim_LogCallback</code> function pointer using the <a href="#DsVeosCoSim_SetLogCallback">DsVeosCoSim_SetLogCallback</a> function.</p>
+<p>You can register the <code>DsVeosCoSim_LogCallback</code> function pointer using the <a href="#dsveoscosim_setlogcallback-function">DsVeosCoSim_SetLogCallback Function</a>.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">(*DsVeosCoSim_LogCallback)</span><span class="hljs-params">(
     DsVeosCoSim_Severity severity,
@@ -3193,7 +3146,7 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>severity</td>
-<td>The severity of the message. Refer to <a href="#DsVeosCoSim_Severity">DsVeosCoSim_Severity Enumeration</a>.</td>
+<td>The severity of the message. Refer to <a href="#dsveoscosim_severity-enumeration">DsVeosCoSim_Severity Enumeration</a>.</td>
 </tr>
 <tr>
 <td>logMessage</td>
@@ -3203,7 +3156,6 @@ are discarded.</p>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_PollCommand" />
 <h3 id="dsveoscosimpollcommand-function">DsVeosCoSim_PollCommand Function</h3>
 <h4 id="description">Description</h4>
 <p>Polls the simulator for a command.</p>
@@ -3225,21 +3177,20 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>command</td>
-<td>The received command. Refer to <a href="#DsVeosCoSim_Command">DsVeosCoSim_Command Enumeration</a>.</td>
+<td>The received command. Refer to <a href="#dsveoscosim_command-enumeration">DsVeosCoSim_Command Enumeration</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_ReadIncomingSignal" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimreadincomingsignal-function">DsVeosCoSim_ReadIncomingSignal Function</h3>
 <h4 id="description">Description</h4>
 <p>Reads a value from an incoming signal of the VEOS CoSim server identified by the given handle.</p>
@@ -3262,11 +3213,11 @@ are discarded.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>incomingSignalId</td>
-<td>The ID of the incoming signal. Refer to <a href="#DsVeosCoSim_IoSignalId">DsVeosCoSim_IoSignalId Type</a>.</td>
+<td>The ID of the incoming signal. Refer to <a href="#dsveoscosim_iosignalid-type">DsVeosCoSim_IoSignalId Type</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -3279,13 +3230,12 @@ are discarded.</p>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_ReceiveCanMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimreceivecanmessage-function">DsVeosCoSim_ReceiveCanMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Receives a CAN message from the VEOS CoSim server.</p>
 <p><strong>Note:</strong>
-If the <a href="#DsVeosCoSim_CanMessageReceivedCallback">DsVeosCoSim_CanMessageReceivedCallback</a> function pointer is registered, you cannot collect CAN messages using
+If the <a href="#dsveoscosim_canmessagereceivedcallback-function-pointer">DsVeosCoSim_CanMessageReceivedCallback Function Pointer</a> is registered, you cannot collect CAN messages using
 the <code>DsVeosCoSim_ReceiveCanMessage</code> function.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_ReceiveCanMessage</span><span class="hljs-params">(
@@ -3304,22 +3254,21 @@ the <code>DsVeosCoSim_ReceiveCanMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the received CAN message. Refer to <a href="#DsVeosCoSim_CanMessage">DsVeosCoSim_CanMessage Structure</a>.</td>
+<td>A pointer to the received CAN message. Refer to <a href="#dsveoscosim_canmessage-structure">DsVeosCoSim_CanMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_ReceiveEthMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimreceiveethmessage-function">DsVeosCoSim_ReceiveEthMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Receives an Ethernet message from the VEOS CoSim server.</p>
 <p><strong>Note:</strong>
-If the <a href="#DsVeosCoSim_EthMessageReceivedCallback">DsVeosCoSim_EthMessageReceivedCallback</a> function pointer is registered, you cannot collect Ethernet messages
+If the [DsVeosCoSim_EthMessageReceivedCallback Function Pointer](#dsveoscosim_ethmessagereceivedcallback-function pointer) is registered, you cannot collect Ethernet messages
 using the <code>DsVeosCoSim_ReceiveEthMessage</code> function.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_ReceiveEthMessage</span><span class="hljs-params">(
@@ -3338,22 +3287,21 @@ using the <code>DsVeosCoSim_ReceiveEthMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the Ethernet message. Refer to <a href="#DsVeosCoSim_EthMessage">DsVeosCoSim_EthMessage</a> Structure.</td>
+<td>A pointer to the Ethernet message. Refer to <a href="#dsveoscosim_ethmessage-structure">DsVeosCoSim_EthMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_ReceiveLinMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimreceivelinmessage-function">DsVeosCoSim_ReceiveLinMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Receives a LIN message from the VEOS CoSim server.</p>
 <p><strong>Note:</strong>
-If the <a href="#DsVeosCoSim_LinMessageReceivedCallback">DsVeosCoSim_LinMessageReceivedCallback</a> function pointer is registered, you cannot collect LIN messages using
+If the <a href="#dsveoscosim_linmessagereceivedcallback-function-pointer">DsVeosCoSim_LinMessageReceivedCallback Function Pointer</a> is registered, you cannot collect LIN messages using
 the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_ReceiveLinMessage</span><span class="hljs-params">(
@@ -3372,17 +3320,16 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the LIN message. Refer to <a href="#DsVeosCoSim_LinMessage">DsVeosCoSim_LinMessage Structure</a>.</td>
+<td>A pointer to the LIN message. Refer to <a href="#dsveoscosim_linmessage-structure">DsVeosCoSim_LinMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_RunCallbackBasedCoSimulation" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimruncallbackbasedcosimulation-function">DsVeosCoSim_RunCallbackBasedCoSimulation Function</h3>
 <h4 id="description">Description</h4>
 <p>Starts a callback-based co-simulation.</p>
@@ -3403,17 +3350,16 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>callbacks</td>
-<td>The callbacks to be set. Refer to <a href="#DsVeosCoSim_Callbacks">DsVeosCoSim_Callbacks Structure</a>.</td>
+<td>The callbacks to be set. Refer to <a href="#dsveoscosim_callbacks-structure">DsVeosCoSim_Callbacks Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_SetCallbacks" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimsetcallbacks-function">DsVeosCoSim_SetCallbacks Function</h3>
 <h4 id="description">Description</h4>
 <p>Sets the callbacks for the VEOS CoSim client specified via the handle.</p>
@@ -3434,17 +3380,16 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>callbacks</td>
-<td>The callbacks to be set. Refer to <a href="#DsVeosCoSim_Callbacks">DsVeosCoSim_Callbacks Structure</a>.</td>
+<td>The callbacks to be set. Refer to <a href="#dsveoscosim_callbacks-structure">DsVeosCoSim_Callbacks Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_SetLogCallback" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimsetlogcallback-function">DsVeosCoSim_SetLogCallback Function</h3>
 <h4 id="description">Description</h4>
 <p>Specifies the log callback function.</p>
@@ -3464,13 +3409,12 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>logCallback</td>
-<td>The log callback to which log messages will be sent. Refer to <a href="#DsVeosCoSim_LogCallback">DsVeosCoSim_LogCallback Function Pointer</a>.</td>
+<td>The log callback to which log messages will be sent. Refer to <a href="#dsveoscosim_logcallback-function-pointer">DsVeosCoSim_LogCallback Function Pointer</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_SetNextSimulationTime" />
 <h3 id="dsveoscosimsetnextsimulationtime-function">DsVeosCoSim_SetNextSimulationTime Function</h3>
 <h4 id="description">Description</h4>
 <p>Sets the next simulation time for the given client handle.</p>
@@ -3491,17 +3435,16 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>simulationTime</td>
-<td>The next simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The next simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_SimulationCallback" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimsimulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>A generic simulation callback function pointer.</p>
@@ -3522,17 +3465,16 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed to the co-simulation function via the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function. Can be NULL.</td>
+<td>The user data passed to the co-simulation function via the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>. Can be NULL.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_SimulationTerminatedCallback" />
 <h3 id="dsveoscosimsimulationterminatedcallback-function-pointer">DsVeosCoSim_SimulationTerminatedCallback Function Pointer</h3>
 <h4 id="description">Description</h4>
 <p>Called when a simulation is terminated.</p>
@@ -3554,21 +3496,20 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>simulationTime</td>
-<td>The current simulation time. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>The current simulation time. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>reason</td>
-<td>The reason for the termination. Refer to <a href="#DsVeosCoSim_TerminateReason">DsVeosCoSim_TerminateReason Enumeration</a>.</td>
+<td>The reason for the termination. Refer to <a href="#dsveoscosim_terminatereason-enumeration">DsVeosCoSim_TerminateReason Enumeration</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
-<td>The user data passed to the co-simulation function via the <a href="#DsVeosCoSim_SetCallbacks">DsVeosCoSim_SetCallbacks</a> function. Can be NULL.</td>
+<td>The user data passed to the co-simulation function via the <a href="#dsveoscosim_setcallbacks-function">DsVeosCoSim_SetCallbacks Function</a>. Can be NULL.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
 <p>This function has no return values.</p>
-<div id="DsVeosCoSim_StartPollingBasedCoSimulation" />
 <h3 id="dsveoscosimstartpollingbasedcosimulation-function">DsVeosCoSim_StartPollingBasedCoSimulation Function</h3>
 <h4 id="description">Description</h4>
 <p>Starts a co-simulation in non-blocking mode.</p>
@@ -3589,24 +3530,23 @@ the <code>DsVeosCoSim_ReceiveLinMessage</code> function.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>callbacks</td>
-<td>The callbacks to be set. Refer to <a href="#DsVeosCoSim_Callbacks">DsVeosCoSim_Callbacks Structure</a>.</td>
+<td>The callbacks to be set. Refer to <a href="#dsveoscosim_callbacks-structure">DsVeosCoSim_Callbacks Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_TransmitCanMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimtransmitcanmessage-function">DsVeosCoSim_TransmitCanMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Transmits a CAN message to the VEOS CoSim server.</p>
 <p>The <code>DsVeosCoSim_TransmitCanMessage</code> function can be called in any callback handler. The timestamp property of transmission bus messages will be ignored.</p>
 <p><strong>Note:</strong>
 Currently, the DsVeosCoSim client cannot buffer more than 512 bus messages for each bus controller. If the buffer is full, the <code>DsVeosCoSim_TransmitCanMessage</code>
-function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
+function returns <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Full</a>.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_TransmitCanMessage</span><span class="hljs-params">(
     DsVeosCoSim_Handle handle,
@@ -3624,24 +3564,23 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to a CAN message to be transmitted. Refer to <a href="#DsVeosCoSim_CanMessage">DsVeosCoSim_CanMessage Structure</a>.</td>
+<td>A pointer to a CAN message to be transmitted. Refer to <a href="#dsveoscosim_canmessage-structure">DsVeosCoSim_CanMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_TransmitEthMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimtransmitethmessage-function">DsVeosCoSim_TransmitEthMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Transmits an Ethernet message to the VEOS CoSim server.</p>
 <p>The <code>DsVeosCoSim_TransmitEthMessage</code> function can be called in any callback handler. The timestamp property of transmission messages will be ignored.</p>
 <p><strong>Note:</strong>
 Currently, the DsVeosCoSim client cannot buffer more than 512 bus messages for each bus controller. If the buffer is full, the <code>DsVeosCoSim_TransmitEthMessage</code>
-function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
+function returns <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Full</a>.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_TransmitEthMessage</span><span class="hljs-params">(
     DsVeosCoSim_Handle handle,
@@ -3659,24 +3598,23 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to an Ethernet message to be transmitted. Refer to <a href="#DsVeosCoSim_EthMessage">DsVeosCoSim_EthMessage Structure</a>.</td>
+<td>A pointer to an Ethernet message to be transmitted. Refer to <a href="#dsveoscosim_ethmessage-structure">DsVeosCoSim_EthMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_TransmitLinMessage" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimtransmitlinmessage-function">DsVeosCoSim_TransmitLinMessage Function</h3>
 <h4 id="description">Description</h4>
 <p>Transmits a LIN message to the VEOS CoSim server.</p>
 <p>The <code>DsVeosCoSim_TransmitLinMessage</code> function can be called in any callback handler. The timestamp property of transmitted bus messages will be ignored.</p>
 <p><strong>Note:</strong>
 Currently, the VEOS CoSim client cannot buffer more than 512 bus messages for each bus controller. If the buffer is full, the <code>DsVeosCoSim_TransmitLinMessage</code>
-function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
+function returns <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result_Full</a>.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-function">DSVEOSCOSIM_DECL DsVeosCoSim_Result <span class="hljs-title">DsVeosCoSim_TransmitLinMessage</span><span class="hljs-params">(
     DsVeosCoSim_Handle handle,
@@ -3694,17 +3632,16 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
 <td>message</td>
-<td>A pointer to the LIN message to be transmitted. Refer to <a href="#DsVeosCoSim_LinMessage">DsVeosCoSim_LinMessage Structure</a>.</td>
+<td>A pointer to the LIN message to be transmitted. Refer to <a href="#dsveoscosim_linmessage-structure">DsVeosCoSim_LinMessage Structure</a>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="DsVeosCoSim_WriteOutgoingSignal" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h3 id="dsveoscosimwriteoutgoingsignal-function">DsVeosCoSim_WriteOutgoingSignal Function</h3>
 <h4 id="description">Description</h4>
 <p>Writes a value to an outgoing signal of the VEOS CoSim server identified by the given handle.</p>
@@ -3727,11 +3664,11 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>handle</td>
-<td>The handle of the VEOS CoSim client. Refer to <a href="#DsVeosCoSim_Handle">DsVeosCoSim_Handle Type</a>.</td>
+<td>The handle of the VEOS CoSim client. Refer to <a href="#dsveoscosim_handle-type">DsVeosCoSim_Handle Type</a>.</td>
 </tr>
 <tr>
-<td>ougoingSignalId</td>
-<td>The ID of the outgoing signal. Refer to <a href="#DsVeosCoSim_IoSignalId">DsVeosCoSim_IoSignalId Type</a>.</td>
+<td>outgoingSignalId</td>
+<td>The ID of the outgoing signal. Refer to <a href="#dsveoscosim_iosignalid-type">DsVeosCoSim_IoSignalId Type</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -3744,10 +3681,8 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tbody>
 </table>
 <h4 id="return-values">Return values</h4>
-<p>Refer to <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result Enumeration</a>.</p>
-<div id="Structures" />
+<p>Refer to <a href="#dsveoscosim_result-enumeration">DsVeosCoSim_Result Enumeration</a>.</p>
 <h2 id="structures">Structures</h2>
-<div id="DsVeosCoSim_Callbacks" />
 <h3 id="dsveoscosimcallbacks-structure">DsVeosCoSim_Callbacks Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains the callbacks that can be called during the co-simulation.</p>
@@ -3778,47 +3713,47 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>simulationStartedCallback</td>
-<td>Called when the simulation is started in VEOS. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called when the simulation is started in VEOS. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationStoppedCallback</td>
-<td>Called when the simulation is stopped in VEOS. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called when the simulation is stopped in VEOS. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationTerminatedCallback</td>
-<td>Called when the simulation is terminated in VEOS. Refer to <a href="#DsVeosCoSim_SimulationTerminatedCallback">DsVeosCoSim_SimulationTerminatedCallback Function Pointer</a>.</td>
+<td>Called when the simulation is terminated in VEOS. Refer to <a href="#dsveoscosim_simulationterminatedcallback-function-pointer">DsVeosCoSim_SimulationTerminatedCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationPausedCallback</td>
-<td>Called when the simulation is paused in VEOS. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called when the simulation is paused in VEOS. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationContinuedCallback</td>
-<td>Called when the simulation is continued in VEOS. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called when the simulation is continued in VEOS. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationBeginStepCallback</td>
-<td>Called at the beginning of a simulation step. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called at the beginning of a simulation step. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>simulationEndStepCallback</td>
-<td>Called at the end of a simulation step. Refer to <a href="#DsVeosCoSim_SimulationCallback">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
+<td>Called at the end of a simulation step. Refer to <a href="#dsveoscosim_simulationcallback-function-pointer">DsVeosCoSim_SimulationCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>incomingSignalChangedCallback</td>
-<td>Called when an incoming signal value has changed. Refer to <a href="#DsVeosCoSim_IncomingSignalChangedCallback">DsVeosCoSim_IncomingSignalChangedCallback Function Pointer</a>.</td>
+<td>Called when an incoming signal value has changed. Refer to <a href="#dsveoscosim_incomingsignalchangedcallback-function-pointer">DsVeosCoSim_IncomingSignalChangedCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>canMessageReceivedCallback</td>
-<td>Called when a CAN message is received from the VEOS CoSim server. Refer to <a href="#DsVeosCoSim_CanMessageReceivedCallback">DsVeosCoSim_CanMessageReceivedCallback Function Pointer</a>.</td>
+<td>Called when a CAN message is received from the VEOS CoSim server. Refer to <a href="#dsveoscosim_canmessagereceivedcallback-function-pointer">DsVeosCoSim_CanMessageReceivedCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>ethMessageReceivedCallback</td>
-<td>Called when an Ethernet message is received from the VEOS CoSim server. Refer to <a href="#DsVeosCoSim_EthMessageReceivedCallback">DsVeosCoSim_EthMessageReceivedCallback Function Pointer</a>.</td>
+<td>Called when an Ethernet message is received from the VEOS CoSim server. Refer to <a href="#dsveoscosim_ethmessagereceivedcallback-function-pointer">DsVeosCoSim_EthMessageReceivedCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>linMessageReceivedCallback</td>
-<td>Called when a LIN message is received from the VEOS CoSim server. Refer to <a href="#DsVeosCoSim_LinMessageReceivedCallback">DsVeosCoSim_LinMessageReceivedCallback Function Pointer</a>.</td>
+<td>Called when a LIN message is received from the VEOS CoSim server. Refer to <a href="#dsveoscosim_linmessagereceivedcallback-function-pointer">DsVeosCoSim_LinMessageReceivedCallback Function Pointer</a>.</td>
 </tr>
 <tr>
 <td>userData</td>
@@ -3826,7 +3761,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_CanController" />
 <h3 id="dsveoscosimcancontroller-structure">DsVeosCoSim_CanController Structure</h3>
 <h4 id="description">Description</h4>
 <p>Represents a CAN controller.</p>
@@ -3852,7 +3786,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>id</td>
-<td>The unique identifier of the CAN controller. Refer to <a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId Type</a>.</td>
+<td>The unique identifier of the CAN controller. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>queueSize</td>
@@ -3880,7 +3814,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_CanMessage" />
 <h3 id="dsveoscosimcanmessage-structure">DsVeosCoSim_CanMessage Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains information on a CAN message.</p>
@@ -3905,11 +3838,11 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>timestamp</td>
-<td>Contains the virtual simulation time at which the CAN message was received. Only for received messages. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>Contains the virtual simulation time at which the CAN message was received. Only for received messages. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>controllerId</td>
-<td>The ID of the CAN controller over which the CAN message was sent. Refer to <a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId Type</a>.</td>
+<td>The ID of the CAN controller over which the CAN message was sent. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>id</td>
@@ -3917,7 +3850,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 <tr>
 <td>flags</td>
-<td>The flags of the CAN message. Refer to <a href="#DsVeosCoSim_CanMessageFlags">DsVeosCoSim_CanMessageFlags Enumeration</a>.</td>
+<td>The flags of the CAN message. Refer to <a href="#dsveoscosim_canmessageflags-enumeration">DsVeosCoSim_CanMessageFlags Enumeration</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -3929,7 +3862,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_ConnectConfig" />
 <h3 id="dsveoscosimconnectconfig-structure">DsVeosCoSim_ConnectConfig Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains the data that is required for establishing a connection to the VEOS CoSim server.</p>
@@ -3973,7 +3905,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_EthController" />
 <h3 id="dsveoscosimethcontroller-structure">DsVeosCoSim_EthController Structure</h3>
 <h4 id="description">Description</h4>
 <p>Represents an Ethernet controller.</p>
@@ -3999,7 +3930,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>id</td>
-<td>The unique identifier of the Ethernet controller. Refer to <a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId Type</a>.</td>
+<td>The unique identifier of the Ethernet controller. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>queueSize</td>
@@ -4027,14 +3958,13 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_EthMessage" />
 <h3 id="dsveoscosimethmessage-structure">DsVeosCoSim_EthMessage Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains information on an Ethernet message.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">DsVeosCoSim_EthMessage</span> {</span>
     DsVeosCoSim_SimulationTime timestamp;
-    DsVeosCoSim_EthControllerId controllerId;
+    DsVeosCoSim_BusControllerId controllerId;
     <span class="hljs-keyword">uint32_t</span> reserved;
     DsVeosCoSim_EthMessageFlags flags;
     <span class="hljs-keyword">uint32_t</span> length;
@@ -4052,11 +3982,11 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>timestamp</td>
-<td>Contains the virtual simulation time at which the Ethernet message was received. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>Contains the virtual simulation time at which the Ethernet message was received. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>controllerId</td>
-<td>The ID of the Ethernet controller over which the Ethernet message was sent. Refer to <a href="#DsVeosCoSim_EthControllerId">DsVeosCoSim_EthControllerId Type</a>.</td>
+<td>The ID of the Ethernet controller over which the Ethernet message was sent. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>reserved</td>
@@ -4064,7 +3994,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 <tr>
 <td>flags</td>
-<td>The flags of the Ethernet message. Refer to <a href="#DsVeosCoSim_EthMessageFlags">DsVeosCoSim_EthMessageFlags Enumeration</a>.</td>
+<td>The flags of the Ethernet message. Refer to <a href="#dsveoscosim_ethmessageflags-enumeration">DsVeosCoSim_EthMessageFlags Enumeration</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -4076,7 +4006,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_IoSignal" />
 <h3 id="dsveoscosimiosignal-structure">DsVeosCoSim_IoSignal Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains information on an I/O signal.</p>
@@ -4100,7 +4029,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>id</td>
-<td>The unique identifier of the I/O signal. Refer to <a href="#DsVeosCoSim_IoSignalId">DsVeosCoSim_IoSignalId Type</a>.</td>
+<td>The unique identifier of the I/O signal. Refer to <a href="#dsveoscosim_iosignalid-type">DsVeosCoSim_IoSignalId Type</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -4108,11 +4037,11 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 <tr>
 <td>dataType</td>
-<td>The data type of the I/O signal. Refer to <a href="#DsVeosCoSim_DataType">DsVeosCoSim_DataType Enumeration</a>.</td>
+<td>The data type of the I/O signal. Refer to <a href="#dsveoscosim_datatype-enumeration">DsVeosCoSim_DataType Enumeration</a>.</td>
 </tr>
 <tr>
 <td>sizeKind</td>
-<td>The size kind of the the I/O signal, i.e., variable or fixed length. Refer to <a href="#DsVeosCoSim_SizeKind">DsVeosCoSim_SizeKind Enumeration</a>.</td>
+<td>The size kind of the the I/O signal, i.e., variable or fixed length. Refer to <a href="#dsveoscosim_sizekind-enumeration">DsVeosCoSim_SizeKind Enumeration</a>.</td>
 </tr>
 <tr>
 <td>name</td>
@@ -4120,7 +4049,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_LinController" />
 <h3 id="dsveoscosimlincontroller-structure">DsVeosCoSim_LinController Structure</h3>
 <h4 id="description">Description</h4>
 <p>Represents a LIN controller.</p>
@@ -4146,7 +4074,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>id</td>
-<td>The unique identifier of the LIN controller. Refer to <a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId Type</a>.</td>
+<td>The unique identifier of the LIN controller. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>queueSize</td>
@@ -4158,7 +4086,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 <tr>
 <td>type</td>
-<td>The LIN controller type. Refer to <a href="#DsVeosCoSim_LinControllerType">DsVeosCoSim_LinControllerType Enumeration</a>.</td>
+<td>The LIN controller type. Refer to <a href="#dsveoscosim_lincontrollertype-enumeration">DsVeosCoSim_LinControllerType Enumeration</a>.</td>
 </tr>
 <tr>
 <td>name</td>
@@ -4174,7 +4102,6 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="DsVeosCoSim_LinMessage" />
 <h3 id="dsveoscosimlinmessage-structure">DsVeosCoSim_LinMessage Structure</h3>
 <h4 id="description">Description</h4>
 <p>Contains information on a LIN message.</p>
@@ -4199,11 +4126,11 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 <tbody>
 <tr>
 <td>timestamp</td>
-<td>Contains the virtual simulation time at which the LIN message was received. Only for received messages. Refer to <a href="#DsVeosCoSim_SimulationTime">DsVeosCoSim_SimulationTime Type</a>.</td>
+<td>Contains the virtual simulation time at which the LIN message was received. Only for received messages. Refer to <a href="#dsveoscosim_simulationtime-type">DsVeosCoSim_SimulationTime Type</a>.</td>
 </tr>
 <tr>
 <td>controllerId</td>
-<td>The ID of the LIN controller over which the LIN message was sent. Refer to <a href="#DsVeosCoSim_BusControllerId">DsVeosCoSim_BusControllerId Type</a>.</td>
+<td>The ID of the LIN controller over which the LIN message was sent. Refer to <a href="#dsveoscosim_buscontrollerid-type">DsVeosCoSim_BusControllerId Type</a>.</td>
 </tr>
 <tr>
 <td>id</td>
@@ -4211,7 +4138,7 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 <tr>
 <td>flags</td>
-<td>The flags of the LIN message. Refer to <a href="#DsVeosCoSim_LinMessageFlags">DsVeosCoSim_LinMessageFlags Enumeration</a>.</td>
+<td>The flags of the LIN message. Refer to <a href="#dsveoscosim_linmessageflags-enumeration">DsVeosCoSim_LinMessageFlags Enumeration</a>.</td>
 </tr>
 <tr>
 <td>length</td>
@@ -4223,38 +4150,32 @@ function returns <a href="#DsVeosCoSim_Result">DsVeosCoSim_Result_Full</a>.</p>
 </tr>
 </tbody>
 </table>
-<div id="SimpleTypes" />
 <h2 id="simple-types">Simple Types</h2>
-<div id="DsVeosCoSim_BusControllerId" />
 <h3 id="dsveoscosimbuscontrollerid-type">DsVeosCoSim_BusControllerId Type</h3>
 <h4 id="description">Description</h4>
 <p>Represents a bus controller ID.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_BusControllerId;
 </div></code></pre>
-<div id="DsVeosCoSim_Handle" />
 <h3 id="dsveoscosimhandle-type">DsVeosCoSim_Handle Type</h3>
 <h4 id="description">Description</h4>
 <p>A handle to represent the VEOS CoSim client.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">void</span>* DsVeosCoSim_Handle;
 </div></code></pre>
-<div id="DsVeosCoSim_IoSignalId" />
 <h3 id="dsveoscosimiosignalid-type">DsVeosCoSim_IoSignalId Type</h3>
 <h4 id="description">Description</h4>
 <p>Represents an I/O signal ID.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_IoSignalId;
 </div></code></pre>
-<div id="DsVeosCoSim_SimulationTime" />
 <h3 id="dsveoscosimsimulationtime-type">DsVeosCoSim_SimulationTime Type</h3>
 <h4 id="description">Description</h4>
 <p>Represents the simulation time in nanoseconds.</p>
-<p>Divide by <a href="#Macros">DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND</a> to get the simulation time in seconds.</p>
+<p>Divide by <a href="#macros">DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND</a> to get the simulation time in seconds.</p>
 <h4 id="syntax">Syntax</h4>
 <pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">int64_t</span> DsVeosCoSim_SimulationTime;
 </div></code></pre>
-<div id="Macros" />
 <h2 id="macros">Macros</h2>
 <h3 id="description">Description</h3>
 <p>The <code>DsVeosCoSim.h</code> file contains a number of macro definitions which are listed in the table below.</p>

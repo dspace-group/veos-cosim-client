@@ -303,7 +303,7 @@ typedef enum DsVeosCoSim_SizeKind {
 /**
  * \brief Represents an IO signal.
  */
-typedef struct DsVeosCoSim_IoSignal {
+typedef struct DsVeosCoSim_IoSignal {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the IO signal.
      */
@@ -334,7 +334,7 @@ typedef struct DsVeosCoSim_IoSignal {
 /**
  * \brief Represents a CAN controller.
  */
-typedef struct DsVeosCoSim_CanController {
+typedef struct DsVeosCoSim_CanController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the CAN controller.
      */
@@ -372,9 +372,14 @@ typedef struct DsVeosCoSim_CanController {
 } DsVeosCoSim_CanController;
 
 /**
+ * \brief Underlying data type of the flags of a CAN message.
+ */
+typedef uint32_t DsVeosCoSim_CanMessageFlags;
+
+/**
  * \brief Represents the flags of a CAN message.
  */
-typedef enum DsVeosCoSim_CanMessageFlags {
+enum {
     /**
      * \brief CAN message will be transmitted to sender as well.
      *        For received and transmitted messages.
@@ -409,15 +414,13 @@ typedef enum DsVeosCoSim_CanMessageFlags {
      * \brief CAN message is a CANFD message.
      *        For received and transmitted messages.
      */
-    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32,
-
-    DsVeosCoSim_CanMessageFlags_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
-} DsVeosCoSim_CanMessageFlags;
+    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32
+};
 
 /**
  * \brief Represents a CAN message.
  */
-typedef struct DsVeosCoSim_CanMessage {
+typedef struct DsVeosCoSim_CanMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the CAN message was received.
      *        For received messages only.
@@ -453,7 +456,7 @@ typedef struct DsVeosCoSim_CanMessage {
 /**
  * \brief Represents an ethernet controller.
  */
-typedef struct DsVeosCoSim_EthController {
+typedef struct DsVeosCoSim_EthController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the ethernet controller.
      */
@@ -474,8 +477,6 @@ typedef struct DsVeosCoSim_EthController {
      */
     uint8_t macAddress[DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
 
-    uint8_t reserved[8 % DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
-
     /**
      * \brief Name of the ethernet controller.
      */
@@ -493,9 +494,14 @@ typedef struct DsVeosCoSim_EthController {
 } DsVeosCoSim_EthController;
 
 /**
+ * \brief Underlying data type of the flags of an ethernet message.
+ */
+typedef uint32_t DsVeosCoSim_EthMessageFlags;
+
+/**
  * \brief Represents the flags of an ethernet message.
  */
-typedef enum DsVeosCoSim_EthMessageFlags {
+enum {
     /**
      * \brief Ethernet message will be transmitted to sender as well.
      *        For received and transmitted messages.
@@ -512,15 +518,13 @@ typedef enum DsVeosCoSim_EthMessageFlags {
      * \brief Ethernet message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
      *        For received messages only.
      */
-    DsVeosCoSim_EthMessageFlags_Drop = 4,
-
-    DsVeosCoSim_EthMessageFlags_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
-} DsVeosCoSim_EthMessageFlags;
+    DsVeosCoSim_EthMessageFlags_Drop = 4
+};
 
 /**
  * \brief Represents an ethernet message.
  */
-typedef struct DsVeosCoSim_EthMessage {
+typedef struct DsVeosCoSim_EthMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the ethernet message was received.
      *        For received messages only.
@@ -573,7 +577,7 @@ typedef enum DsVeosCoSim_LinControllerType {
 /**
  * \brief Represents an LIN controller.
  */
-typedef struct DsVeosCoSim_LinController {
+typedef struct DsVeosCoSim_LinController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the LIN controller.
      */
@@ -611,9 +615,14 @@ typedef struct DsVeosCoSim_LinController {
 } DsVeosCoSim_LinController;
 
 /**
+ * \brief Underlying data type of the flags of a LIN message.
+ */
+typedef uint32_t DsVeosCoSim_LinMessageFlags;
+
+/**
  * \brief Represents the flags of a LIN message.
  */
-typedef enum DsVeosCoSim_LinMessageFlags {
+enum {
     /**
      * \brief LIN message will be transmitted to sender as well.
      *        For received and transmitted messages.
@@ -684,15 +693,13 @@ typedef enum DsVeosCoSim_LinMessageFlags {
      * \brief No response received for the last header.
      *        For received messages only.
      */
-    DsVeosCoSim_LinMessageFlags_NoResponse = 2048,
-
-    DsVeosCoSim_LinMessageFlags_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
-} DsVeosCoSim_LinMessageFlags;
+    DsVeosCoSim_LinMessageFlags_NoResponse = 2048
+};
 
 /**
  * \brief Represents a LIN message.
  */
-typedef struct DsVeosCoSim_LinMessage {
+typedef struct DsVeosCoSim_LinMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the LIN message was received.
      *        For received messages only.
@@ -800,7 +807,7 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
 /**
  * \brief Represents the callbacks that will be fired during the co-simulation.
  */
-typedef struct DsVeosCoSim_Callbacks {
+typedef struct DsVeosCoSim_Callbacks {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Will be called when the simulation started in dSPACE VEOS.
      */
@@ -868,7 +875,7 @@ typedef struct DsVeosCoSim_Callbacks {
 /**
  * \brief Represents the data that will be used for establishing the connection.
  */
-typedef struct DsVeosCoSim_ConnectConfig {
+typedef struct DsVeosCoSim_ConnectConfig {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The IP address of the dSPACE VEOS CoSim server. "127.0.0.1" if not specified.
      */

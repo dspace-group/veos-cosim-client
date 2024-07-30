@@ -3,7 +3,6 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 #include <functional>
 #include <string>
 #include <string_view>
@@ -72,22 +71,22 @@ enum class Result {
 [[nodiscard]] inline std::string ToString(Result result) {
     switch (result) {
         case Result::Ok:
-            return "OK";
+            return "Ok";
         case Result::Error:
-            return "ERROR";
+            return "Error";
         case Result::Empty:
-            return "EMPTY";
+            return "Empty";
         case Result::Full:
-            return "FULL";
+            return "Full";
         case Result::InvalidArgument:
-            return "INVALID ARGUMENT";
+            return "InvalidArgument";
         case Result::Disconnected:
-            return "DISCONNECTED";
+            return "Disconnected";
         case Result::TryAgain:
-            return "TRY AGAIN";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(result));
+            return "TryAgain";
     }
+
+    return std::to_string(static_cast<int>(result));
 }
 
 enum class Command {
@@ -122,9 +121,9 @@ enum class Command {
             return "TerminateFinished";
         case Command::Ping:
             return "Ping";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(command));
     }
+
+    return std::to_string(static_cast<int>(command));
 }
 
 enum class Severity {
@@ -137,16 +136,16 @@ enum class Severity {
 [[nodiscard]] inline std::string ToString(Severity severity) {
     switch (severity) {
         case Severity::Error:
-            return "ERROR";
+            return "Error";
         case Severity::Warning:
-            return "WARNING";
+            return "Warning";
         case Severity::Info:
-            return "INFO";
+            return "Info";
         case Severity::Trace:
-            return "TRACE";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(severity));
+            return "Trace";
     }
+
+    return std::to_string(static_cast<int>(severity));
 }
 
 enum class TerminateReason {
@@ -160,9 +159,9 @@ enum class TerminateReason {
             return "Finished";
         case TerminateReason::Error:
             return "Error";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(terminateReason));
     }
+
+    return std::to_string(static_cast<int>(terminateReason));
 }
 
 enum class ConnectionState {
@@ -176,9 +175,9 @@ enum class ConnectionState {
             return "Connected";
         case ConnectionState::Disconnected:
             return "Disconnected";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(connectionState));
     }
+
+    return std::to_string(static_cast<int>(connectionState));
 }
 
 enum class DataType {
@@ -219,9 +218,9 @@ enum class DataType {
             return "Float32";
         case DataType::Float64:
             return "Float64";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(dataType));
     }
+
+    return std::to_string(static_cast<int>(dataType));
 }
 
 [[nodiscard]] inline int GetDataTypeSize(DataType dataType) {
@@ -241,9 +240,9 @@ enum class DataType {
         case DataType::UInt64:
         case DataType::Float64:
             return 8;
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return 0;
     }
+
+    return 0;
 }
 
 enum class SizeKind {
@@ -257,9 +256,9 @@ enum class SizeKind {
             return "Fixed";
         case SizeKind::Variable:
             return "Variable";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(sizeKind));
     }
+
+    return std::to_string(static_cast<int>(sizeKind));
 }
 
 enum class SimulationState {
@@ -283,27 +282,27 @@ DEFINE_BITMASK_OPS(CanMessageFlags);
     std::string flagsStr;
 
     if (hasFlag(flags, CanMessageFlags::Loopback)) {
-        flagsStr += ",LOOPBACK";
+        flagsStr += ",Loopback";
     }
 
     if (hasFlag(flags, CanMessageFlags::Error)) {
-        flagsStr += ",ERROR";
+        flagsStr += ",Error";
     }
 
     if (hasFlag(flags, CanMessageFlags::Drop)) {
-        flagsStr += ",DROP";
+        flagsStr += ",Drop";
     }
 
     if (hasFlag(flags, CanMessageFlags::ExtendedId)) {
-        flagsStr += ",EXTENDED_ID";
+        flagsStr += ",ExtendedId";
     }
 
     if (hasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-        flagsStr += ",BIT_RATE_SWITCH";
+        flagsStr += ",BitRateSwitch";
     }
 
     if (hasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        flagsStr += ",FLEXIBLE_DATA_RATE_FORMAT";
+        flagsStr += ",FlexibleDataRateFormat";
     }
 
     if (!flagsStr.empty()) {
@@ -325,15 +324,15 @@ DEFINE_BITMASK_OPS(EthMessageFlags);
     std::string flagsStr;
 
     if (hasFlag(flags, EthMessageFlags::Loopback)) {
-        flagsStr += ",LOOPBACK";
+        flagsStr += ",Loopback";
     }
 
     if (hasFlag(flags, EthMessageFlags::Error)) {
-        flagsStr += ",ERROR";
+        flagsStr += ",Error";
     }
 
     if (hasFlag(flags, EthMessageFlags::Drop)) {
-        flagsStr += ",DROP";
+        flagsStr += ",Drop";
     }
 
     if (!flagsStr.empty()) {
@@ -364,51 +363,51 @@ DEFINE_BITMASK_OPS(LinMessageFlags);
     std::string flagsStr;
 
     if (hasFlag(flags, LinMessageFlags::Loopback)) {
-        flagsStr += ",LOOPBACK";
+        flagsStr += ",Loopback";
     }
 
     if (hasFlag(flags, LinMessageFlags::Error)) {
-        flagsStr += ",ERROR";
+        flagsStr += ",Error";
     }
 
     if (hasFlag(flags, LinMessageFlags::Drop)) {
-        flagsStr += ",DROP";
+        flagsStr += ",Drop";
     }
 
     if (hasFlag(flags, LinMessageFlags::Header)) {
-        flagsStr += ",HEADER";
+        flagsStr += ",Header";
     }
 
     if (hasFlag(flags, LinMessageFlags::Response)) {
-        flagsStr += ",RESPONSE";
+        flagsStr += ",Response";
     }
 
     if (hasFlag(flags, LinMessageFlags::WakeEvent)) {
-        flagsStr += ",WAKE_EVENT";
+        flagsStr += ",WakeEvent";
     }
 
     if (hasFlag(flags, LinMessageFlags::SleepEvent)) {
-        flagsStr += ",SLEEP_EVENT";
+        flagsStr += ",SleepEvent";
     }
 
     if (hasFlag(flags, LinMessageFlags::EnhancedChecksum)) {
-        flagsStr += ",ENHANCED_CHECKSUM";
+        flagsStr += ",EnhancedChecksum";
     }
 
     if (hasFlag(flags, LinMessageFlags::TransferOnce)) {
-        flagsStr += ",TRANSFER_ONCE";
+        flagsStr += ",TransferOnce";
     }
 
     if (hasFlag(flags, LinMessageFlags::ParityFailure)) {
-        flagsStr += ",PARITY_FAILURE";
+        flagsStr += ",ParityFailure";
     }
 
     if (hasFlag(flags, LinMessageFlags::Collision)) {
-        flagsStr += ",COLLISION";
+        flagsStr += ",Collision";
     }
 
     if (hasFlag(flags, LinMessageFlags::NoResponse)) {
-        flagsStr += ",NO_RESPONSE";
+        flagsStr += ",NoResponse";
     }
 
     if (!flagsStr.empty()) {
@@ -430,11 +429,10 @@ struct IoSignal {
     uint32_t length{};
     DataType dataType{};
     SizeKind sizeKind{};
-    std::string name{};
+    std::string name;
 };
 
-enum class BusControllerId : uint32_t {
-};
+using BusControllerId = DsVeosCoSim_BusControllerId;
 
 [[nodiscard]] inline std::string ToString(BusControllerId controllerId) {
     return std::to_string(static_cast<uint32_t>(controllerId));
@@ -450,20 +448,6 @@ struct CanController {
     std::string clusterName;
 };
 
-struct CanMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t id{};
-    CanMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-};
-
-struct CanMessageContainer {
-    CanMessage message{};
-    std::vector<uint8_t> data;
-};
-
 struct EthController {
     BusControllerId id{};
     uint32_t queueSize{};
@@ -472,20 +456,6 @@ struct EthController {
     std::string name;
     std::string channelName;
     std::string clusterName;
-};
-
-struct EthMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t reserved{};
-    EthMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-};
-
-struct EthMessageContainer {
-    EthMessage message{};
-    std::vector<uint8_t> data;
 };
 
 enum class LinControllerType {
@@ -499,9 +469,9 @@ enum class LinControllerType {
             return "Responder";
         case LinControllerType::Commander:
             return "Commander";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(type));
     }
+
+    return std::to_string(static_cast<int>(type));
 }
 
 struct LinController {
@@ -514,28 +484,14 @@ struct LinController {
     std::string clusterName;
 };
 
-struct LinMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t id{};
-    LinMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-};
-
-struct LinMessageContainer {
-    LinMessage message{};
-    std::vector<uint8_t> data;
-};
-
 using LogCallback = std::function<void(Severity, std::string_view)>;
 
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
 using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason reason)>;
 using IncomingSignalChangedCallback = std::function<void(SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value)>;
-using CanMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const CanController& controller, const CanMessage& message)>;
-using EthMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const EthController& controller, const EthMessage& message)>;
-using LinMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const LinController& controller, const LinMessage& message)>;
+using CanMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const CanController& controller, const DsVeosCoSim_CanMessage& message)>;
+using EthMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const EthController& controller, const DsVeosCoSim_EthMessage& message)>;
+using LinMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const LinController& controller, const DsVeosCoSim_LinMessage& message)>;
 
 struct Callbacks {
     DsVeosCoSim_Callbacks callbacks;
