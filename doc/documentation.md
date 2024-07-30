@@ -1836,14 +1836,16 @@ Contains the possible flags of a CAN message.
 #### Syntax
 
 ```c
-typedef enum DsVeosCoSim_CanMessageFlags {
+typedef uint32_t DsVeosCoSim_CanMessageFlags;
+
+enum {
     DsVeosCoSim_CanMessageFlags_Loopback = 1,
     DsVeosCoSim_CanMessageFlags_Error = 2,
     DsVeosCoSim_CanMessageFlags_Drop = 4,
     DsVeosCoSim_CanMessageFlags_ExtendedId = 8,
     DsVeosCoSim_CanMessageFlags_BitRateSwitch = 16,
     DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32,
-} DsVeosCoSim_CanMessageFlags;
+};
 ```
 
 #### Values
@@ -1960,11 +1962,13 @@ Contains the possible flags of an Ethernet message.
 #### Syntax
 
 ```c
-typedef enum DsVeosCoSim_EthMessageFlags {
+typedef uint32_t DsVeosCoSim_EthMessageFlags;
+
+enum {
     DsVeosCoSim_EthMessageFlags_Loopback = 1,
     DsVeosCoSim_EthMessageFlags_Error = 2,
     DsVeosCoSim_EthMessageFlags_Drop = 4,
-} DsVeosCoSim_EthMessageFlags;
+};
 ```
 
 #### Values
@@ -2006,7 +2010,9 @@ Contains the possible flags of a LIN message.
 #### Syntax
 
 ```c
-typedef enum DsVeosCoSim_LinMessageFlags {
+typedef uint32_t DsVeosCoSim_LinMessageFlags;
+
+enum {
     DsVeosCoSim_LinMessageFlags_Loopback = 1,
     DsVeosCoSim_LinMessageFlags_Error = 2,
     DsVeosCoSim_LinMessageFlags_Drop = 4,
@@ -2019,7 +2025,7 @@ typedef enum DsVeosCoSim_LinMessageFlags {
     DsVeosCoSim_LinMessageFlags_ParityFailure = 512,
     DsVeosCoSim_LinMessageFlags_Collision = 1024,
     DsVeosCoSim_LinMessageFlags_NoResponse = 2048,
-} DsVeosCoSim_LinMessageFlags;
+};
 ```
 
 #### Values

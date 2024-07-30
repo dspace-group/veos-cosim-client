@@ -2134,14 +2134,16 @@ interface description file of the CoSim server, the simulation can be started ev
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of a CAN message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_CanMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_CanMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_CanMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_CanMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_CanMessageFlags_Drop = <span class="hljs-number">4</span>,
     DsVeosCoSim_CanMessageFlags_ExtendedId = <span class="hljs-number">8</span>,
     DsVeosCoSim_CanMessageFlags_BitRateSwitch = <span class="hljs-number">16</span>,
     DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = <span class="hljs-number">32</span>,
-} DsVeosCoSim_CanMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
@@ -2336,11 +2338,13 @@ interface description file of the CoSim server, the simulation can be started ev
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of an Ethernet message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_EthMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_EthMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_EthMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_EthMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_EthMessageFlags_Drop = <span class="hljs-number">4</span>,
-} DsVeosCoSim_EthMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
@@ -2397,7 +2401,9 @@ interface description file of the CoSim server, the simulation can be started ev
 <h4 id="description">Description</h4>
 <p>Contains the possible flags of a LIN message.</p>
 <h4 id="syntax">Syntax</h4>
-<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">enum</span> DsVeosCoSim_LinMessageFlags {
+<pre class="hljs"><code><div><span class="hljs-keyword">typedef</span> <span class="hljs-keyword">uint32_t</span> DsVeosCoSim_LinMessageFlags;
+
+<span class="hljs-keyword">enum</span> {
     DsVeosCoSim_LinMessageFlags_Loopback = <span class="hljs-number">1</span>,
     DsVeosCoSim_LinMessageFlags_Error = <span class="hljs-number">2</span>,
     DsVeosCoSim_LinMessageFlags_Drop = <span class="hljs-number">4</span>,
@@ -2410,7 +2416,7 @@ interface description file of the CoSim server, the simulation can be started ev
     DsVeosCoSim_LinMessageFlags_ParityFailure = <span class="hljs-number">512</span>,
     DsVeosCoSim_LinMessageFlags_Collision = <span class="hljs-number">1024</span>,
     DsVeosCoSim_LinMessageFlags_NoResponse = <span class="hljs-number">2048</span>,
-} DsVeosCoSim_LinMessageFlags;
+};
 </div></code></pre>
 <h4 id="values">Values</h4>
 <table>
