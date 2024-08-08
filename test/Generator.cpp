@@ -3,6 +3,7 @@
 #include "Generator.h"
 
 #include <string>
+#include "CoSimTypes.h"
 
 namespace DsVeosCoSim {
 
@@ -48,111 +49,116 @@ std::string GenerateString(const std::string& prefix) {
     return prefix + std::to_string(GenerateU32());
 }
 
-void CreateSignal(IoSignal& signal, uint32_t index) {
+IoSignal CreateSignal() {
+    IoSignal signal{};
     signal.id = static_cast<IoSignalId>(GenerateU32());
     signal.length = GenerateRandom(1U, 10U);
-    signal.dataType = GenerateRandom(DataType::Bool, DataType::Float64);
-    signal.sizeKind = GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
-    signal.name = "Signal日本語" + std::to_string(index);
+    signal.dataType = GenerateRandom(DsVeosCoSim_DataType_Bool, DsVeosCoSim_DataType_Float64);
+    signal.sizeKind = GenerateRandom(DsVeosCoSim_SizeKind_Fixed, DsVeosCoSim_SizeKind_Variable);
+    signal.name = GenerateString("Signal名前\xF0\x9F\x98\x80");
+    return signal;
 }
 
-void CreateController(CanController& controller, uint32_t index) {
-    controller.id = static_cast<BusControllerId>(GenerateU32());
+void FillWithRandom(CanController& controller) {
+    controller.id = GenerateU32();
     controller.queueSize = 100;
     controller.bitsPerSecond = 500000;
     controller.flexibleDataRateBitsPerSecond = 2000000;
-    controller.name = "CanController日本語" + std::to_string(index);
-    controller.channelName = GenerateString("Channel日本語");
-    controller.clusterName = GenerateString("Cluster日本語");
+    controller.name = GenerateString("CanController名前\xF0\x9F\x98\x80");
+    controller.channelName = GenerateString("CanChannel名前\xF0\x9F\x98\x80");
+    controller.clusterName = GenerateString("CanCluster名前\xF0\x9F\x98\x80");
 }
 
-void CreateController(EthController& controller, uint32_t index) {
-    controller.id = static_cast<BusControllerId>(GenerateU32());
+void FillWithRandom(EthController& controller) {
+    controller.id = GenerateU32();
     controller.queueSize = 100;
     controller.bitsPerSecond = 1000000000;
     FillWithRandom(controller.macAddress.data(), EthAddressLength);
-    controller.name = "EthController日本語" + std::to_string(index);
-    controller.channelName = GenerateString("Channel日本語");
-    controller.clusterName = GenerateString("Cluster日本語");
+    controller.name = GenerateString("EthController名前\xF0\x9F\x98\x80");
+    controller.channelName = GenerateString("EthChannel名前\xF0\x9F\x98\x80");
+    controller.clusterName = GenerateString("EthCluster名前\xF0\x9F\x98\x80");
 }
 
-void CreateController(LinController& controller, uint32_t index) {
-    controller.id = static_cast<BusControllerId>(GenerateU32());
+void FillWithRandom(LinController& controller) {
+    controller.id = GenerateU32();
     controller.queueSize = 100;
     controller.bitsPerSecond = 19200;
     controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
-    controller.name = "LinController日本語" + std::to_string(index);
-    controller.channelName = GenerateString("Channel日本語");
-    controller.clusterName = GenerateString("Cluster日本語");
+    controller.name = GenerateString("LinController名前\xF0\x9F\x98\x80");
+    controller.channelName = GenerateString("LinChannel名前\xF0\x9F\x98\x80");
+    controller.clusterName = GenerateString("LinCluster名前\xF0\x9F\x98\x80");
 }
 
-std::vector<IoSignal> CreateSignals(uint32_t count) {
+void FillWithRandom(CanMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+    const uint32_t length = GenerateRandom(1U, CanMessageMaxLength);
+    message.controllerId = controllerId;
+    message.id = GenerateU32();
+    message.timestamp = GenerateI64();
+    message.length = length;
+    FillWithRandom(message.data.data(), length);
+}
+
+void FillWithRandom(EthMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+    const uint32_t length = GenerateRandom(1U, EthMessageMaxLength);
+    message.controllerId = controllerId;
+    message.timestamp = GenerateI64();
+    message.length = length;
+    FillWithRandom(message.data.data(), length);
+}
+
+void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+    const uint32_t length = GenerateRandom(1U, LinMessageMaxLength);
+    message.controllerId = controllerId;
+    message.id = GenerateU32();
+    message.timestamp = GenerateI64();
+    message.length = length;
+    FillWithRandom(message.data.data(), length);
+}
+
+std::vector<IoSignal> CreateSignals(size_t count) {
     std::vector<IoSignal> signals;
-    signals.resize(count);
-    for (uint32_t i = 0; i < count; i++) {
-        CreateSignal(signals[i], i);
+
+    for (size_t i = 0; i < count; i++) {
+        signals.push_back(CreateSignal());
     }
 
     return signals;
 }
 
-std::vector<CanController> CreateCanControllers(uint32_t count) {
+std::vector<CanController> CreateCanControllers(size_t count) {
     std::vector<CanController> controllers;
-    controllers.resize(count);
-    for (uint32_t i = 0; i < count; i++) {
-        CreateController(controllers[i], i);
+
+    for (size_t i = 0; i < count; i++) {
+        CanController controller{};
+        FillWithRandom(controller);
+        controllers.push_back(controller);
     }
 
     return controllers;
 }
 
-std::vector<EthController> CreateEthControllers(uint32_t count) {
+std::vector<EthController> CreateEthControllers(size_t count) {
     std::vector<EthController> controllers;
-    controllers.resize(count);
-    for (uint32_t i = 0; i < count; i++) {
-        CreateController(controllers[i], i);
+
+    for (size_t i = 0; i < count; i++) {
+        EthController controller{};
+        FillWithRandom(controller);
+        controllers.push_back(controller);
     }
 
     return controllers;
 }
 
-std::vector<LinController> CreateLinControllers(uint32_t count) {
+std::vector<LinController> CreateLinControllers(size_t count) {
     std::vector<LinController> controllers;
-    controllers.resize(count);
-    for (uint32_t i = 0; i < count; i++) {
-        CreateController(controllers[i], i);
+
+    for (size_t i = 0; i < count; i++) {
+        LinController controller{};
+        FillWithRandom(controller);
+        controllers.push_back(controller);
     }
 
     return controllers;
-}
-
-void CreateMessage(BusControllerId controllerId, CanMessageContainer& container) {
-    const uint32_t length = GenerateRandom(1U, CanMessageMaxLength);
-    FillWithRandom(container.data.data(), length);
-    container.message.controllerId = controllerId;
-    container.message.id = GenerateU32();
-    container.message.timestamp = GenerateI64();
-    container.message.length = length;
-    container.message.data = container.data.data();
-}
-
-void CreateMessage(BusControllerId controllerId, EthMessageContainer& container) {
-    const uint32_t length = GenerateRandom(1U, EthMessageMaxLength);
-    FillWithRandom(container.data.data(), length);
-    container.message.controllerId = controllerId;
-    container.message.timestamp = GenerateI64();
-    container.message.length = length;
-    container.message.data = container.data.data();
-}
-
-void CreateMessage(BusControllerId controllerId, LinMessageContainer& container) {
-    const uint32_t length = GenerateRandom(1U, LinMessageMaxLength);
-    FillWithRandom(container.data.data(), length);
-    container.message.controllerId = controllerId;
-    container.message.id = GenerateU8();
-    container.message.timestamp = GenerateI64();
-    container.message.length = length;
-    container.message.data = container.data.data();
 }
 
 }  // namespace DsVeosCoSim

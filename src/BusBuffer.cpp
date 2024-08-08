@@ -9,7 +9,7 @@
 
 namespace DsVeosCoSim {
 
-Result CanMessageShm::SerializeTo(Channel& channel) const {
+Result CanMessage::SerializeTo(Channel& channel) const {
     CheckResult(channel.Write(timestamp));
     CheckResult(channel.Write(controllerId));
     CheckResult(channel.Write(id));
@@ -18,7 +18,7 @@ Result CanMessageShm::SerializeTo(Channel& channel) const {
     return channel.Write(data.data(), length);
 }
 
-Result CanMessageShm::DeserializeFrom(Channel& channel) {
+Result CanMessage::DeserializeFrom(Channel& channel) {
     CheckResult(channel.Read(timestamp));
     CheckResult(channel.Read(controllerId));
     CheckResult(channel.Read(id));
@@ -28,7 +28,7 @@ Result CanMessageShm::DeserializeFrom(Channel& channel) {
     return channel.Read(data.data(), length);
 }
 
-void CanMessageShm::WriteTo(DsVeosCoSim_CanMessage& message) const {
+void CanMessage::WriteTo(DsVeosCoSim_CanMessage& message) const {
     message.timestamp = timestamp;
     message.controllerId = controllerId;
     message.id = id;
@@ -37,7 +37,7 @@ void CanMessageShm::WriteTo(DsVeosCoSim_CanMessage& message) const {
     message.data = data.data();
 }
 
-Result CanMessageShm::ReadFrom(const DsVeosCoSim_CanMessage& message) {
+Result CanMessage::ReadFrom(const DsVeosCoSim_CanMessage& message) {
     timestamp = message.timestamp;
     controllerId = message.controllerId;
     id = message.id;
@@ -48,7 +48,13 @@ Result CanMessageShm::ReadFrom(const DsVeosCoSim_CanMessage& message) {
     return Result::Ok;
 }
 
-Result CanMessageShm::CheckMaxLength() const {
+DsVeosCoSim_CanMessage CanMessage::Convert() const {
+    DsVeosCoSim_CanMessage message{};
+    WriteTo(message);
+    return message;
+}
+
+Result CanMessage::CheckMaxLength() const {
     if (length > CanMessageMaxLength) {
         LogError("CAN message data exceeds maximum length.");
         return Result::InvalidArgument;
@@ -57,7 +63,7 @@ Result CanMessageShm::CheckMaxLength() const {
     return Result::Ok;
 }
 
-Result EthMessageShm::SerializeTo(Channel& channel) const {
+Result EthMessage::SerializeTo(Channel& channel) const {
     CheckResult(channel.Write(timestamp));
     CheckResult(channel.Write(controllerId));
     CheckResult(channel.Write(flags));
@@ -65,7 +71,7 @@ Result EthMessageShm::SerializeTo(Channel& channel) const {
     return channel.Write(data.data(), length);
 }
 
-Result EthMessageShm::DeserializeFrom(Channel& channel) {
+Result EthMessage::DeserializeFrom(Channel& channel) {
     CheckResult(channel.Read(timestamp));
     CheckResult(channel.Read(controllerId));
     CheckResult(channel.Read(flags));
@@ -74,7 +80,7 @@ Result EthMessageShm::DeserializeFrom(Channel& channel) {
     return channel.Read(data.data(), length);
 }
 
-void EthMessageShm::WriteTo(DsVeosCoSim_EthMessage& message) const {
+void EthMessage::WriteTo(DsVeosCoSim_EthMessage& message) const {
     message.timestamp = timestamp;
     message.controllerId = controllerId;
     message.flags = (DsVeosCoSim_EthMessageFlags)flags;
@@ -82,7 +88,7 @@ void EthMessageShm::WriteTo(DsVeosCoSim_EthMessage& message) const {
     message.data = data.data();
 }
 
-Result EthMessageShm::ReadFrom(const DsVeosCoSim_EthMessage& message) {
+Result EthMessage::ReadFrom(const DsVeosCoSim_EthMessage& message) {
     timestamp = message.timestamp;
     controllerId = message.controllerId;
     flags = (EthMessageFlags)message.flags;
@@ -92,7 +98,13 @@ Result EthMessageShm::ReadFrom(const DsVeosCoSim_EthMessage& message) {
     return Result::Ok;
 }
 
-Result EthMessageShm::CheckMaxLength() const {
+DsVeosCoSim_EthMessage EthMessage::Convert() const {
+    DsVeosCoSim_EthMessage message{};
+    WriteTo(message);
+    return message;
+}
+
+Result EthMessage::CheckMaxLength() const {
     if (length > EthMessageMaxLength) {
         LogError("Ethernet message data exceeds maximum length.");
         return Result::InvalidArgument;
@@ -101,7 +113,7 @@ Result EthMessageShm::CheckMaxLength() const {
     return Result::Ok;
 }
 
-Result LinMessageShm::SerializeTo(Channel& channel) const {
+Result LinMessage::SerializeTo(Channel& channel) const {
     CheckResult(channel.Write(timestamp));
     CheckResult(channel.Write(controllerId));
     CheckResult(channel.Write(id));
@@ -110,7 +122,7 @@ Result LinMessageShm::SerializeTo(Channel& channel) const {
     return channel.Write(data.data(), length);
 }
 
-Result LinMessageShm::DeserializeFrom(Channel& channel) {
+Result LinMessage::DeserializeFrom(Channel& channel) {
     CheckResult(channel.Read(timestamp));
     CheckResult(channel.Read(controllerId));
     CheckResult(channel.Read(id));
@@ -120,7 +132,7 @@ Result LinMessageShm::DeserializeFrom(Channel& channel) {
     return channel.Read(data.data(), length);
 }
 
-void LinMessageShm::WriteTo(DsVeosCoSim_LinMessage& message) const {
+void LinMessage::WriteTo(DsVeosCoSim_LinMessage& message) const {
     message.timestamp = timestamp;
     message.controllerId = controllerId;
     message.id = id;
@@ -129,7 +141,7 @@ void LinMessageShm::WriteTo(DsVeosCoSim_LinMessage& message) const {
     message.data = data.data();
 }
 
-Result LinMessageShm::ReadFrom(const DsVeosCoSim_LinMessage& message) {
+Result LinMessage::ReadFrom(const DsVeosCoSim_LinMessage& message) {
     timestamp = message.timestamp;
     controllerId = message.controllerId;
     id = message.id;
@@ -140,7 +152,13 @@ Result LinMessageShm::ReadFrom(const DsVeosCoSim_LinMessage& message) {
     return Result::Ok;
 }
 
-Result LinMessageShm::CheckMaxLength() const {
+DsVeosCoSim_LinMessage LinMessage::Convert() const {
+    DsVeosCoSim_LinMessage message{};
+    WriteTo(message);
+    return message;
+}
+
+Result LinMessage::CheckMaxLength() const {
     if (length > LinMessageMaxLength) {
         LogError("LIN message data exceeds maximum length.");
         return Result::InvalidArgument;
@@ -149,40 +167,40 @@ Result LinMessageShm::CheckMaxLength() const {
     return Result::Ok;
 }
 
-Result BusBuffer::Initialize(const std::vector<CanController>& canControllers,
-                             const std::vector<EthController>& ethControllers,
-                             const std::vector<LinController>& linControllers) {
-    ClearData();
+Result BusBuffer::Initialize(const std::vector<DsVeosCoSim_CanController>& canControllers,
+                             const std::vector<DsVeosCoSim_EthController>& ethControllers,
+                             const std::vector<DsVeosCoSim_LinController>& linControllers) {
+    Clear();
 
     CheckResult(_canBuffer.Initialize(canControllers));
     CheckResult(_ethBuffer.Initialize(ethControllers));
     return _linBuffer.Initialize(linControllers);
 }
 
-void BusBuffer::ClearData() {
-    _canBuffer.ClearData();
-    _ethBuffer.ClearData();
-    _linBuffer.ClearData();
+void BusBuffer::Clear() {
+    _canBuffer.Clear();
+    _ethBuffer.Clear();
+    _linBuffer.Clear();
 }
 
 Result BusBuffer::Transmit(const DsVeosCoSim_CanMessage& message) {
     return _canBuffer.Transmit(message);
 }
 
-Result BusBuffer::Receive(DsVeosCoSim_CanMessage& message) {
-    return _canBuffer.Receive(message);
-}
-
 Result BusBuffer::Transmit(const DsVeosCoSim_EthMessage& message) {
     return _ethBuffer.Transmit(message);
 }
 
-Result BusBuffer::Receive(DsVeosCoSim_EthMessage& message) {
-    return _ethBuffer.Receive(message);
-}
-
 Result BusBuffer::Transmit(const DsVeosCoSim_LinMessage& message) {
     return _linBuffer.Transmit(message);
+}
+
+Result BusBuffer::Receive(DsVeosCoSim_CanMessage& message) {
+    return _canBuffer.Receive(message);
+}
+
+Result BusBuffer::Receive(DsVeosCoSim_EthMessage& message) {
+    return _ethBuffer.Receive(message);
 }
 
 Result BusBuffer::Receive(DsVeosCoSim_LinMessage& message) {

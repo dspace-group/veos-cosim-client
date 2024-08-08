@@ -87,7 +87,7 @@ void CoSimServerWrapper::RunBackground() {
             std::lock_guard lock(_mutex);
 
             if (_server.BackgroundService() != Result::Ok) {
-                throw std::runtime_error("Could not background.");
+                throw std::runtime_error("Could not run background service.");
             }
         }
 

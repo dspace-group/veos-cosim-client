@@ -31,7 +31,7 @@ TEST_F(TestPortMapper, SetAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName日本語");
+    const std::string serverName = GenerateString("Server名前");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -49,7 +49,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName日本語\xF0\x9F\x98\x80");
+    const std::string serverName = GenerateString("Server名前");
 
     // Act
     uint16_t port{};
@@ -64,7 +64,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName日本語");
+    const std::string serverName = GenerateString("Server名前");
 
     const uint16_t setPort = GenerateU16();
     uint16_t getPort{};
@@ -83,7 +83,7 @@ TEST_F(TestPortMapper, SetTwiceAndGet) {
     PortMapperServer portMapperServer;
     ASSERT_OK(portMapperServer.Start(false));
 
-    const std::string serverName = GenerateString("ServerName日本語");
+    const std::string serverName = GenerateString("Server名前");
 
     const uint16_t setPort1 = GenerateU16();
     const uint16_t setPort2 = setPort1 + 1;

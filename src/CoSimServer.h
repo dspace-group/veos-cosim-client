@@ -65,8 +65,8 @@ public:
     [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value);
 
     [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
     [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
+    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
 
     [[nodiscard]] Result BackgroundService();
 

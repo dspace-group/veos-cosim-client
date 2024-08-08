@@ -11,7 +11,7 @@
 
 namespace DsVeosCoSim {
 
-struct CanMessageShm {
+struct CanMessage {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
     uint32_t id{};
@@ -24,11 +24,13 @@ struct CanMessageShm {
     void WriteTo(DsVeosCoSim_CanMessage& message) const;
     [[nodiscard]] Result ReadFrom(const DsVeosCoSim_CanMessage& message);
 
+    [[nodiscard]] DsVeosCoSim_CanMessage Convert() const;
+
 private:
     [[nodiscard]] Result CheckMaxLength() const;
 };
 
-struct EthMessageShm {
+struct EthMessage {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
     EthMessageFlags flags{};
@@ -40,11 +42,13 @@ struct EthMessageShm {
     void WriteTo(DsVeosCoSim_EthMessage& message) const;
     [[nodiscard]] Result ReadFrom(const DsVeosCoSim_EthMessage& message);
 
+    [[nodiscard]] DsVeosCoSim_EthMessage Convert() const;
+
 private:
     [[nodiscard]] Result CheckMaxLength() const;
 };
 
-struct LinMessageShm {
+struct LinMessage {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
     uint32_t id{};
@@ -56,6 +60,8 @@ struct LinMessageShm {
     [[nodiscard]] Result DeserializeFrom(Channel& channel);
     void WriteTo(DsVeosCoSim_LinMessage& message) const;
     [[nodiscard]] Result ReadFrom(const DsVeosCoSim_LinMessage& message);
+
+    [[nodiscard]] DsVeosCoSim_LinMessage Convert() const;
 
 private:
     [[nodiscard]] Result CheckMaxLength() const;
@@ -72,6 +78,7 @@ public:
     void Clear() {
         ClearData();
         _items.clear();
+        _items.resize(_capacity);
     }
 
     void ClearData() {
@@ -140,16 +147,16 @@ private:
     bool _isEmpty = true;
 };
 
-template <typename TMessage, typename TMessageShm, typename TController>
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
 class BusProtocolBuffer {
     struct ControllerExtension {
-        TController info{};
+        TControllerExtern info{};
         uint32_t receiveCount{};
         uint32_t transmitCount{};
         bool receiveWarningSent = false;
         bool transmitWarningSent = false;
 
-        void ClearData() {
+        void Clear() {
             receiveCount = 0;
             transmitCount = 0;
             receiveWarningSent = false;
@@ -167,7 +174,7 @@ public:
     BusProtocolBuffer(BusProtocolBuffer&&) = delete;
     BusProtocolBuffer& operator=(BusProtocolBuffer&&) = default;
 
-    [[nodiscard]] Result Initialize(const std::vector<TController>& controllers) {
+    [[nodiscard]] Result Initialize(const std::vector<TControllerExtern>& controllers) {
         _controllers.clear();
         _controllers.reserve(controllers.size());
 
@@ -175,7 +182,7 @@ public:
         for (const auto& controller : controllers) {
             const auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                LogError("Duplicated controller id " + ToString(controller.id) + ".");
+                LogError("Duplicated controller id " + std::to_string(controller.id) + ".");
                 return Result::Error;
             }
 
@@ -192,21 +199,21 @@ public:
         return Result::Ok;
     }
 
-    void ClearData() {
+    void Clear() {
         for (auto& [controllerId, dataPerController] : _controllers) {
-            dataPerController.ClearData();
+            dataPerController.Clear();
         }
 
-        _receiveBuffer.ClearData();
-        _transmitBuffer.ClearData();
+        _receiveBuffer.Clear();
+        _transmitBuffer.Clear();
     }
 
-    [[nodiscard]] Result Receive(TMessage& message) {
+    [[nodiscard]] Result Receive(TMessageExtern& message) {
         if (_receiveBuffer.IsEmpty()) {
             return Result::Empty;
         }
 
-        TMessageShm& messageShm = _receiveBuffer.PopFront();
+        TMessage& messageShm = _receiveBuffer.PopFront();
         messageShm.WriteTo(message);
 
         ControllerExtension* extension{};
@@ -215,8 +222,8 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result Transmit(const TMessage& message) {
-        TMessageShm messageShm{};
+    [[nodiscard]] Result Transmit(const TMessageExtern& message) {
+        TMessage messageShm{};
         CheckResult(messageShm.ReadFrom(message));
 
         ControllerExtension* extension{};
@@ -239,27 +246,26 @@ public:
     [[nodiscard]] Result Deserialize(
         Channel& channel,
         SimulationTime simulationTime,
-        const std::function<void(SimulationTime simulationTime, const TController& controller, const TMessage& message)>& callback) {
+        const std::function<void(SimulationTime simulationTime, const TControllerExtern& controller, const TMessageExtern& message)>& callback) {
         uint32_t totalCanCount = 0;
         CheckResult(channel.Read(totalCanCount));
 
         for (uint32_t i = 0; i < totalCanCount; i++) {
-            TMessageShm messageShm{};
+            TMessage messageShm{};
             CheckResult(messageShm.DeserializeFrom(channel));
 
             ControllerExtension* extension{};
             CheckResult(FindController(messageShm.controllerId, &extension));
 
             if (callback) {
-                TMessage message{};
-                messageShm.WriteTo(message);
+                TMessageExtern message = messageShm.Convert();
                 callback(simulationTime, extension->info, message);
                 continue;
             }
 
             if (extension->receiveCount == extension->info.queueSize) {
                 if (!extension->receiveWarningSent) {
-                    LogWarning("Receive buffer for controller '" + extension->info.name + "' is full.");
+                    LogWarning("Receive buffer for controller '" + std::string(extension->info.name) + "' is full.");
                     extension->receiveWarningSent = true;
                 }
 
@@ -295,13 +301,13 @@ private:
             return Result::Ok;
         }
 
-        LogError("controller id " + ToString(controllerId) + " is unknown.");
+        LogError("Controller id " + std::to_string(controllerId) + " is unknown.");
         return Result::InvalidArgument;
     }
 
     std::unordered_map<BusControllerId, ControllerExtension> _controllers;
-    RingBuffer<TMessageShm> _receiveBuffer;
-    RingBuffer<TMessageShm> _transmitBuffer;
+    RingBuffer<TMessage> _receiveBuffer;
+    RingBuffer<TMessage> _transmitBuffer;
 };
 
 class BusBuffer {
@@ -313,7 +319,7 @@ class BusBuffer {
         bool receiveWarningSent = false;
         bool transmitWarningSent = false;
 
-        void ClearData() {
+        void Clear() {
             receiveCount = 0;
             transmitCount = 0;
             receiveWarningSent = false;
@@ -326,16 +332,16 @@ public:
     ~BusBuffer() noexcept = default;
 
     BusBuffer(const BusBuffer&) = delete;
-    BusBuffer& operator=(BusBuffer const&) = delete;
+    BusBuffer& operator=(const BusBuffer&) = delete;
 
     BusBuffer(BusBuffer&&) = delete;
     BusBuffer& operator=(BusBuffer&&) = delete;
 
-    [[nodiscard]] Result Initialize(const std::vector<CanController>& canControllers,
-                                    const std::vector<EthController>& ethControllers,
-                                    const std::vector<LinController>& linControllers);
+    [[nodiscard]] Result Initialize(const std::vector<DsVeosCoSim_CanController>& canControllers,
+                                    const std::vector<DsVeosCoSim_EthController>& ethControllers,
+                                    const std::vector<DsVeosCoSim_LinController>& linControllers);
 
-    void ClearData();
+    void Clear();
 
     [[nodiscard]] Result Receive(DsVeosCoSim_CanMessage& message);
     [[nodiscard]] Result Receive(DsVeosCoSim_EthMessage& message);
@@ -349,9 +355,9 @@ public:
     [[nodiscard]] Result Serialize(Channel& channel);
 
 private:
-    BusProtocolBuffer<DsVeosCoSim_CanMessage, CanMessageShm, CanController> _canBuffer;
-    BusProtocolBuffer<DsVeosCoSim_EthMessage, EthMessageShm, EthController> _ethBuffer;
-    BusProtocolBuffer<DsVeosCoSim_LinMessage, LinMessageShm, LinController> _linBuffer;
+    BusProtocolBuffer<CanMessage, DsVeosCoSim_CanMessage, DsVeosCoSim_CanController> _canBuffer;
+    BusProtocolBuffer<EthMessage, DsVeosCoSim_EthMessage, DsVeosCoSim_EthController> _ethBuffer;
+    BusProtocolBuffer<LinMessage, DsVeosCoSim_LinMessage, DsVeosCoSim_LinController> _linBuffer;
 };
 
 }  // namespace DsVeosCoSim

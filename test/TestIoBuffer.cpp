@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include "Communication.h"
+#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Generator.h"
 #include "IoBuffer.h"
 #include "Logger.h"
@@ -51,7 +52,7 @@ TEST_F(TestIoBuffer, CreateWithSingleIoSignalInfo) {
     IoBuffer ioBuffer;
 
     // Act
-    const Result result = ioBuffer.Initialize(incomingSignals, outgoingSignals);
+    const Result result = ioBuffer.Initialize(Convert(incomingSignals), Convert(outgoingSignals));
 
     // Assert
     ASSERT_OK(result);
@@ -64,7 +65,7 @@ TEST_F(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
     IoBuffer ioBuffer;
 
     // Act
-    const Result result = ioBuffer.Initialize(incomingSignals, outgoingSignals);
+    const Result result = ioBuffer.Initialize(Convert(incomingSignals), Convert(outgoingSignals));
 
     // Assert
     ASSERT_OK(result);
@@ -72,41 +73,38 @@ TEST_F(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
 
 TEST_F(TestIoBuffer, DuplicatedReadIds) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
+    IoSignal signal = CreateSignal();
 
     IoBuffer ioBuffer;
 
     // Act
-    const Result result = ioBuffer.Initialize({signal, signal}, {});
+    const Result result = ioBuffer.Initialize({signal.Convert(), signal.Convert()}, {});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + ToString(signal.id) + ".");
+    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
 }
 
 TEST_F(TestIoBuffer, DuplicatedWriteIds) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
+    IoSignal signal = CreateSignal();
 
     IoBuffer ioBuffer;
 
     // Act
-    const Result result = ioBuffer.Initialize({}, {signal, signal});
+    const Result result = ioBuffer.Initialize({}, {signal.Convert(), signal.Convert()});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + ToString(signal.id) + ".");
+    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
 }
 
 TEST_F(TestIoBuffer, ReadInvalidId) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
+    IoSignal signal = CreateSignal();
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal}, {}));
+    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
 
     const IoSignalId readId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
     uint32_t readLength{};
@@ -118,16 +116,15 @@ TEST_F(TestIoBuffer, ReadInvalidId) {
 
     // Assert
     ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + ToString(readId) + " is unknown.");
+    AssertLastMessage("IO signal id " + std::to_string(readId) + " is unknown.");
 }
 
 TEST_F(TestIoBuffer, WriteInvalidId) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
+    IoSignal signal = CreateSignal();
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal}));
+    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
 
     const IoSignalId writeId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
     const uint32_t writeLength = signal.length;
@@ -140,18 +137,17 @@ TEST_F(TestIoBuffer, WriteInvalidId) {
 
     // Assert
     ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + ToString(writeId) + " is unknown.");
+    AssertLastMessage("IO signal id " + std::to_string(writeId) + " is unknown.");
 }
 
 TEST_F(TestIoBuffer, ScalarInitialData) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = 1;
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal}, {}));
+    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> initialValue;
     initialValue.resize(GetDataTypeSize(signal.dataType));
@@ -171,16 +167,15 @@ TEST_F(TestIoBuffer, ScalarInitialData) {
 
 TEST_F(TestIoBuffer, ScalarChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = 1;
 
     IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal}));
+    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
 
     IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
+    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> writeValue;
     writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -194,13 +189,15 @@ TEST_F(TestIoBuffer, ScalarChanged) {  // NOLINT(readability-function-cognitive-
     const SimulationTime writeSimulationTime = GenerateI64();
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback =
-        [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(writeSimulationTime, simulationTime);
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-        };
+    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
+                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
+                                                                                           uint32_t length,
+                                                                                           const void* value) {
+        ASSERT_EQ(writeSimulationTime, simulationTime);
+        ASSERT_EQ(signal.id, changedIoSignal.id);
+        ASSERT_EQ(signal.length, length);
+        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
+    };
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue;
@@ -219,13 +216,12 @@ TEST_F(TestIoBuffer, ScalarChanged) {  // NOLINT(readability-function-cognitive-
 
 TEST_F(TestIoBuffer, ScalarWrongLength) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = 1;
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal}));
+    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
 
     std::vector<uint8_t> writeValue;
     writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -243,13 +239,12 @@ TEST_F(TestIoBuffer, ScalarWrongLength) {
 
 TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = GenerateRandom(2, 10);
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal}, {}));
+    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> initialValue;
     initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -269,16 +264,15 @@ TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
 
 TEST_F(TestIoBuffer, FixedSizedVectorChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = GenerateRandom(2, 10);
 
     IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal}));
+    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
 
     IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
+    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> writeValue{};
     writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -290,13 +284,15 @@ TEST_F(TestIoBuffer, FixedSizedVectorChanged) {  // NOLINT(readability-function-
     const SimulationTime writeSimulationTime = GenerateI64();
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback =
-        [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(writeSimulationTime, simulationTime);
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-        };
+    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
+                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
+                                                                                           uint32_t length,
+                                                                                           const void* value) {
+        ASSERT_EQ(writeSimulationTime, simulationTime);
+        ASSERT_EQ(signal.id, changedIoSignal.id);
+        ASSERT_EQ(signal.length, length);
+        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
+    };
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue{};
@@ -315,13 +311,12 @@ TEST_F(TestIoBuffer, FixedSizedVectorChanged) {  // NOLINT(readability-function-
 
 TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Fixed;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
     signal.length = GenerateRandom(2, 10);
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal}));
+    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
 
     const uint32_t writeLength = signal.length + 1;
     std::vector<uint8_t> writeValue{};
@@ -339,12 +334,11 @@ TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
 
 TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Variable;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal}, {}));
+    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> initialValue;
     initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -363,15 +357,14 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
 
 TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Variable;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
 
     IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal}));
+    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
 
     IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
+    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> writeValue{};
     writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
@@ -383,13 +376,15 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {  // NOLINT(readabi
     const SimulationTime writeSimulationTime = GenerateI64();
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback =
-        [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(writeSimulationTime, simulationTime);
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length, length);
-            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-        };
+    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
+                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
+                                                                                           uint32_t length,
+                                                                                           const void* value) {
+        ASSERT_EQ(writeSimulationTime, simulationTime);
+        ASSERT_EQ(signal.id, changedIoSignal.id);
+        ASSERT_EQ(signal.length, length);
+        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
+    };
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue{};
@@ -408,16 +403,15 @@ TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {  // NOLINT(readabi
 
 TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Variable;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
     signal.length = GenerateRandom(2, 10);
 
     IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal}));
+    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
 
     IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
+    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
 
     std::vector<uint8_t> writeValue{};
     writeValue.resize(static_cast<size_t>(signal.length - 1) * GetDataTypeSize(signal.dataType));
@@ -429,13 +423,15 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {  // NOLINT(readab
     const SimulationTime writeSimulationTime = GenerateI64();
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback =
-        [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(writeSimulationTime, simulationTime);
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length - 1, length);
-            AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-        };
+    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
+                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
+                                                                                           uint32_t length,
+                                                                                           const void* value) {
+        ASSERT_EQ(writeSimulationTime, simulationTime);
+        ASSERT_EQ(signal.id, changedIoSignal.id);
+        ASSERT_EQ(signal.length - 1, length);
+        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
+    };
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue{};
@@ -454,15 +450,14 @@ TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {  // NOLINT(readab
 
 TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Variable;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
 
     IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal}));
+    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
 
     IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal}, {}));
+    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
 
     constexpr uint32_t writeLength = 0;  // No element should be written
     std::vector<uint8_t> writeValue{};
@@ -474,7 +469,7 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {  // NOLINT(readab
     int callbacksCounter{};
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&callbacksCounter](SimulationTime, const IoSignal&, uint32_t, const void*) {
+    callbacks.incomingSignalChangedCallback = [&callbacksCounter](SimulationTime, const DsVeosCoSim_IoSignal&, uint32_t, const void*) {
         callbacksCounter++;
     };
 
@@ -498,13 +493,12 @@ TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {  // NOLINT(readab
 
 TEST_F(TestIoBuffer, VariableSizedVectorInvalidLength) {
     // Arrange
-    IoSignal signal{};
-    CreateSignal(signal, GenerateU32());
-    signal.sizeKind = SizeKind::Variable;
+    IoSignal signal = CreateSignal();
+    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
     signal.length = GenerateRandom(2, 10);
 
     IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal}));
+    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
 
     const uint32_t writeLength = signal.length + 1;
     std::vector<uint8_t> writeValue{};

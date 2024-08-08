@@ -2,57 +2,41 @@
 
 #pragma once
 
-#include <vector>
-
+#include "BusBuffer.h"
 #include "CoSimTypes.h"
 
 namespace DsVeosCoSim {
 
-struct CanMessageContainer {
-    DsVeosCoSim_CanMessage message{};
-    std::array<uint8_t, CanMessageMaxLength> data{};
-};
-
-struct EthMessageContainer {
-    DsVeosCoSim_EthMessage message{};
-    std::array<uint8_t, EthMessageMaxLength> data{};
-};
-
-struct LinMessageContainer {
-    DsVeosCoSim_LinMessage message{};
-    std::array<uint8_t, LinMessageMaxLength> data{};
-};
-
-int Random(int min, int max);
+[[nodiscard]] int Random(int min, int max);
 
 void FillWithRandom(uint8_t* data, size_t length);
 
 template <typename T>
-T GenerateRandom(T min, T max) {
+[[nodiscard]] T GenerateRandom(T min, T max) {
     return static_cast<T>(Random(static_cast<int>(min), static_cast<int>(max)));
 }
 
-uint8_t GenerateU8();
-uint16_t GenerateU16();
-uint32_t GenerateU32();
-uint64_t GenerateU64();
-int64_t GenerateI64();
-std::string GenerateString(const std::string& prefix);
+[[nodiscard]] uint8_t GenerateU8();
+[[nodiscard]] uint16_t GenerateU16();
+[[nodiscard]] uint32_t GenerateU32();
+[[nodiscard]] uint64_t GenerateU64();
+[[nodiscard]] int64_t GenerateI64();
+[[nodiscard]] std::string GenerateString(const std::string& prefix);
 
-void CreateSignal(IoSignal& signal, uint32_t index);
+[[nodiscard]] IoSignal CreateSignal();
 
-void CreateController(CanController& controller, uint32_t index);
-void CreateController(EthController& controller, uint32_t index);
-void CreateController(LinController& controller, uint32_t index);
+void FillWithRandom(CanController& controller);
+void FillWithRandom(EthController& controller);
+void FillWithRandom(LinController& controller);
 
-std::vector<IoSignal> CreateSignals(uint32_t count);
+void FillWithRandom(CanMessage& message, DsVeosCoSim_BusControllerId controllerId);
+void FillWithRandom(EthMessage& message, DsVeosCoSim_BusControllerId controllerId);
+void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerId);
 
-std::vector<CanController> CreateCanControllers(uint32_t count);
-std::vector<EthController> CreateEthControllers(uint32_t count);
-std::vector<LinController> CreateLinControllers(uint32_t count);
+[[nodiscard]] std::vector<IoSignal> CreateSignals(size_t count);
 
-void CreateMessage(BusControllerId controllerId, CanMessageContainer& container);
-void CreateMessage(BusControllerId controllerId, EthMessageContainer& container);
-void CreateMessage(BusControllerId controllerId, LinMessageContainer& container);
+[[nodiscard]] std::vector<CanController> CreateCanControllers(size_t count);
+[[nodiscard]] std::vector<EthController> CreateEthControllers(size_t count);
+[[nodiscard]] std::vector<LinController> CreateLinControllers(size_t count);
 
 }  // namespace DsVeosCoSim

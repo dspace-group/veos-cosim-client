@@ -11,30 +11,10 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] Result CheckDataType(DataType dataType, const std::string& name) {
-    switch (dataType) {
-        case DataType::Bool:
-        case DataType::Int8:
-        case DataType::Int16:
-        case DataType::Int32:
-        case DataType::Int64:
-        case DataType::UInt8:
-        case DataType::UInt16:
-        case DataType::UInt32:
-        case DataType::UInt64:
-        case DataType::Float32:
-        case DataType::Float64:
-            return Result::Ok;
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            LogError("Unknown data type '" + ToString(dataType) + "' for IO signal '" + name + "'.");
-            return Result::Error;
-    }
-}
-
-[[nodiscard]] Result CheckSizeKind(SizeKind sizeKind, const std::string& name) {
+[[nodiscard]] Result CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
     switch (sizeKind) {
-        case SizeKind::Fixed:
-        case SizeKind::Variable:
+        case DsVeosCoSim_SizeKind_Fixed:
+        case DsVeosCoSim_SizeKind_Variable:
             return Result::Ok;
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             LogError("Unknown size kind '" + ToString(sizeKind) + "' for IO signal '" + name + "'.");
@@ -44,27 +24,27 @@ namespace {
 
 }  // namespace
 
-Result IoBuffer::Initialize(const std::vector<IoSignal>& incomingSignals, const std::vector<IoSignal>& outgoingSignals) {
+Result IoBuffer::Initialize(const std::vector<DsVeosCoSim_IoSignal>& incomingSignals, const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals) {
     Reset();
     CheckResult(Initialize(incomingSignals, _readBuffers));
     CheckResult(Initialize(outgoingSignals, _writeBuffers));
-    ClearData();
+    Clear();
     return Result::Ok;
 }
 
 void IoBuffer::Reset() {
-    ClearData();
+    Clear();
     _readBuffers.clear();
     _writeBuffers.clear();
 }
 
-void IoBuffer::ClearData() {
+void IoBuffer::Clear() {
     while (!_changed.empty()) {
         _changed.pop();
     }
 
-    ClearData(_readBuffers);
-    ClearData(_writeBuffers);
+    Clear(_readBuffers);
+    Clear(_writeBuffers);
 }
 
 Result IoBuffer::Read(IoSignalId signalId, uint32_t& length, void* value) {
@@ -90,10 +70,10 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
     InternalIoBuffer* writeBuffer{};
     CheckResult(FindWriteBuffer(signalId, &writeBuffer));
 
-    const bool isVariableSized = writeBuffer->info.sizeKind == SizeKind::Variable;
+    const bool isVariableSized = writeBuffer->info.sizeKind == DsVeosCoSim_SizeKind_Variable;
     if (isVariableSized) {
         if (length > writeBuffer->info.length) {
-            LogError("Length of variable sized IO signal '" + writeBuffer->info.name + "' exceeds max size.");
+            LogError("Length of variable sized IO signal '" + std::string(writeBuffer->info.name) + "' exceeds max size.");
             return Result::Error;
         }
 
@@ -107,8 +87,8 @@ Result IoBuffer::Write(IoSignalId signalId, uint32_t length, const void* value) 
         writeBuffer->currentLength = length;
     } else {
         if (length != writeBuffer->info.length) {
-            LogError("Length of fixed sized IO signal '" + writeBuffer->info.name + "' must be " + std::to_string(writeBuffer->info.length) + " but was " +
-                     std::to_string(length) + ".");
+            LogError("Length of fixed sized IO signal '" + std::string(writeBuffer->info.name) + "' must be " + std::to_string(writeBuffer->info.length) +
+                     " but was " + std::to_string(length) + ".");
             return Result::Error;
         }
     }
@@ -142,12 +122,12 @@ Result IoBuffer::Deserialize(Channel& channel,  // NOLINT(readability-function-c
         InternalIoBuffer* readBuffer{};
         CheckResult(FindReadBuffer(signalId, &readBuffer));
 
-        const bool isVariableSized = readBuffer->info.sizeKind == SizeKind::Variable;
+        const bool isVariableSized = readBuffer->info.sizeKind == DsVeosCoSim_SizeKind_Variable;
         if (isVariableSized) {
             uint32_t length = 0;
             CheckResult(channel.Read(length));
             if (length > readBuffer->info.length) {
-                LogError("Length of variable sized IO signal '" + readBuffer->info.name + "' exceeds max size.");
+                LogError("Length of variable sized IO signal '" + std::string(readBuffer->info.name) + "' exceeds max size.");
                 return Result::Error;
             }
 
@@ -176,7 +156,7 @@ Result IoBuffer::Serialize(Channel& channel) {
         InternalIoBuffer* internalBuffer = _changed.front();
         CheckResult(channel.Write(internalBuffer->info.id));
 
-        const bool isVariableSized = internalBuffer->info.sizeKind == SizeKind::Variable;
+        const bool isVariableSized = internalBuffer->info.sizeKind == DsVeosCoSim_SizeKind_Variable;
         if (isVariableSized) {
             CheckResult(channel.Write(internalBuffer->currentLength));
         }
@@ -193,19 +173,23 @@ Result IoBuffer::Serialize(Channel& channel) {
     return Result::Ok;
 }
 
-Result IoBuffer::Initialize(const std::vector<IoSignal>& signals, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
+Result IoBuffer::Initialize(const std::vector<DsVeosCoSim_IoSignal>& signals, std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
     buffer.reserve(signals.size());
 
     for (const auto& signal : signals) {
         InternalIoBuffer internalBuffer{};
         internalBuffer.info = signal;
 
-        CheckResult(CheckDataType(signal.dataType, signal.name));
         CheckResult(CheckSizeKind(signal.sizeKind, signal.name));
 
         internalBuffer.dataTypeSize = GetDataTypeSize(signal.dataType);
 
-        const bool isFixedSize = signal.sizeKind == SizeKind::Fixed;
+        if (internalBuffer.dataTypeSize == 0) {
+            LogError("Invalid data type " + ToString(signal.dataType) + " for IO signal '" + signal.name + "'.");
+            return Result::Error;
+        }
+
+        const bool isFixedSize = signal.sizeKind == DsVeosCoSim_SizeKind_Fixed;
         if (isFixedSize) {
             internalBuffer.currentLength = signal.length;
         }
@@ -217,13 +201,13 @@ Result IoBuffer::Initialize(const std::vector<IoSignal>& signals, std::unordered
 
         const size_t totalSize = static_cast<size_t>(signal.length) * internalBuffer.dataTypeSize;
         if (totalSize > UINT32_MAX) {
-            LogError("Buffer size exceeds maximum for IO signal '" + signal.name + "'.");
+            LogError("Buffer size exceeds maximum for IO signal '" + std::string(signal.name) + "'.");
             return Result::Error;
         }
 
         const auto search = buffer.find(signal.id);
         if (search != buffer.end()) {
-            LogError("Duplicated IO signal id " + ToString(signal.id) + ".");
+            LogError("Duplicated IO signal id " + std::to_string(signal.id) + ".");
             return Result::Error;
         }
 
@@ -235,13 +219,13 @@ Result IoBuffer::Initialize(const std::vector<IoSignal>& signals, std::unordered
     return Result::Ok;
 }
 
-void IoBuffer::ClearData(std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
+void IoBuffer::Clear(std::unordered_map<IoSignalId, InternalIoBuffer>& buffer) {
     for (auto& [signalId, internalBuffer] : buffer) {
         internalBuffer.changed = false;
 
         std::fill(internalBuffer.data.begin(), internalBuffer.data.end(), static_cast<uint8_t>(0));
 
-        if (internalBuffer.info.sizeKind == SizeKind::Variable) {
+        if (internalBuffer.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
             internalBuffer.currentLength = 0;
         }
     }
@@ -254,7 +238,7 @@ Result IoBuffer::FindReadBuffer(IoSignalId signalId, InternalIoBuffer** readBuff
         return Result::Ok;
     }
 
-    LogError("IO signal id " + ToString(signalId) + " is unknown.");
+    LogError("IO signal id " + std::to_string(signalId) + " is unknown.");
     return Result::InvalidArgument;
 }
 
@@ -265,7 +249,7 @@ Result IoBuffer::FindWriteBuffer(IoSignalId signalId, InternalIoBuffer** writeBu
         return Result::Ok;
     }
 
-    LogError("IO signal id " + ToString(signalId) + " is unknown.");
+    LogError("IO signal id " + std::to_string(signalId) + " is unknown.");
     return Result::InvalidArgument;
 }
 
