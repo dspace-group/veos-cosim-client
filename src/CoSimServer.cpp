@@ -39,9 +39,16 @@ Result CoSimServer::Load(const CoSimServerConfig& config) {
         CheckResult(_portMapperServer.Start(_enableRemoteAccess));
     }
 
-    // Switched read and write signals on purpose
-    CheckResult(_ioBuffer.Initialize(_outgoingSignals, _incomingSignals));
-    CheckResult(_busBuffer.Initialize(_canControllers, _ethControllers, _linControllers));
+    std::vector<DsVeosCoSim_IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
+
+    // Switch read and write signals on purpose
+    CheckResult(_ioBuffer.Initialize(outgoingSignalsExtern, incomingSignalsExtern));
+
+    std::vector<DsVeosCoSim_CanController> canControllersExtern = Convert(_canControllers);
+    std::vector<DsVeosCoSim_EthController> ethControllersExtern = Convert(_ethControllers);
+    std::vector<DsVeosCoSim_LinController> linControllersExtern = Convert(_linControllers);
+    CheckResult(_busBuffer.Initialize(canControllersExtern, ethControllersExtern, linControllersExtern));
 
     CheckResult(StartAccepting());
 
@@ -179,7 +186,7 @@ Result CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) {
     return _busBuffer.Transmit(message);
 }
 
-Result CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) {
+Result CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) {
     if (!_isConnected) {
         return Result::Ok;
     }
@@ -187,7 +194,7 @@ Result CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) {
     return _busBuffer.Transmit(message);
 }
 
-Result CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) {
+Result CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) {
     if (!_isConnected) {
         return Result::Ok;
     }

@@ -169,7 +169,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle, DsV
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Read(static_cast<IoSignalId>(incomingSignalId), *length, value));
+    return static_cast<DsVeosCoSim_Result>(client->Read(incomingSignalId, *length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle, uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) {
@@ -190,7 +190,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle, Ds
 
     auto* const client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Write(static_cast<IoSignalId>(outgoingSignalId), length, value));
+    return static_cast<DsVeosCoSim_Result>(client->Write(outgoingSignalId, length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle, uint32_t* canControllersCount, const DsVeosCoSim_CanController** canControllers) {

@@ -42,25 +42,25 @@ protected:
 TEST_F(TestBusBuffer, DuplicateCanIds) {
     // Arrange
     CanController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({controller, controller}, {}, {});
+    const Result result = busBuffer.Initialize({controller.Convert(), controller.Convert()}, {}, {});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated controller id " + ToString(controller.id) + ".");
+    AssertLastMessage("Duplicated controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
     // Arrange
     CanController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({controller}, {}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({controller.Convert()}, {}, {}));
 
     DsVeosCoSim_CanMessage receivedMessage{};
 
@@ -74,27 +74,27 @@ TEST_F(TestBusBuffer, ReceiveCanMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     CanController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({controller}, {}, {}));
-    ASSERT_OK(receiverBusBuffer.Initialize({controller}, {}, {}));
+    ASSERT_OK(senderBusBuffer.Initialize({controller.Convert()}, {}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({controller.Convert()}, {}, {}));
 
-    std::vector<CanMessageContainer> sendMessages;
+    std::vector<CanMessage> sendMessages;
     sendMessages.reserve(controller.queueSize);
 
     // Act
     for (uint32_t i = 0; i < controller.queueSize; i++) {
-        CanMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(controller.id, sendMessage);
-        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
+        CanMessage& sendMessage = sendMessages.emplace_back();
+        FillWithRandom(sendMessage, controller.id);
+        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.Convert()));
     }
 
-    CanMessageContainer rejectedMessage{};
-    CreateMessage(controller.id, rejectedMessage);
-    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
+    CanMessage rejectedMessage{};
+    FillWithRandom(rejectedMessage, controller.id);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.Convert()));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
@@ -102,7 +102,7 @@ TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {  // NOLINT(readability-fu
     DsVeosCoSim_CanMessage receivedMessage{};
     for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
-        AssertEq(sendMessages[i].message, receivedMessage);
+        AssertEq(sendMessages[i].Convert(), receivedMessage);
     }
 
     ASSERT_EMPTY(receiverBusBuffer.Receive(receivedMessage));
@@ -111,25 +111,25 @@ TEST_F(TestBusBuffer, TransmitAndReceiveCanMessages) {  // NOLINT(readability-fu
 TEST_F(TestBusBuffer, DuplicateEthIds) {
     // Arrange
     EthController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({}, {controller, controller}, {});
+    const Result result = busBuffer.Initialize({}, {controller.Convert(), controller.Convert()}, {});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated controller id " + ToString(controller.id) + ".");
+    AssertLastMessage("Duplicated controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
     // Arrange
     EthController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller.Convert()}, {}));
 
     DsVeosCoSim_EthMessage receivedMessage{};
 
@@ -143,27 +143,27 @@ TEST_F(TestBusBuffer, ReceiveEthMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     EthController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({}, {controller}, {}));
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller}, {}));
+    ASSERT_OK(senderBusBuffer.Initialize({}, {controller.Convert()}, {}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {controller.Convert()}, {}));
 
-    std::vector<EthMessageContainer> sendMessages;
+    std::vector<EthMessage> sendMessages;
     sendMessages.reserve(controller.queueSize);
 
     // Act
     for (uint32_t i = 0; i < controller.queueSize; i++) {
-        EthMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(controller.id, sendMessage);
-        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
+        EthMessage& sendMessage = sendMessages.emplace_back();
+        FillWithRandom(sendMessage, controller.id);
+        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.Convert()));
     }
 
-    EthMessageContainer rejectedMessage{};
-    CreateMessage(controller.id, rejectedMessage);
-    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
+    EthMessage rejectedMessage{};
+    FillWithRandom(rejectedMessage, controller.id);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.Convert()));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
@@ -171,7 +171,7 @@ TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {  // NOLINT(readability-fu
     DsVeosCoSim_EthMessage receivedMessage{};
     for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
-        AssertEq(sendMessages[i].message, receivedMessage);
+        AssertEq(sendMessages[i].Convert(), receivedMessage);
     }
 
     ASSERT_EMPTY(receiverBusBuffer.Receive(receivedMessage));
@@ -180,25 +180,25 @@ TEST_F(TestBusBuffer, TransmitAndReceiveEthMessages) {  // NOLINT(readability-fu
 TEST_F(TestBusBuffer, DuplicateLinIds) {
     // Arrange
     LinController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer busBuffer;
 
     // Act
-    const Result result = busBuffer.Initialize({}, {}, {controller, controller});
+    const Result result = busBuffer.Initialize({}, {}, {controller.Convert(), controller.Convert()});
 
     // Assert
     ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated controller id " + ToString(controller.id) + ".");
+    AssertLastMessage("Duplicated controller id " + std::to_string(controller.id) + ".");
 }
 
 TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
     // Arrange
     LinController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer receiverBusBuffer;
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller.Convert()}));
 
     DsVeosCoSim_LinMessage receivedMessage{};
 
@@ -212,27 +212,27 @@ TEST_F(TestBusBuffer, ReceiveLinMessageOnEmptyBuffer) {
 TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {  // NOLINT(readability-function-cognitive-complexity)
     // Arrange
     LinController controller;
-    CreateController(controller, GenerateU32());
+    FillWithRandom(controller);
 
     BusBuffer senderBusBuffer;
     BusBuffer receiverBusBuffer;
 
-    ASSERT_OK(senderBusBuffer.Initialize({}, {}, {controller}));
-    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller}));
+    ASSERT_OK(senderBusBuffer.Initialize({}, {}, {controller.Convert()}));
+    ASSERT_OK(receiverBusBuffer.Initialize({}, {}, {controller.Convert()}));
 
-    std::vector<LinMessageContainer> sendMessages;
+    std::vector<LinMessage> sendMessages;
     sendMessages.reserve(controller.queueSize);
 
     // Act
     for (uint32_t i = 0; i < controller.queueSize; i++) {
-        LinMessageContainer& sendMessage = sendMessages.emplace_back();
-        CreateMessage(controller.id, sendMessage);
-        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.message));
+        LinMessage& sendMessage = sendMessages.emplace_back();
+        FillWithRandom(sendMessage, controller.id);
+        ASSERT_OK(senderBusBuffer.Transmit(sendMessage.Convert()));
     }
 
-    LinMessageContainer rejectedMessage{};
-    CreateMessage(controller.id, rejectedMessage);
-    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.message));
+    LinMessage rejectedMessage{};
+    FillWithRandom(rejectedMessage, controller.id);
+    ASSERT_FULL(senderBusBuffer.Transmit(rejectedMessage.Convert()));
 
     Transfer(senderBusBuffer, receiverBusBuffer);
 
@@ -240,7 +240,7 @@ TEST_F(TestBusBuffer, TransmitAndReceiveLinMessages) {  // NOLINT(readability-fu
     DsVeosCoSim_LinMessage receivedMessage{};
     for (uint32_t i = 0; i < controller.queueSize; i++) {
         ASSERT_OK(receiverBusBuffer.Receive(receivedMessage));
-        AssertEq(sendMessages[i].message, receivedMessage);
+        AssertEq(sendMessages[i].Convert(), receivedMessage);
     }
 
     ASSERT_EMPTY(receiverBusBuffer.Receive(receivedMessage));
