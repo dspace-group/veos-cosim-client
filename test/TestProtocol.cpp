@@ -76,7 +76,7 @@ TEST_F(TestProtocol, SendAndReceivePingOk) {
 
 TEST_F(TestProtocol, SendAndReceiveError) {
     // Arrange
-    const std::string sendErrorMessage = GenerateString("ErrorMessage日本語");
+    const std::string sendErrorMessage = GenerateString("Errorメッセージ");
 
     // Act
     ASSERT_OK(Protocol::SendError(_senderChannel, sendErrorMessage));
@@ -93,8 +93,8 @@ TEST_F(TestProtocol, SendAndReceiveConnect) {
     // Arrange
     const uint32_t sendVersion = GenerateU32();
     constexpr Mode sendMode{};
-    const std::string sendServerName = GenerateString("ServerName日本語");
-    const std::string sendClientName = GenerateString("ClientName日本語");
+    const std::string sendServerName = GenerateString("Server名前");
+    const std::string sendClientName = GenerateString("Client名前");
 
     // Act
     ASSERT_OK(Protocol::SendConnect(_senderChannel, sendVersion, sendMode, sendServerName, sendClientName));
@@ -249,7 +249,7 @@ TEST_F(TestProtocol, SendAndReceiveContinue) {
 
 TEST_F(TestProtocol, SendAndReceiveGetPort) {
     // Arrange
-    const std::string sendServerName = GenerateString("ServerName日本語");
+    const std::string sendServerName = GenerateString("Server名前");
 
     // Act
     ASSERT_OK(Protocol::SendGetPort(_senderChannel, sendServerName));
@@ -279,7 +279,7 @@ TEST_F(TestProtocol, SendAndReceiveGetPortOk) {
 
 TEST_F(TestProtocol, SendAndReceiveSetPort) {
     // Arrange
-    const std::string sendServerName = GenerateString("ServerName日本語");
+    const std::string sendServerName = GenerateString("Server名前");
     const uint16_t sendPort = GenerateU16();
 
     // Act
@@ -297,7 +297,7 @@ TEST_F(TestProtocol, SendAndReceiveSetPort) {
 
 TEST_F(TestProtocol, SendAndReceiveUnsetPort) {
     // Arrange
-    const std::string sendServerName = GenerateString("ServerName日本語");
+    const std::string sendServerName = GenerateString("Server名前");
 
     // Act
     ASSERT_OK(Protocol::SendUnsetPort(_senderChannel, sendServerName));
