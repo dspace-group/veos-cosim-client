@@ -3,23 +3,26 @@
 #pragma once
 
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "BusBuffer.h"
 #include "CoSimTypes.h"
-#include "Communication.h"
 #include "IoBuffer.h"
 #include "PortMapper.h"
+#include "SocketChannel.h"
+
+#ifdef _WIN32
+#include "LocalChannel.h"
+#endif
 
 namespace DsVeosCoSim {
 
 struct CoSimServerConfig {
+    uint16_t port{};
+    bool enableRemoteAccess{};
     std::string serverName;
-    uint16_t localPort = 0;
-    bool isClientOptional = false;
-    bool enableRemoteAccess = true;
-    bool startPortMapper = false;
+    bool isClientOptional{};
+    bool startPortMapper{};
     bool registerAtPortMapper = true;
     SimulationTime stepSize{};
     LogCallback logCallback;
@@ -49,62 +52,69 @@ public:
     CoSimServer(CoSimServer&&) = delete;
     CoSimServer& operator=(CoSimServer&&) = delete;
 
-    [[nodiscard]] Result Load(const CoSimServerConfig& config);
-    [[nodiscard]] Result Unload();
+    void Load(const CoSimServerConfig& config);
+    void Unload();
 
-    // Commander functions
-    [[nodiscard]] Result Start(SimulationTime simulationTime);
-    [[nodiscard]] Result Stop(SimulationTime simulationTime);
-    [[nodiscard]] Result Terminate(SimulationTime simulationTime, TerminateReason reason);
-    [[nodiscard]] Result Pause(SimulationTime simulationTime);
-    [[nodiscard]] Result Continue(SimulationTime simulationTime);
-    [[nodiscard]] Result Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
+    void Start(SimulationTime simulationTime);
+    void Stop(SimulationTime simulationTime);
+    void Terminate(SimulationTime simulationTime, TerminateReason reason);
+    void Pause(SimulationTime simulationTime);
+    void Continue(SimulationTime simulationTime);
+    void Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
 
-    // Data functions
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value);
-    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value);
+    void Write(IoSignalId signalId, uint32_t length, const void* value) const;
 
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
+    void Read(IoSignalId signalId, uint32_t& length, const void** value) const;
 
-    [[nodiscard]] Result BackgroundService();
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_CanMessage& message) const;
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_EthMessage& message) const;
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_LinMessage& message) const;
+
+    void BackgroundService();
 
     [[nodiscard]] uint16_t GetLocalPort() const;
 
 private:
-    [[nodiscard]] Result StartInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result StopInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason);
-    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command);
+    [[nodiscard]] bool StartInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] bool StopInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] bool TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const;
+    [[nodiscard]] bool PauseInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] bool ContinueInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] bool StepInternal(SimulationTime simulationTime,
+                                    SimulationTime& nextSimulationTime,
+                                    Command& command) const;
 
-    [[nodiscard]] Result CloseConnection();
-    [[nodiscard]] Result Ping(Command& command);
-    [[nodiscard]] Result OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort);
-    [[nodiscard]] Result StartAccepting();
-    [[nodiscard]] Result Accepting();
+    void CloseConnection();
+    [[nodiscard]] bool Ping(Command& command) const;
+    void StartAccepting();
+    void StopAccepting();
+    [[nodiscard]] bool AcceptChannel();
+    [[nodiscard]] bool OnHandleConnect();
 
-    [[nodiscard]] Result WaitForOkFrame();
-    [[nodiscard]] Result WaitForPingOkFrame(Command& command);
-    [[nodiscard]] Result WaitForConnectFrame(uint32_t& version, std::string& clientName);
-    [[nodiscard]] Result WaitForStepOkFrame(SimulationTime& simulationTime, Command& command);
+    [[nodiscard]] bool WaitForOkFrame() const;
+    [[nodiscard]] bool WaitForPingOkFrame(Command& command) const;
+    [[nodiscard]] bool WaitForConnectFrame(uint32_t& version, std::string& clientName) const;
+    [[nodiscard]] bool WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const;
 
     void HandlePendingCommand(Command command) const;
 
-    Channel _channel;
+    std::unique_ptr<Channel> _channel;
 
-    PortMapperServer _portMapperServer;
-    Server _server;
+    uint16_t _localPort{};
+    bool _enableRemoteAccess{};
 
-    bool _isConnected{};
-    uint16_t _actualLocalPort{};
-    uint16_t _givenLocalPort{};
+    std::unique_ptr<PortMapperServer> _portMapperServer;
+    std::unique_ptr<TcpChannelServer> _tcpChannelServer;
+#ifdef _WIN32
+    std::unique_ptr<LocalChannelServer> _localChannelServer;
+#else
+    std::unique_ptr<UdsChannelServer> _udsChannelServer;
+#endif
+
+    ConnectionKind _connectionKind = ConnectionKind::Remote;
     std::string _serverName;
     Callbacks _callbacks{};
     bool _isClientOptional{};
-    bool _enableRemoteAccess{};
     SimulationTime _stepSize{};
     bool _registerAtPortMapper{};
 
@@ -113,11 +123,8 @@ private:
     std::vector<CanController> _canControllers;
     std::vector<EthController> _ethControllers;
     std::vector<LinController> _linControllers;
-    IoBuffer _ioBuffer;
-    BusBuffer _busBuffer;
-
-    bool _stopAcceptingThread{};
-    std::thread _acceptingThread;
+    std::unique_ptr<IoBuffer> _ioBuffer;
+    std::unique_ptr<BusBuffer> _busBuffer;
 };
 
 }  // namespace DsVeosCoSim

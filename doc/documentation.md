@@ -2040,7 +2040,7 @@ DsVeosCoSim_LinMessageFlags_Response | For transmit and receive messages. Indica
 DsVeosCoSim_LinMessageFlags_WakeEvent | For transmit and receive messages. Indicates that the LIN message contains a wake command.
 DsVeosCoSim_LinMessageFlags_SleepEvent | For transmit and receive messages. Indicates that the LIN message contains a sleep command.
 DsVeosCoSim_LinMessageFlags_EnhancedChecksum | For transmit and receive messages. Indicates that the LIN message uses the enhanced checksum.
-DsVeosCoSim_LinMessageFlags_TransferOnce | Only for transmit messages. Indicates that the LIN message is to be used only for the next header. This flag only makes sense if the DsVeosCoSim_LinMessageFlags_Response flag is set.
+DsVeosCoSim_LinMessageFlags_TransferOnce | Only for transmit messages. This flag only makes sense if the DsVeosCoSim_LinMessageFlags_Response flag is set. Indicates a single ad-hoc transmission of a LIN response message. If the message is not in the allowed response space it will be omitted silently.
 DsVeosCoSim_LinMessageFlags_ParityFailure | Only for receive messages. Indicates that the LIN header could not be transmitted, because another LIN header was sent at the same time.
 DsVeosCoSim_LinMessageFlags_Collision | Only for receive messages. Indicates that the LIN response could not be transmitted, because another LIN response was sent at the same time.
 DsVeosCoSim_LinMessageFlags_NoResponse | Only for receive messages. Indicates that no response to the last header was received.

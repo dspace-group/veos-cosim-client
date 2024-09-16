@@ -2,32 +2,41 @@
 
 add_executable(
   ${PROJECT_NAME}Test
-  CoSimServerWrapper.cpp
-  Generator.cpp
+  Communication/TestLocalChannel.cpp
+  Communication/TestTcpChannel.cpp
+  Communication/TestUdsChannel.cpp
+  OsAbstraction/TestNamedEvent.cpp
+  OsAbstraction/TestNamedMutex.cpp
+  OsAbstraction/TestSharedMemory.cpp
+  OsAbstraction/TestTcpSocket.cpp
+  OsAbstraction/TestUdsSocket.cpp
+  Helpers/TestHelper.cpp
   Program.cpp
   TestBusBuffer.cpp
-  TestCommunication.cpp
   TestCoSim.cpp
-  TestHelper.cpp
   TestIoBuffer.cpp
   TestPortMapper.cpp
   TestProtocol.cpp
-  TestSocket.cpp
 )
 
 target_include_directories(
   ${PROJECT_NAME}Test
-  PUBLIC
-  ./
-  ../include
-  ../src
-  ../third_party/googletest/googletest/include
+  PRIVATE
+  Helpers
 )
 
-target_compile_definitions(${PROJECT_NAME}Test PRIVATE _CRT_SECURE_NO_WARNINGS DSVEOSCOSIM_EXPORT WIN32_LEAN_AND_MEAN)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  target_compile_definitions(
+    ${PROJECT_NAME}Test
+    PRIVATE
+    EXCEPTION_TESTS
+  )
+endif()
 
 target_link_libraries(
   ${PROJECT_NAME}Test
   ${PROJECT_NAME}
+  shared
   GTest::gtest
+  GTest::gmock
 )

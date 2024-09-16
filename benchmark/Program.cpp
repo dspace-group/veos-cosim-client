@@ -2,13 +2,12 @@
 
 #include <benchmark/benchmark.h>
 
-#include "BenchmarkHelper.h"
-#include "Logger.h"
+#include "Helper.h"
 
-using namespace DsVeosCoSim;
-
-int main(int argc, char** argv) {
-    SetLogCallback(OnLogCallback);
+int32_t main(int32_t argc, char** argv) {
+    if (!StartUp()) {
+        return 1;
+    }
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();

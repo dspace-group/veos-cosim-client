@@ -2461,7 +2461,7 @@ interface description file of the CoSim server, the simulation can be started ev
 </tr>
 <tr>
 <td>DsVeosCoSim_LinMessageFlags_TransferOnce</td>
-<td>Only for transmit messages. Indicates that the LIN message is to be used only for the next header. This flag only makes sense if the DsVeosCoSim_LinMessageFlags_Response flag is set.</td>
+<td>Only for transmit messages. This flag only makes sense if the DsVeosCoSim_LinMessageFlags_Response flag is set. Indicates a single ad-hoc transmission of a LIN response message. If the message is not in the allowed response space it will be omitted silently.</td>
 </tr>
 <tr>
 <td>DsVeosCoSim_LinMessageFlags_ParityFailure</td>

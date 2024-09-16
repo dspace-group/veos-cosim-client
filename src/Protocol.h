@@ -3,13 +3,13 @@
 #pragma once
 
 #include "BusBuffer.h"
+#include "Channel.h"
 #include "CoSimTypes.h"
-#include "Communication.h"
 #include "IoBuffer.h"
 
 namespace DsVeosCoSim {
 
-constexpr uint32_t CoSimProtocolVersion = 0x10000U;
+constexpr uint32_t CoSimProtocolVersion = 0x10000U;  // NOLINT
 
 enum class FrameKind {
     Ok = 1,
@@ -36,83 +36,141 @@ enum class FrameKind {
     UnsetPort
 };
 
-std::string ToString(FrameKind frameKind);
+[[nodiscard]] inline std::string ToString(const FrameKind& frameKind) {
+    switch (frameKind) {
+        case FrameKind::Ping:
+            return "Ping";
+        case FrameKind::PingOk:
+            return "PingOk";
+        case FrameKind::Ok:
+            return "Ok";
+        case FrameKind::Error:
+            return "Error";
+        case FrameKind::Start:
+            return "Start";
+        case FrameKind::Stop:
+            return "Stop";
+        case FrameKind::Terminate:
+            return "Terminate";
+        case FrameKind::Pause:
+            return "Pause";
+        case FrameKind::Continue:
+            return "Continue";
+        case FrameKind::Step:
+            return "Step";
+        case FrameKind::StepOk:
+            return "StepOk";
+        case FrameKind::Connect:
+            return "Connect";
+        case FrameKind::ConnectOk:
+            return "ConnectOk";
+        case FrameKind::GetPort:
+            return "GetPort";
+        case FrameKind::GetPortOk:
+            return "GetPortOk";
+        case FrameKind::SetPort:
+            return "SetPort";
+        case FrameKind::UnsetPort:
+            return "UnsetPort";
+    }
+
+    return std::to_string(static_cast<int32_t>(frameKind));
+}
 
 namespace Protocol {
 
-[[nodiscard]] Result ReceiveHeader(Channel& channel, FrameKind& frameKind);
+[[nodiscard]] bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind);
 
-[[nodiscard]] Result SendOk(Channel& channel);
+[[nodiscard]] bool SendOk(ChannelWriter& writer);
 
-[[nodiscard]] Result SendError(Channel& channel, std::string_view errorStr);
-[[nodiscard]] Result ReadError(Channel& channel, std::string& errorStr);
+[[nodiscard]] bool SendError(ChannelWriter& writer, std::string_view errorStr);
+[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorStr);
 
-[[nodiscard]] Result SendPing(Channel& channel);
+[[nodiscard]] bool SendPing(ChannelWriter& writer);
 
-[[nodiscard]] Result SendPingOk(Channel& channel, Command command);
-[[nodiscard]] Result ReadPingOk(Channel& channel, Command& command);
+[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command);
+[[nodiscard]] bool ReadPingOk(ChannelReader& reader, Command& command);
 
-[[nodiscard]] Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode clientMode, std::string_view serverName, std::string_view clientName);
-[[nodiscard]] Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& clientMode, std::string& serverName, std::string& clientName);
+[[nodiscard]] bool SendConnect(ChannelWriter& writer,
+                               uint32_t protocolVersion,
+                               Mode clientMode,
+                               std::string_view serverName,
+                               std::string_view clientName);
+[[nodiscard]] bool ReadConnect(ChannelReader& reader,
+                               uint32_t& protocolVersion,
+                               Mode& clientMode,
+                               std::string& serverName,
+                               std::string& clientName);
 
-[[nodiscard]] Result SendConnectOk(Channel& channel,
-                                   uint32_t protocolVersion,
-                                   Mode clientMode,
-                                   SimulationTime stepSize,
-                                   SimulationState simulationState,
-                                   const std::vector<IoSignal>& incomingSignals,
-                                   const std::vector<IoSignal>& outgoingSignals,
-                                   const std::vector<CanController>& canControllers,
-                                   const std::vector<EthController>& ethControllers,
-                                   const std::vector<LinController>& linControllers);
-[[nodiscard]] Result ReadConnectOk(Channel& channel,
-                                   uint32_t& protocolVersion,
-                                   Mode& clientMode,
-                                   SimulationTime& stepSize,
-                                   SimulationState& simulationState,
-                                   std::vector<IoSignal>& incomingSignals,
-                                   std::vector<IoSignal>& outgoingSignals,
-                                   std::vector<CanController>& canControllers,
-                                   std::vector<EthController>& ethControllers,
-                                   std::vector<LinController>& linControllers);
+[[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
+                                 uint32_t protocolVersion,
+                                 Mode clientMode,
+                                 SimulationTime stepSize,
+                                 SimulationState simulationState,
+                                 const std::vector<IoSignal>& incomingSignals,
+                                 const std::vector<IoSignal>& outgoingSignals,
+                                 const std::vector<CanController>& canControllers,
+                                 const std::vector<EthController>& ethControllers,
+                                 const std::vector<LinController>& linControllers);
+[[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
+                                 uint32_t& protocolVersion,
+                                 Mode& clientMode,
+                                 SimulationTime& stepSize,
+                                 SimulationState& simulationState,
+                                 std::vector<IoSignal>& incomingSignals,
+                                 std::vector<IoSignal>& outgoingSignals,
+                                 std::vector<CanController>& canControllers,
+                                 std::vector<EthController>& ethControllers,
+                                 std::vector<LinController>& linControllers);
 
-[[nodiscard]] Result SendStart(Channel& channel, SimulationTime simulationTime);
-[[nodiscard]] Result ReadStart(Channel& channel, SimulationTime& simulationTime);
+[[nodiscard]] bool SendStart(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] Result SendStop(Channel& channel, SimulationTime simulationTime);
-[[nodiscard]] Result ReadStop(Channel& channel, SimulationTime& simulationTime);
+[[nodiscard]] bool SendStop(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] Result SendTerminate(Channel& channel, SimulationTime simulationTime, TerminateReason reason);
-[[nodiscard]] Result ReadTerminate(Channel& channel, SimulationTime& simulationTime, TerminateReason& reason);
+[[nodiscard]] bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason);
+[[nodiscard]] bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason);
 
-[[nodiscard]] Result SendPause(Channel& channel, SimulationTime simulationTime);
-[[nodiscard]] Result ReadPause(Channel& channel, SimulationTime& simulationTime);
+[[nodiscard]] bool SendPause(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] Result SendContinue(Channel& channel, SimulationTime simulationTime);
-[[nodiscard]] Result ReadContinue(Channel& channel, SimulationTime& simulationTime);
+[[nodiscard]] bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] Result SendStep(Channel& channel, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer);
-[[nodiscard]] Result ReadStep(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks);
+[[nodiscard]] bool SendStep(ChannelWriter& writer,
+                            SimulationTime simulationTime,
+                            IoBuffer& ioBuffer,
+                            BusBuffer& busBuffer);
+[[nodiscard]] bool ReadStep(ChannelReader& reader,
+                            SimulationTime& simulationTime,
+                            IoBuffer& ioBuffer,
+                            BusBuffer& busBuffer,
+                            const Callbacks& callbacks);
 
-[[nodiscard]] Result SendStepOk(Channel& channel, SimulationTime nextSimulationTime, Command command, IoBuffer& ioBuffer, BusBuffer& busBuffer);
-[[nodiscard]] Result ReadStepOk(Channel& channel,
-                                SimulationTime& nextSimulationTime,
-                                Command& command,
-                                IoBuffer& ioBuffer,
-                                BusBuffer& busBuffer,
-                                const Callbacks& callbacks);
+[[nodiscard]] bool SendStepOk(ChannelWriter& writer,
+                              SimulationTime nextSimulationTime,
+                              Command command,
+                              IoBuffer& ioBuffer,
+                              BusBuffer& busBuffer);
+[[nodiscard]] bool ReadStepOk(ChannelReader& reader,
+                              SimulationTime& nextSimulationTime,
+                              Command& command,
+                              IoBuffer& ioBuffer,
+                              BusBuffer& busBuffer,
+                              const Callbacks& callbacks);
 
-[[nodiscard]] Result SendGetPort(Channel& channel, std::string_view serverName);
-[[nodiscard]] Result ReadGetPort(Channel& channel, std::string& serverName);
+[[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] bool ReadGetPort(ChannelReader& reader, std::string& serverName);
 
-[[nodiscard]] Result SendGetPortOk(Channel& channel, uint16_t port);
-[[nodiscard]] Result ReadGetPortOk(Channel& channel, uint16_t& port);
+[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port);
+[[nodiscard]] bool ReadGetPortOk(ChannelReader& reader, uint16_t& port);
 
-[[nodiscard]] Result SendSetPort(Channel& channel, std::string_view serverName, uint16_t port);
-[[nodiscard]] Result ReadSetPort(Channel& channel, std::string& serverName, uint16_t& port);
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port);
+[[nodiscard]] bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port);
 
-[[nodiscard]] Result SendUnsetPort(Channel& channel, std::string_view serverName);
-[[nodiscard]] Result ReadUnsetPort(Channel& channel, std::string& serverName);
+[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] bool ReadUnsetPort(ChannelReader& reader, std::string& serverName);
 
 }  // namespace Protocol
 
