@@ -213,7 +213,7 @@ bool ConnectWithTimeout(socket_t& socket,
     timeout.tv_usec = static_cast<long>(timeoutInMilliseconds % 1000) * 1000;
 
 #ifdef _WIN32
-    int32_t result = ::select(0, nullptr, &writeSet, nullptr, &timeout);
+    int32_t result = ::select(0, nullptr, &set, nullptr, &timeout);
 #else
     int32_t result = ::select(socket + 1, nullptr, &set, nullptr, &timeout);
 #endif
