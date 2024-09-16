@@ -1,21 +1,27 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include "CoSimServer.h"
+#include <memory>
+#include <thread>
 
+#include "CoSimTypes.h"
 #include "Logger.h"
+#include "PortMapper.h"
 #include "Protocol.h"
+#include "Socket.h"
+#include "SocketChannel.h"
 
 namespace DsVeosCoSim {
 
 CoSimServer::~CoSimServer() noexcept {
-    (void)Unload();
+    Unload();
 }
 
-Result CoSimServer::Load(const CoSimServerConfig& config) {
-    _givenLocalPort = config.localPort;
+void CoSimServer::Load(const CoSimServerConfig& config) {
+    _enableRemoteAccess = config.enableRemoteAccess;
+    _localPort = config.port;
     _serverName = config.serverName;
     _isClientOptional = config.isClientOptional;
-    _enableRemoteAccess = config.enableRemoteAccess;
     _stepSize = config.stepSize;
     _registerAtPortMapper = config.registerAtPortMapper;
     _incomingSignals = config.incomingSignals;
@@ -36,381 +42,446 @@ Result CoSimServer::Load(const CoSimServerConfig& config) {
     SetLogCallback(config.logCallback);
 
     if (config.startPortMapper) {
-        CheckResult(_portMapperServer.Start(_enableRemoteAccess));
+        _portMapperServer = std::make_unique<PortMapperServer>(_enableRemoteAccess);
     }
 
-    std::vector<DsVeosCoSim_IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-
-    // Switch read and write signals on purpose
-    CheckResult(_ioBuffer.Initialize(outgoingSignalsExtern, incomingSignalsExtern));
-
-    std::vector<DsVeosCoSim_CanController> canControllersExtern = Convert(_canControllers);
-    std::vector<DsVeosCoSim_EthController> ethControllersExtern = Convert(_ethControllers);
-    std::vector<DsVeosCoSim_LinController> linControllersExtern = Convert(_linControllers);
-    CheckResult(_busBuffer.Initialize(canControllersExtern, ethControllersExtern, linControllersExtern));
-
-    CheckResult(StartAccepting());
-
-    const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
-    LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" + std::to_string(_actualLocalPort) + ".");
-
-    return Result::Ok;
+    StartAccepting();
 }
 
-Result CoSimServer::Unload() {
-    _stopAcceptingThread = true;
-
-    if (_acceptingThread.joinable()) {
-        _acceptingThread.join();
+void CoSimServer::Unload() {
+    if (_channel) {
+        _channel.reset();
     }
 
-    if (_registerAtPortMapper) {
-        (void)PortMapper_UnsetPort(_serverName);
+    StopAccepting();
+
+    if (_portMapperServer) {
+        _portMapperServer.reset();
     }
-
-    _server.Stop();
-
-    _channel.Disconnect();
-    return Result::Ok;
 }
 
-Result CoSimServer::Start(SimulationTime simulationTime) {
-    if (!_isConnected) {
+void CoSimServer::Start(SimulationTime simulationTime) {
+    if (!_channel) {
         if (_isClientOptional) {
-            return Result::Ok;
+            return;
         }
 
-        LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '" + _serverName + "' ...");
-        if (_acceptingThread.joinable()) {
-            _acceptingThread.join();
+        LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '{}' ...", _serverName);
+
+        while (!AcceptChannel()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        if (!OnHandleConnect()) {
+            CloseConnection();
+            return;
         }
     }
 
-    const Result result = StartInternal(simulationTime);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!StartInternal(simulationTime)) {
+        CloseConnection();
     }
-
-    return Result::Ok;
 }
 
-Result CoSimServer::Stop(SimulationTime simulationTime) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Stop(SimulationTime simulationTime) {
+    if (!_channel) {
+        return;
     }
 
-    const Result result = StopInternal(simulationTime);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!StopInternal(simulationTime)) {
+        CloseConnection();
     }
-
-    return Result::Ok;
 }
 
-Result CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
+    if (!_channel) {
+        return;
     }
 
-    const Result result = TerminateInternal(simulationTime, reason);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!TerminateInternal(simulationTime, reason)) {
+        CloseConnection();
     }
-
-    return Result::Ok;
 }
 
-Result CoSimServer::Pause(SimulationTime simulationTime) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Pause(SimulationTime simulationTime) {
+    if (!_channel) {
+        return;
     }
 
-    const Result result = PauseInternal(simulationTime);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!PauseInternal(simulationTime)) {
+        CloseConnection();
     }
-
-    return Result::Ok;
 }
 
-Result CoSimServer::Continue(SimulationTime simulationTime) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Continue(SimulationTime simulationTime) {
+    if (!_channel) {
+        return;
     }
 
-    const Result result = ContinueInternal(simulationTime);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!ContinueInternal(simulationTime)) {
+        CloseConnection();
     }
-
-    return Result::Ok;
 }
 
-Result CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
+    if (!_channel) {
+        return;
     }
 
     Command command{};
-    const Result result = StepInternal(simulationTime, nextSimulationTime, command);
-    if (result != Result::Ok) {
-        return CloseConnection();
+    if (!StepInternal(simulationTime, nextSimulationTime, command)) {
+        CloseConnection();
+        return;
     }
 
     HandlePendingCommand(command);
-    return Result::Ok;
 }
 
-Result CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value) const {
+    if (!_channel) {
+        return;
     }
 
-    return _ioBuffer.Read(signalId, length, value);
+    _ioBuffer->Write(signalId, length, value);
 }
 
-Result CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value) {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value) const {
+    if (!_channel) {
+        return;
     }
 
-    return _ioBuffer.Write(signalId, length, value);
+    _ioBuffer->Read(signalId, length, value);
 }
 
-Result CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) {
-    if (!_isConnected) {
-        return Result::Ok;
+bool CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) const {
+    if (!_channel) {
+        return true;
     }
 
-    return _busBuffer.Transmit(message);
+    return _busBuffer->Transmit(message);
 }
 
-Result CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) {
-    if (!_isConnected) {
-        return Result::Ok;
+bool CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) const {
+    if (!_channel) {
+        return true;
     }
 
-    return _busBuffer.Transmit(message);
+    return _busBuffer->Transmit(message);
 }
 
-Result CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) {
-    if (!_isConnected) {
-        return Result::Ok;
+bool CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) const {
+    if (!_channel) {
+        return true;
     }
 
-    return _busBuffer.Transmit(message);
+    return _busBuffer->Transmit(message);
 }
 
-Result CoSimServer::BackgroundService() {
-    if (!_isConnected) {
-        return Result::Ok;
+void CoSimServer::BackgroundService() {
+    if (!_channel) {
+        if (AcceptChannel()) {
+            if (!OnHandleConnect()) {
+                CloseConnection();
+                return;
+            }
+        }
+
+        return;
     }
 
     Command command{};
-    if (Ping(command) != Result::Ok) {
-        return CloseConnection();
+    if (!Ping(command)) {
+        CloseConnection();
+        return;
     }
 
     HandlePendingCommand(command);
-    return Result::Ok;
 }
 
 uint16_t CoSimServer::GetLocalPort() const {
-    return _actualLocalPort;
+    if (_tcpChannelServer) {
+        return _tcpChannelServer->GetLocalPort();
+    }
+
+    return 0;
 }
 
-Result CoSimServer::StartInternal(SimulationTime simulationTime) {
-    CheckResult(Protocol::SendStart(_channel, simulationTime));
-    return WaitForOkFrame();
+bool CoSimServer::StartInternal(SimulationTime simulationTime) const {
+    CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
+    CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+    return true;
 }
 
-Result CoSimServer::StopInternal(SimulationTime simulationTime) {
-    CheckResult(Protocol::SendStop(_channel, simulationTime));
-    return WaitForOkFrame();
+bool CoSimServer::StopInternal(SimulationTime simulationTime) const {
+    CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
+    CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+    return true;
 }
 
-Result CoSimServer::TerminateInternal(SimulationTime simulationTime, TerminateReason reason) {
-    CheckResult(Protocol::SendTerminate(_channel, simulationTime, reason));
-    return WaitForOkFrame();
+bool CoSimServer::TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
+    CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
+                           "Could not send terminate frame.");
+    CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+    return true;
 }
 
-Result CoSimServer::PauseInternal(SimulationTime simulationTime) {
-    CheckResult(Protocol::SendPause(_channel, simulationTime));
-    return WaitForOkFrame();
+bool CoSimServer::PauseInternal(SimulationTime simulationTime) const {
+    CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
+    CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+    return true;
 }
 
-Result CoSimServer::ContinueInternal(SimulationTime simulationTime) {
-    CheckResult(Protocol::SendContinue(_channel, simulationTime));
-    return WaitForOkFrame();
+bool CoSimServer::ContinueInternal(SimulationTime simulationTime) const {
+    CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
+                           "Could not send continue frame.");
+    CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+    return true;
 }
 
-Result CoSimServer::StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command) {
-    CheckResult(Protocol::SendStep(_channel, simulationTime, _ioBuffer, _busBuffer));
-    return WaitForStepOkFrame(nextSimulationTime, command);
+bool CoSimServer::StepInternal(SimulationTime simulationTime,
+                               SimulationTime& nextSimulationTime,
+                               Command& command) const {
+    CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
+                           "Could not send step frame.");
+    CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
+    return true;
 }
 
-Result CoSimServer::CloseConnection() {
+void CoSimServer::CloseConnection() {
     LogWarning("dSPACE VEOS CoSim client disconnected.");
 
-    _isConnected = false;
-
-    _channel.Disconnect();
+    _channel.reset();
 
     if (!_isClientOptional && _callbacks.simulationStoppedCallback) {
         _callbacks.simulationStoppedCallback(0);
     }
 
-    return StartAccepting();
+    StartAccepting();
 }
 
-Result CoSimServer::Ping(Command& command) {
-    CheckResult(Protocol::SendPing(_channel));
-    return WaitForPingOkFrame(command);
+bool CoSimServer::Ping(Command& command) const {
+    CheckResultWithMessage(Protocol::SendPing(_channel->GetWriter()), "Could not send ping frame.");
+    CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
+    return true;
 }
 
-Result CoSimServer::OnHandleConnect(std::string_view remoteIpAddress, uint16_t remotePort) {
+void CoSimServer::StartAccepting() {
+    uint16_t port{};
+    if (!_tcpChannelServer) {
+        _tcpChannelServer = std::make_unique<TcpChannelServer>(_localPort, _enableRemoteAccess);
+        port = _tcpChannelServer->GetLocalPort();
+    }
+
+#ifdef _WIN32
+    if (!_localChannelServer) {
+        _localChannelServer = std::make_unique<LocalChannelServer>(_serverName);
+    }
+#else
+    if (!_udsChannelServer && Socket::IsUdsSupported()) {
+        _udsChannelServer = std::make_unique<UdsChannelServer>(_serverName);
+    }
+#endif
+
+    if (port != 0) {
+        if (_registerAtPortMapper) {
+            if (!PortMapper_SetPort(_serverName, port)) {
+                LogTrace("Could not set port in port mapper.");
+            }
+        }
+
+        const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
+        LogInfo("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, localIpAddress, port);
+    }
+}
+
+void CoSimServer::StopAccepting() {
+    if (_registerAtPortMapper) {
+        if (!PortMapper_UnsetPort(_serverName)) {
+            LogTrace("Could not unset port in port mapper.");
+        }
+    }
+
+    if (_tcpChannelServer) {
+        _tcpChannelServer.reset();
+    }
+
+#ifdef _WIN32
+    if (_localChannelServer) {
+        _localChannelServer.reset();
+    }
+#else
+    if (_udsChannelServer) {
+        _udsChannelServer.reset();
+    }
+#endif
+}
+
+bool CoSimServer::AcceptChannel() {
+    if (_channel) {
+        return true;
+    }
+
+#ifdef _WIN32
+    if (_localChannelServer) {
+        std::optional<LocalChannel> channel = _localChannelServer->TryAccept();
+        if (channel) {
+            _channel = std::make_unique<LocalChannel>(std::move(*channel));
+            _connectionKind = ConnectionKind::Local;
+            return true;
+        }
+    }
+#else
+    if (_udsChannelServer) {
+        std::optional<SocketChannel> channel = _udsChannelServer->TryAccept();
+        if (channel) {
+            _channel = std::make_unique<SocketChannel>(std::move(*channel));
+            _connectionKind = ConnectionKind::Local;
+            return true;
+        }
+    }
+#endif
+
+    if (_tcpChannelServer) {
+        std::optional<SocketChannel> channel = _tcpChannelServer->TryAccept();
+        if (channel) {
+            _channel = std::make_unique<SocketChannel>(std::move(*channel));
+            _connectionKind = ConnectionKind::Remote;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CoSimServer::OnHandleConnect() {
     uint32_t clientProtocolVersion{};
     std::string clientName;
-    CheckResult(WaitForConnectFrame(clientProtocolVersion, clientName));
+    CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName), "Could not receive connect frame.");
 
-    CheckResult(Protocol::SendConnectOk(_channel,
-                                        CoSimProtocolVersion,
-                                        {},
-                                        _stepSize,
-                                        {},
-                                        _incomingSignals,
-                                        _outgoingSignals,
-                                        _canControllers,
-                                        _ethControllers,
-                                        _linControllers));
+    CheckResultWithMessage(Protocol::SendConnectOk(_channel->GetWriter(),
+                                                   CoSimProtocolVersion,
+                                                   {},
+                                                   _stepSize,
+                                                   {},
+                                                   _incomingSignals,
+                                                   _outgoingSignals,
+                                                   _canControllers,
+                                                   _ethControllers,
+                                                   _linControllers),
+                           "Could not send connect ok frame.");
 
-    if (clientName.empty()) {
-        LogInfo("dSPACE VEOS CoSim client at " + std::string(remoteIpAddress) + ":" + std::to_string(remotePort) + " connected.");
+    std::vector<DsVeosCoSim_IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
+    _ioBuffer = std::make_unique<IoBuffer>(CoSimType::Server,
+                                           _connectionKind,
+                                           _serverName,
+                                           incomingSignalsExtern,
+                                           outgoingSignalsExtern);
+
+    std::vector<DsVeosCoSim_CanController> canControllersExtern = Convert(_canControllers);
+    std::vector<DsVeosCoSim_EthController> ethControllersExtern = Convert(_ethControllers);
+    std::vector<DsVeosCoSim_LinController> linControllersExtern = Convert(_linControllers);
+    _busBuffer = std::make_unique<BusBuffer>(CoSimType::Server,
+                                             _connectionKind,
+                                             _serverName,
+                                             canControllersExtern,
+                                             ethControllersExtern,
+                                             linControllersExtern);
+
+    StopAccepting();
+
+    if (_connectionKind == ConnectionKind::Remote) {
+        SocketAddress socketAddress = reinterpret_cast<SocketChannel*>(_channel.get())->GetRemoteAddress();
+        if (clientName.empty()) {
+            LogInfo("dSPACE VEOS CoSim client at {}:{} connected.", socketAddress.ipAddress, socketAddress.port);
+        } else {
+            LogInfo("dSPACE VEOS CoSim client '{}' at {}:{} connected.",
+                    clientName,
+                    socketAddress.ipAddress,
+                    socketAddress.port);
+        }
     } else {
-        LogInfo("dSPACE VEOS CoSim client '" + clientName + "' at " + std::string(remoteIpAddress) + ":" + std::to_string(remotePort) + " connected.");
+        if (clientName.empty()) {
+            LogInfo("Local dSPACE VEOS CoSim client connected.");
+        } else {
+            LogInfo("Local dSPACE VEOS CoSim client '{}' connected.", clientName);
+        }
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result CoSimServer::StartAccepting() {
-    _actualLocalPort = _givenLocalPort;
-    CheckResult(_server.Start(_actualLocalPort, _enableRemoteAccess));
-
-    if (_registerAtPortMapper) {
-        CheckResult(PortMapper_SetPort(_serverName, _actualLocalPort));
-    }
-
-    if (_acceptingThread.joinable()) {
-        _acceptingThread.join();
-    }
-
-    _stopAcceptingThread = false;
-    _acceptingThread = std::thread([this] {
-        (void)Accepting();
-    });
-
-    return Result::Ok;
-}
-
-Result CoSimServer::Accepting() {
-    while (!_stopAcceptingThread) {
-        const Result result = _server.Accept(_channel);
-        if (result == Result::TryAgain) {
-            continue;
-        }
-
-        if (result != Result::Ok) {
-            return result;
-        }
-
-        std::string acceptedIpAddress;
-        uint16_t acceptedPort = 0;
-        if (_channel.GetRemoteAddress(acceptedIpAddress, acceptedPort) != Result::Ok) {
-            _channel.Disconnect();
-            continue;
-        }
-
-        if (OnHandleConnect(acceptedIpAddress, acceptedPort) != Result::Ok) {
-            _channel.Disconnect();
-            continue;
-        }
-
-        (void)PortMapper_UnsetPort(_serverName);
-        _server.Stop();
-
-        _isConnected = true;
-        return Result::Ok;
-    }
-
-    return Result::Ok;
-}
-
-Result CoSimServer::WaitForOkFrame() {
+bool CoSimServer::WaitForOkFrame() const {
     FrameKind frameKind{};
-    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+    CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Ok:
-            return Result::Ok;
+            return true;
         case FrameKind::Error: {
             std::string errorMessage;
-            CheckResult(Protocol::ReadError(_channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
+            CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
+                                   "Could not read error frame.");
+            throw CoSimException(errorMessage);
         }
         default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
+            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
-Result CoSimServer::WaitForPingOkFrame(Command& command) {
+bool CoSimServer::WaitForPingOkFrame(Command& command) const {
     FrameKind frameKind{};
-    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+    CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::PingOk:
-            return Protocol::ReadPingOk(_channel, command);
+            CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
+                                   "Could not read ping ok frame.");
+            return true;
         default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
+            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
-Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) {
+bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
     FrameKind frameKind{};
-    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+    CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Connect: {
             Mode mode{};
             std::string serverName;
-            return Protocol::ReadConnect(_channel, version, mode, serverName, clientName);
+            CheckResultWithMessage(Protocol::ReadConnect(_channel->GetReader(), version, mode, serverName, clientName),
+                                   "Could not read connect frame.");
+            return true;
         }
         default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
+            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
-Result CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) {
+bool CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
     FrameKind frameKind{};
-    CheckResult(Protocol::ReceiveHeader(_channel, frameKind));
+    CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::StepOk:
-            return Protocol::ReadStepOk(_channel, simulationTime, command, _ioBuffer, _busBuffer, _callbacks);
+            CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
+                                                        simulationTime,
+                                                        command,
+                                                        *_ioBuffer,
+                                                        *_busBuffer,
+                                                        _callbacks),
+                                   "Could not receive step ok frame.");
+            return true;
         case FrameKind::Error: {
             std::string errorMessage;
-            CheckResult(Protocol::ReadError(_channel, errorMessage));
-            LogError(errorMessage);
-            return Result::Error;
+            CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
+                                   "Could not read error frame.");
+            throw CoSimException(errorMessage);
         }
         default:
-            LogError("Received unexpected frame " + ToString(frameKind) + ".");
-            return Result::Error;
+            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -436,6 +507,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
             break;
         case Command::None:
         case Command::Step:
+        case Command::Ping:
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
             break;
     }

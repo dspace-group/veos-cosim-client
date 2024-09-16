@@ -7,7 +7,6 @@
 
 #include "BusBuffer.h"
 #include "CoSimTypes.h"
-#include "Communication.h"
 #include "IoBuffer.h"
 
 namespace DsVeosCoSim {
@@ -29,78 +28,82 @@ public:
     CoSimClient(CoSimClient&&) = delete;
     CoSimClient& operator=(CoSimClient&&) = delete;
 
-    [[nodiscard]] Result Connect(const ConnectConfig& connectConfig);
+    [[nodiscard]] bool Connect(const ConnectConfig& connectConfig);
     void Disconnect();
     [[nodiscard]] ConnectionState GetConnectionState() const;
 
-    [[nodiscard]] Result GetStepSize(SimulationTime& stepSize) const;
+    [[nodiscard]] SimulationTime GetStepSize() const;
 
-    [[nodiscard]] Result RunCallbackBasedCoSimulation(const Callbacks& callbacks);
-    [[nodiscard]] Result StartPollingBasedCoSimulation(const Callbacks& callbacks);
-    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing);
-    [[nodiscard]] Result FinishCommand();
-    [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime);
+    [[nodiscard]] bool RunCallbackBasedCoSimulation(const Callbacks& callbacks);
+    void StartPollingBasedCoSimulation(const Callbacks& callbacks);
+    [[nodiscard]] bool PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing);
+    [[nodiscard]] bool FinishCommand();
+    void SetNextSimulationTime(SimulationTime simulationTime);
 
-    [[nodiscard]] Result Start();
-    [[nodiscard]] Result Stop();
-    [[nodiscard]] Result Terminate(TerminateReason terminateReason);
-    [[nodiscard]] Result Pause();
-    [[nodiscard]] Result Continue();
+    void Start();
+    void Stop();
+    void Terminate(TerminateReason terminateReason);
+    void Pause();
+    void Continue();
 
-    [[nodiscard]] Result GetIncomingSignals(uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) const;
-    [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& incomingSignals) const;
+    void GetIncomingSignals(uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) const;
+    void GetOutgoingSignals(uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) const;
 
-    [[nodiscard]] Result GetOutgoingSignals(uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) const;
-    [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& outgoingSignals) const;
+    [[nodiscard]] std::vector<IoSignal> GetIncomingSignals() const;
+    [[nodiscard]] std::vector<IoSignal> GetOutgoingSignals() const;
 
-    [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value);
-    [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value);
-    [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value);
+    void Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const;
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
-    [[nodiscard]] Result GetControllers(std::vector<CanController>& controllers) const;
+    void Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const;
+    void Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const;
 
-    [[nodiscard]] Result Receive(DsVeosCoSim_CanMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_CanMessage& message);
+    void GetCanControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
+    void GetEthControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const;
+    void GetLinControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const;
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const;
-    [[nodiscard]] Result GetControllers(std::vector<EthController>& controllers) const;
+    [[nodiscard]] std::vector<CanController> GetCanControllers() const;
+    [[nodiscard]] std::vector<EthController> GetEthControllers() const;
+    [[nodiscard]] std::vector<LinController> GetLinControllers() const;
 
-    [[nodiscard]] Result Receive(DsVeosCoSim_EthMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_EthMessage& message);
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_CanMessage& message) const;
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_EthMessage& message) const;
+    [[nodiscard]] bool Transmit(const DsVeosCoSim_LinMessage& message) const;
 
-    [[nodiscard]] Result GetControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const;
-    [[nodiscard]] Result GetControllers(std::vector<LinController>& controllers) const;
-
-    [[nodiscard]] Result Receive(DsVeosCoSim_LinMessage& message);
-    [[nodiscard]] Result Transmit(const DsVeosCoSim_LinMessage& message);
+    [[nodiscard]] bool Receive(DsVeosCoSim_CanMessage& message) const;
+    [[nodiscard]] bool Receive(DsVeosCoSim_EthMessage& message) const;
+    [[nodiscard]] bool Receive(DsVeosCoSim_LinMessage& message) const;
 
 private:
     void SetCallbacks(const Callbacks& callbacks);
     void ResetDataFromPreviousConnect();
+
+    [[nodiscard]] bool LocalConnect();
+    [[nodiscard]] bool RemoteConnect();
+
+    [[nodiscard]] bool SendConnectRequest() const;
+    [[nodiscard]] bool OnConnectOk();
+    [[nodiscard]] bool OnConnectError() const;
+    [[nodiscard]] bool ReceiveConnectResponse();
+
+    [[nodiscard]] bool RunCallbackBasedCoSimulationInternal();
+    [[nodiscard]] bool PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing);
+    [[nodiscard]] bool FinishCommandInternal();
+
+    [[nodiscard]] bool OnStep();
+    [[nodiscard]] bool OnStart();
+    [[nodiscard]] bool OnStop();
+    [[nodiscard]] bool OnTerminate();
+    [[nodiscard]] bool OnPause();
+    [[nodiscard]] bool OnContinue();
+
+    void EnsureIsConnected() const;
+    void EnsureIsInResponderModeBlocking();
+    void EnsureIsInResponderModeNonBlocking();
+
     void CloseConnection();
 
-    [[nodiscard]] Result SendConnectRequest();
-    [[nodiscard]] Result OnConnectOk();
-    [[nodiscard]] Result OnConnectError();
-    [[nodiscard]] Result ReceiveConnectResponse();
-
-    [[nodiscard]] Result RunCallbackBasedCoSimulationInternal();
-    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing);
-    [[nodiscard]] Result FinishCommandInternal();
-
-    [[nodiscard]] Result OnStep();
-    [[nodiscard]] Result OnStart();
-    [[nodiscard]] Result OnStop();
-    [[nodiscard]] Result OnTerminate();
-    [[nodiscard]] Result OnPause();
-    [[nodiscard]] Result OnContinue();
-
-    [[nodiscard]] Result EnsureIsConnected() const;
-    [[nodiscard]] Result EnsureIsInResponderModeBlocking();
-    [[nodiscard]] Result EnsureIsInResponderModeNonBlocking();
-
-    Channel _channel;
+    std::unique_ptr<Channel> _channel;
+    ConnectionKind _connectionKind = ConnectionKind::Remote;
 
     bool _isConnected{};
     Callbacks _callbacks{};
@@ -113,6 +116,7 @@ private:
     std::string _serverName;
     std::string _clientName;
     uint16_t _remotePort{};
+    uint16_t _localPort{};
 
     ResponderMode _responderMode{};
     Command _currentCommand{};
@@ -130,8 +134,8 @@ private:
     std::vector<DsVeosCoSim_EthController> _ethControllersExtern;
     std::vector<DsVeosCoSim_LinController> _linControllersExtern;
 
-    IoBuffer _ioBuffer;
-    BusBuffer _busBuffer;
+    std::unique_ptr<IoBuffer> _ioBuffer;
+    std::unique_ptr<BusBuffer> _busBuffer;
 };
 
 }  // namespace DsVeosCoSim

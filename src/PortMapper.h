@@ -2,16 +2,18 @@
 
 #pragma once
 
-#include "CoSimTypes.h"
-#include "Communication.h"
-
+#include <cstdint>
 #include <thread>
+#include <unordered_map>
+
+#include "Event.h"
+#include "SocketChannel.h"
 
 namespace DsVeosCoSim {
 
 class PortMapperServer {
 public:
-    PortMapperServer() = default;
+    explicit PortMapperServer(bool enableRemoteAccess);
     ~PortMapperServer() noexcept;
 
     PortMapperServer(const PortMapperServer&) = delete;
@@ -20,29 +22,23 @@ public:
     PortMapperServer(PortMapperServer&&) = delete;
     PortMapperServer& operator=(PortMapperServer&&) = delete;
 
-    [[nodiscard]] Result Start(bool enableRemoteAccess);
-    void Stop();
-
 private:
     void RunPortMapperServer();
-    [[nodiscard]] Result HandleClient();
-    [[nodiscard]] Result HandleGetPort();
-    [[nodiscard]] Result HandleSetPort();
-    [[nodiscard]] Result HandleUnsetPort();
+    [[nodiscard]] bool HandleClient(Channel& channel);
+    [[nodiscard]] bool HandleGetPort(Channel& channel);
+    [[nodiscard]] bool HandleSetPort(Channel& channel);
+    [[nodiscard]] bool HandleUnsetPort(Channel& channel);
     void DumpEntries();
 
     std::unordered_map<std::string, uint16_t> _ports;
 
-    Server _server;
-    Channel _channel;
-
+    TcpChannelServer _server;
     std::thread _thread;
-
-    bool _isRunning = false;
+    Event _stopEvent;
 };
 
-[[nodiscard]] Result PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port);
-[[nodiscard]] Result PortMapper_SetPort(std::string_view name, uint16_t port);
-[[nodiscard]] Result PortMapper_UnsetPort(std::string_view name);
+[[nodiscard]] bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port);
+[[nodiscard]] bool PortMapper_SetPort(std::string_view name, uint16_t port);
+[[nodiscard]] bool PortMapper_UnsetPort(std::string_view name);
 
 }  // namespace DsVeosCoSim

@@ -4,461 +4,490 @@
 
 #include <bit>
 
-#include "CoSimTypes.h"
-#include "Communication.h"
+#include "Result.h"
 
 namespace DsVeosCoSim {
 
 namespace {
 
-Result WriteHeader(Channel& channel, FrameKind frameKind) {
-    return channel.Write(frameKind);
+[[nodiscard]] bool WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
+    CheckResultWithMessage(writer.Write(frameKind), "Could not write frame header.");
+    return true;
 }
 
-Result ReadString(Channel& channel, std::string& string) {
+[[nodiscard]] bool ReadString(ChannelReader& reader, std::string& string) {
     uint32_t size = 0;
-    CheckResult(channel.Read(size));
+    CheckResultWithMessage(reader.Read(size), "Could not read string size.");
     string.resize(size);
-    return channel.Read(string.data(), size);
+    CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
+    return true;
 }
 
-Result WriteString(Channel& channel, std::string_view string) {
+[[nodiscard]] bool WriteString(ChannelWriter& writer, std::string_view string) {
     const auto size = static_cast<uint32_t>(string.size());
-    CheckResult(channel.Write(size));
-    return channel.Write(string.data(), size);
+    CheckResultWithMessage(writer.Write(size), "Could not write string size.");
+    CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
+    return true;
 }
 
-Result ReadIoSignalInfo(Channel& channel, IoSignal& signal) {
-    CheckResult(channel.Read(signal.id));
-    CheckResult(channel.Read(signal.length));
-    CheckResult(channel.Read(signal.dataType));
-    CheckResult(channel.Read(signal.sizeKind));
-    return ReadString(channel, signal.name);
+[[nodiscard]] bool ReadIoSignalInfo(ChannelReader& reader, IoSignal& signal) {
+    CheckResultWithMessage(reader.Read(signal.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(signal.length), "Could not read length.");
+    CheckResultWithMessage(reader.Read(signal.dataType), "Could not read data type.");
+    CheckResultWithMessage(reader.Read(signal.sizeKind), "Could not read size kind.");
+    CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
+    return true;
 }
 
-Result WriteIoSignalInfo(Channel& channel, const IoSignal& signal) {
-    CheckResult(channel.Write(signal.id));
-    CheckResult(channel.Write(signal.length));
-    CheckResult(channel.Write(signal.dataType));
-    CheckResult(channel.Write(signal.sizeKind));
-    return WriteString(channel, signal.name);
+[[nodiscard]] bool WriteIoSignalInfo(ChannelWriter& writer, const IoSignal& signal) {
+    CheckResultWithMessage(writer.Write(signal.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(signal.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(signal.dataType), "Could not write data type.");
+    CheckResultWithMessage(writer.Write(signal.sizeKind), "Could not write size kind.");
+    CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
+    return true;
 }
 
-Result ReadIoSignalInfos(Channel& channel, std::vector<IoSignal>& signals) {
+[[nodiscard]] bool ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignal>& signals) {
     uint32_t signalsCount = 0;
-    CheckResult(channel.Read(signalsCount));
+    CheckResultWithMessage(reader.Read(signalsCount), "Could not read signals count.");
     signals.resize(signalsCount);
 
     for (uint32_t i = 0; i < signalsCount; i++) {
-        CheckResult(ReadIoSignalInfo(channel, signals[i]));
+        CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result WriteIoSignalInfos(Channel& channel, const std::vector<IoSignal>& signals) {
-    CheckResult(channel.Write(static_cast<uint32_t>(signals.size())));
+[[nodiscard]] bool WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignal>& signals) {
+    auto size = static_cast<uint32_t>(signals.size());
+    CheckResultWithMessage(writer.Write(size), "Could not write signals count.");
     for (const auto& signal : signals) {
-        CheckResult(WriteIoSignalInfo(channel, signal));
+        CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result ReadControllerInfo(Channel& channel, CanController& controller) {
-    CheckResult(channel.Read(controller.id));
-    CheckResult(channel.Read(controller.queueSize));
-    CheckResult(channel.Read(controller.bitsPerSecond));
-    CheckResult(channel.Read(controller.flexibleDataRateBitsPerSecond));
-    CheckResult(ReadString(channel, controller.name));
-    CheckResult(ReadString(channel, controller.channelName));
-    return ReadString(channel, controller.clusterName);
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, CanController& controller) {
+    CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
+    CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
+    CheckResultWithMessage(reader.Read(controller.flexibleDataRateBitsPerSecond),
+                           "Could not read flexible data rate bits per second.");
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return true;
 }
 
-Result WriteControllerInfo(Channel& channel, const CanController& controller) {
-    CheckResult(channel.Write(controller.id));
-    CheckResult(channel.Write(controller.queueSize));
-    CheckResult(channel.Write(controller.bitsPerSecond));
-    CheckResult(channel.Write(controller.flexibleDataRateBitsPerSecond));
-    CheckResult(WriteString(channel, controller.name));
-    CheckResult(WriteString(channel, controller.channelName));
-    return WriteString(channel, controller.clusterName);
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const CanController& controller) {
+    CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
+    CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
+    CheckResultWithMessage(writer.Write(controller.flexibleDataRateBitsPerSecond),
+                           "Could not write flexible data rate bits per second.");
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return true;
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<CanController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<CanController>& controllers) {
     uint32_t controllersCount = 0;
-    CheckResult(channel.Read(controllersCount));
+    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
 
     for (uint32_t i = 0; i < controllersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, controllers[i]));
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<CanController>& controllers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<CanController>& controllers) {
+    auto size = static_cast<uint32_t>(controllers.size());
+    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
-        CheckResult(WriteControllerInfo(channel, controller));
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result ReadControllerInfo(Channel& channel, EthController& controller) {
-    CheckResult(channel.Read(controller.id));
-    CheckResult(channel.Read(controller.queueSize));
-    CheckResult(channel.Read(controller.bitsPerSecond));
-    CheckResult(channel.Read(controller.macAddress));
-    CheckResult(ReadString(channel, controller.name));
-    CheckResult(ReadString(channel, controller.channelName));
-    return ReadString(channel, controller.clusterName);
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, EthController& controller) {
+    CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
+    CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
+    CheckResultWithMessage(reader.Read(controller.macAddress), "Could not read MAC address.");
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return true;
 }
 
-Result WriteControllerInfo(Channel& channel, const EthController& controller) {
-    CheckResult(channel.Write(controller.id));
-    CheckResult(channel.Write(controller.queueSize));
-    CheckResult(channel.Write(controller.bitsPerSecond));
-    CheckResult(channel.Write(controller.macAddress));
-    CheckResult(WriteString(channel, controller.name));
-    CheckResult(WriteString(channel, controller.channelName));
-    return WriteString(channel, controller.clusterName);
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const EthController& controller) {
+    CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
+    CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
+    CheckResultWithMessage(writer.Write(controller.macAddress), "Could not write MAC address.");
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return true;
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<EthController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<EthController>& controllers) {
     uint32_t controllersCount = 0;
-    CheckResult(channel.Read(controllersCount));
+    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
 
     for (uint32_t i = 0; i < controllersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, controllers[i]));
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<EthController>& controllers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<EthController>& controllers) {
+    auto size = static_cast<uint32_t>(controllers.size());
+    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
-        CheckResult(WriteControllerInfo(channel, controller));
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result ReadControllerInfo(Channel& channel, LinController& controller) {
-    CheckResult(channel.Read(controller.id));
-    CheckResult(channel.Read(controller.queueSize));
-    CheckResult(channel.Read(controller.bitsPerSecond));
-    CheckResult(channel.Read(controller.type));
-    CheckResult(ReadString(channel, controller.name));
-    CheckResult(ReadString(channel, controller.channelName));
-    return ReadString(channel, controller.clusterName);
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, LinController& controller) {
+    CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
+    CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
+    CheckResultWithMessage(reader.Read(controller.type), "Could not read type.");
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return true;
 }
 
-Result WriteControllerInfo(Channel& channel, const LinController& controller) {
-    CheckResult(channel.Write(controller.id));
-    CheckResult(channel.Write(controller.queueSize));
-    CheckResult(channel.Write(controller.bitsPerSecond));
-    CheckResult(channel.Write(controller.type));
-    CheckResult(WriteString(channel, controller.name));
-    CheckResult(WriteString(channel, controller.channelName));
-    return WriteString(channel, controller.clusterName);
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const LinController& controller) {
+    CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
+    CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
+    CheckResultWithMessage(writer.Write(controller.type), "Could not write type.");
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return true;
 }
 
-Result ReadControllerInfos(Channel& channel, std::vector<LinController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<LinController>& controllers) {
     uint32_t controllersCount = 0;
-    CheckResult(channel.Read(controllersCount));
+    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
 
     for (uint32_t i = 0; i < controllersCount; i++) {
-        CheckResult(ReadControllerInfo(channel, controllers[i]));
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
-Result WriteControllerInfos(Channel& channel, const std::vector<LinController>& controllers) {
-    CheckResult(channel.Write(static_cast<uint32_t>(controllers.size())));
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<LinController>& controllers) {
+    auto size = static_cast<uint32_t>(controllers.size());
+    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
-        CheckResult(WriteControllerInfo(channel, controller));
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return Result::Ok;
+    return true;
 }
 
 }  // namespace
 
-std::string ToString(FrameKind frameKind) {
-    switch (frameKind) {
-        case FrameKind::Ping:
-            return "Ping";
-        case FrameKind::PingOk:
-            return "PingOk";
-        case FrameKind::Ok:
-            return "Ok";
-        case FrameKind::Error:
-            return "Error";
-        case FrameKind::Start:
-            return "Start";
-        case FrameKind::Stop:
-            return "Stop";
-        case FrameKind::Terminate:
-            return "Terminate";
-        case FrameKind::Pause:
-            return "Pause";
-        case FrameKind::Continue:
-            return "Continue";
-        case FrameKind::Step:
-            return "Step";
-        case FrameKind::StepOk:
-            return "StepOk";
-        case FrameKind::Connect:
-            return "Connect";
-        case FrameKind::ConnectOk:
-            return "ConnectOk";
-        case FrameKind::GetPort:
-            return "GetPort";
-        case FrameKind::GetPortOk:
-            return "GetPortOk";
-        case FrameKind::SetPort:
-            return "SetPort";
-        case FrameKind::UnsetPort:
-            return "UnsetPort";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return std::to_string(static_cast<int>(frameKind));
-    }
-}
-
 namespace Protocol {
 
-Result ReceiveHeader(Channel& channel, FrameKind& frameKind) {
-    return channel.Read(frameKind);
+bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
+    CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame header.");
+    return true;
 }
 
-Result SendOk(Channel& channel) {
-    CheckResult(WriteHeader(channel, FrameKind::Ok));
-    return channel.EndWrite();
+bool SendOk(ChannelWriter& writer) {
+    CheckResult(WriteHeader(writer, FrameKind::Ok));
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result SendError(Channel& channel, std::string_view errorStr) {
-    CheckResult(WriteHeader(channel, FrameKind::Error));
-    CheckResult(WriteString(channel, errorStr));
-    return channel.EndWrite();
+bool SendError(ChannelWriter& writer, std::string_view errorStr) {
+    CheckResult(WriteHeader(writer, FrameKind::Error));
+    CheckResultWithMessage(WriteString(writer, errorStr), "Could not write error message.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadError(Channel& channel, std::string& errorStr) {
-    return ReadString(channel, errorStr);
+bool ReadError(ChannelReader& reader, std::string& errorStr) {
+    CheckResultWithMessage(ReadString(reader, errorStr), "Could not read error message.");
+    return true;
 }
 
-Result SendPing(Channel& channel) {
-    CheckResult(WriteHeader(channel, FrameKind::Ping));
-    return channel.EndWrite();
+bool SendPing(ChannelWriter& writer) {
+    CheckResult(WriteHeader(writer, FrameKind::Ping));
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result SendPingOk(Channel& channel, Command command) {
-    CheckResult(WriteHeader(channel, FrameKind::PingOk));
-    CheckResult(channel.Write(command));
-    return channel.EndWrite();
+bool SendPingOk(ChannelWriter& writer, Command command) {
+    CheckResult(WriteHeader(writer, FrameKind::PingOk));
+    CheckResultWithMessage(writer.Write(command), "Could not write command.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadPingOk(Channel& channel, Command& command) {
-    return channel.Read(command);
+bool ReadPingOk(ChannelReader& reader, Command& command) {
+    CheckResultWithMessage(reader.Read(command), "Could not read command.");
+    return true;
 }
 
-Result SendConnect(Channel& channel, uint32_t protocolVersion, Mode clientMode, std::string_view serverName, std::string_view clientName) {
-    CheckResult(WriteHeader(channel, FrameKind::Connect));
-    CheckResult(channel.Write(protocolVersion));
-    CheckResult(channel.Write(clientMode));
-    CheckResult(WriteString(channel, serverName));
-    CheckResult(WriteString(channel, clientName));
-    return channel.EndWrite();
+bool SendConnect(ChannelWriter& writer,
+                 uint32_t protocolVersion,
+                 Mode clientMode,
+                 std::string_view serverName,
+                 std::string_view clientName) {
+    CheckResult(WriteHeader(writer, FrameKind::Connect));
+    CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
+    CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
+    CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
+    CheckResultWithMessage(WriteString(writer, clientName), "Could not write client name.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadConnect(Channel& channel, uint32_t& protocolVersion, Mode& clientMode, std::string& serverName, std::string& clientName) {
-    CheckResult(channel.Read(protocolVersion));
-    CheckResult(channel.Read(clientMode));
-    CheckResult(ReadString(channel, serverName));
-    return ReadString(channel, clientName);
+bool ReadConnect(ChannelReader& reader,
+                 uint32_t& protocolVersion,
+                 Mode& clientMode,
+                 std::string& serverName,
+                 std::string& clientName) {
+    CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
+    CheckResultWithMessage(reader.Read(clientMode), "Could not read client mode.");
+    CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
+    return true;
 }
 
-Result SendConnectOk(Channel& channel,  // NOLINT(readability-function-cognitive-complexity)
-                     uint32_t protocolVersion,
-                     Mode clientMode,
-                     SimulationTime stepSize,
-                     SimulationState simulationState,
-                     const std::vector<IoSignal>& incomingSignals,
-                     const std::vector<IoSignal>& outgoingSignals,
-                     const std::vector<CanController>& canControllers,
-                     const std::vector<EthController>& ethControllers,
-                     const std::vector<LinController>& linControllers) {
-    CheckResult(WriteHeader(channel, FrameKind::ConnectOk));
-    CheckResult(channel.Write(protocolVersion));
-    CheckResult(channel.Write(clientMode));
-    CheckResult(channel.Write(stepSize));
-    CheckResult(channel.Write(simulationState));
-    CheckResult(WriteIoSignalInfos(channel, incomingSignals));
-    CheckResult(WriteIoSignalInfos(channel, outgoingSignals));
-    CheckResult(WriteControllerInfos(channel, canControllers));
-    CheckResult(WriteControllerInfos(channel, ethControllers));
-    CheckResult(WriteControllerInfos(channel, linControllers));
-    return channel.EndWrite();
+bool SendConnectOk(ChannelWriter& writer,
+                   uint32_t protocolVersion,
+                   Mode clientMode,
+                   SimulationTime stepSize,
+                   SimulationState simulationState,
+                   const std::vector<IoSignal>& incomingSignals,
+                   const std::vector<IoSignal>& outgoingSignals,
+                   const std::vector<CanController>& canControllers,
+                   const std::vector<EthController>& ethControllers,
+                   const std::vector<LinController>& linControllers) {
+    CheckResult(WriteHeader(writer, FrameKind::ConnectOk));
+    CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
+    CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
+    CheckResultWithMessage(writer.Write(stepSize), "Could not write step size.");
+    CheckResultWithMessage(writer.Write(simulationState), "Could not write simulation state.");
+    CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
+    CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
+    CheckResultWithMessage(WriteControllerInfos(writer, canControllers), "Could not write CAN controllers.");
+    CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
+    CheckResultWithMessage(WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadConnectOk(Channel& channel,
-                     uint32_t& protocolVersion,
-                     Mode& clientMode,
-                     SimulationTime& stepSize,
-                     SimulationState& simulationState,
-                     std::vector<IoSignal>& incomingSignals,
-                     std::vector<IoSignal>& outgoingSignals,
-                     std::vector<CanController>& canControllers,
-                     std::vector<EthController>& ethControllers,
-                     std::vector<LinController>& linControllers) {
-    CheckResult(channel.Read(protocolVersion));
-    CheckResult(channel.Read(clientMode));
-    CheckResult(channel.Read(stepSize));
-    CheckResult(channel.Read(simulationState));
-    CheckResult(ReadIoSignalInfos(channel, incomingSignals));
-    CheckResult(ReadIoSignalInfos(channel, outgoingSignals));
-    CheckResult(ReadControllerInfos(channel, canControllers));
-    CheckResult(ReadControllerInfos(channel, ethControllers));
-    return ReadControllerInfos(channel, linControllers);
+bool ReadConnectOk(ChannelReader& reader,
+                   uint32_t& protocolVersion,
+                   Mode& clientMode,
+                   SimulationTime& stepSize,
+                   SimulationState& simulationState,
+                   std::vector<IoSignal>& incomingSignals,
+                   std::vector<IoSignal>& outgoingSignals,
+                   std::vector<CanController>& canControllers,
+                   std::vector<EthController>& ethControllers,
+                   std::vector<LinController>& linControllers) {
+    CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
+    CheckResultWithMessage(reader.Read(clientMode), "Could not read client mode.");
+    CheckResultWithMessage(reader.Read(stepSize), "Could not read step size.");
+    CheckResultWithMessage(reader.Read(simulationState), "Could not read simulation state.");
+    CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
+    CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
+    CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
+    CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
+    CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
+    return true;
 }
 
-Result SendStart(Channel& channel, SimulationTime simulationTime) {
-    CheckResult(WriteHeader(channel, FrameKind::Start));
-    CheckResult(channel.Write(simulationTime));
-    return channel.EndWrite();
+bool SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
+    CheckResult(WriteHeader(writer, FrameKind::Start));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadStart(Channel& channel, SimulationTime& simulationTime) {
-    return channel.Read(simulationTime);
+bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    return true;
 }
 
-Result SendStop(Channel& channel, SimulationTime simulationTime) {
-    CheckResult(WriteHeader(channel, FrameKind::Stop));
-    CheckResult(channel.Write(simulationTime));
-    return channel.EndWrite();
+bool SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
+    CheckResult(WriteHeader(writer, FrameKind::Stop));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadStop(Channel& channel, SimulationTime& simulationTime) {
-    return channel.Read(simulationTime);
+bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    return true;
 }
 
-Result SendTerminate(Channel& channel, SimulationTime simulationTime, TerminateReason reason) {
-    CheckResult(WriteHeader(channel, FrameKind::Terminate));
-    CheckResult(channel.Write(simulationTime));
-    CheckResult(channel.Write(reason));
-    return channel.EndWrite();
+bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
+    CheckResult(WriteHeader(writer, FrameKind::Terminate));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.Write(reason), "Could not write reason.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadTerminate(Channel& channel, SimulationTime& simulationTime, TerminateReason& reason) {
-    CheckResult(channel.Read(simulationTime));
-    return channel.Read(reason);
+bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    CheckResultWithMessage(reader.Read(reason), "Could not read reason.");
+    return true;
 }
 
-Result SendPause(Channel& channel, SimulationTime simulationTime) {
-    CheckResult(WriteHeader(channel, FrameKind::Pause));
-    CheckResult(channel.Write(simulationTime));
-    return channel.EndWrite();
+bool SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
+    CheckResult(WriteHeader(writer, FrameKind::Pause));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadPause(Channel& channel, SimulationTime& simulationTime) {
-    return channel.Read(simulationTime);
+bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    return true;
 }
 
-Result SendContinue(Channel& channel, SimulationTime simulationTime) {
-    CheckResult(WriteHeader(channel, FrameKind::Continue));
-    CheckResult(channel.Write(simulationTime));
-    return channel.EndWrite();
+bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
+    CheckResult(WriteHeader(writer, FrameKind::Continue));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadContinue(Channel& channel, SimulationTime& simulationTime) {
-    return channel.Read(simulationTime);
+bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    return true;
 }
 
-Result SendStep(Channel& channel, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
-    CheckResult(WriteHeader(channel, FrameKind::Step));
-    CheckResult(channel.Write(simulationTime));
-    CheckResult(ioBuffer.Serialize(channel));
-    CheckResult(busBuffer.Serialize(channel));
-    return channel.EndWrite();
+bool SendStep(ChannelWriter& writer, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
+    CheckResult(WriteHeader(writer, FrameKind::Step));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
+    CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadStep(Channel& channel, SimulationTime& simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks) {
-    CheckResult(channel.Read(simulationTime));
+bool ReadStep(ChannelReader& reader,
+              SimulationTime& simulationTime,
+              IoBuffer& ioBuffer,
+              BusBuffer& busBuffer,
+              const Callbacks& callbacks) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (callbacks.simulationBeginStepCallback) {
         callbacks.simulationBeginStepCallback(simulationTime);
     }
 
-    CheckResult(ioBuffer.Deserialize(channel, simulationTime, callbacks));
-    return busBuffer.Deserialize(channel, simulationTime, callbacks);
+    CheckResultWithMessage(ioBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read IO buffer data.");
+    CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+    return true;
 }
 
-Result SendStepOk(Channel& channel, SimulationTime simulationTime, Command command, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
-    CheckResult(WriteHeader(channel, FrameKind::StepOk));
-    CheckResult(channel.Write(simulationTime));
-    CheckResult(channel.Write(command));
-    CheckResult(ioBuffer.Serialize(channel));
-    CheckResult(busBuffer.Serialize(channel));
-    return channel.EndWrite();
+bool SendStepOk(ChannelWriter& writer,
+                SimulationTime simulationTime,
+                Command command,
+                IoBuffer& ioBuffer,
+                BusBuffer& busBuffer) {
+    CheckResult(WriteHeader(writer, FrameKind::StepOk));
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.Write(command), "Could not write command.");
+    CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
+    CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadStepOk(Channel& channel, SimulationTime& simulationTime, Command& command, IoBuffer& ioBuffer, BusBuffer& busBuffer, const Callbacks& callbacks) {
-    CheckResult(channel.Read(simulationTime));
-    CheckResult(channel.Read(command));
+bool ReadStepOk(ChannelReader& reader,
+                SimulationTime& simulationTime,
+                Command& command,
+                IoBuffer& ioBuffer,
+                BusBuffer& busBuffer,
+                const Callbacks& callbacks) {
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    CheckResultWithMessage(reader.Read(command), "Could not read command.");
 
     if (callbacks.simulationBeginStepCallback) {
         callbacks.simulationBeginStepCallback(simulationTime);
     }
 
-    CheckResult(ioBuffer.Deserialize(channel, simulationTime, callbacks));
-    return busBuffer.Deserialize(channel, simulationTime, callbacks);
+    CheckResultWithMessage(ioBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read IO buffer data.");
+    CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+    return true;
 }
 
-Result SendSetPort(Channel& channel, std::string_view serverName, uint16_t port) {
-    CheckResult(WriteHeader(channel, FrameKind::SetPort));
-    CheckResult(WriteString(channel, serverName));
-    CheckResult(channel.Write(port));
-    return channel.EndWrite();
+bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
+    CheckResult(WriteHeader(writer, FrameKind::SetPort));
+    CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
+    CheckResultWithMessage(writer.Write(port), "Could not write port.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadSetPort(Channel& channel, std::string& serverName, uint16_t& port) {
-    CheckResult(ReadString(channel, serverName));
-    return channel.Read(port);
+bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
+    CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    CheckResultWithMessage(reader.Read(port), "Could not read port.");
+    return true;
 }
 
-Result SendUnsetPort(Channel& channel, std::string_view serverName) {
-    CheckResult(WriteHeader(channel, FrameKind::UnsetPort));
-    CheckResult(WriteString(channel, serverName));
-    return channel.EndWrite();
+bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
+    CheckResult(WriteHeader(writer, FrameKind::UnsetPort));
+    CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadUnsetPort(Channel& channel, std::string& serverName) {
-    return ReadString(channel, serverName);
+bool ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
+    CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    return true;
 }
 
-Result SendGetPort(Channel& channel, std::string_view serverName) {
-    CheckResult(WriteHeader(channel, FrameKind::GetPort));
-    CheckResult(WriteString(channel, serverName));
-    return channel.EndWrite();
+bool SendGetPort(ChannelWriter& writer, std::string_view serverName) {
+    CheckResult(WriteHeader(writer, FrameKind::GetPort));
+    CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadGetPort(Channel& channel, std::string& serverName) {
-    return ReadString(channel, serverName);
+bool ReadGetPort(ChannelReader& reader, std::string& serverName) {
+    CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    return true;
 }
 
-Result SendGetPortOk(Channel& channel, uint16_t port) {
-    CheckResult(WriteHeader(channel, FrameKind::GetPortOk));
-    CheckResult(channel.Write(port));
-    return channel.EndWrite();
+bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+    CheckResult(WriteHeader(writer, FrameKind::GetPortOk));
+    CheckResultWithMessage(writer.Write(port), "Could not write port.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+    return true;
 }
 
-Result ReadGetPortOk(Channel& channel, uint16_t& port) {
-    return channel.Read(port);
+bool ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
+    CheckResultWithMessage(reader.Read(port), "Could not read port.");
+    return true;
 }
 
 }  // namespace Protocol

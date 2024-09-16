@@ -1,516 +1,695 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "Communication.h"
+#include <fmt/format.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include "CoSimTypes.h"
 #include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Generator.h"
+#include "Helper.h"
 #include "IoBuffer.h"
-#include "Logger.h"
+#include "LogHelper.h"
+#include "SocketChannel.h"
 #include "TestHelper.h"
 
 using namespace DsVeosCoSim;
+using namespace testing;
 
-class TestIoBuffer : public testing::Test {
-protected:
-    Channel _senderChannel;
-    Channel _receiverChannel;
+namespace {
 
-    void SetUp() override {
-        SetLogCallback(OnLogCallback);
+auto coSimTypes = testing::Values(CoSimType::Client, CoSimType::Server);
 
-        Server server;
-        uint16_t port = 0;
-        ASSERT_OK(server.Start(port, true));
+auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
-        ASSERT_OK(ConnectToServer("127.0.0.1", port, 0, _senderChannel));
+auto dataTypes = testing::Values(DsVeosCoSim_DataType_Bool,
+                                 DsVeosCoSim_DataType_Int8,
+                                 DsVeosCoSim_DataType_Int16,
+                                 DsVeosCoSim_DataType_Int32,
+                                 DsVeosCoSim_DataType_Int64,
+                                 DsVeosCoSim_DataType_UInt8,
+                                 DsVeosCoSim_DataType_UInt16,
+                                 DsVeosCoSim_DataType_UInt32,
+                                 DsVeosCoSim_DataType_UInt64,
+                                 DsVeosCoSim_DataType_Float32,
+                                 DsVeosCoSim_DataType_Float64);
 
-        ASSERT_OK(server.Accept(_receiverChannel));
+void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {
+    TcpChannelServer server(0, true);
+    uint16_t port = server.GetLocalPort();
 
-        ClearLastMessage();
+    SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
+    SocketChannel receiverChannel = Accept(server);
+
+    ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
+    ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {}));
+}
+
+struct EventData {
+    IoSignal signal{};
+    std::vector<uint8_t> data;
+};
+
+void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std::vector<EventData> eventData) {
+    TcpChannelServer server(0, true);
+    uint16_t port = server.GetLocalPort();
+
+    SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
+    SocketChannel receiverChannel = Accept(server);
+
+    SimulationTime simulationTime = GenerateI64();
+
+    Callbacks callbacks{};
+    callbacks.incomingSignalChangedCallback =
+        [&](SimulationTime simTime, const DsVeosCoSim_IoSignal& changedIoSignal, uint32_t length, const void* value) {
+            ASSERT_EQ(simTime, simulationTime);
+            ASSERT_FALSE(eventData.empty());
+            ASSERT_EQ(eventData[0].signal.id, changedIoSignal.id);
+            ASSERT_EQ(eventData[0].signal.length, length);
+            AssertByteArray(eventData[0].data.data(), value, eventData[0].data.size());
+            eventData.pop_back();
+        };
+
+    ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
+    ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks));
+
+    ASSERT_TRUE(eventData.empty());
+}
+
+void SwitchSignals(std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
+                   std::vector<DsVeosCoSim_IoSignal>& outgoingSignals,
+                   CoSimType coSimType) {
+    if (coSimType == CoSimType::Server) {
+        std::swap(incomingSignals, outgoingSignals);
     }
+}
 
-    void TearDown() override {
-        _senderChannel.Disconnect();
-        _receiverChannel.Disconnect();
+}  // namespace
+
+class TestIoBufferWithCoSimType : public testing::TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
+protected:
+    void SetUp() override {
+        ClearLastMessage();
     }
 };
 
-TEST_F(TestIoBuffer, CreateWithZeroIoSignalInfos) {
+INSTANTIATE_TEST_SUITE_P(Test,
+                         TestIoBufferWithCoSimType,
+                         testing::Combine(coSimTypes, connectionKinds),
+                         [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
+                             return fmt::format("{}_{}",
+                                                ToString(std::get<0>(info.param)),
+                                                ToString(std::get<1>(info.param)));
+                         });
+
+TEST_P(TestIoBufferWithCoSimType, CreateWithZeroIoSignalInfos) {
     // Arrange
-    IoBuffer ioBuffer;
+    auto [coSimType, connectionKind] = GetParam();
 
-    // Act
-    const Result result = ioBuffer.Initialize({}, {});
+    std::string name = GenerateString("IoBuffer名前");
 
-    // Assert
-    ASSERT_OK(result);
+    // Act and assert
+    ASSERT_NO_THROW(IoBuffer(coSimType, connectionKind, name, {}, {}));
 }
 
-TEST_F(TestIoBuffer, CreateWithSingleIoSignalInfo) {
+class TestIoBuffer : public testing::TestWithParam<std::tuple<CoSimType, ConnectionKind, DsVeosCoSim_DataType>> {
+protected:
+    void SetUp() override {
+        ClearLastMessage();
+    }
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    ,
+    TestIoBuffer,
+    testing::Combine(coSimTypes, connectionKinds, dataTypes),
+    [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DsVeosCoSim_DataType>>& info) {
+        return fmt::format("{}_{}_{}",
+                           ToString(std::get<0>(info.param)),
+                           ToString(std::get<1>(info.param)),
+                           ToString(std::get<2>(info.param)));
+    });
+
+TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {
     // Arrange
-    const std::vector<IoSignal> incomingSignals = CreateSignals(1);
-    const std::vector<IoSignal> outgoingSignals = CreateSignals(1);
-    IoBuffer ioBuffer;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    // Act
-    const Result result = ioBuffer.Initialize(Convert(incomingSignals), Convert(outgoingSignals));
+    std::string name = GenerateString("IoBuffer名前");
 
-    // Assert
-    ASSERT_OK(result);
+    IoSignal incomingSignal = CreateSignal(dataType);
+    IoSignal outgoingSignal = CreateSignal(dataType);
+
+    // Act and assert
+    ASSERT_NO_THROW(IoBuffer(coSimType, connectionKind, name, {incomingSignal}, {outgoingSignal}));
 }
 
-TEST_F(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
+TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
     // Arrange
-    const std::vector<IoSignal> incomingSignals = CreateSignals(2);
-    const std::vector<IoSignal> outgoingSignals = CreateSignals(2);
-    IoBuffer ioBuffer;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    // Act
-    const Result result = ioBuffer.Initialize(Convert(incomingSignals), Convert(outgoingSignals));
+    std::string name = GenerateString("IoBuffer名前");
 
-    // Assert
-    ASSERT_OK(result);
+    IoSignal incomingSignal1 = CreateSignal(dataType);
+    IoSignal incomingSignal2 = CreateSignal(dataType);
+    IoSignal outgoingSignal1 = CreateSignal(dataType);
+    IoSignal outgoingSignal2 = CreateSignal(dataType);
+
+    // Act and assert
+    ASSERT_NO_THROW(IoBuffer(coSimType,
+                             connectionKind,
+                             name,
+                             {incomingSignal1, incomingSignal2},
+                             {outgoingSignal1, outgoingSignal2}));
 }
 
-TEST_F(TestIoBuffer, DuplicatedReadIds) {
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, DuplicatedReadIds) {
     // Arrange
-    IoSignal signal = CreateSignal();
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
+    std::string name = GenerateString("IoBuffer名前");
 
-    // Act
-    const Result result = ioBuffer.Initialize({signal.Convert(), signal.Convert()}, {});
+    IoSignal signal = CreateSignal(dataType);
 
-    // Assert
-    ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal, signal};
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            IoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+        },
+        ThrowsMessage<CoSimException>(fmt::format("Duplicated IO signal id {}.", signal.id)));
 }
+#endif
 
-TEST_F(TestIoBuffer, DuplicatedWriteIds) {
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, DuplicatedWriteIds) {
     // Arrange
-    IoSignal signal = CreateSignal();
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
+    std::string name = GenerateString("IoBuffer名前");
 
-    // Act
-    const Result result = ioBuffer.Initialize({}, {signal.Convert(), signal.Convert()});
+    IoSignal signal = CreateSignal(dataType);
 
-    // Assert
-    ASSERT_ERROR(result);
-    AssertLastMessage("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal, signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            IoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+        },
+        ThrowsMessage<CoSimException>(fmt::format("Duplicated IO signal id {}.", signal.id)));
 }
+#endif
 
-TEST_F(TestIoBuffer, ReadInvalidId) {
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, ReadInvalidId) {
     // Arrange
-    IoSignal signal = CreateSignal();
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalId readId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
+    IoSignal signal = CreateSignal(dataType);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal};
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
     uint32_t readLength{};
-    std::vector<uint8_t> readValue;
-    readValue.resize(GetDataTypeSize(signal.dataType));
+    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
-    // Act
-    const Result result = ioBuffer.Read(readId, readLength, readValue.data());
-
-    // Assert
-    ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + std::to_string(readId) + " is unknown.");
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            ioBuffer.Read(signal.id + 1, readLength, readValue.data());
+        },
+        ThrowsMessage<CoSimException>(fmt::format("IO signal id {} is unknown.", signal.id + 1)));
 }
+#endif
 
-TEST_F(TestIoBuffer, WriteInvalidId) {
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, WriteInvalidId) {
     // Arrange
-    IoSignal signal = CreateSignal();
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalId writeId = static_cast<IoSignalId>(static_cast<uint32_t>(signal.id) + 1U);
-    const uint32_t writeLength = signal.length;
-    std::vector<uint8_t> writeValue;
-    writeValue.resize(GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
+    IoSignal signal = CreateSignal(dataType);
 
-    // Act
-    const Result result = ioBuffer.Write(writeId, writeLength, writeValue.data());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    // Assert
-    ASSERT_INVALID_ARGUMENT(result);
-    AssertLastMessage("IO signal id " + std::to_string(writeId) + " is unknown.");
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            ioBuffer.Write(signal.id + 1, signal.length, writeValue.data());
+        },
+        ThrowsMessage<CoSimException>(fmt::format("IO signal id {} is unknown.", signal.id + 1)));
 }
+#endif
 
-TEST_F(TestIoBuffer, ScalarInitialData) {
+TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = 1;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    std::vector<uint8_t> initialValue;
-    initialValue.resize(GetDataTypeSize(signal.dataType));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal};
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
-    std::vector<uint8_t> readValue;
-    readValue.resize(initialValue.size());
+    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     // Act
-    const Result result = ioBuffer.Read(signal.id, readLength, readValue.data());
+    ASSERT_NO_THROW(ioBuffer.Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_OK(result);
     ASSERT_EQ(signal.length, readLength);
     AssertByteArray(initialValue.data(), readValue.data(), initialValue.size());
 }
 
-TEST_F(TestIoBuffer, ScalarChanged) {  // NOLINT(readability-function-cognitive-complexity)
+TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = 1;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
 
-    std::vector<uint8_t> writeValue;
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal};
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
-    ASSERT_OK(_senderChannel.EndWrite());
-
-    const SimulationTime writeSimulationTime = GenerateI64();
-
-    Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
-                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
-                                                                                           uint32_t length,
-                                                                                           const void* value) {
-        ASSERT_EQ(writeSimulationTime, simulationTime);
-        ASSERT_EQ(signal.id, changedIoSignal.id);
-        ASSERT_EQ(signal.length, length);
-        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-    };
+    std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
-    std::vector<uint8_t> readValue;
-    readValue.resize(writeValue.size());
+    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     // Act
-    const Result deserializeResult = receiverIoBuffer.Deserialize(_receiverChannel, writeSimulationTime, callbacks);
-    const Result readResult = receiverIoBuffer.Read(signal.id, readLength, readValue.data());
+    ASSERT_NO_THROW(ioBuffer.Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_OK(deserializeResult);
-    ASSERT_OK(readResult);
+    ASSERT_EQ(0, readLength);
+}
+
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, WriteWrongSizeForFixedSizedLength) {
+    // Arrange
+    auto [coSimType, connectionKind, dataType] = GetParam();
+
+    std::string name = GenerateString("IoBuffer名前");
+
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            ioBuffer.Write(signal.id, signal.length + 1, writeValue.data());
+        },
+        ThrowsMessage<CoSimException>(fmt::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
+                                                  signal.name,
+                                                  signal.length,
+                                                  signal.length + 1)));
+}
+#endif
+
+#ifdef EXCEPTION_TESTS
+TEST_P(TestIoBuffer, WriteWrongVariableSizedLength) {
+    // Arrange
+    auto [coSimType, connectionKind, dataType] = GetParam();
+
+    std::string name = GenerateString("IoBuffer名前");
+
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+
+    // Act and assert
+    ASSERT_THAT(
+        [&]() {
+            ioBuffer.Write(signal.id, signal.length + 1, writeValue.data());
+        },
+        ThrowsMessage<CoSimException>(
+            fmt::format("Length of variable sized IO signal '{}' exceeds max size.", signal.name)));
+}
+#endif
+
+TEST_P(TestIoBuffer, WriteFixedSizedData) {
+    // Arrange
+    auto [coSimType, connectionKind, dataType] = GetParam();
+
+    std::string name = GenerateString("IoBuffer名前");
+
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+
+    // Act and assert
+    ASSERT_NO_THROW(ioBuffer.Write(signal.id, signal.length, writeValue.data()));
+}
+
+TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
+    // Arrange
+    auto [coSimType, connectionKind, dataType] = GetParam();
+
+    std::string name = GenerateString("IoBuffer名前");
+
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+    IoSignal signal1 = CreateSignal();
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal1, signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+    uint32_t readLength{};
+    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
+
+    Transfer(writerIoBuffer, readerIoBuffer);
+
+    // Act
+    ASSERT_NO_THROW(readerIoBuffer.Read(signal.id, readLength, readValue.data()));
+
+    // Assert
     ASSERT_EQ(signal.length, readLength);
     AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
 }
 
-TEST_F(TestIoBuffer, ScalarWrongLength) {
+TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = 1;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    std::vector<uint8_t> writeValue;
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
-    const uint32_t writeLength = signal.length + 1;
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+    IoSignal signal1 = CreateSignal();
 
-    // Act
-    const Result result = ioBuffer.Write(signal.id, writeLength, writeValue.data());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal, signal1};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    // Assert
-    ASSERT_ERROR(result);
-    AssertLastMessage("Length of fixed sized IO signal '" + signal.name + "' must be " + std::to_string(signal.length) + " but was " +
-                      std::to_string(writeLength) + ".");
-}
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-TEST_F(TestIoBuffer, FixedSizedVectorInitialData) {
-    // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = GenerateRandom(2, 10);
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 
-    std::vector<uint8_t> initialValue;
-    initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
+    // Second write with different data
+    writeValue = GenerateIoData(signal);
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 
     uint32_t readLength{};
-    std::vector<uint8_t> readValue;
-    readValue.resize(initialValue.size());
+    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
+
+    Transfer(writerIoBuffer, readerIoBuffer);
 
     // Act
-    const Result result = ioBuffer.Read(signal.id, readLength, readValue.data());
+    ASSERT_NO_THROW(readerIoBuffer.Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_OK(result);
-    ASSERT_EQ(signal.length, readLength);
-    AssertByteArray(initialValue.data(), readValue.data(), initialValue.size());
-}
-
-TEST_F(TestIoBuffer, FixedSizedVectorChanged) {  // NOLINT(readability-function-cognitive-complexity)
-    // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = GenerateRandom(2, 10);
-
-    IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
-
-    IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
-
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
-    ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
-    ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
-    ASSERT_OK(_senderChannel.EndWrite());
-
-    const SimulationTime writeSimulationTime = GenerateI64();
-
-    Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
-                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
-                                                                                           uint32_t length,
-                                                                                           const void* value) {
-        ASSERT_EQ(writeSimulationTime, simulationTime);
-        ASSERT_EQ(signal.id, changedIoSignal.id);
-        ASSERT_EQ(signal.length, length);
-        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-    };
-
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue{};
-    readValue.resize(writeValue.size());
-
-    // Act
-    const Result deserializeResult = receiverIoBuffer.Deserialize(_receiverChannel, writeSimulationTime, callbacks);
-    const Result readResult = receiverIoBuffer.Read(signal.id, readLength, readValue.data());
-
-    // Assert
-    ASSERT_OK(deserializeResult);
-    ASSERT_OK(readResult);
     ASSERT_EQ(signal.length, readLength);
     AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
 }
 
-TEST_F(TestIoBuffer, FixedSizedVectorWrongLength) {
+TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
-    signal.length = GenerateRandom(2, 10);
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    const uint32_t writeLength = signal.length + 1;
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+    IoSignal signal1 = CreateSignal();
+    IoSignal signal2 = CreateSignal();
 
-    // Act
-    const Result result = ioBuffer.Write(signal.id, writeLength, writeValue.data());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal, signal1, signal2};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    // Assert
-    ASSERT_ERROR(result);
-    AssertLastMessage("Length of fixed sized IO signal '" + signal.name + "' must be " + std::to_string(signal.length) + " but was " +
-                      std::to_string(writeLength) + ".");
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
+
+    // Act and assert
+    for (uint32_t i = 0; i < 2; i++) {
+        std::vector<uint8_t> writeValue = GenerateIoData(signal);
+        writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+        TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
+    }
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorInitialData) {
+TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({signal.Convert()}, {}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    std::vector<uint8_t> initialValue;
-    initialValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+    IoSignal signal1 = CreateSignal();
+    IoSignal signal2 = CreateSignal();
 
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue;
-    readValue.resize(initialValue.size());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal1, signal2, signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    // Act
-    const Result result = ioBuffer.Read(signal.id, readLength, readValue.data());
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    // Assert
-    ASSERT_OK(result);
-    ASSERT_EQ(0U, readLength);
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
+
+    // Act and assert
+    for (uint32_t i = 0; i < 2; i++) {
+        std::vector<uint8_t> writeValue = GenerateIoData(signal);
+        writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+        // Second write with different data
+        writeValue = GenerateIoData(signal);
+        writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+        // Act and assert
+        TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
+    }
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorAllElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
+TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
+    signal.length = GenerateRandom(2U, 10U);
 
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
-    ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length, writeValue.data()));
-    ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
-    ASSERT_OK(_senderChannel.EndWrite());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const SimulationTime writeSimulationTime = GenerateI64();
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
-                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
-                                                                                           uint32_t length,
-                                                                                           const void* value) {
-        ASSERT_EQ(writeSimulationTime, simulationTime);
-        ASSERT_EQ(signal.id, changedIoSignal.id);
-        ASSERT_EQ(signal.length, length);
-        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-    };
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
 
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue{};
-    readValue.resize(writeValue.size());
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 
-    // Act
-    const Result deserializeResult = receiverIoBuffer.Deserialize(_receiverChannel, writeSimulationTime, callbacks);
-    const Result readResult = receiverIoBuffer.Read(signal.id, readLength, readValue.data());
+    TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
 
-    // Assert
-    ASSERT_OK(deserializeResult);
-    ASSERT_OK(readResult);
-    ASSERT_EQ(signal.length, readLength);
-    AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
+    // Second write with same data
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+    // Act and assert
+    TransferWithEvents(writerIoBuffer, readerIoBuffer, {});
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorSomeElementsChanged) {  // NOLINT(readability-function-cognitive-complexity)
+TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
-    signal.length = GenerateRandom(2, 10);
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
 
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length - 1) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
-    ASSERT_OK(senderIoBuffer.Write(signal.id, signal.length - 1, writeValue.data()));
-    ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
-    ASSERT_OK(_senderChannel.EndWrite());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const SimulationTime writeSimulationTime = GenerateI64();
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&writeSimulationTime, &signal, &writeValue](SimulationTime simulationTime,
-                                                                                           const DsVeosCoSim_IoSignal& changedIoSignal,
-                                                                                           uint32_t length,
-                                                                                           const void* value) {
-        ASSERT_EQ(writeSimulationTime, simulationTime);
-        ASSERT_EQ(signal.id, changedIoSignal.id);
-        ASSERT_EQ(signal.length - 1, length);
-        AssertByteArray(writeValue.data(), static_cast<const uint8_t*>(value), writeValue.size());
-    };
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
 
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue{};
-    readValue.resize(writeValue.size());
+    // Act and assert
+    for (uint32_t i = 0; i < 2; i++) {
+        std::vector<uint8_t> writeValue = GenerateIoData(signal);
+        writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 
-    // Act
-    const Result deserializeResult = receiverIoBuffer.Deserialize(_receiverChannel, writeSimulationTime, callbacks);
-    const Result readResult = receiverIoBuffer.Read(signal.id, readLength, readValue.data());
-
-    // Assert
-    ASSERT_OK(deserializeResult);
-    ASSERT_OK(readResult);
-    ASSERT_EQ(signal.length - 1, readLength);
-    AssertByteArray(writeValue.data(), readValue.data(), writeValue.size());
+        TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
+    }
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorInitialLengthIsZero) {  // NOLINT(readability-function-cognitive-complexity)
+TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveEvent) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer senderIoBuffer;
-    ASSERT_OK(senderIoBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    IoBuffer receiverIoBuffer;
-    ASSERT_OK(receiverIoBuffer.Initialize({signal.Convert()}, {}));
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
+    signal.length = GenerateRandom(2U, 10U);
 
-    constexpr uint32_t writeLength = 0;  // No element should be written
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const SimulationTime writeSimulationTime = GenerateI64();
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    int callbacksCounter{};
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
 
-    Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback = [&callbacksCounter](SimulationTime, const DsVeosCoSim_IoSignal&, uint32_t, const void*) {
-        callbacksCounter++;
-    };
+    std::vector<uint8_t> writeValue = CreateZeroedIoData(signal);
 
-    ASSERT_OK(senderIoBuffer.Serialize(_senderChannel));
-    ASSERT_OK(_senderChannel.EndWrite());
+    // Act and assert
+    for (uint32_t i = 0; i < 2; i++) {
+        // Only change one byte, so that only element is changed
+        ++writeValue[0];
+        writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue{};
-    readValue.resize(writeValue.size());
-
-    // Act
-    const Result deserializeResult = receiverIoBuffer.Deserialize(_receiverChannel, writeSimulationTime, callbacks);
-    const Result readResult = receiverIoBuffer.Read(signal.id, readLength, readValue.data());
-
-    // Assert
-    ASSERT_OK(deserializeResult);
-    ASSERT_OK(readResult);
-    ASSERT_EQ(0, callbacksCounter);
-    ASSERT_EQ(writeLength, readLength);
+        // Act and assert
+        TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
+    }
 }
 
-TEST_F(TestIoBuffer, VariableSizedVectorInvalidLength) {
+TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventWithSharedMemory) {
     // Arrange
-    IoSignal signal = CreateSignal();
-    signal.sizeKind = DsVeosCoSim_SizeKind_Variable;
-    signal.length = GenerateRandom(2, 10);
+    auto [coSimType, connectionKind, dataType] = GetParam();
 
-    IoBuffer ioBuffer;
-    ASSERT_OK(ioBuffer.Initialize({}, {signal.Convert()}));
+    std::string name = GenerateString("IoBuffer名前");
 
-    const uint32_t writeLength = signal.length + 1;
-    std::vector<uint8_t> writeValue{};
-    writeValue.resize(static_cast<size_t>(signal.length) * GetDataTypeSize(signal.dataType));
-    FillWithRandom(writeValue.data(), writeValue.size());
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
+    signal.length = GenerateRandom(2U, 10U);
 
-    // Act
-    const Result result = ioBuffer.Write(signal.id, writeLength, writeValue.data());
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    // Assert
-    ASSERT_ERROR(result);
-    AssertLastMessage("Length of variable sized IO signal '" + signal.name + "' exceeds max size.");
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
+
+    IoSignal signalCopy = signal;
+    signalCopy.length--;
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signalCopy);
+    writerIoBuffer.Write(signal.id, signalCopy.length, writeValue.data());
+
+    // Act and assert
+    TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signalCopy, writeValue}});
 }
 
-// Add more tests
+TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory) {
+    // Arrange
+    auto [coSimType, connectionKind, dataType] = GetParam();
+
+    std::string name = GenerateString("IoBuffer名前");
+
+    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
+    signal.length = GenerateRandom(2U, 10U);
+
+    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
+    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
+    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
+
+    IoBuffer writerIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
+
+    IoBuffer readerIoBuffer(GetCounterPart(coSimType),
+                            connectionKind,
+                            GetCounterPart(name, connectionKind),
+                            incomingSignals,
+                            outgoingSignals);
+
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+    TransferWithEvents(writerIoBuffer, readerIoBuffer, {{signal, writeValue}});
+
+    // Second write with same data
+    writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
+
+    // Act and assert
+    TransferWithEvents(writerIoBuffer, readerIoBuffer, {});
+}

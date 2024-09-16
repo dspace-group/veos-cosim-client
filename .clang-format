@@ -8,6 +8,6 @@ AllowShortLambdasOnASingleLine: None
 BasedOnStyle: Chromium
 BinPackArguments: false
 BinPackParameters: false
-ColumnLimit: 160
+ColumnLimit: 120
 IndentWidth: 4
 InsertBraces: true
