@@ -204,11 +204,11 @@ bool ConnectWithTimeout(socket_t& socket,
         throw OsAbstractionException("Could not connect.", errorCode);
     }
 
-    fd_set set;
+    fd_set set{};
     FD_ZERO(&set);
     FD_SET(socket, &set);
 
-    timeval timeout;
+    timeval timeout{};
     timeout.tv_sec = static_cast<long>(timeoutInMilliseconds / 1000);
     timeout.tv_usec = static_cast<long>(timeoutInMilliseconds % 1000) * 1000;
 
@@ -384,7 +384,7 @@ bool Socket::IsValid() const {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {  // NOLINT(readability-convert-member-functions-to-static)
+void Socket::EnableIpv6Only() const {  // NOLINT
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
@@ -447,7 +447,7 @@ std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
     return {};
 }
 
-bool Socket::TryConnect(const std::string& name) {
+bool Socket::TryConnect(const std::string& name) const {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {
@@ -491,7 +491,7 @@ void Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) const {
     address.sin_port = ::htons(port);
     address.sin_addr.s_addr = enableRemoteAccess ? INADDR_ANY : ::htonl(INADDR_LOOPBACK);
 
-    if (::bind(_socket, reinterpret_cast<sockaddr*>(&address), static_cast<socklen_t>(sizeof(address))) < 0) {
+    if (::bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
         throw OsAbstractionException("Could not bind socket.", GetLastNetworkError());
     }
 }
@@ -502,7 +502,7 @@ void Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
     address.sin6_port = ::htons(port);
     address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;
 
-    if (::bind(_socket, reinterpret_cast<sockaddr*>(&address), static_cast<socklen_t>(sizeof(address))) < 0) {
+    if (::bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
         throw OsAbstractionException("Could not bind socket.", GetLastNetworkError());
     }
 }
@@ -544,11 +544,7 @@ void Socket::EnableReuseAddress() const {
     }
 
     int32_t flags = 1;
-    if (::setsockopt(_socket,
-                     SOL_SOCKET,
-                     SO_REUSEADDR,
-                     reinterpret_cast<char*>(&flags),
-                     static_cast<socklen_t>(sizeof(flags))) < 0) {
+    if (::setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags)) < 0) {
         throw OsAbstractionException("Could not enable socket option reuse address.", GetLastNetworkError());
     }
 }
@@ -557,11 +553,7 @@ void Socket::EnableNoDelay() const {
     EnsureIsValid();
 
     int32_t flags = 1;
-    if (::setsockopt(_socket,
-                     IPPROTO_TCP,
-                     TCP_NODELAY,
-                     reinterpret_cast<char*>(&flags),
-                     static_cast<socklen_t>(sizeof(flags))) < 0) {
+    if (::setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags)) < 0) {
         throw OsAbstractionException("Could not enable TCP option no delay.", GetLastNetworkError());
     }
 }

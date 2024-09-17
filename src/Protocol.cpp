@@ -278,7 +278,7 @@ bool ReadConnect(ChannelReader& reader,
 bool SendConnectOk(ChannelWriter& writer,
                    uint32_t protocolVersion,
                    Mode clientMode,
-                   SimulationTime stepSize,
+                   DsVeosCoSim_SimulationTime stepSize,
                    SimulationState simulationState,
                    const std::vector<IoSignal>& incomingSignals,
                    const std::vector<IoSignal>& outgoingSignals,
@@ -302,7 +302,7 @@ bool SendConnectOk(ChannelWriter& writer,
 bool ReadConnectOk(ChannelReader& reader,
                    uint32_t& protocolVersion,
                    Mode& clientMode,
-                   SimulationTime& stepSize,
+                   DsVeosCoSim_SimulationTime& stepSize,
                    SimulationState& simulationState,
                    std::vector<IoSignal>& incomingSignals,
                    std::vector<IoSignal>& outgoingSignals,
@@ -321,31 +321,33 @@ bool ReadConnectOk(ChannelReader& reader,
     return true;
 }
 
-bool SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
+bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
     CheckResult(WriteHeader(writer, FrameKind::Start));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
     return true;
 }
 
-bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
+bool ReadStart(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     return true;
 }
 
-bool SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
+bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
     CheckResult(WriteHeader(writer, FrameKind::Stop));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
     return true;
 }
 
-bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
+bool ReadStop(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     return true;
 }
 
-bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
+bool SendTerminate(ChannelWriter& writer,
+                   DsVeosCoSim_SimulationTime simulationTime,
+                   DsVeosCoSim_TerminateReason reason) {
     CheckResult(WriteHeader(writer, FrameKind::Terminate));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.Write(reason), "Could not write reason.");
@@ -353,37 +355,42 @@ bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, Termina
     return true;
 }
 
-bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
+bool ReadTerminate(ChannelReader& reader,
+                   DsVeosCoSim_SimulationTime& simulationTime,
+                   DsVeosCoSim_TerminateReason& reason) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     CheckResultWithMessage(reader.Read(reason), "Could not read reason.");
     return true;
 }
 
-bool SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
+bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
     CheckResult(WriteHeader(writer, FrameKind::Pause));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
     return true;
 }
 
-bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
+bool ReadPause(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     return true;
 }
 
-bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
+bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
     CheckResult(WriteHeader(writer, FrameKind::Continue));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
     return true;
 }
 
-bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
+bool ReadContinue(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     return true;
 }
 
-bool SendStep(ChannelWriter& writer, SimulationTime simulationTime, IoBuffer& ioBuffer, BusBuffer& busBuffer) {
+bool SendStep(ChannelWriter& writer,
+              DsVeosCoSim_SimulationTime simulationTime,
+              const IoBuffer& ioBuffer,
+              const BusBuffer& busBuffer) {
     CheckResult(WriteHeader(writer, FrameKind::Step));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
@@ -393,9 +400,9 @@ bool SendStep(ChannelWriter& writer, SimulationTime simulationTime, IoBuffer& io
 }
 
 bool ReadStep(ChannelReader& reader,
-              SimulationTime& simulationTime,
-              IoBuffer& ioBuffer,
-              BusBuffer& busBuffer,
+              DsVeosCoSim_SimulationTime& simulationTime,
+              const IoBuffer& ioBuffer,
+              const BusBuffer& busBuffer,
               const Callbacks& callbacks) {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
@@ -409,12 +416,12 @@ bool ReadStep(ChannelReader& reader,
 }
 
 bool SendStepOk(ChannelWriter& writer,
-                SimulationTime simulationTime,
+                DsVeosCoSim_SimulationTime nextSimulationTime,
                 Command command,
-                IoBuffer& ioBuffer,
-                BusBuffer& busBuffer) {
+                const IoBuffer& ioBuffer,
+                const BusBuffer& busBuffer) {
     CheckResult(WriteHeader(writer, FrameKind::StepOk));
-    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.Write(nextSimulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.Write(command), "Could not write command.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
@@ -423,20 +430,22 @@ bool SendStepOk(ChannelWriter& writer,
 }
 
 bool ReadStepOk(ChannelReader& reader,
-                SimulationTime& simulationTime,
+                DsVeosCoSim_SimulationTime& nextSimulationTime,
                 Command& command,
-                IoBuffer& ioBuffer,
-                BusBuffer& busBuffer,
+                const IoBuffer& ioBuffer,
+                const BusBuffer& busBuffer,
                 const Callbacks& callbacks) {
-    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    CheckResultWithMessage(reader.Read(nextSimulationTime), "Could not read simulation time.");
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
 
     if (callbacks.simulationBeginStepCallback) {
-        callbacks.simulationBeginStepCallback(simulationTime);
+        callbacks.simulationBeginStepCallback(nextSimulationTime);
     }
 
-    CheckResultWithMessage(ioBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read IO buffer data.");
-    CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+    CheckResultWithMessage(ioBuffer.Deserialize(reader, nextSimulationTime, callbacks),
+                           "Could not read IO buffer data.");
+    CheckResultWithMessage(busBuffer.Deserialize(reader, nextSimulationTime, callbacks),
+                           "Could not read bus buffer data.");
     return true;
 }
 

@@ -3,7 +3,6 @@
 #include <thread>
 
 #include "CoSimServer.h"
-#include "CoSimServerWrapper.h"
 #include "LogHelper.h"
 #include "Logger.h"
 #include "PerformanceTestHelper.h"
@@ -25,21 +24,21 @@ void CoSimServerRun() {
         config.logCallback = OnLogCallback;
         config.startPortMapper = false;
         config.registerAtPortMapper = false;
-        config.simulationStoppedCallback = [&stopSimulation](SimulationTime) {
+        config.simulationStoppedCallback = [&stopSimulation](DsVeosCoSim_SimulationTime) {
             stopSimulation = true;
         };
 
-        CoSimServerWrapper server;
+        CoSimServer server;
         server.Load(config);
 
         while (true) {
-            SimulationTime simulationTime{};
+            DsVeosCoSim_SimulationTime simulationTime{};
             server.Start(simulationTime);
 
             stopSimulation = false;
 
             while (!stopSimulation) {
-                SimulationTime nextSimulationTime{};
+                DsVeosCoSim_SimulationTime nextSimulationTime{};
                 server.Step(simulationTime, nextSimulationTime);
 
                 simulationTime++;

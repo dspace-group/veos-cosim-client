@@ -218,22 +218,22 @@ BusBuffer::BusBuffer(CoSimType coSimType,
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
                      const std::string& name,
-                     const std::vector<DsVeosCoSim_CanController>& controllers)
-    : BusBuffer(coSimType, connectionKind, name, controllers, {}, {}) {
+                     const std::vector<DsVeosCoSim_CanController>& canControllers)
+    : BusBuffer(coSimType, connectionKind, name, canControllers, {}, {}) {
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
                      const std::string& name,
-                     const std::vector<DsVeosCoSim_EthController>& controllers)
-    : BusBuffer(coSimType, connectionKind, name, {}, controllers, {}) {
+                     const std::vector<DsVeosCoSim_EthController>& ethControllers)
+    : BusBuffer(coSimType, connectionKind, name, {}, ethControllers, {}) {
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
                      const std::string& name,
-                     const std::vector<DsVeosCoSim_LinController>& controllers)
-    : BusBuffer(coSimType, connectionKind, name, {}, {}, controllers) {
+                     const std::vector<DsVeosCoSim_LinController>& linControllers)
+    : BusBuffer(coSimType, connectionKind, name, {}, {}, linControllers) {
 }
 
 void BusBuffer::ClearData() const {
@@ -277,7 +277,9 @@ bool BusBuffer::Serialize(ChannelWriter& writer) const {
     return true;
 }
 
-bool BusBuffer::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const {
+bool BusBuffer::Deserialize(ChannelReader& reader,
+                            DsVeosCoSim_SimulationTime simulationTime,
+                            const Callbacks& callbacks) const {
     CheckResultWithMessage(_canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback),
                            "Could not receive CAN messages.");
     CheckResultWithMessage(_ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback),

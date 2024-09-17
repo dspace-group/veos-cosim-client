@@ -5,7 +5,6 @@ add_library(
   STATIC
   BackgroundService.cpp
   ClientServerTestHelper.cpp
-  CoSimServerWrapper.cpp
   Generator.cpp
   Helper.cpp
   LogHelper.cpp

@@ -105,7 +105,7 @@ namespace Protocol {
 [[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
                                  uint32_t protocolVersion,
                                  Mode clientMode,
-                                 SimulationTime stepSize,
+                                 DsVeosCoSim_SimulationTime stepSize,
                                  SimulationState simulationState,
                                  const std::vector<IoSignal>& incomingSignals,
                                  const std::vector<IoSignal>& outgoingSignals,
@@ -115,7 +115,7 @@ namespace Protocol {
 [[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
                                  uint32_t& protocolVersion,
                                  Mode& clientMode,
-                                 SimulationTime& stepSize,
+                                 DsVeosCoSim_SimulationTime& stepSize,
                                  SimulationState& simulationState,
                                  std::vector<IoSignal>& incomingSignals,
                                  std::vector<IoSignal>& outgoingSignals,
@@ -123,41 +123,45 @@ namespace Protocol {
                                  std::vector<EthController>& ethControllers,
                                  std::vector<LinController>& linControllers);
 
-[[nodiscard]] bool SendStart(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime);
+[[nodiscard]] bool ReadStart(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendStop(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime);
+[[nodiscard]] bool ReadStop(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason);
-[[nodiscard]] bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason);
+[[nodiscard]] bool SendTerminate(ChannelWriter& writer,
+                                 DsVeosCoSim_SimulationTime simulationTime,
+                                 DsVeosCoSim_TerminateReason reason);
+[[nodiscard]] bool ReadTerminate(ChannelReader& reader,
+                                 DsVeosCoSim_SimulationTime& simulationTime,
+                                 DsVeosCoSim_TerminateReason& reason);
 
-[[nodiscard]] bool SendPause(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime);
+[[nodiscard]] bool ReadPause(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime);
+[[nodiscard]] bool ReadContinue(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime);
 
 [[nodiscard]] bool SendStep(ChannelWriter& writer,
-                            SimulationTime simulationTime,
-                            IoBuffer& ioBuffer,
-                            BusBuffer& busBuffer);
+                            DsVeosCoSim_SimulationTime simulationTime,
+                            const IoBuffer& ioBuffer,
+                            const BusBuffer& busBuffer);
 [[nodiscard]] bool ReadStep(ChannelReader& reader,
-                            SimulationTime& simulationTime,
-                            IoBuffer& ioBuffer,
-                            BusBuffer& busBuffer,
+                            DsVeosCoSim_SimulationTime& simulationTime,
+                            const IoBuffer& ioBuffer,
+                            const BusBuffer& busBuffer,
                             const Callbacks& callbacks);
 
 [[nodiscard]] bool SendStepOk(ChannelWriter& writer,
-                              SimulationTime nextSimulationTime,
+                              DsVeosCoSim_SimulationTime nextSimulationTime,
                               Command command,
-                              IoBuffer& ioBuffer,
-                              BusBuffer& busBuffer);
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer);
 [[nodiscard]] bool ReadStepOk(ChannelReader& reader,
-                              SimulationTime& nextSimulationTime,
+                              DsVeosCoSim_SimulationTime& nextSimulationTime,
                               Command& command,
-                              IoBuffer& ioBuffer,
-                              BusBuffer& busBuffer,
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer,
                               const Callbacks& callbacks);
 
 [[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName);

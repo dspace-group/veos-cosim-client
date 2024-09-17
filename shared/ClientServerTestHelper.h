@@ -13,7 +13,7 @@ struct RunTimeInfo {
     std::vector<DsVeosCoSim::LinController> linControllers;
     std::vector<DsVeosCoSim::IoSignal> incomingSignals;
     std::vector<DsVeosCoSim::IoSignal> outgoingSignals;
-    std::function<void(DsVeosCoSim::IoSignalId signalId, uint32_t length, const void* value)> write;
+    std::function<void(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value)> write;
     std::function<bool(const DsVeosCoSim_CanMessage& message)> transmitCan;
     std::function<bool(const DsVeosCoSim_EthMessage& message)> transmitEth;
     std::function<bool(const DsVeosCoSim_LinMessage& message)> transmitLin;
@@ -29,4 +29,4 @@ bool IsSendingCanMessagesEnabled();
 bool IsSendingEthMessagesEnabled();
 bool IsSendingLinMessagesEnabled();
 
-[[nodiscard]] bool SendSomeData(DsVeosCoSim::SimulationTime simulationTime, const RunTimeInfo& runTimeInfo);
+[[nodiscard]] bool SendSomeData(DsVeosCoSim_SimulationTime simulationTime, const RunTimeInfo& runTimeInfo);

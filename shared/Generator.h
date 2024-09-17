@@ -31,16 +31,16 @@ template <typename T>
 [[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType);
 [[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind);
 
-[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim::IoSignal& signal);
-[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim::IoSignal& signal);
+[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal);
+[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal);
 
 void FillWithRandom(DsVeosCoSim::CanController& controller);
 void FillWithRandom(DsVeosCoSim::EthController& controller);
 void FillWithRandom(DsVeosCoSim::LinController& controller);
 
-void FillWithRandom(DsVeosCoSim::CanMessage& message, DsVeosCoSim::BusControllerId controllerId);
-void FillWithRandom(DsVeosCoSim::EthMessage& message, DsVeosCoSim::BusControllerId controllerId);
-void FillWithRandom(DsVeosCoSim::LinMessage& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::CanMessage& message, DsVeosCoSim_BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::EthMessage& message, DsVeosCoSim_BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::LinMessage& message, DsVeosCoSim_BusControllerId controllerId);
 
 [[nodiscard]] std::vector<DsVeosCoSim::IoSignal> CreateSignals(size_t count);
 

@@ -38,29 +38,31 @@ public:
 
     void ClearData();
 
-    void Write(IoSignalId signalId, uint32_t length, const void* value);
-    void Read(IoSignalId signalId, uint32_t& length, void* value);
-    void Read(IoSignalId signalId, uint32_t& length, const void** value);
+    void Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value);
+    void Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value);
+    void Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value);
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer);
-    [[nodiscard]] bool Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks);
+    [[nodiscard]] bool Deserialize(ChannelReader& reader,
+                                   DsVeosCoSim_SimulationTime simulationTime,
+                                   const Callbacks& callbacks);
 
 protected:
     virtual void ClearDataInternal() = 0;
 
-    virtual void WriteInternal(IoSignalId signalId, uint32_t length, const void* value) = 0;
-    virtual void ReadInternal(IoSignalId signalId, uint32_t& length, void* value) = 0;
-    virtual void ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) = 0;
+    virtual void WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) = 0;
+    virtual void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) = 0;
+    virtual void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) = 0;
 
     [[nodiscard]] virtual bool SerializeInternal(ChannelWriter& writer) = 0;
     [[nodiscard]] virtual bool DeserializeInternal(ChannelReader& reader,
-                                                   SimulationTime simulationTime,
+                                                   DsVeosCoSim_SimulationTime simulationTime,
                                                    const Callbacks& callbacks) = 0;
 
-    [[nodiscard]] MetaData& FindMetaData(IoSignalId signalId);
+    [[nodiscard]] MetaData& FindMetaData(DsVeosCoSim_IoSignalId signalId);
 
     CoSimType _coSimType{};
-    std::unordered_map<IoSignalId, MetaData> _metaDataLookup;
+    std::unordered_map<DsVeosCoSim_IoSignalId, MetaData> _metaDataLookup;
     RingBuffer<MetaData*> _changedSignalsQueue;
 
 private:
@@ -87,13 +89,13 @@ public:
 protected:
     void ClearDataInternal() override;
 
-    void WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override;
-    void ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override;
-    void ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override;
+    void WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) override;
+    void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) override;
+    void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) override;
 
     [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override;
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           SimulationTime simulationTime,
+                                           DsVeosCoSim_SimulationTime simulationTime,
                                            const Callbacks& callbacks) override;
 
 private:
@@ -127,17 +129,17 @@ public:
 protected:
     void ClearDataInternal() override;
 
-    void WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override;
-    void ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override;
-    void ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override;
+    void WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) override;
+    void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) override;
+    void ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) override;
 
     [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override;
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           SimulationTime simulationTime,
+                                           DsVeosCoSim_SimulationTime simulationTime,
                                            const Callbacks& callbacks) override;
 
 private:
-    [[nodiscard]] DataBuffer* GetDataBuffer(size_t offset);
+    [[nodiscard]] DataBuffer* GetDataBuffer(size_t offset) const;
 
     static void FlipBuffers(Data& data);
 
@@ -164,13 +166,13 @@ public:
 
     void ClearData() const;
 
-    void Write(IoSignalId signalId, uint32_t length, const void* value) const;
-    void Read(IoSignalId signalId, uint32_t& length, void* value) const;
-    void Read(IoSignalId signalId, uint32_t& length, const void** value) const;
+    void Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) const;
+    void Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) const;
+    void Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) const;
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) const;
     [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   SimulationTime simulationTime,
+                                   DsVeosCoSim_SimulationTime simulationTime,
                                    const Callbacks& callbacks) const;
 
 private:

@@ -30,19 +30,19 @@ public:
 
     [[nodiscard]] bool Connect(const ConnectConfig& connectConfig);
     void Disconnect();
-    [[nodiscard]] ConnectionState GetConnectionState() const;
+    [[nodiscard]] DsVeosCoSim_ConnectionState GetConnectionState() const;
 
-    [[nodiscard]] SimulationTime GetStepSize() const;
+    [[nodiscard]] DsVeosCoSim_SimulationTime GetStepSize() const;
 
     [[nodiscard]] bool RunCallbackBasedCoSimulation(const Callbacks& callbacks);
     void StartPollingBasedCoSimulation(const Callbacks& callbacks);
-    [[nodiscard]] bool PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing);
+    [[nodiscard]] bool PollCommand(DsVeosCoSim_SimulationTime& simulationTime, Command& command, bool returnOnPing);
     [[nodiscard]] bool FinishCommand();
-    void SetNextSimulationTime(SimulationTime simulationTime);
+    void SetNextSimulationTime(DsVeosCoSim_SimulationTime simulationTime);
 
     void Start();
     void Stop();
-    void Terminate(TerminateReason terminateReason);
+    void Terminate(DsVeosCoSim_TerminateReason terminateReason);
     void Pause();
     void Continue();
 
@@ -52,10 +52,10 @@ public:
     [[nodiscard]] std::vector<IoSignal> GetIncomingSignals() const;
     [[nodiscard]] std::vector<IoSignal> GetOutgoingSignals() const;
 
-    void Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const;
+    void Write(DsVeosCoSim_IoSignalId outgoingSignalId, uint32_t length, const void* value) const;
 
-    void Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const;
-    void Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const;
+    void Read(DsVeosCoSim_IoSignalId incomingSignalId, uint32_t& length, void* value) const;
+    void Read(DsVeosCoSim_IoSignalId incomingSignalId, uint32_t& length, const void** value) const;
 
     void GetCanControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const;
     void GetEthControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const;
@@ -86,7 +86,9 @@ private:
     [[nodiscard]] bool ReceiveConnectResponse();
 
     [[nodiscard]] bool RunCallbackBasedCoSimulationInternal();
-    [[nodiscard]] bool PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing);
+    [[nodiscard]] bool PollCommandInternal(DsVeosCoSim_SimulationTime& simulationTime,
+                                           Command& command,
+                                           bool returnOnPing);
     [[nodiscard]] bool FinishCommandInternal();
 
     [[nodiscard]] bool OnStep();
@@ -107,10 +109,10 @@ private:
 
     bool _isConnected{};
     Callbacks _callbacks{};
-    SimulationTime _currentSimulationTime{};
-    SimulationTime _nextSimulationTime{};
+    DsVeosCoSim_SimulationTime _currentSimulationTime{};
+    DsVeosCoSim_SimulationTime _nextSimulationTime{};
 
-    SimulationTime _stepSize{};
+    DsVeosCoSim_SimulationTime _stepSize{};
 
     std::string _remoteIpAddress;
     std::string _serverName;

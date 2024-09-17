@@ -57,7 +57,7 @@ bool IsSendingLinMessagesEnabled() {
     return g_sendLinMessages;
 }
 
-bool SendSomeData(DsVeosCoSim::SimulationTime simulationTime, const RunTimeInfo& runTimeInfo) {
+bool SendSomeData(DsVeosCoSim_SimulationTime simulationTime, const RunTimeInfo& runTimeInfo) {
     static int64_t lastHalfSecond = -1;
     static int64_t counter = 0;
     const int64_t currentHalfSecond = simulationTime / 500000000;

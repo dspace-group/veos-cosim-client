@@ -60,7 +60,7 @@ void CoSimServer::Unload() {
     }
 }
 
-void CoSimServer::Start(SimulationTime simulationTime) {
+void CoSimServer::Start(DsVeosCoSim_SimulationTime simulationTime) {
     if (!_channel) {
         if (_isClientOptional) {
             return;
@@ -83,7 +83,7 @@ void CoSimServer::Start(SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Stop(SimulationTime simulationTime) {
+void CoSimServer::Stop(DsVeosCoSim_SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -93,7 +93,7 @@ void CoSimServer::Stop(SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
+void CoSimServer::Terminate(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason) {
     if (!_channel) {
         return;
     }
@@ -103,7 +103,7 @@ void CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reaso
     }
 }
 
-void CoSimServer::Pause(SimulationTime simulationTime) {
+void CoSimServer::Pause(DsVeosCoSim_SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -113,7 +113,7 @@ void CoSimServer::Pause(SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Continue(SimulationTime simulationTime) {
+void CoSimServer::Continue(DsVeosCoSim_SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -123,7 +123,7 @@ void CoSimServer::Continue(SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
+void CoSimServer::Step(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_SimulationTime& nextSimulationTime) {
     if (!_channel) {
         return;
     }
@@ -137,7 +137,7 @@ void CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimula
     HandlePendingCommand(command);
 }
 
-void CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value) const {
+void CoSimServer::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) const {
     if (!_channel) {
         return;
     }
@@ -145,7 +145,7 @@ void CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value)
     _ioBuffer->Write(signalId, length, value);
 }
 
-void CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value) const {
+void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) const {
     if (!_channel) {
         return;
     }
@@ -206,40 +206,41 @@ uint16_t CoSimServer::GetLocalPort() const {
     return 0;
 }
 
-bool CoSimServer::StartInternal(SimulationTime simulationTime) const {
+bool CoSimServer::StartInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::StopInternal(SimulationTime simulationTime) const {
+bool CoSimServer::StopInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
+bool CoSimServer::TerminateInternal(DsVeosCoSim_SimulationTime simulationTime,
+                                    DsVeosCoSim_TerminateReason reason) const {
     CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                            "Could not send terminate frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::PauseInternal(SimulationTime simulationTime) const {
+bool CoSimServer::PauseInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::ContinueInternal(SimulationTime simulationTime) const {
+bool CoSimServer::ContinueInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                            "Could not send continue frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::StepInternal(SimulationTime simulationTime,
-                               SimulationTime& nextSimulationTime,
+bool CoSimServer::StepInternal(DsVeosCoSim_SimulationTime simulationTime,
+                               DsVeosCoSim_SimulationTime& nextSimulationTime,
                                Command& command) const {
     CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
                            "Could not send step frame.");
@@ -460,7 +461,7 @@ bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName
     }
 }
 
-bool CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
+bool CoSimServer::WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime, Command& command) const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -494,7 +495,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
             _callbacks.simulationStoppedCallback({});
             break;
         case Command::Terminate:
-            _callbacks.simulationTerminatedCallback({}, TerminateReason::Error);
+            _callbacks.simulationTerminatedCallback({}, DsVeosCoSim_TerminateReason_Error);
             break;
         case Command::Pause:
             _callbacks.simulationPausedCallback({});
@@ -503,7 +504,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
             _callbacks.simulationContinuedCallback({});
             break;
         case Command::TerminateFinished:
-            _callbacks.simulationTerminatedCallback({}, TerminateReason::Finished);
+            _callbacks.simulationTerminatedCallback({}, DsVeosCoSim_TerminateReason_Finished);
             break;
         case Command::None:
         case Command::Step:

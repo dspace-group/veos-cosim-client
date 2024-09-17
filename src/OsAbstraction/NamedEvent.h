@@ -28,7 +28,7 @@ public:
     [[nodiscard]] static NamedEvent OpenExisting(const std::string& name);
     [[nodiscard]] static std::optional<NamedEvent> TryOpenExisting(const std::string& name);
 
-    operator Handle&() noexcept;  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
+    operator Handle&() noexcept;  // NOLINT
 
     void Set();
     void Wait() const;

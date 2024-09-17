@@ -40,7 +40,7 @@ std::string DataToString(const uint8_t* data, uint32_t dataLength, char separato
 }
 
 std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim_DataType dataType) {
-    switch (dataType) {
+    switch (dataType) {  // NOLINT
         case DsVeosCoSim_DataType_Bool:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
         case DsVeosCoSim_DataType_Int8:
@@ -63,9 +63,9 @@ std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim
             return std::to_string(static_cast<const float*>(value)[index]);
         case DsVeosCoSim_DataType_Float64:
             return std::to_string(static_cast<const double*>(value)[index]);
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return "";
     }
+
+    throw std::runtime_error("Invalid data type.");
 }
 
 std::string ValueToString(const void* value, uint32_t length, DsVeosCoSim_DataType dataType) {
@@ -100,22 +100,20 @@ void InitializeOutput() {
     SetLogCallback(OnLogCallback);
 }
 
-void OnLogCallback(Severity severity, std::string_view message) {
+void OnLogCallback(DsVeosCoSim_Severity severity, std::string_view message) {
     g_lastMessage = message;
-    switch (severity) {
-        case Severity::Error:
+    switch (severity) {  // NOLINT
+        case DsVeosCoSim_Severity_Error:
             print(red, "{}\n", message);
             break;
-        case Severity::Warning:
+        case DsVeosCoSim_Severity_Warning:
             print(yellow, "{}\n", message);
             break;
-        case Severity::Info:
+        case DsVeosCoSim_Severity_Info:
             print(white, "{}\n", message);
             break;
-        case Severity::Trace:
+        case DsVeosCoSim_Severity_Trace:
             print(gray, "{}\n", message);
-            break;
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
             break;
     }
 }
@@ -129,7 +127,7 @@ void LogIoSignal(const DsVeosCoSim_IoSignal& ioSignal) {
              ioSignal.length);
 }
 
-void LogIoData(SimulationTime simulationTime,
+void LogIoData(DsVeosCoSim_SimulationTime simulationTime,
                const DsVeosCoSim_IoSignal& ioSignal,
                uint32_t length,
                const void* value) {
@@ -174,7 +172,7 @@ void LogLinController(const DsVeosCoSim_LinController& controller) {
              controller.clusterName);
 }
 
-void LogCanMessage(SimulationTime simulationTime,
+void LogCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                    const DsVeosCoSim_CanController& controller,
                    const DsVeosCoSim_CanMessage& message) {
     print(blue,
@@ -187,7 +185,7 @@ void LogCanMessage(SimulationTime simulationTime,
           CanMessageFlagsToString(message.flags));
 }
 
-void LogEthMessage(SimulationTime simulationTime,
+void LogEthMessage(DsVeosCoSim_SimulationTime simulationTime,
                    const DsVeosCoSim_EthController& controller,
                    const DsVeosCoSim_EthMessage& message) {
     const uint8_t* data = message.data;
@@ -219,7 +217,7 @@ void LogEthMessage(SimulationTime simulationTime,
     }
 }
 
-void LogLinMessage(SimulationTime simulationTime,
+void LogLinMessage(DsVeosCoSim_SimulationTime simulationTime,
                    const DsVeosCoSim_LinController& controller,
                    const DsVeosCoSim_LinMessage& message) {
     print(green,

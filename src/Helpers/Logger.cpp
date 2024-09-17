@@ -17,28 +17,28 @@ void SetLogCallback(LogCallback logCallback) {
 void LogError(std::string_view message) {
     const auto logCallback = g_logCallback;
     if (logCallback) {
-        logCallback(Severity::Error, message.data());
+        logCallback(DsVeosCoSim_Severity_Error, message.data());
     }
 }
 
 void LogWarning(std::string_view message) {
     const auto logCallback = g_logCallback;
     if (logCallback) {
-        logCallback(Severity::Warning, message);
+        logCallback(DsVeosCoSim_Severity_Warning, message);
     }
 }
 
 void LogInfo(std::string_view message) {
     const auto logCallback = g_logCallback;
     if (logCallback) {
-        logCallback(Severity::Info, message);
+        logCallback(DsVeosCoSim_Severity_Info, message);
     }
 }
 
 void LogTrace(std::string_view message) {
     const auto logCallback = g_logCallback;
     if (logCallback) {
-        logCallback(Severity::Trace, message);
+        logCallback(DsVeosCoSim_Severity_Trace, message);
     }
 }
 

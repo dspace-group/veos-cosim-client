@@ -40,7 +40,7 @@ void Transfer(BusBuffer& senderBusBuffer, BusBuffer& receiverBusBuffer) {
 template <typename TControllerExtern, typename TMessage>
 void Transfer(BusBuffer& senderBusBuffer,
               BusBuffer& receiverBusBuffer,
-              SimulationTime simulationTime,
+              DsVeosCoSim_SimulationTime simulationTime,
               const std::vector<std::tuple<TControllerExtern, TMessage>>& expectedCallbacks) {
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -54,7 +54,7 @@ void Transfer(BusBuffer& senderBusBuffer,
     size_t index{};
     Callbacks callbacks{};
     if constexpr (std::is_same_v<TControllerExtern, DsVeosCoSim_CanController>) {
-        callbacks.canMessageReceivedCallback = [&](SimulationTime simTime,
+        callbacks.canMessageReceivedCallback = [&](DsVeosCoSim_SimulationTime simTime,
                                                    const DsVeosCoSim_CanController& controller,
                                                    const DsVeosCoSim_CanMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
@@ -70,7 +70,7 @@ void Transfer(BusBuffer& senderBusBuffer,
     }
 
     if constexpr (std::is_same_v<TControllerExtern, DsVeosCoSim_EthController>) {
-        callbacks.ethMessageReceivedCallback = [&](SimulationTime simTime,
+        callbacks.ethMessageReceivedCallback = [&](DsVeosCoSim_SimulationTime simTime,
                                                    const DsVeosCoSim_EthController& controller,
                                                    const DsVeosCoSim_EthMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
@@ -86,7 +86,7 @@ void Transfer(BusBuffer& senderBusBuffer,
     }
 
     if constexpr (std::is_same_v<TControllerExtern, DsVeosCoSim_LinController>) {
-        callbacks.linMessageReceivedCallback = [&](SimulationTime simTime,
+        callbacks.linMessageReceivedCallback = [&](DsVeosCoSim_SimulationTime simTime,
                                                    const DsVeosCoSim_LinController& controller,
                                                    const DsVeosCoSim_LinMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
@@ -203,7 +203,7 @@ using Parameters = Types<Param<CanController,
 class NameGenerator {
 public:
     template <typename T>
-    static std::string GetName([[maybe_unused]] int32_t index) {
+    static std::string GetName([[maybe_unused]] int32_t index) {  // NOLINT
         using TController = typename T::Controller;
         CoSimType coSimType = T::GetCoSimType();
         ConnectionKind connectionKind = T::GetConnectionKind();
@@ -452,7 +452,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBufferByEvent) {
 
     std::vector<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
-    SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
@@ -519,7 +519,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageByEvent) {
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
     expectedEvents.push_back({controller, sendMessage});
 
-    SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
@@ -600,7 +600,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
         ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
     }
 
-    SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
@@ -670,7 +670,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
     FillWithRandom(sendMessage, controller.id);
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
 
-    SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     Transfer(fakeSenderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);  // Should not transfer anything

@@ -3,16 +3,13 @@
 #pragma once
 
 #include <cstdint>
-#include <stdexcept>  // IWYU pragma: keep
+#include <stdexcept>  // IWYU pragma: keep, NOLINT
 
 #include "Communication/SocketChannel.h"
 #include "OsAbstraction/Socket.h"
 
 #ifdef _WIN32
 #include "Communication/LocalChannel.h"
-#else
-#include <termios.h>
-#include <unistd.h>
 #endif
 
 constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
@@ -28,7 +25,7 @@ constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
         }                                                \
     } while (0)
 
-int32_t getChar();
+[[nodiscard]] int32_t GetChar();
 
 constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
 

@@ -58,18 +58,20 @@ void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std:
     SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel receiverChannel = Accept(server);
 
-    SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     Callbacks callbacks{};
-    callbacks.incomingSignalChangedCallback =
-        [&](SimulationTime simTime, const DsVeosCoSim_IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(simTime, simulationTime);
-            ASSERT_FALSE(eventData.empty());
-            ASSERT_EQ(eventData[0].signal.id, changedIoSignal.id);
-            ASSERT_EQ(eventData[0].signal.length, length);
-            AssertByteArray(eventData[0].data.data(), value, eventData[0].data.size());
-            eventData.pop_back();
-        };
+    callbacks.incomingSignalChangedCallback = [&](DsVeosCoSim_SimulationTime simTime,
+                                                  const DsVeosCoSim_IoSignal& changedIoSignal,
+                                                  uint32_t length,
+                                                  const void* value) {
+        ASSERT_EQ(simTime, simulationTime);
+        ASSERT_FALSE(eventData.empty());
+        ASSERT_EQ(eventData[0].signal.id, changedIoSignal.id);
+        ASSERT_EQ(eventData[0].signal.length, length);
+        AssertByteArray(eventData[0].data.data(), value, eventData[0].data.size());
+        eventData.pop_back();
+    };
 
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());

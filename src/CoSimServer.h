@@ -24,7 +24,7 @@ struct CoSimServerConfig {
     bool isClientOptional{};
     bool startPortMapper{};
     bool registerAtPortMapper = true;
-    SimulationTime stepSize{};
+    DsVeosCoSim_SimulationTime stepSize{};
     LogCallback logCallback;
     SimulationCallback simulationStartedCallback;
     SimulationCallback simulationStoppedCallback;
@@ -55,16 +55,16 @@ public:
     void Load(const CoSimServerConfig& config);
     void Unload();
 
-    void Start(SimulationTime simulationTime);
-    void Stop(SimulationTime simulationTime);
-    void Terminate(SimulationTime simulationTime, TerminateReason reason);
-    void Pause(SimulationTime simulationTime);
-    void Continue(SimulationTime simulationTime);
-    void Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
+    void Start(DsVeosCoSim_SimulationTime simulationTime);
+    void Stop(DsVeosCoSim_SimulationTime simulationTime);
+    void Terminate(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason);
+    void Pause(DsVeosCoSim_SimulationTime simulationTime);
+    void Continue(DsVeosCoSim_SimulationTime simulationTime);
+    void Step(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_SimulationTime& nextSimulationTime);
 
-    void Write(IoSignalId signalId, uint32_t length, const void* value) const;
+    void Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) const;
 
-    void Read(IoSignalId signalId, uint32_t& length, const void** value) const;
+    void Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) const;
 
     [[nodiscard]] bool Transmit(const DsVeosCoSim_CanMessage& message) const;
     [[nodiscard]] bool Transmit(const DsVeosCoSim_EthMessage& message) const;
@@ -75,13 +75,14 @@ public:
     [[nodiscard]] uint16_t GetLocalPort() const;
 
 private:
-    [[nodiscard]] bool StartInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool StopInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const;
-    [[nodiscard]] bool PauseInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool ContinueInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool StepInternal(SimulationTime simulationTime,
-                                    SimulationTime& nextSimulationTime,
+    [[nodiscard]] bool StartInternal(DsVeosCoSim_SimulationTime simulationTime) const;
+    [[nodiscard]] bool StopInternal(DsVeosCoSim_SimulationTime simulationTime) const;
+    [[nodiscard]] bool TerminateInternal(DsVeosCoSim_SimulationTime simulationTime,
+                                         DsVeosCoSim_TerminateReason reason) const;
+    [[nodiscard]] bool PauseInternal(DsVeosCoSim_SimulationTime simulationTime) const;
+    [[nodiscard]] bool ContinueInternal(DsVeosCoSim_SimulationTime simulationTime) const;
+    [[nodiscard]] bool StepInternal(DsVeosCoSim_SimulationTime simulationTime,
+                                    DsVeosCoSim_SimulationTime& nextSimulationTime,
                                     Command& command) const;
 
     void CloseConnection();
@@ -94,7 +95,7 @@ private:
     [[nodiscard]] bool WaitForOkFrame() const;
     [[nodiscard]] bool WaitForPingOkFrame(Command& command) const;
     [[nodiscard]] bool WaitForConnectFrame(uint32_t& version, std::string& clientName) const;
-    [[nodiscard]] bool WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const;
+    [[nodiscard]] bool WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime, Command& command) const;
 
     void HandlePendingCommand(Command command) const;
 
@@ -115,7 +116,7 @@ private:
     std::string _serverName;
     Callbacks _callbacks{};
     bool _isClientOptional{};
-    SimulationTime _stepSize{};
+    DsVeosCoSim_SimulationTime _stepSize{};
     bool _registerAtPortMapper{};
 
     std::vector<IoSignal> _incomingSignals;
