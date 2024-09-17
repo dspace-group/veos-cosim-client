@@ -368,6 +368,8 @@ void Socket::Close() {
         return;
     }
 
+    Shutdown();
+
     _socket = InvalidSocket;
     _addressFamily = {};
 
@@ -376,7 +378,6 @@ void Socket::Close() {
         _path = {};
     }
 
-    Shutdown();
     CloseSocket(socket);
 }
 

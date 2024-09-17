@@ -40,7 +40,7 @@ std::string DataToString(const uint8_t* data, uint32_t dataLength, char separato
 }
 
 std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim_DataType dataType) {
-    switch (dataType) {  // NOLINT
+    switch (dataType) {
         case DsVeosCoSim_DataType_Bool:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
         case DsVeosCoSim_DataType_Int8:
@@ -63,6 +63,8 @@ std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim
             return std::to_string(static_cast<const float*>(value)[index]);
         case DsVeosCoSim_DataType_Float64:
             return std::to_string(static_cast<const double*>(value)[index]);
+        case DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
     }
 
     throw std::runtime_error("Invalid data type.");
@@ -102,7 +104,7 @@ void InitializeOutput() {
 
 void OnLogCallback(DsVeosCoSim_Severity severity, std::string_view message) {
     g_lastMessage = message;
-    switch (severity) {  // NOLINT
+    switch (severity) {
         case DsVeosCoSim_Severity_Error:
             print(red, "{}\n", message);
             break;
@@ -114,6 +116,8 @@ void OnLogCallback(DsVeosCoSim_Severity severity, std::string_view message) {
             break;
         case DsVeosCoSim_Severity_Trace:
             print(gray, "{}\n", message);
+            break;
+        case DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_:
             break;
     }
 }
@@ -133,7 +137,7 @@ void LogIoData(DsVeosCoSim_SimulationTime simulationTime,
                const void* value) {
     print(violet,
           "{},{},{},{}\n",
-          SimulationTimeToSeconds(simulationTime),
+          DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime),
           ioSignal.name,
           length,
           ValueToString(value, length, ioSignal.dataType));
@@ -177,7 +181,7 @@ void LogCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                    const DsVeosCoSim_CanMessage& message) {
     print(blue,
           "{},{},{},{},{},CAN,{}\n",
-          SimulationTimeToSeconds(simulationTime),
+          DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime),
           controller.name,
           message.id,
           message.length,
@@ -198,7 +202,7 @@ void LogEthMessage(DsVeosCoSim_SimulationTime simulationTime,
 
         print(cyan,
               "{},{},{}-{},{},{},ETH,{},{}\n",
-              SimulationTimeToSeconds(simulationTime),
+              DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime),
               controller.name,
               macAddress2,
               macAddress1,
@@ -209,7 +213,7 @@ void LogEthMessage(DsVeosCoSim_SimulationTime simulationTime,
     } else {
         print(cyan,
               "{},{},{},{},ETH,{}\n",
-              SimulationTimeToSeconds(simulationTime),
+              DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime),
               controller.name,
               length,
               DataToString(data, length, '-'),
@@ -222,7 +226,7 @@ void LogLinMessage(DsVeosCoSim_SimulationTime simulationTime,
                    const DsVeosCoSim_LinMessage& message) {
     print(green,
           "{},{},{},{},{},LIN,{}\n",
-          SimulationTimeToSeconds(simulationTime),
+          DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime),
           controller.name,
           message.id,
           message.length,

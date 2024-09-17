@@ -18,10 +18,6 @@ constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;  //
 constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
 
-[[nodiscard]] inline double SimulationTimeToSeconds(DsVeosCoSim_SimulationTime simulationTime) {
-    return DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime);
-}
-
 class CoSimException final : public std::runtime_error {
 public:
     explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
@@ -98,7 +94,7 @@ enum class Command {
 }
 
 [[nodiscard]] inline std::string ToString(DsVeosCoSim_Severity severity) {
-    switch (severity) {  // NOLINT
+    switch (severity) {
         case DsVeosCoSim_Severity_Error:
             return "Error";
         case DsVeosCoSim_Severity_Warning:
@@ -107,28 +103,34 @@ enum class Command {
             return "Info";
         case DsVeosCoSim_Severity_Trace:
             return "Trace";
+        case DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
     }
 
     return std::to_string(severity);
 }
 
 inline std::string ToString(DsVeosCoSim_TerminateReason terminateReason) {
-    switch (terminateReason) {  // NOLINT
+    switch (terminateReason) {
         case DsVeosCoSim_TerminateReason_Finished:
             return "Finished";
         case DsVeosCoSim_TerminateReason_Error:
             return "Error";
+        case DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
     }
 
     return std::to_string(terminateReason);
 }
 
 inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
-    switch (connectionState) {  // NOLINT
+    switch (connectionState) {
         case DsVeosCoSim_ConnectionState_Connected:
             return "Connected";
         case DsVeosCoSim_ConnectionState_Disconnected:
             return "Disconnected";
+        case DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
     }
 
     return std::to_string(connectionState);
