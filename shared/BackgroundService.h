@@ -13,7 +13,7 @@ public:
     ~BackgroundService() noexcept;
 
     BackgroundService(const BackgroundService&) = delete;
-    BackgroundService& operator=(BackgroundService const&) = delete;
+    BackgroundService& operator=(const BackgroundService&) = delete;
 
     BackgroundService(BackgroundService&&) = delete;
     BackgroundService& operator=(BackgroundService&&) = delete;

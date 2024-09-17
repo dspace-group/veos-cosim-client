@@ -72,13 +72,13 @@ IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKi
     return signal;
 }
 
-std::vector<uint8_t> GenerateIoData(const IoSignal& signal) {
+std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
     FillWithRandom(data.data(), data.size());
     return data;
 }
 
-std::vector<uint8_t> CreateZeroedIoData(const IoSignal& signal) {
+std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal) {
     std::vector<uint8_t> data;
     data.resize(GetDataTypeSize(signal.dataType) * signal.length);
     return data;

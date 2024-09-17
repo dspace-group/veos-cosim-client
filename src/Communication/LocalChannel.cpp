@@ -196,21 +196,11 @@ bool LocalChannelWriter::EndWrite() {
 }
 
 bool LocalChannelWriter::WaitForFreeSpace(uint32_t& currentSize) {
-#if 0
-    _newDataEvent.Set();
-    for (int32_t i = 0; i < 1000; i++) {
-        currentSize = _writeIndex - _header->readIndex.load();
-        if (currentSize < BufferSize) {
-            return true;
-        }
-    }
-#else
     (void)SignalAndWait(_newDataEvent, _newSpaceEvent, 1);
     currentSize = _writeIndex - _header->readIndex.load();
     if (currentSize < BufferSize) {
         return true;
     }
-#endif
 
     while (!_newSpaceEvent.Wait(1)) {
         currentSize = _writeIndex - _header->readIndex.load();
@@ -271,15 +261,6 @@ bool LocalChannelReader::Read(void* destination, size_t size) {
 }
 
 bool LocalChannelReader::BeginRead(uint32_t& currentSize) {
-#if 0
-    for (int32_t i = 0; i < 1000; i++) {
-        currentSize = _header->writeIndex.load() - _readIndex;
-        if (currentSize > 0) {
-            return true;
-        }
-    }
-#endif
-
     while (!_newDataEvent.Wait(1)) {
         currentSize = _header->writeIndex.load() - _readIndex;
         if (currentSize > 0) {

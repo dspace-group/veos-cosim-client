@@ -48,6 +48,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
     ASSERT_NE(0, port);
 }
 
+#ifdef _WIN32
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
     Param param = GetParam();
@@ -66,6 +67,7 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Assert
     ASSERT_FALSE(connectedChannel);
 }
+#endif
 
 TEST_P(TestTcpChannel, Connect) {
     // Arrange

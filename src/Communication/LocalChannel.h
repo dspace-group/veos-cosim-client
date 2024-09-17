@@ -123,7 +123,7 @@ public:
     ~LocalChannelServer() noexcept = default;
 
     LocalChannelServer(const LocalChannelServer&) = delete;
-    LocalChannelServer& operator=(LocalChannelServer const&) = delete;
+    LocalChannelServer& operator=(const LocalChannelServer&) = delete;
 
     LocalChannelServer(LocalChannelServer&&) = delete;
     LocalChannelServer& operator=(LocalChannelServer&&) = delete;

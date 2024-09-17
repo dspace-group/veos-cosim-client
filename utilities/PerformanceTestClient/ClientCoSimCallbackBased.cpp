@@ -29,7 +29,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
         connectedEvent.Set();
 
         Callbacks callbacks{};
-        callbacks.simulationEndStepCallback = [&](SimulationTime) {
+        callbacks.simulationEndStepCallback = [&](DsVeosCoSim_SimulationTime) {
             if (isStopped) {
                 coSimClient.Disconnect();
             }

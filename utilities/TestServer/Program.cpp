@@ -1,13 +1,14 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <cstring>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include "BackgroundService.h"
 #include "ClientServerTestHelper.h"
 #include "CoSimServer.h"
-#include "CoSimServerWrapper.h"
 #include "CoSimTypes.h"
 #include "Generator.h"
 #include "Helper.h"
@@ -31,11 +32,12 @@ enum class State {
 bool g_stopSimulationThread;
 std::thread g_simulationThread;
 
-SimulationTime g_currentTime;
+DsVeosCoSim_SimulationTime g_currentTime;
 
 RunTimeInfo g_runTimeInfo;
 
-std::unique_ptr<CoSimServerWrapper> g_server;
+std::unique_ptr<CoSimServer> g_server;
+std::unique_ptr<BackgroundService> g_backgroundService;
 State g_state;
 
 std::thread::id g_simulationThreadId;
@@ -58,13 +60,15 @@ std::string format_as(State state) {
 }
 
 void DoSimulation() {
+    g_backgroundService.reset();
+
     g_simulationThreadId = std::this_thread::get_id();
     while (!g_stopSimulationThread) {
         if (!SendSomeData(g_currentTime, g_runTimeInfo)) {
-            return;
+            break;
         }
 
-        SimulationTime nextSimulationTime{};
+        DsVeosCoSim_SimulationTime nextSimulationTime{};
         g_server->Step(g_currentTime, nextSimulationTime);
 
         if (nextSimulationTime > g_currentTime) {
@@ -73,6 +77,8 @@ void DoSimulation() {
             g_currentTime += 1000000;
         }
     }
+
+    g_backgroundService = std::make_unique<BackgroundService>(*g_server);
 }
 
 void StopSimulationThread() {
@@ -111,6 +117,8 @@ void StartSimulation() {
 
     g_currentTime = 0;
     LogInfo("Starting ...");
+    g_backgroundService.reset();
+
     g_server->Start(g_currentTime);
 
     StartSimulationThread();
@@ -190,33 +198,34 @@ void TerminateSimulation() {
 
     StopSimulationThread();
 
-    g_server->Terminate(g_currentTime, TerminateReason::Error);
+    g_server->Terminate(g_currentTime, DsVeosCoSim_TerminateReason_Error);
     g_state = State::Terminated;
 
     LogInfo("Terminated.");
 }
 
-void OnSimulationStartedCallback(SimulationTime /* unused */) {
+void OnSimulationStartedCallback([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime) {
     LogInfo("Received simulation started event.");
     StartSimulation();
 }
 
-void OnSimulationStoppedCallback(SimulationTime /* unused */) {
+void OnSimulationStoppedCallback([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime) {
     LogInfo("Received simulation stopped event.");
     StopSimulation();
 }
 
-void OnSimulationPausedCallback(SimulationTime /* unused */) {
+void OnSimulationPausedCallback([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime) {
     LogInfo("Received simulation paused event.");
     PauseSimulation();
 }
 
-void OnSimulationContinuedCallback(SimulationTime /* unused */) {
+void OnSimulationContinuedCallback([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime) {
     LogInfo("Received simulation continued event.");
     ContinueSimulation();
 }
 
-void OnSimulationTerminatedCallback(SimulationTime /* unused */, TerminateReason /* unused */) {
+void OnSimulationTerminatedCallback([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                                    [[maybe_unused]] DsVeosCoSim_TerminateReason terminateReason) {
     LogInfo("Received simulation continued event.");
     TerminateSimulation();
 }
@@ -250,7 +259,7 @@ void LoadSimulation(bool isClientOptional, std::string_view name) {
     config.incomingSignals = CreateSignals(1);
     config.outgoingSignals = CreateSignals(1);
 
-    g_server = std::make_unique<CoSimServerWrapper>();
+    g_server = std::make_unique<CoSimServer>();
     g_server->Load(config);
     g_state = State::Stopped;
 
@@ -268,9 +277,11 @@ void LoadSimulation(bool isClientOptional, std::string_view name) {
     g_runTimeInfo.transmitLin = [&](const DsVeosCoSim_LinMessage& message) {
         return g_server->Transmit(message);
     };
-    g_runTimeInfo.write = [&](IoSignalId signalId, uint32_t length, const void* value) {
+    g_runTimeInfo.write = [&](DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) {
         return g_server->Write(signalId, length, value);
     };
+
+    g_backgroundService = std::make_unique<BackgroundService>(*g_server);
 
     LogInfo("Loaded.");
 }
@@ -289,7 +300,7 @@ void HostServer(bool isClientOptional, std::string_view name) {
     LoadSimulation(isClientOptional, name);
 
     while (true) {
-        switch (getChar()) {
+        switch (GetChar()) {
             case CTRL('c'):
                 return;
             case 'l':

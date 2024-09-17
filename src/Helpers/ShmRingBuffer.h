@@ -55,7 +55,7 @@ public:
             _writeIndex = 0;
         }
 
-        _size++;
+        ++_size;
     }
 
     [[nodiscard]] T& PopFront() {
@@ -63,7 +63,7 @@ public:
             throw std::runtime_error("SHM ring buffer is empty.");
         }
 
-        _size--;
+        --_size;
 
         T& item = _items[_readIndex];
 
@@ -81,8 +81,8 @@ private:
     uint32_t _readIndex{};        // Read and written by reader
     uint32_t _writeIndex{};       // Read and written by writer
 
-    // Zero sized array would be correct here, since the items are inside of a shared memory. But that leads to
-    // warnings, so we add an additional element here
+    // Zero sized array would be correct here, since the items are inside a shared memory. But that leads to
+    // warnings, so we add set the size to 1
     T _items[1]{};
 };
 

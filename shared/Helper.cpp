@@ -15,6 +15,8 @@
 #include <conio.h>
 #else
 #include <cstdlib>
+#include <termios.h>
+#include <unistd.h>
 #endif
 
 using namespace DsVeosCoSim;
@@ -55,7 +57,7 @@ bool StartUp() {
     return true;
 }
 
-int32_t getChar() {
+int32_t GetChar() {
 #ifdef _WIN32
     return _getch();
 #else

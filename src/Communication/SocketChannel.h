@@ -91,7 +91,7 @@ public:
     ~TcpChannelServer() noexcept = default;
 
     TcpChannelServer(const TcpChannelServer&) = delete;
-    TcpChannelServer& operator=(TcpChannelServer const&) = delete;
+    TcpChannelServer& operator=(const TcpChannelServer&) = delete;
 
     TcpChannelServer(TcpChannelServer&&) = delete;
     TcpChannelServer& operator=(TcpChannelServer&&) = delete;
@@ -114,7 +114,7 @@ public:
     ~UdsChannelServer() noexcept = default;
 
     UdsChannelServer(const UdsChannelServer&) = delete;
-    UdsChannelServer& operator=(UdsChannelServer const&) = delete;
+    UdsChannelServer& operator=(const UdsChannelServer&) = delete;
 
     UdsChannelServer(UdsChannelServer&&) = delete;
     UdsChannelServer& operator=(UdsChannelServer&&) = delete;

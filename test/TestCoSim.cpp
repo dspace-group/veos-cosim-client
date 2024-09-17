@@ -69,7 +69,7 @@ TEST_F(TestCoSim, StartServerWithoutOptionalClient) {
     CoSimServer server;
     server.Load(config);
 
-    const SimulationTime simulationTime = GenerateI64();
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     ASSERT_NO_THROW(server.Start(simulationTime));
@@ -83,7 +83,7 @@ TEST_F(TestCoSim, StopServerWithoutOptionalClient) {
     server.Load(config);
     server.Start(GenerateI64());
 
-    const SimulationTime simulationTime = GenerateI64();
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     ASSERT_NO_THROW(server.Stop(simulationTime));
@@ -97,7 +97,7 @@ TEST_F(TestCoSim, PauseServerWithoutOptionalClient) {
     server.Load(config);
     server.Start(GenerateI64());
 
-    const SimulationTime simulationTime = GenerateI64();
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     ASSERT_NO_THROW(server.Pause(simulationTime));
@@ -112,7 +112,7 @@ TEST_F(TestCoSim, ContinueServerWithoutOptionalClient) {
     server.Start(GenerateI64());
     server.Pause(GenerateI64());
 
-    const SimulationTime simulationTime = GenerateI64();
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
 
     // Act and assert
     ASSERT_NO_THROW(server.Continue(simulationTime));
@@ -126,8 +126,9 @@ TEST_F(TestCoSim, TerminateServerWithoutOptionalClient) {
     server.Load(config);
     server.Start(GenerateI64());
 
-    const SimulationTime simulationTime = GenerateI64();
-    const TerminateReason reason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    const DsVeosCoSim_TerminateReason reason =
+        GenerateRandom(DsVeosCoSim_TerminateReason_Finished, DsVeosCoSim_TerminateReason_Error);
 
     // Act and assert
     ASSERT_NO_THROW(server.Terminate(simulationTime, reason));
@@ -141,8 +142,8 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
     server.Load(config);
     server.Start(GenerateI64());
 
-    const SimulationTime simulationTime = GenerateI64();
-    SimulationTime nextSimulationTime{};
+    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    DsVeosCoSim_SimulationTime nextSimulationTime{};
 
     // Act and assert
     ASSERT_NO_THROW(server.Step(simulationTime, nextSimulationTime));
@@ -225,7 +226,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     Event stoppedEvent;
 
     CoSimServerConfig config = CreateServerConfig();
-    config.simulationStoppedCallback = [&](SimulationTime) {
+    config.simulationStoppedCallback = [&](DsVeosCoSim_SimulationTime) {
         stoppedEvent.Set();
     };
 

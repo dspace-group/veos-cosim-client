@@ -14,6 +14,12 @@ protected:
 public:
     virtual ~ChannelWriter() noexcept = default;
 
+    ChannelWriter(const ChannelWriter&) = delete;
+    ChannelWriter& operator=(const ChannelWriter&) = delete;
+
+    ChannelWriter(ChannelWriter&&) noexcept = default;
+    ChannelWriter& operator=(ChannelWriter&&) noexcept = default;
+
     template <typename T>
     [[nodiscard]] bool Write(const T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
@@ -33,6 +39,12 @@ protected:
 public:
     virtual ~ChannelReader() noexcept = default;
 
+    ChannelReader(const ChannelReader&) = delete;
+    ChannelReader& operator=(const ChannelReader&) = delete;
+
+    ChannelReader(ChannelReader&&) noexcept = default;
+    ChannelReader& operator=(ChannelReader&&) noexcept = default;
+
     template <typename T>
     [[nodiscard]] bool Read(T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
@@ -49,6 +61,12 @@ protected:
 
 public:
     virtual ~Channel() noexcept = default;
+
+    Channel(const Channel&) = delete;
+    Channel& operator=(const Channel&) = delete;
+
+    Channel(Channel&&) noexcept = default;
+    Channel& operator=(Channel&&) noexcept = default;
 
     virtual void Disconnect() = 0;
 

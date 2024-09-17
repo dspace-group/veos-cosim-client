@@ -24,7 +24,7 @@ RunTimeInfo g_runTimeInfo;
 
 std::thread g_simulationThread;
 
-void OnSimulationPostStepCallback(SimulationTime simulationTime) {
+void OnSimulationPostStepCallback(DsVeosCoSim_SimulationTime simulationTime) {
     (void)SendSomeData(simulationTime, g_runTimeInfo);
 }
 
@@ -33,29 +33,31 @@ void StartSimulationThread(const std::function<void()>& function) {
     g_simulationThread.detach();
 }
 
-void OnSimulationStartedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation started at {} s.", SimulationTimeToSeconds(simulationTime));
+void OnSimulationStartedCallback(DsVeosCoSim_SimulationTime simulationTime) {
+    LogInfo("Simulation started at {} s.", DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
 }
 
-void OnSimulationStoppedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation stopped at {} s.", SimulationTimeToSeconds(simulationTime));
+void OnSimulationStoppedCallback(DsVeosCoSim_SimulationTime simulationTime) {
+    LogInfo("Simulation stopped at {} s.", DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
 }
 
-void OnSimulationTerminatedCallback(SimulationTime simulationTime, TerminateReason reason) {
-    LogInfo("Simulation terminated with reason {} at {} s.", ToString(reason), SimulationTimeToSeconds(simulationTime));
+void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason) {
+    LogInfo("Simulation terminated with reason {} at {} s.",
+            ToString(reason),
+            DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
 }
 
-void OnSimulationPausedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation paused at {} s.", SimulationTimeToSeconds(simulationTime));
+void OnSimulationPausedCallback(DsVeosCoSim_SimulationTime simulationTime) {
+    LogInfo("Simulation paused at {} s.", DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
 }
 
-void OnSimulationContinuedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation continued at {} s.", SimulationTimeToSeconds(simulationTime));
+void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime) {
+    LogInfo("Simulation continued at {} s.", DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
 }
 
 [[nodiscard]] bool Connect(std::string_view host, std::string_view serverName) {
     LogInfo("Connecting ...");
-    if (g_coSimClient->GetConnectionState() == ConnectionState::Connected) {
+    if (g_coSimClient->GetConnectionState() == DsVeosCoSim_ConnectionState_Connected) {
         LogInfo("Already connected.");
         return true;
     }
@@ -125,7 +127,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     g_runTimeInfo.transmitLin = [&](const DsVeosCoSim_LinMessage& message) {
         return g_coSimClient->Transmit(message);
     };
-    g_runTimeInfo.write = [&](IoSignalId signalId, uint32_t length, const void* value) {
+    g_runTimeInfo.write = [&](DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) {
         return g_coSimClient->Write(signalId, length, value);
     };
 
@@ -172,7 +174,7 @@ void HostClient(std::string_view host, std::string_view serverName) {
     StartSimulationThread(RunCallbackBasedCoSimulation);
 
     while (true) {
-        switch (getChar()) {
+        switch (GetChar()) {
             case CTRL('c'):
                 Disconnect();
                 return;
@@ -198,7 +200,7 @@ void HostClient(std::string_view host, std::string_view serverName) {
                 g_coSimClient->Pause();
                 break;
             case 't':
-                g_coSimClient->Terminate(TerminateReason::Error);
+                g_coSimClient->Terminate(DsVeosCoSim_TerminateReason_Error);
                 break;
             case 'n':
                 g_coSimClient->Continue();

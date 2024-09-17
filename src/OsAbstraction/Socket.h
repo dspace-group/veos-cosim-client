@@ -59,7 +59,7 @@ public:
                                                           uint16_t localPort,
                                                           uint32_t timeoutInMilliseconds);
 
-    [[nodiscard]] bool TryConnect(const std::string& name);
+    [[nodiscard]] bool TryConnect(const std::string& name) const;
     void EnableIpv6Only() const;
     void Bind(uint16_t port, bool enableRemoteAccess) const;
     void Bind(const std::string& name);

@@ -32,7 +32,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
         coSimClient.StartPollingBasedCoSimulation({});
 
         while (!isStopped) {
-            SimulationTime simulationTime{};
+            DsVeosCoSim_SimulationTime simulationTime{};
             Command command{};
             MUST_BE_TRUE(coSimClient.PollCommand(simulationTime, command, false));
 

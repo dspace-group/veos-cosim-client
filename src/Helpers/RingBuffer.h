@@ -54,7 +54,7 @@ public:
             _writeIndex = 0;
         }
 
-        _size++;
+        ++_size;
     }
 
     [[nodiscard]] T& PopFront() {
@@ -62,7 +62,7 @@ public:
             throw std::runtime_error("Ring buffer is empty.");
         }
 
-        _size--;
+        --_size;
 
         T& item = _items[_readIndex];
 

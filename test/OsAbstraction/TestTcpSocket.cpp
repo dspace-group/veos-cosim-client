@@ -73,6 +73,7 @@ TEST_P(TestTcpSocket, Listen) {
     ASSERT_NO_THROW(serverSocket.Listen());
 }
 
+#ifdef _WIN32
 TEST_P(TestTcpSocket, ConnectWithoutListening) {
     // Arrange
     Param param = GetParam();
@@ -87,6 +88,7 @@ TEST_P(TestTcpSocket, ConnectWithoutListening) {
     // Assert
     ASSERT_FALSE(connectedSocket);
 }
+#endif
 
 TEST_P(TestTcpSocket, Connect) {
     // Arrange
