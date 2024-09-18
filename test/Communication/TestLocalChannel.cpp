@@ -19,8 +19,6 @@ std::string GenerateName() {
     return GenerateString("Channel名前\xF0\x9F\x98\x80");
 }
 
-}  // namespace
-
 class TestLocalChannel : public testing::Test {};
 
 TEST_F(TestLocalChannel, StartServer) {
@@ -200,7 +198,7 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-static void StreamClient(LocalChannel& channel) {
+void StreamClient(LocalChannel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -228,7 +226,7 @@ TEST_F(TestLocalChannel, Stream) {
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
 
-static void ReceiveBigElement(LocalChannel& channel) {
+void ReceiveBigElement(LocalChannel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -257,5 +255,7 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
+
+}  // namespace
 
 #endif

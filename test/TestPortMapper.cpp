@@ -10,6 +10,8 @@
 using namespace DsVeosCoSim;
 using namespace testing;
 
+namespace {
+
 class TestPortMapper : public testing::Test {
 protected:
     void SetUp() override {
@@ -104,3 +106,5 @@ TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Assert
     ASSERT_EQ(setPort2, port);
 }
+
+}  // namespace

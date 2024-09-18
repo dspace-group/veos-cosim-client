@@ -15,6 +15,8 @@
 
 using namespace DsVeosCoSim;
 
+namespace {
+
 class TestProtocol : public testing::TestWithParam<ConnectionKind> {
 protected:
     std::unique_ptr<Channel> _senderChannel;
@@ -432,3 +434,5 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
     ASSERT_TRUE(Protocol::ReadUnsetPort(_receiverChannel->GetReader(), receiveServerName));
     AssertEq(sendServerName, receiveServerName);
 }
+
+}  // namespace

@@ -15,8 +15,6 @@ std::string GenerateName() {
     return GenerateString("SharedMemory名前\xF0\x9F\x98\x80");
 }
 
-}  // namespace
-
 class TestSharedMemory : public testing::Test {};
 
 TEST_F(TestSharedMemory, CreateAndDestroy) {
@@ -77,5 +75,7 @@ TEST_F(TestSharedMemory, CouldNotOpenNonExisting) {
     // Act and assert
     ASSERT_FALSE(SharedMemory::TryOpenExisting(name, 100));
 }
+
+}  // namespace
 
 #endif

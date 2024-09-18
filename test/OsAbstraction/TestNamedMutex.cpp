@@ -25,8 +25,6 @@ void DifferentThread(const std::string& name, int32_t& counter) {
     }
 }
 
-}  // namespace
-
 class TestNamedMutex : public testing::Test {};
 
 TEST_F(TestNamedMutex, CreateAndDestroy) {
@@ -67,5 +65,7 @@ TEST_F(TestNamedMutex, LockAndUnlockOnDifferentMutexes) {
     // Assert
     ASSERT_EQ(counter, 20000);
 }
+
+}  // namespace
 
 #endif

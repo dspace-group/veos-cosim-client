@@ -19,13 +19,25 @@ struct Param {
     AddressFamily addressFamily{};
 };
 
-}  // namespace
+std::vector<Param> GetValues() {
+    std::vector<Param> values;
+
+    if (Socket::IsIpv4Supported()) {
+        values.push_back(Param{AddressFamily::Ipv4});
+    }
+
+    if (Socket::IsIpv6Supported()) {
+        values.push_back(Param{AddressFamily::Ipv6});
+    }
+
+    return values;
+}
 
 class TestTcpChannel : public testing::TestWithParam<Param> {};
 
 INSTANTIATE_TEST_SUITE_P(,
                          TestTcpChannel,
-                         testing::Values(Param{AddressFamily::Ipv4}, Param{AddressFamily::Ipv6}),
+                         testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
                              return format_as(info.param.addressFamily);
                          });
@@ -294,7 +306,7 @@ TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-static void StreamClient(SocketChannel& channel) {
+void StreamClient(SocketChannel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -324,7 +336,7 @@ TEST_P(TestTcpChannel, Stream) {
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
 
-static void ReceiveBigElement(SocketChannel& channel) {
+void ReceiveBigElement(SocketChannel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -355,3 +367,5 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
+
+}  // namespace

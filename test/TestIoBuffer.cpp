@@ -88,8 +88,6 @@ void SwitchSignals(std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
     }
 }
 
-}  // namespace
-
 class TestIoBufferWithCoSimType : public testing::TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
 protected:
     void SetUp() override {
@@ -309,11 +307,13 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
+    uint32_t expectedReadLength = 0;
+
     // Act
     ASSERT_NO_THROW(ioBuffer.Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(0, readLength);
+    ASSERT_EQ(expectedReadLength, readLength);
 }
 
 #ifdef EXCEPTION_TESTS
@@ -695,3 +695,5 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     // Act and assert
     TransferWithEvents(writerIoBuffer, readerIoBuffer, {});
 }
+
+}  // namespace

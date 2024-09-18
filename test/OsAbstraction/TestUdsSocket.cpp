@@ -8,6 +8,8 @@
 
 using namespace DsVeosCoSim;
 
+namespace {
+
 class TestUdsSocket : public testing::Test {};
 
 TEST_F(TestUdsSocket, Create) {
@@ -119,3 +121,5 @@ TEST_F(TestUdsSocket, SendAndReceive) {
     // Assert
     ASSERT_EQ(sendValue, receiveValue);
 }
+
+}  // namespace
