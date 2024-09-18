@@ -5,9 +5,9 @@
 #include <fmt/format.h>
 #include <cstring>
 
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
 #include "DsVeosCoSim/DsVeosCoSim.h"
-#include "Result.h"
 
 namespace DsVeosCoSim {
 

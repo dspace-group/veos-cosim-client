@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <fmt/format.h>
 
+#include "CoSimHelper.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -26,7 +27,7 @@ NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
     std::string fullName = GetFullNamedEventName(name);
     void* handle = ::CreateEventA(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not create event '{}'.", name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not create event '{}'.", name), GetLastWindowsError());
     }
 
     return {fullName, handle};
@@ -36,7 +37,7 @@ NamedEvent NamedEvent::OpenExisting(const std::string& name) {
     std::string fullName = GetFullNamedEventName(name);
     void* handle = ::OpenEventA(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not open event '{}'.", name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not open event '{}'.", name), GetLastWindowsError());
     }
 
     return {fullName, handle};
@@ -58,7 +59,7 @@ NamedEvent::operator Handle&() noexcept {
 
 void NamedEvent::Set() {
     if (::SetEvent(_handle) == FALSE) {
-        throw OsAbstractionException(fmt::format("Could not set event '{}'.", _name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not set event '{}'.", _name), GetLastWindowsError());
     }
 }
 

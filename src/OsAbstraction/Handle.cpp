@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <fmt/format.h>
 
+#include "CoSimHelper.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -49,9 +50,9 @@ bool Handle::Wait(uint32_t milliseconds) const {
         case WAIT_TIMEOUT:
             return false;
         case WAIT_FAILED:
-            throw OsAbstractionException("Could not wait for handle.", GetLastWindowsError());
+            throw CoSimException("Could not wait for handle.", GetLastWindowsError());
         default:
-            throw OsAbstractionException(fmt::format("Could not wait for handle. Invalid result: {}.", result));
+            throw CoSimException(fmt::format("Could not wait for handle. Invalid result: {}.", result));
     }
 }
 
@@ -64,10 +65,9 @@ bool SignalAndWait(const Handle& toSignal, const Handle& toWait, uint32_t millis
         case WAIT_TIMEOUT:
             return false;
         case WAIT_FAILED:
-            throw OsAbstractionException("Could not signal and wait for handle.", GetLastWindowsError());
+            throw CoSimException("Could not signal and wait for handle.", GetLastWindowsError());
         default:
-            throw OsAbstractionException(
-                fmt::format("Could not signal and wait for handle. Invalid result: {}.", result));
+            throw CoSimException(fmt::format("Could not signal and wait for handle. Invalid result: {}.", result));
     }
 }
 

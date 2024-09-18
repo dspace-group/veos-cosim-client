@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <type_traits>
 
 namespace DsVeosCoSim {
@@ -72,12 +71,6 @@ public:
 
     [[nodiscard]] virtual ChannelWriter& GetWriter() = 0;
     [[nodiscard]] virtual ChannelReader& GetReader() = 0;
-};
-
-class CommunicationException final : public std::runtime_error {
-public:
-    explicit CommunicationException(std::string_view message) : std::runtime_error(message.data()) {
-    }
 };
 
 }  // namespace DsVeosCoSim

@@ -3,7 +3,7 @@
 #ifdef _WIN32
 #include <thread>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "NamedEvent.h"
 #include "PerformanceTestHelper.h"
 #include "SharedMemory.h"

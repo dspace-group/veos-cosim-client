@@ -1,7 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 
 extern void RunAsioBlockingTest(std::string_view host);
 extern void RunTcpTest(std::string_view host);

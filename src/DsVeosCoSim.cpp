@@ -5,8 +5,8 @@
 #include <memory>
 
 #include "CoSimClient.h"
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 
@@ -75,8 +75,8 @@ DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_Co
         }
 
         return DsVeosCoSim_Result_Disconnected;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -91,8 +91,8 @@ DsVeosCoSim_Result DsVeosCoSim_Disconnect(DsVeosCoSim_Handle handle) {
         client->Disconnect();
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -109,8 +109,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle,
         *connectionState = client->GetConnectionState();
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -131,8 +131,8 @@ DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle h
         }
 
         return DsVeosCoSim_Result_Disconnected;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -151,8 +151,8 @@ DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle 
         client->StartPollingBasedCoSimulation(newCallbacks);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -173,8 +173,8 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle,
         }
 
         return DsVeosCoSim_Result_Disconnected;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -191,8 +191,8 @@ DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {
         }
 
         return DsVeosCoSim_Result_Disconnected;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -208,8 +208,8 @@ DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle,
         client->SetNextSimulationTime(simulationTime);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -225,8 +225,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSi
         *stepSize = client->GetStepSize();
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -245,8 +245,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle handle,
         client->GetIncomingSignals(incomingSignalsCount, incomingSignals);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -266,8 +266,8 @@ DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle,
         client->Read(incomingSignalId, *length, value);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -286,8 +286,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle,
         client->GetOutgoingSignals(outgoingSignalsCount, outgoingSignals);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -308,8 +308,8 @@ DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle,
         client->Write(outgoingSignalId, length, value);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -328,8 +328,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle,
         client->GetCanControllers(canControllersCount, canControllers);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -347,8 +347,8 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVe
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -366,8 +366,8 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, con
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -386,8 +386,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle,
         client->GetEthControllers(ethControllersCount, ethControllers);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -405,8 +405,8 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVe
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -424,8 +424,8 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, con
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -444,8 +444,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle,
         client->GetLinControllers(linControllersCount, linControllers);
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -463,8 +463,8 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVe
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }
@@ -482,8 +482,8 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, con
         }
 
         return DsVeosCoSim_Result_Ok;
-    } catch (const std::exception& exception) {
-        LogError(exception.what());
+    } catch (const std::exception& e) {
+        LogError(e.what());
 
         return DsVeosCoSim_Result_Error;
     }

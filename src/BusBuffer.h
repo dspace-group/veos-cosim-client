@@ -10,9 +10,8 @@
 #include <vector>
 
 #include "Channel.h"
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "Logger.h"
-#include "Result.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32

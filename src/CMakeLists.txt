@@ -5,7 +5,7 @@ add_library(
   ${DSVEOSCOSIM_TYPE}
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
-  Helpers/Logger.cpp
+  Helpers/CoSimHelper.cpp
   OsAbstraction/Handle.cpp
   OsAbstraction/NamedEvent.cpp
   OsAbstraction/NamedMutex.cpp

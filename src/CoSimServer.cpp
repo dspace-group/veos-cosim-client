@@ -4,8 +4,8 @@
 #include <memory>
 #include <thread>
 
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "Logger.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 #include "Socket.h"

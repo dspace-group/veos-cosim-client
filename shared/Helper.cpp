@@ -4,9 +4,8 @@
 
 #include <stdexcept>
 
+#include "CoSimHelper.h"
 #include "LogHelper.h"
-#include "Logger.h"
-#include "Result.h"
 #include "Socket.h"
 #include "SocketChannel.h"
 
@@ -14,9 +13,10 @@
 #include <Windows.h>
 #include <conio.h>
 #else
-#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
+#include <cstdlib>
+
 #endif
 
 using namespace DsVeosCoSim;

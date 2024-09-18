@@ -8,10 +8,9 @@
 #include <cstdint>
 #include <mutex>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "NamedMutex.h"
 #include "OsUtilities.h"
-#include "Result.h"
 
 namespace DsVeosCoSim {
 
@@ -136,7 +135,8 @@ bool LocalChannelBase::CheckIfConnectionIsAlive() {
         if (!_connectionDetected) {
             _detectionCounter++;
             if (_detectionCounter == 5000) {
-                throw CommunicationException("Counterpart still not connected after 5 seconds.");
+                LogError("Counterpart still not connected after 5 seconds.");
+                return false;
             }
 
             return true;

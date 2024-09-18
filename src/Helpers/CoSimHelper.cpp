@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 
 namespace DsVeosCoSim {
 
@@ -40,6 +40,10 @@ void LogTrace(std::string_view message) {
     if (logCallback) {
         logCallback(DsVeosCoSim_Severity_Trace, message);
     }
+}
+
+std::string GetSystemErrorMessage(int32_t errorCode) {
+    return fmt::format("Error code: {}. {}", errorCode, std::system_category().message(errorCode));
 }
 
 }  // namespace DsVeosCoSim

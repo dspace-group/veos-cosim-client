@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <fmt/format.h>
 
+#include "CoSimHelper.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -26,7 +27,7 @@ NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not create or open mutex '{}'.", name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not create or open mutex '{}'.", name), GetLastWindowsError());
     }
 
     return NamedMutex(handle);
@@ -36,7 +37,7 @@ NamedMutex NamedMutex::OpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not open mutex '{}'", name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not open mutex '{}'", name), GetLastWindowsError());
     }
 
     return NamedMutex(handle);

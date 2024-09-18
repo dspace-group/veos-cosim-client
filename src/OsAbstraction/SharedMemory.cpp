@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include <fmt/format.h>
 
+#include "CoSimHelper.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -24,8 +25,7 @@ SharedMemory::SharedMemory(const std::string& name, size_t size, Handle handle)
     _data = ::MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size);
     if (!_data) {
         (void)::CloseHandle(_handle);
-        throw OsAbstractionException(fmt::format("Could not map view of shared memory '{}'.", name),
-                                     GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not map view of shared memory '{}'.", name), GetLastWindowsError());
     }
 }
 
@@ -56,8 +56,7 @@ SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
     void* handle =
         ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not create or open shared memory '{}'.", name),
-                                     GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not create or open shared memory '{}'.", name), GetLastWindowsError());
     }
 
     return {name, size, handle};
@@ -67,7 +66,7 @@ SharedMemory SharedMemory::OpenExisting(const std::string& name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
-        throw OsAbstractionException(fmt::format("Could not open shared memory '{}'.", name), GetLastWindowsError());
+        throw CoSimException(fmt::format("Could not open shared memory '{}'.", name), GetLastWindowsError());
     }
 
     return {name, size, handle};

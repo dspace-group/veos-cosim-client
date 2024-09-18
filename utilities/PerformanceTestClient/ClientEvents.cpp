@@ -1,7 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "NamedEvent.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"

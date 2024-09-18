@@ -2,9 +2,9 @@
 
 #include <thread>
 
+#include "CoSimHelper.h"
 #include "CoSimServer.h"
 #include "LogHelper.h"
-#include "Logger.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;

@@ -7,7 +7,7 @@
 #include <cstring>
 #include <thread>
 
-#include "Result.h"
+#include "CoSimHelper.h"
 
 namespace DsVeosCoSim {
 
@@ -162,7 +162,7 @@ bool SocketChannelReader::BeginRead() {
             (void)::memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
             if (_endFrameIndex > BufferSize) {
-                throw CommunicationException("Protocol error. The buffer size is too small.");
+                throw CoSimException("Protocol error. The buffer size is too small.");
             }
 
             sizeToRead = _endFrameIndex - _writeIndex;

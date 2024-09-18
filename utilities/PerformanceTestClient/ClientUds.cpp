@@ -2,8 +2,8 @@
 
 #include <string_view>
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 #include "Socket.h"

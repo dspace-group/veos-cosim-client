@@ -2,8 +2,8 @@
 
 #include <string_view>  // IWYU pragma: keep
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 #include "SocketChannel.h"

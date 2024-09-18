@@ -5,7 +5,6 @@
 #include <memory.h>
 #include <array>
 #include <functional>
-#include <stdexcept>
 #include <string>
 #include <string_view>  // NOLINT
 
@@ -17,12 +16,6 @@ constexpr uint32_t CanMessageMaxLength = DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH;  //
 constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
-
-class CoSimException final : public std::runtime_error {
-public:
-    explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
-    }
-};
 
 enum class CoSimType {
     Client,

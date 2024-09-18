@@ -4,7 +4,7 @@
 #include <asio.hpp>
 #include <thread>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;
@@ -40,7 +40,7 @@ void Session(tcp::socket s) {
                 throw std::system_error(error);
             }
         }
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
         LogError("Exception in ASIO blocking server thread: {}", e.what());
     }
 }

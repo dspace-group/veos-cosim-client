@@ -8,12 +8,12 @@
 
 #include "BackgroundService.h"
 #include "ClientServerTestHelper.h"
+#include "CoSimHelper.h"
 #include "CoSimServer.h"
 #include "CoSimTypes.h"
 #include "Generator.h"
 #include "Helper.h"
 #include "LogHelper.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 

@@ -5,7 +5,8 @@
 #include <fmt/color.h>
 #include <iomanip>
 #include <sstream>
-#include "Logger.h"
+
+#include "CoSimHelper.h"
 
 #ifdef _WIN32
 #include <Windows.h>

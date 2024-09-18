@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "PerformanceTestHelper.h"
 
 #ifdef _WIN32

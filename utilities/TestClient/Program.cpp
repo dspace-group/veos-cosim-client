@@ -9,10 +9,10 @@
 
 #include "ClientServerTestHelper.h"
 #include "CoSimClient.h"
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
 #include "Helper.h"
 #include "LogHelper.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 

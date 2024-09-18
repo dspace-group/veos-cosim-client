@@ -1,7 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
