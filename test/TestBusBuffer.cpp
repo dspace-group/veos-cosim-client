@@ -3,6 +3,8 @@
 #include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <deque>
+#include <memory>
 
 #include "BusBuffer.h"
 #include "CoSimTypes.h"
@@ -12,10 +14,16 @@
 #include "LogHelper.h"
 #include "TestHelper.h"
 
+#ifdef _WIN32
+#include "LocalChannel.h"
+#endif
+
 using ::testing::Types;
 
 using namespace DsVeosCoSim;
 using namespace testing;
+
+namespace {
 
 template <typename Types>
 class TestBusBuffer : public testing::Test {
@@ -25,47 +33,79 @@ protected:
     }
 };
 
-void Transfer(BusBuffer& senderBusBuffer, BusBuffer& receiverBusBuffer) {
-    TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+void Transfer(ConnectionKind connectionKind, BusBuffer& senderBusBuffer, BusBuffer& receiverBusBuffer) {  // NOLINT
+    std::unique_ptr<Channel> senderChannel{};
+    std::unique_ptr<Channel> receiverChannel{};
+    if (connectionKind == ConnectionKind::Remote) {
+        TcpChannelServer server(0, true);
+        uint16_t port = server.GetLocalPort();
 
-    SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
-    SocketChannel receiverChannel = Accept(server);
+        senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
+        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+    } else {
+        std::string name = GenerateString("Local名前");
+#ifdef _WIN32
+        LocalChannelServer server(name);
 
-    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel.GetWriter()));
-    ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
-    ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel.GetReader(), {}, {}));
+        senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
+        receiverChannel = std::make_unique<LocalChannel>(Accept(server));
+#else
+        UdsChannelServer server(name);
+
+        senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
+        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+#endif
+    }
+
+    std::jthread thread([&] {
+        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), {}, {}));
+    });
+
+    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
+    ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
 }
 
 template <typename TControllerExtern, typename TMessage>
-void Transfer(BusBuffer& senderBusBuffer,
+void Transfer(ConnectionKind connectionKind,
+              BusBuffer& senderBusBuffer,
               BusBuffer& receiverBusBuffer,
-              DsVeosCoSim_SimulationTime simulationTime,
-              const std::vector<std::tuple<TControllerExtern, TMessage>>& expectedCallbacks) {
-    TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+              std::deque<std::tuple<TControllerExtern, TMessage>> expectedCallbacks) {
+    std::unique_ptr<Channel> senderChannel{};
+    std::unique_ptr<Channel> receiverChannel{};
+    if (connectionKind == ConnectionKind::Remote) {
+        TcpChannelServer server(0, true);
+        uint16_t port = server.GetLocalPort();
 
-    SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
-    SocketChannel receiverChannel = Accept(server);
+        senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
+        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+    } else {
+        std::string name = GenerateString("Local名前");
+#ifdef _WIN32
+        LocalChannelServer server(name);
 
-    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel.GetWriter()));
-    ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
+        senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
+        receiverChannel = std::make_unique<LocalChannel>(Accept(server));
+#else
+        UdsChannelServer server(name);
 
-    size_t index{};
+        senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
+        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+#endif
+    }
+
+    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+
     Callbacks callbacks{};
     if constexpr (std::is_same_v<TControllerExtern, DsVeosCoSim_CanController>) {
         callbacks.canMessageReceivedCallback = [&](DsVeosCoSim_SimulationTime simTime,
                                                    const DsVeosCoSim_CanController& controller,
                                                    const DsVeosCoSim_CanMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
-            ASSERT_LE(index, expectedCallbacks.size());
-            if (index < expectedCallbacks.size()) {
-                const auto [expectedController, expectedMessage] = expectedCallbacks[index];
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessage, message);
-            }
-
-            index++;
+            ASSERT_FALSE(expectedCallbacks.empty());
+            const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+            AssertEq(expectedController, controller);
+            AssertEq(expectedMessage, message);
+            expectedCallbacks.pop_front();
         };
     }
 
@@ -74,14 +114,11 @@ void Transfer(BusBuffer& senderBusBuffer,
                                                    const DsVeosCoSim_EthController& controller,
                                                    const DsVeosCoSim_EthMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
-            ASSERT_LE(index, expectedCallbacks.size());
-            if (index < expectedCallbacks.size()) {
-                const auto [expectedController, expectedMessage] = expectedCallbacks[index];
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessage, message);
-            }
-
-            index++;
+            ASSERT_FALSE(expectedCallbacks.empty());
+            const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+            AssertEq(expectedController, controller);
+            AssertEq(expectedMessage, message);
+            expectedCallbacks.pop_front();
         };
     }
 
@@ -90,20 +127,24 @@ void Transfer(BusBuffer& senderBusBuffer,
                                                    const DsVeosCoSim_LinController& controller,
                                                    const DsVeosCoSim_LinMessage& message) {
             ASSERT_EQ(simTime, simulationTime);
-            ASSERT_LE(index, expectedCallbacks.size());
-            if (index < expectedCallbacks.size()) {
-                const auto [expectedController, expectedMessage] = expectedCallbacks[index];
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessage, message);
-            }
-
-            index++;
+            ASSERT_FALSE(expectedCallbacks.empty());
+            const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+            AssertEq(expectedController, controller);
+            AssertEq(expectedMessage, message);
+            expectedCallbacks.pop_front();
         };
     }
 
-    ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks));
+    std::thread thread([&] {
+        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), simulationTime, callbacks));
+    });
 
-    ASSERT_EQ(index, expectedCallbacks.size());
+    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
+    ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
+
+    thread.join();
+
+    ASSERT_TRUE(expectedCallbacks.empty());
 }
 
 template <typename TController,
@@ -420,7 +461,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBuffer) {
                                 GetCounterPart(name, connectionKind),
                                 {controller});
 
-    Transfer(senderBusBuffer, receiverBusBuffer);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
@@ -450,12 +491,10 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBufferByEvent) {
                                 GetCounterPart(name, connectionKind),
                                 {controller});
 
-    std::vector<std::tuple<TControllerExtern, TMessage>> expectedEvents;
-
-    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     // Act and assert
-    Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
@@ -481,7 +520,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
     FillWithRandom(sendMessage, controller.id);
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
 
-    Transfer(senderBusBuffer, receiverBusBuffer);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
@@ -512,17 +551,15 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageByEvent) {
                                 GetCounterPart(name, connectionKind),
                                 {controller});
 
-    std::vector<std::tuple<TControllerExtern, TMessage>> expectedEvents;
+    std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
     expectedEvents.push_back({controller, sendMessage});
 
-    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
-
     // Act and assert
-    Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
@@ -546,7 +583,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
                                 GetCounterPart(name, connectionKind),
                                 {controller1, controller2});
 
-    std::vector<TMessage> sendMessages;
+    std::deque<TMessage> sendMessages;
 
     for (uint32_t i = 0; i < controller1.queueSize + controller2.queueSize; i++) {
         uint32_t controllerId = (i % 2) == 0 ? controller1.id : controller2.id;
@@ -556,7 +593,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
         ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
     }
 
-    Transfer(senderBusBuffer, receiverBusBuffer);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
@@ -590,7 +627,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
                                 GetCounterPart(name, connectionKind),
                                 {controller1, controller2});
 
-    std::vector<std::tuple<TControllerExtern, TMessage>> expectedEvents;
+    std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     for (uint32_t i = 0; i < controller1.queueSize + controller2.queueSize; i++) {
         TController* controller = (i % 2) == 0 ? &controller1 : &controller2;
@@ -600,10 +637,8 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
         ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
     }
 
-    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
-
     // Act and assert
-    Transfer(senderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);
+    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
@@ -632,7 +667,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
 
     // Should not transfer anything
-    Transfer(fakeSenderBusBuffer, receiverBusBuffer);
+    Transfer(connectionKind, fakeSenderBusBuffer, receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
@@ -664,14 +699,14 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
                                 GetCounterPart(name, connectionKind),
                                 {controller});
 
-    std::vector<std::tuple<TControllerExtern, TMessage>> expectedEvents;
+    std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
     ASSERT_TRUE(senderBusBuffer.Transmit(sendMessage));
 
-    DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
-
     // Act and assert
-    Transfer(fakeSenderBusBuffer, receiverBusBuffer, simulationTime, expectedEvents);  // Should not transfer anything
+    Transfer(connectionKind, fakeSenderBusBuffer, receiverBusBuffer, expectedEvents);  // Should not transfer anything
 }
+
+}  // namespace

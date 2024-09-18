@@ -39,8 +39,6 @@ ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, const std::stri
     return connectConfig;
 }
 
-}  // namespace
-
 class TestCoSim : public testing::TestWithParam<ConnectionKind> {
 protected:
     void SetUp() override {
@@ -218,7 +216,6 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     ASSERT_TRUE(client.Connect(connectConfig));
 }
 
-#ifdef EXCEPTION_TESTS
 TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     // Arrange
     ConnectionKind connectionKind = GetParam();
@@ -247,6 +244,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     // Assert
     ASSERT_TRUE(stoppedEvent.Wait(1000));
 }
-#endif
 
 // Add more tests
+
+}  // namespace

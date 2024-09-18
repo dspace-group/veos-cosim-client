@@ -18,8 +18,6 @@ std::string GenerateName() {
     return GenerateString("UdsChannel");
 }
 
-}  // namespace
-
 class TestUdsChannel : public testing::Test {};
 
 TEST_F(TestUdsChannel, StartServer) {
@@ -199,7 +197,7 @@ TEST_F(TestUdsChannel, SendTwoFramesAtOnce) {
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-static void StreamClient(SocketChannel& channel) {
+void StreamClient(SocketChannel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -227,7 +225,7 @@ TEST_F(TestUdsChannel, Stream) {
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
 
-static void ReceiveBigElement(SocketChannel& channel) {
+void ReceiveBigElement(SocketChannel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -256,3 +254,5 @@ TEST_F(TestUdsChannel, SendAndReceiveBigElement) {
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
+
+}  // namespace

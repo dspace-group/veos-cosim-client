@@ -24,8 +24,6 @@ void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
     event2.Set();
 }
 
-}  // namespace
-
 class TestNamedEvent : public testing::Test {};
 
 TEST_F(TestNamedEvent, CreateAndDestroyNamedEvent) {
@@ -194,5 +192,7 @@ TEST_F(TestNamedEvent, SetAndWaitInDifferentThreads) {
 
     // Assert
 }
+
+}  // namespace
 
 #endif

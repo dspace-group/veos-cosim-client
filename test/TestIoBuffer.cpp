@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <deque>
 
 #include "CoSimTypes.h"
 #include "DsVeosCoSim/DsVeosCoSim.h"
@@ -41,9 +42,12 @@ void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {
     SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel receiverChannel = Accept(server);
 
+    std::jthread thread([&] {
+        ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {}));
+    });
+
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
-    ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {}));
 }
 
 struct EventData {
@@ -51,7 +55,7 @@ struct EventData {
     std::vector<uint8_t> data;
 };
 
-void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std::vector<EventData> eventData) {
+void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std::deque<EventData> expectedCallbacks) {
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
 
@@ -66,18 +70,24 @@ void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std:
                                                   uint32_t length,
                                                   const void* value) {
         ASSERT_EQ(simTime, simulationTime);
-        ASSERT_FALSE(eventData.empty());
-        ASSERT_EQ(eventData[0].signal.id, changedIoSignal.id);
-        ASSERT_EQ(eventData[0].signal.length, length);
-        AssertByteArray(eventData[0].data.data(), value, eventData[0].data.size());
-        eventData.pop_back();
+        ASSERT_FALSE(expectedCallbacks.empty());
+        const auto [signal, data] = expectedCallbacks.front();
+        ASSERT_EQ(signal.id, changedIoSignal.id);
+        ASSERT_EQ(signal.length, length);
+        AssertByteArray(data.data(), value, data.size());
+        expectedCallbacks.pop_front();
     };
+
+    std::thread thread([&] {
+        ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks));
+    });
 
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
-    ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks));
 
-    ASSERT_TRUE(eventData.empty());
+    thread.join();
+
+    ASSERT_TRUE(expectedCallbacks.empty());
 }
 
 void SwitchSignals(std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
@@ -87,8 +97,6 @@ void SwitchSignals(std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
         std::swap(incomingSignals, outgoingSignals);
     }
 }
-
-}  // namespace
 
 class TestIoBufferWithCoSimType : public testing::TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
 protected:
@@ -309,11 +317,13 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
+    uint32_t expectedReadLength = 0;
+
     // Act
     ASSERT_NO_THROW(ioBuffer.Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(0, readLength);
+    ASSERT_EQ(expectedReadLength, readLength);
 }
 
 #ifdef EXCEPTION_TESTS
@@ -695,3 +705,5 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     // Act and assert
     TransferWithEvents(writerIoBuffer, readerIoBuffer, {});
 }
+
+}  // namespace
