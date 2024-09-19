@@ -55,15 +55,15 @@ DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_Co
 
     ConnectConfig config{};
     if (connectConfig.remoteIpAddress) {
-        config.remoteIpAddress = std::string(connectConfig.remoteIpAddress);
+        config.remoteIpAddress = connectConfig.remoteIpAddress;
     }
 
     if (connectConfig.serverName) {
-        config.serverName = std::string(connectConfig.serverName);
+        config.serverName = connectConfig.serverName;
     }
 
     if (connectConfig.clientName) {
-        config.clientName = std::string(connectConfig.clientName);
+        config.clientName = connectConfig.clientName;
     }
 
     config.remotePort = connectConfig.remotePort;

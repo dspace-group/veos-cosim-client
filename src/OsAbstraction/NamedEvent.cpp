@@ -14,43 +14,43 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] std::string GetFullNamedEventName(const std::string& name) {
-    return fmt::format("Local\\dSPACE.VEOS.CoSim.Event.{}", name);
+[[nodiscard]] std::wstring GetFullNamedEventName(std::string_view name) {
+    return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim.Event.{}", name));
 }
 
 }  // namespace
 
-NamedEvent::NamedEvent(const std::string& name, Handle handle) : _name(name), _handle(std::move(handle)) {
+NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
 }
 
-NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
-    std::string fullName = GetFullNamedEventName(name);
-    void* handle = ::CreateEventA(nullptr, FALSE, FALSE, fullName.c_str());
+NamedEvent NamedEvent::CreateOrOpen(std::string_view name) {
+    std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = ::CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException(fmt::format("Could not create event '{}'.", name), GetLastWindowsError());
     }
 
-    return {fullName, handle};
+    return NamedEvent(handle);
 }
 
-NamedEvent NamedEvent::OpenExisting(const std::string& name) {
-    std::string fullName = GetFullNamedEventName(name);
-    void* handle = ::OpenEventA(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
+NamedEvent NamedEvent::OpenExisting(std::string_view name) {
+    std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException(fmt::format("Could not open event '{}'.", name), GetLastWindowsError());
     }
 
-    return {fullName, handle};
+    return NamedEvent(handle);
 }
 
-std::optional<NamedEvent> NamedEvent::TryOpenExisting(const std::string& name) {
-    std::string fullName = GetFullNamedEventName(name);
-    void* handle = ::OpenEventA(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
+std::optional<NamedEvent> NamedEvent::TryOpenExisting(std::string_view name) {
+    std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         return {};
     }
 
-    return NamedEvent(fullName, handle);
+    return NamedEvent(handle);
 }
 
 NamedEvent::operator Handle&() noexcept {
@@ -59,7 +59,7 @@ NamedEvent::operator Handle&() noexcept {
 
 void NamedEvent::Set() {
     if (::SetEvent(_handle) == FALSE) {
-        throw CoSimException(fmt::format("Could not set event '{}'.", _name), GetLastWindowsError());
+        throw CoSimException("Could not set event.", GetLastWindowsError());
     }
 }
 

@@ -13,7 +13,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
+void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, std::string_view name) {
     switch (sizeKind) {  // NOLINT
         case DsVeosCoSim_SizeKind_Fixed:
         case DsVeosCoSim_SizeKind_Variable:
@@ -129,7 +129,7 @@ IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(DsVeosCoSim_IoSignalI
 }
 
 RemoteIoPartBuffer::RemoteIoPartBuffer(CoSimType coSimType,
-                                       [[maybe_unused]] const std::string& name,
+                                       [[maybe_unused]] std::string_view name,
                                        const std::vector<DsVeosCoSim_IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     _dataVector.resize(_metaDataLookup.size());
@@ -283,7 +283,7 @@ bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
 #ifdef _WIN32
 
 LocalIoPartBuffer::LocalIoPartBuffer(CoSimType coSimType,
-                                     const std::string& name,
+                                     std::string_view name,
                                      const std::vector<DsVeosCoSim_IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     // The memory layout looks like this:
@@ -470,27 +470,27 @@ void LocalIoPartBuffer::FlipBuffers(Data& data) {
 
 IoBuffer::IoBuffer(CoSimType coSimType,
                    [[maybe_unused]] ConnectionKind connectionKind,
-                   const std::string& name,
+                   std::string_view name,
                    const std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
                    const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals) {
-    std::string suffixForWrite = ".Outgoing";
-    std::string suffixForRead = ".Incoming";
+    std::string outgoingName = fmt::format("{}.Outgoing", name);
+    std::string incomingName = fmt::format("{}.Incoming", name);
     const std::vector<DsVeosCoSim_IoSignal>* writeSignals = &outgoingSignals;
     const std::vector<DsVeosCoSim_IoSignal>* readSignals = &incomingSignals;
     if (coSimType == CoSimType::Server) {
-        std::swap(suffixForRead, suffixForWrite);
+        std::swap(incomingName, outgoingName);
         writeSignals = &incomingSignals;
         readSignals = &outgoingSignals;
     }
 
 #ifdef _WIN32
     if (connectionKind == ConnectionKind::Local) {
-        _readBuffer = std::make_unique<LocalIoPartBuffer>(coSimType, name + suffixForRead, *readSignals);
-        _writeBuffer = std::make_unique<LocalIoPartBuffer>(coSimType, name + suffixForWrite, *writeSignals);
+        _readBuffer = std::make_unique<LocalIoPartBuffer>(coSimType, incomingName, *readSignals);
+        _writeBuffer = std::make_unique<LocalIoPartBuffer>(coSimType, outgoingName, *writeSignals);
     } else {
 #endif
-        _readBuffer = std::make_unique<RemoteIoPartBuffer>(coSimType, name + suffixForRead, *readSignals);
-        _writeBuffer = std::make_unique<RemoteIoPartBuffer>(coSimType, name + suffixForWrite, *writeSignals);
+        _readBuffer = std::make_unique<RemoteIoPartBuffer>(coSimType, incomingName, *readSignals);
+        _writeBuffer = std::make_unique<RemoteIoPartBuffer>(coSimType, outgoingName, *writeSignals);
 #ifdef _WIN32
     }
 #endif

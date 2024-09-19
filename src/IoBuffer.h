@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -77,7 +78,7 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    RemoteIoPartBuffer(CoSimType coSimType, const std::string& name, const std::vector<DsVeosCoSim_IoSignal>& signals);
+    RemoteIoPartBuffer(CoSimType coSimType, std::string_view name, const std::vector<DsVeosCoSim_IoSignal>& signals);
     ~RemoteIoPartBuffer() noexcept override = default;
 
     RemoteIoPartBuffer(const RemoteIoPartBuffer&) = delete;
@@ -117,7 +118,7 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    LocalIoPartBuffer(CoSimType coSimType, const std::string& name, const std::vector<DsVeosCoSim_IoSignal>& signals);
+    LocalIoPartBuffer(CoSimType coSimType, std::string_view name, const std::vector<DsVeosCoSim_IoSignal>& signals);
     ~LocalIoPartBuffer() noexcept override = default;
 
     LocalIoPartBuffer(const LocalIoPartBuffer&) = delete;
@@ -153,7 +154,7 @@ class IoBuffer {
 public:
     IoBuffer(CoSimType coSimType,
              ConnectionKind connectionKind,
-             const std::string& name,
+             std::string_view name,
              const std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
              const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals);
     ~IoBuffer() noexcept = default;

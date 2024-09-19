@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "BusBuffer.h"
 #include "CoSimTypes.h"
@@ -22,7 +23,7 @@ template <typename T>
 [[nodiscard]] uint32_t GenerateU32();
 [[nodiscard]] uint64_t GenerateU64();
 [[nodiscard]] int64_t GenerateI64();
-[[nodiscard]] std::string GenerateString(const std::string& prefix);
+[[nodiscard]] std::string GenerateString(std::string_view prefix);
 
 [[nodiscard]] DsVeosCoSim_DataType GenerateDataType();
 [[nodiscard]] DsVeosCoSim_SizeKind GenerateSizeKind();

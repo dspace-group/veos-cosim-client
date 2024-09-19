@@ -15,7 +15,7 @@ namespace {
 
 constexpr uint32_t BigNumber = 4 * 1024 * 1024;
 
-std::string GenerateName() {
+[[nodiscard]] std::string GenerateName() {
     return GenerateString("Channel名前\xF0\x9F\x98\x80");
 }
 
@@ -23,7 +23,7 @@ class TestLocalChannel : public testing::Test {};
 
 TEST_F(TestLocalChannel, StartServer) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     // Act and assert
     ASSERT_NO_THROW((void)LocalChannelServer(name));
@@ -31,7 +31,7 @@ TEST_F(TestLocalChannel, StartServer) {
 
 TEST_F(TestLocalChannel, ConnectWithoutStart) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     { LocalChannelServer server(name); }
 
@@ -44,7 +44,7 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
 
 TEST_F(TestLocalChannel, Connect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -57,7 +57,7 @@ TEST_F(TestLocalChannel, Connect) {
 
 TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -70,7 +70,7 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
 
 TEST_F(TestLocalChannel, Accept) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -85,7 +85,7 @@ TEST_F(TestLocalChannel, Accept) {
 
 TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -103,7 +103,7 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
 
 TEST_F(TestLocalChannel, WriteToChannel) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -119,7 +119,7 @@ TEST_F(TestLocalChannel, WriteToChannel) {
 
 TEST_F(TestLocalChannel, ReadFromChannel) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -142,7 +142,7 @@ TEST_F(TestLocalChannel, ReadFromChannel) {
 
 TEST_F(TestLocalChannel, PingPong) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -171,7 +171,7 @@ TEST_F(TestLocalChannel, PingPong) {
 
 TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -209,7 +209,7 @@ void StreamClient(LocalChannel& channel) {
 
 TEST_F(TestLocalChannel, Stream) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -237,7 +237,7 @@ void ReceiveBigElement(LocalChannel& channel) {
 
 TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 

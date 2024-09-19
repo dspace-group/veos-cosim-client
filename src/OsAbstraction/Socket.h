@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace DsVeosCoSim {
 
@@ -59,10 +60,10 @@ public:
                                                           uint16_t localPort,
                                                           uint32_t timeoutInMilliseconds);
 
-    [[nodiscard]] bool TryConnect(const std::string& name) const;
+    [[nodiscard]] bool TryConnect(std::string_view name) const;
     void EnableIpv6Only() const;
     void Bind(uint16_t port, bool enableRemoteAccess) const;
-    void Bind(const std::string& name);
+    void Bind(std::string_view name);
     void EnableReuseAddress() const;
     void EnableNoDelay() const;
     void Listen() const;
@@ -89,7 +90,7 @@ private:
     std::string _path;
 };
 
-[[nodiscard]] inline std::string format_as(DsVeosCoSim::AddressFamily addressFamily) {
+[[nodiscard]] inline std::string_view format_as(DsVeosCoSim::AddressFamily addressFamily) {
     switch (addressFamily) {
         case DsVeosCoSim::AddressFamily::Ipv4:
             return "Ipv4";
@@ -99,7 +100,7 @@ private:
             return "Uds";
     }
 
-    return std::to_string(static_cast<int32_t>(addressFamily));
+    return "<Invalid AddressFamily>";
 }
 
 }  // namespace DsVeosCoSim

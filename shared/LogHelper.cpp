@@ -27,7 +27,7 @@ fmt::text_style gray = fg(fmt::color::light_gray);
 fmt::text_style blue = fg(fmt::color::dodger_blue);
 fmt::text_style violet = fg(fmt::color::fuchsia);
 
-std::string DataToString(const uint8_t* data, uint32_t dataLength, char separator = 0) {
+[[nodiscard]] std::string DataToString(const uint8_t* data, uint32_t dataLength, char separator = 0) {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     for (uint32_t i = 0; i < dataLength; i++) {
@@ -40,7 +40,7 @@ std::string DataToString(const uint8_t* data, uint32_t dataLength, char separato
     return oss.str();
 }
 
-std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim_DataType dataType) {
+[[nodiscard]] std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim_DataType dataType) {
     switch (dataType) {
         case DsVeosCoSim_DataType_Bool:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
@@ -71,7 +71,7 @@ std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim
     throw std::runtime_error("Invalid data type.");
 }
 
-std::string ValueToString(const void* value, uint32_t length, DsVeosCoSim_DataType dataType) {
+[[nodiscard]] std::string ValueToString(const void* value, uint32_t length, DsVeosCoSim_DataType dataType) {
     std::ostringstream oss;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {

@@ -22,7 +22,7 @@ enum class CoSimType {
     Server
 };
 
-[[nodiscard]] inline std::string ToString(CoSimType coSimType) {
+[[nodiscard]] inline std::string_view ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -30,7 +30,7 @@ enum class CoSimType {
             return "Server";
     }
 
-    return std::to_string(static_cast<int32_t>(coSimType));
+    return "<Invalid CoSimType>";
 }
 
 enum class ConnectionKind {
@@ -38,7 +38,7 @@ enum class ConnectionKind {
     Local
 };
 
-[[nodiscard]] inline std::string ToString(ConnectionKind connectionKind) {
+[[nodiscard]] inline std::string_view ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -46,7 +46,7 @@ enum class ConnectionKind {
             return "Local";
     }
 
-    return std::to_string(static_cast<int32_t>(connectionKind));
+    return "<Invalid ConnectionKind>";
 }
 
 enum class Command {
@@ -61,7 +61,7 @@ enum class Command {
     Ping
 };
 
-[[nodiscard]] inline std::string ToString(Command command) {
+[[nodiscard]] inline std::string_view ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -83,10 +83,10 @@ enum class Command {
             return "Ping";
     }
 
-    return std::to_string(static_cast<int32_t>(command));
+    return "<Invalid Command>";
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_Severity severity) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_Severity severity) {
     switch (severity) {
         case DsVeosCoSim_Severity_Error:
             return "Error";
@@ -100,10 +100,10 @@ enum class Command {
             break;
     }
 
-    return std::to_string(severity);
+    return "<Invalid DsVeosCoSim_Severity>";
 }
 
-inline std::string ToString(DsVeosCoSim_TerminateReason terminateReason) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_TerminateReason terminateReason) {
     switch (terminateReason) {
         case DsVeosCoSim_TerminateReason_Finished:
             return "Finished";
@@ -113,10 +113,10 @@ inline std::string ToString(DsVeosCoSim_TerminateReason terminateReason) {
             break;
     }
 
-    return std::to_string(terminateReason);
+    return "<Invalid DsVeosCoSim_TerminateReason>";
 }
 
-inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_ConnectionState connectionState) {
     switch (connectionState) {
         case DsVeosCoSim_ConnectionState_Connected:
             return "Connected";
@@ -126,7 +126,7 @@ inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
             break;
     }
 
-    return std::to_string(connectionState);
+    return "<Invalid DsVeosCoSim_ConnectionState>";
 }
 
 [[nodiscard]] inline size_t GetDataTypeSize(DsVeosCoSim_DataType dataType) {
@@ -153,7 +153,7 @@ inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
     return 0;
 }
 
-inline std::string ToString(DsVeosCoSim_DataType dataType) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_DataType dataType) {
     switch (dataType) {
         case DsVeosCoSim_DataType_Bool:
             return "Bool";
@@ -181,10 +181,10 @@ inline std::string ToString(DsVeosCoSim_DataType dataType) {
             break;
     }
 
-    return std::to_string(dataType);
+    return "<Invalid DsVeosCoSim_DataType>";
 }
 
-inline std::string ToString(DsVeosCoSim_SizeKind sizeKind) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_SizeKind sizeKind) {
     switch (sizeKind) {
         case DsVeosCoSim_SizeKind_Fixed:
             return "Fixed";
@@ -194,10 +194,10 @@ inline std::string ToString(DsVeosCoSim_SizeKind sizeKind) {
             break;
     }
 
-    return std::to_string(sizeKind);
+    return "<Invalid DsVeosCoSim_SizeKind>";
 }
 
-inline std::string ToString(DsVeosCoSim_LinControllerType type) {
+[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_LinControllerType type) {
     switch (type) {
         case DsVeosCoSim_LinControllerType_Responder:
             return "Responder";
@@ -207,7 +207,7 @@ inline std::string ToString(DsVeosCoSim_LinControllerType type) {
             break;
     }
 
-    return std::to_string(type);
+    return "<Invalid DsVeosCoSim_LinControllerType>";
 }
 
 enum class SimulationState {

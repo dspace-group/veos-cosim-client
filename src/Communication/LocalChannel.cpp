@@ -19,15 +19,17 @@ namespace {
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-const std::string ServerToClientPostFix = ".ServerToClient";
-const std::string ClientToServerPostFix = ".ClientToServer";
+std::string_view ServerToClientPostFix = "ServerToClient";
+std::string_view ClientToServerPostFix = "ClientToServer";
 
-std::string GetWriterName(const std::string& name, bool isServer) {
-    return isServer ? name + ServerToClientPostFix : name + ClientToServerPostFix;
+std::string GetWriterName(std::string_view name, bool isServer) {
+    std::string_view postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
+    return fmt::format("{}.{}", name, postfix);
 }
 
-std::string GetReaderName(const std::string& name, bool isServer) {
-    return isServer ? name + ClientToServerPostFix : name + ServerToClientPostFix;
+std::string GetReaderName(std::string_view name, bool isServer) {
+    std::string_view postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
+    return fmt::format("{}.{}", name, postfix);
 }
 
 constexpr uint32_t MaskIndex(uint32_t index) noexcept {
@@ -36,16 +38,16 @@ constexpr uint32_t MaskIndex(uint32_t index) noexcept {
 
 }  // namespace
 
-LocalChannelBase::LocalChannelBase(const std::string& name, bool isServer) {
+LocalChannelBase::LocalChannelBase(std::string_view name, bool isServer) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
 
     bool initShm{};
 
-    std::string dataName = name + ".Data";
-    std::string newDataName = name + ".NewData";
-    std::string newSpaceName = name + ".NewSpace";
+    const std::string dataName = fmt::format("{}.Data", name);
+    const std::string newDataName = fmt::format("{}.NewData", name);
+    const std::string newSpaceName = fmt::format("{}.NewSpace", name);
 
     uint32_t totalSize = BufferSize + sizeof(Header);
 
@@ -150,7 +152,7 @@ bool LocalChannelBase::CheckIfConnectionIsAlive() {
     return true;
 }
 
-LocalChannelWriter::LocalChannelWriter(const std::string& name, bool isServer)
+LocalChannelWriter::LocalChannelWriter(std::string_view name, bool isServer)
     : LocalChannelBase(GetWriterName(name, isServer), isServer) {
 }
 
@@ -217,7 +219,7 @@ bool LocalChannelWriter::WaitForFreeSpace(uint32_t& currentSize) {
     return true;
 }
 
-LocalChannelReader::LocalChannelReader(const std::string& name, bool isServer)
+LocalChannelReader::LocalChannelReader(std::string_view name, bool isServer)
     : LocalChannelBase(GetReaderName(name, isServer), isServer) {
 }
 
@@ -276,7 +278,7 @@ bool LocalChannelReader::BeginRead(uint32_t& currentSize) {
     return true;
 }
 
-LocalChannel::LocalChannel(const std::string& name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
+LocalChannel::LocalChannel(std::string_view name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
 }
 
 void LocalChannel::Disconnect() {
@@ -292,7 +294,7 @@ ChannelReader& LocalChannel::GetReader() {
     return _reader;
 }
 
-std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name) {
+std::optional<LocalChannel> TryConnectToLocalChannel(std::string_view name) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
@@ -303,14 +305,14 @@ std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name) {
     }
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
-    int32_t currentCounter = counter.fetch_add(1);
-    std::string specificName = fmt::format("{}.{}", name, currentCounter);
+    const int32_t currentCounter = counter.fetch_add(1);
+    const std::string specificName = fmt::format("{}.{}", name, currentCounter);
 
     return LocalChannel(specificName, false);
 }
 
-LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
-    NamedMutex mutex = NamedMutex::CreateOrOpen(_name);
+LocalChannelServer::LocalChannelServer(std::string_view name) : _name(name) {
+    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
 
@@ -320,9 +322,9 @@ LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
 }
 
 std::optional<LocalChannel> LocalChannelServer::TryAccept() {
-    int32_t currentCounter = _counter->load();
+    const int32_t currentCounter = _counter->load();
     if (currentCounter > _lastCounter) {
-        std::string specificName = fmt::format("{}.{}", _name, _lastCounter);
+        const std::string specificName = fmt::format("{}.{}", _name, _lastCounter);
         _lastCounter++;
         return LocalChannel(specificName, true);
     }

@@ -6,6 +6,7 @@
 #include <concepts>
 #include <memory>
 #include <mutex>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -126,7 +127,7 @@ public:
     BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
-    void Initialize(CoSimType coSimType, const std::string& name, const std::vector<TControllerExtern>& controllers) {
+    void Initialize(CoSimType coSimType, std::string_view name, const std::vector<TControllerExtern>& controllers) {
         _coSimType = coSimType;
 
         size_t totalQueueItemsCountPerBuffer = 0;
@@ -196,7 +197,7 @@ public:
     }
 
 protected:
-    virtual void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) = 0;
+    virtual void InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) = 0;
 
     virtual void ClearDataInternal() = 0;
 
@@ -240,7 +241,7 @@ public:
     RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal([[maybe_unused]] const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal([[maybe_unused]] std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
         _messageCountPerController.resize(this->_controllers.size());
         _messageBuffer = RingBuffer<TMessage>(totalQueueItemsCountPerBuffer);
     }
@@ -363,7 +364,7 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
@@ -489,21 +490,21 @@ class BusBuffer {
 public:
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
-              const std::string& name,
+              std::string_view name,
               const std::vector<DsVeosCoSim_CanController>& canControllers,
               const std::vector<DsVeosCoSim_EthController>& ethControllers,
               const std::vector<DsVeosCoSim_LinController>& linControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
-              const std::string& name,
+              std::string_view name,
               const std::vector<DsVeosCoSim_CanController>& canControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
-              const std::string& name,
+              std::string_view name,
               const std::vector<DsVeosCoSim_EthController>& ethControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
-              const std::string& name,
+              std::string_view name,
               const std::vector<DsVeosCoSim_LinController>& linControllers);
     ~BusBuffer() noexcept = default;
 

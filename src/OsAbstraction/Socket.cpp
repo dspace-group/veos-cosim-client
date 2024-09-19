@@ -58,7 +58,7 @@ constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 #endif
 
-[[nodiscard]] std::string GetUdsPath(const std::string& name) {
+[[nodiscard]] std::string GetUdsPath(std::string_view name) {
 #ifdef _WIN32
     fs::path tempDir = fs::temp_directory_path();
     fs::path fileDir = tempDir / fmt::format("dSPACE.VEOS.CoSim.{}", name);
@@ -481,7 +481,7 @@ std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
     return {};
 }
 
-bool Socket::TryConnect(const std::string& name) const {
+bool Socket::TryConnect(std::string_view name) const {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {
@@ -541,7 +541,7 @@ void Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
     }
 }
 
-void Socket::Bind(const std::string& name) {
+void Socket::Bind(std::string_view name) {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {

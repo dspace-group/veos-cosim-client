@@ -39,7 +39,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestTcpChannel,
                          testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
-                             return format_as(info.param.addressFamily);
+                             return std::string(format_as(info.param.addressFamily));
                          });
 
 TEST_F(TestTcpChannel, StartServer) {
@@ -64,7 +64,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     uint16_t port{};
 
@@ -84,7 +84,7 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
 TEST_P(TestTcpChannel, Connect) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -98,9 +98,6 @@ TEST_P(TestTcpChannel, Connect) {
 
 TEST_P(TestTcpChannel, AcceptWithoutConnect) {
     // Arrange
-    Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
-
     TcpChannelServer server(0, true);
 
     // Act
@@ -113,7 +110,7 @@ TEST_P(TestTcpChannel, AcceptWithoutConnect) {
 TEST_P(TestTcpChannel, Accept) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -130,7 +127,7 @@ TEST_P(TestTcpChannel, Accept) {
 TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -144,13 +141,13 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
 
 // Assert
 #ifdef _WIN32
-    ASSERT_STREQ(connectedChannelRemoteAddress.ipAddress.c_str(), ipAddress.c_str());
+    ASSERT_STREQ(connectedChannelRemoteAddress.ipAddress.c_str(), ipAddress.data());
     ASSERT_EQ(connectedChannelRemoteAddress.port, port);
 #else
     ASSERT_STREQ(connectedChannelRemoteAddress.ipAddress.c_str(), "127.0.0.1");
 #endif
 
-    ASSERT_STREQ(acceptedChannelRemoteAddress.ipAddress.c_str(), ipAddress.c_str());
+    ASSERT_STREQ(acceptedChannelRemoteAddress.ipAddress.c_str(), ipAddress.data());
     ASSERT_NE(acceptedChannelRemoteAddress.port, port);
     ASSERT_NE(acceptedChannelRemoteAddress.port, 0);
 }
@@ -184,7 +181,7 @@ TEST_F(TestTcpChannel, AcceptClientWithHostName) {
 TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -204,7 +201,7 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
 TEST_P(TestTcpChannel, WriteToChannel) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -222,7 +219,7 @@ TEST_P(TestTcpChannel, WriteToChannel) {
 TEST_P(TestTcpChannel, ReadFromChannel) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -247,7 +244,7 @@ TEST_P(TestTcpChannel, ReadFromChannel) {
 TEST_P(TestTcpChannel, PingPong) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -278,7 +275,7 @@ TEST_P(TestTcpChannel, PingPong) {
 TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -318,7 +315,7 @@ void StreamClient(SocketChannel& channel) {
 TEST_P(TestTcpChannel, Stream) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();
@@ -348,7 +345,7 @@ void ReceiveBigElement(SocketChannel& channel) {
 TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     // Arrange
     Param param = GetParam();
-    std::string ipAddress = GetLoopBackAddress(param.addressFamily);
+    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     TcpChannelServer server(0, true);
     uint16_t port = server.GetLocalPort();

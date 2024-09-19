@@ -86,7 +86,7 @@ Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
     throw std::runtime_error("Could not connect within timeout.");
 }
 
-Socket ConnectSocket(const std::string& name) {
+Socket ConnectSocket(std::string_view name) {
     Socket socket(AddressFamily::Uds);
     if (socket.TryConnect(name)) {
         return socket;
@@ -122,7 +122,7 @@ SocketChannel Accept(const TcpChannelServer& server) {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-SocketChannel ConnectToUdsChannel(const std::string& name) {
+SocketChannel ConnectToUdsChannel(std::string_view name) {
     std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
     if (channel) {
         return std::move(*channel);
@@ -142,7 +142,7 @@ SocketChannel Accept(const UdsChannelServer& server) {
 
 #ifdef _WIN32
 
-LocalChannel ConnectToLocalChannel(const std::string& name) {
+LocalChannel ConnectToLocalChannel(std::string_view name) {
     std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
     if (channel) {
         return std::move(*channel);
@@ -162,7 +162,7 @@ LocalChannel Accept(LocalChannelServer& server) {
 
 #endif
 
-std::string GetLoopBackAddress(AddressFamily addressFamily) {
+[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
         return "127.0.0.1";
     }
