@@ -8,12 +8,12 @@
 
 #include "BackgroundService.h"
 #include "ClientServerTestHelper.h"
+#include "CoSimHelper.h"
 #include "CoSimServer.h"
 #include "CoSimTypes.h"
 #include "Generator.h"
 #include "Helper.h"
 #include "LogHelper.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 
@@ -350,7 +350,7 @@ int32_t main(int32_t argc, char** argv) {
         return 1;
     }
 
-    std::string name = "CoSimProxy";
+    std::string name = "CoSimTest";
     bool isClientOptional = false;
 
     for (int32_t i = 1; i < argc; i++) {

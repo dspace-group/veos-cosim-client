@@ -4,6 +4,7 @@
 
 #include <fmt/format.h>
 #include <string>
+#include <string_view>
 
 #include "LogHelper.h"
 #include "gtest/gtest.h"
@@ -14,8 +15,8 @@ CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
-    return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
+std::string GetCounterPart(std::string_view name, ConnectionKind connectionKind) {
+    return connectionKind == ConnectionKind::Local ? std::string(name) : fmt::format("Other{}", name);
 }
 
 void AssertByteArray(const void* expected, const void* actual, size_t size) {
@@ -94,8 +95,8 @@ void AssertEq(const DsVeosCoSim_LinMessage& expected, const DsVeosCoSim_LinMessa
     AssertByteArray(expected.data, actual.data, expected.length);
 }
 
-void AssertEq(const std::string& expected, const std::string& actual) {
-    AssertEq(expected.c_str(), actual.c_str());
+void AssertEq(std::string_view expected, std::string_view actual) {
+    ASSERT_STREQ(expected.data(), actual.data());
 }
 
 void AssertEq(const char* expected, const char* actual) {

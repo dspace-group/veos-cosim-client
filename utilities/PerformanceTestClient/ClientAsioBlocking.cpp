@@ -3,7 +3,7 @@
 #include <asio.hpp>
 #include <string>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 

@@ -2,8 +2,8 @@
 
 #include <thread>
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 #include "PerformanceTestHelper.h"
 #include "Socket.h"
 

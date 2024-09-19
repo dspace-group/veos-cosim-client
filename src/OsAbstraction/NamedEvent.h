@@ -5,14 +5,14 @@
 #ifdef _WIN32
 
 #include <optional>
-#include <string>
+#include <string_view>
 
 #include "Handle.h"
 
 namespace DsVeosCoSim {
 
 class NamedEvent final {
-    NamedEvent(const std::string& name, Handle handle);
+    explicit NamedEvent(Handle handle);
 
 public:
     NamedEvent() = default;
@@ -24,9 +24,9 @@ public:
     NamedEvent(NamedEvent&&) noexcept = default;
     NamedEvent& operator=(NamedEvent&&) noexcept = default;
 
-    [[nodiscard]] static NamedEvent CreateOrOpen(const std::string& name);
-    [[nodiscard]] static NamedEvent OpenExisting(const std::string& name);
-    [[nodiscard]] static std::optional<NamedEvent> TryOpenExisting(const std::string& name);
+    [[nodiscard]] static NamedEvent CreateOrOpen(std::string_view name);
+    [[nodiscard]] static NamedEvent OpenExisting(std::string_view name);
+    [[nodiscard]] static std::optional<NamedEvent> TryOpenExisting(std::string_view name);
 
     operator Handle&() noexcept;  // NOLINT
 
@@ -35,7 +35,6 @@ public:
     [[nodiscard]] bool Wait(uint32_t milliseconds) const;
 
 private:
-    std::string _name;
     Handle _handle;
 };
 

@@ -3,6 +3,8 @@
 #ifdef _WIN32
 
 #include <benchmark/benchmark.h>
+#include <string>
+#include <string_view>
 #include <thread>
 
 #include "Generator.h"
@@ -35,7 +37,7 @@ void EventSetAndWait(benchmark::State& state) {
 
 bool stopThread;
 
-void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
+void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
     NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
     NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
 

@@ -5,6 +5,8 @@
 #ifdef _WIN32
 
 #include <atomic>
+#include <string>
+#include <string_view>
 
 #include "Channel.h"
 #include "NamedEvent.h"
@@ -16,7 +18,7 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 
 class LocalChannelBase {
 protected:
-    LocalChannelBase(const std::string& name, bool isServer);
+    LocalChannelBase(std::string_view name, bool isServer);
 
 public:
     virtual ~LocalChannelBase() noexcept;
@@ -54,7 +56,7 @@ private:
 
 class LocalChannelWriter final : public LocalChannelBase, public ChannelWriter {
 public:
-    LocalChannelWriter(const std::string& name, bool isServer);
+    LocalChannelWriter(std::string_view name, bool isServer);
     ~LocalChannelWriter() noexcept override = default;
 
     LocalChannelWriter(const LocalChannelWriter&) = delete;
@@ -76,7 +78,7 @@ private:
 
 class LocalChannelReader final : public LocalChannelBase, public ChannelReader {
 public:
-    LocalChannelReader(const std::string& name, bool isServer);
+    LocalChannelReader(std::string_view name, bool isServer);
     ~LocalChannelReader() noexcept override = default;
 
     LocalChannelReader(const LocalChannelReader&) = delete;
@@ -96,7 +98,7 @@ private:
 
 class LocalChannel final : public Channel {
 public:
-    LocalChannel(const std::string& name, bool isServer);
+    LocalChannel(std::string_view name, bool isServer);
     ~LocalChannel() noexcept override = default;
 
     LocalChannel(const LocalChannel&) = delete;
@@ -115,11 +117,11 @@ private:
     LocalChannelReader _reader;
 };
 
-[[nodiscard]] std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name);
+[[nodiscard]] std::optional<LocalChannel> TryConnectToLocalChannel(std::string_view name);
 
 class LocalChannelServer final {
 public:
-    explicit LocalChannelServer(const std::string& name);
+    explicit LocalChannelServer(std::string_view name);
     ~LocalChannelServer() noexcept = default;
 
     LocalChannelServer(const LocalChannelServer&) = delete;

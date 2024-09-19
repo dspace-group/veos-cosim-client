@@ -35,4 +35,31 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {
     LogTrace(vformat(format, fmt::make_format_args(args...)));
 }
 
+#define CheckResultWithMessage(result, message) \
+    do {                                        \
+        if (!(result)) [[unlikely]] {           \
+            LogTrace(message);                  \
+            return false;                       \
+        }                                       \
+    } while (0)
+
+#define CheckResult(result)           \
+    do {                              \
+        if (!(result)) [[unlikely]] { \
+            return false;             \
+        }                             \
+    } while (0)
+
+[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode);
+
+class CoSimException final : public std::runtime_error {
+public:
+    explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
+    }
+
+    CoSimException(std::string_view message, int32_t errorCode)
+        : std::runtime_error(fmt::format("{} {}", message, GetSystemErrorMessage(errorCode))) {
+    }
+};
+
 }  // namespace DsVeosCoSim

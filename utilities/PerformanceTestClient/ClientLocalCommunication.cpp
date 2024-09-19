@@ -1,7 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "CoSimHelper.h"
 #include "Helper.h"
-#include "Logger.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 
@@ -35,8 +35,6 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
             MUST_BE_TRUE(channel->GetWriter().EndWrite());
 
             MUST_BE_TRUE(channel->GetReader().Read(buffer, BufferSize));
-
-
 
             counter++;
         }

@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "Generator.h"
 #include "Helper.h"
@@ -15,16 +16,27 @@ struct Param {
     bool enableRemoteAccess{};
 };
 
-}  // namespace
+std::vector<Param> GetValues() {
+    std::vector<Param> values;
+
+    if (Socket::IsIpv4Supported()) {
+        values.push_back(Param{AddressFamily::Ipv4, true});
+        values.push_back(Param{AddressFamily::Ipv4, false});
+    }
+
+    if (Socket::IsIpv6Supported()) {
+        values.push_back(Param{AddressFamily::Ipv6, true});
+        values.push_back(Param{AddressFamily::Ipv6, false});
+    }
+
+    return values;
+}
 
 class TestTcpSocket : public testing::TestWithParam<Param> {};
 
 INSTANTIATE_TEST_SUITE_P(,
                          TestTcpSocket,
-                         testing::Values(Param{AddressFamily::Ipv4, true},
-                                         Param{AddressFamily::Ipv4, false},
-                                         Param{AddressFamily::Ipv6, true},
-                                         Param{AddressFamily::Ipv6, false}),
+                         testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
                              std::string access = info.param.enableRemoteAccess ? "Remote" : "Local";
                              return fmt::format("{}_{}", info.param.addressFamily, access);
@@ -187,3 +199,5 @@ TEST_P(TestTcpSocket, SendAndReceive) {
     // Assert
     ASSERT_EQ(sendValue, receiveValue);
 }
+
+}  // namespace

@@ -5,7 +5,7 @@
 #ifdef _WIN32
 
 #include <optional>
-#include <string>
+#include <string_view>
 
 #include "Handle.h"
 
@@ -24,9 +24,9 @@ public:
     NamedMutex(NamedMutex&&) noexcept = default;
     NamedMutex& operator=(NamedMutex&&) noexcept = default;
 
-    [[nodiscard]] static NamedMutex CreateOrOpen(const std::string& name);
-    [[nodiscard]] static NamedMutex OpenExisting(const std::string& name);
-    [[nodiscard]] static std::optional<NamedMutex> TryOpenExisting(const std::string& name);
+    [[nodiscard]] static NamedMutex CreateOrOpen(std::string_view name);
+    [[nodiscard]] static NamedMutex OpenExisting(std::string_view name);
+    [[nodiscard]] static std::optional<NamedMutex> TryOpenExisting(std::string_view name);
 
     // Small case, so this mutex can directly be used in std::lock_guard
     void lock() const;                                     // NOLINT(readability-identifier-naming)

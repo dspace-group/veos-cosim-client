@@ -5,14 +5,14 @@
 #ifdef _WIN32
 
 #include <optional>
-#include <string>
+#include <string_view>
 
 #include "Handle.h"
 
 namespace DsVeosCoSim {
 
 class SharedMemory final {
-    SharedMemory(const std::string& name, size_t size, Handle handle);
+    SharedMemory(std::string_view name, size_t size, Handle handle);
 
 public:
     SharedMemory() = default;
@@ -24,9 +24,9 @@ public:
     SharedMemory(SharedMemory&&) noexcept;
     SharedMemory& operator=(SharedMemory&&) noexcept;
 
-    [[nodiscard]] static SharedMemory CreateOrOpen(const std::string& name, size_t size);
-    [[nodiscard]] static SharedMemory OpenExisting(const std::string& name, size_t size);
-    [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(const std::string& name, size_t size);
+    [[nodiscard]] static SharedMemory CreateOrOpen(std::string_view name, size_t size);
+    [[nodiscard]] static SharedMemory OpenExisting(std::string_view name, size_t size);
+    [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(std::string_view name, size_t size);
 
     [[nodiscard]] void* data() const noexcept;   // NOLINT(readability-identifier-naming)
     [[nodiscard]] size_t size() const noexcept;  // NOLINT(readability-identifier-naming)

@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
+#include <string_view>
 
 #include "Generator.h"
 #include "NamedMutex.h"
@@ -11,11 +12,11 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-std::string GenerateName() {
+[[nodiscard]] std::string GenerateName() {
     return GenerateString("Mutex名前\xF0\x9F\x98\x80");
 }
 
-void DifferentThread(const std::string& name, int32_t& counter) {
+void DifferentThread(std::string_view name, int32_t& counter) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     for (int32_t i = 0; i < 10000; i++) {
@@ -24,8 +25,6 @@ void DifferentThread(const std::string& name, int32_t& counter) {
         ASSERT_NO_THROW(mutex.unlock());
     }
 }
-
-}  // namespace
 
 class TestNamedMutex : public testing::Test {};
 
@@ -67,5 +66,7 @@ TEST_F(TestNamedMutex, LockAndUnlockOnDifferentMutexes) {
     // Assert
     ASSERT_EQ(counter, 20000);
 }
+
+}  // namespace
 
 #endif

@@ -42,8 +42,8 @@ int64_t GenerateI64() {
     return static_cast<int64_t>(GenerateU64());
 }
 
-std::string GenerateString(const std::string& prefix) {
-    return prefix + std::to_string(GenerateU32());
+std::string GenerateString(std::string_view prefix) {
+    return fmt::format("{}{}", prefix, GenerateU32());
 }
 
 DsVeosCoSim_DataType GenerateDataType() {

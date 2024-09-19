@@ -15,17 +15,15 @@ namespace {
 
 constexpr uint32_t BigNumber = 4 * 1024 * 1024;
 
-std::string GenerateName() {
+[[nodiscard]] std::string GenerateName() {
     return GenerateString("Channel名前\xF0\x9F\x98\x80");
 }
-
-}  // namespace
 
 class TestLocalChannel : public testing::Test {};
 
 TEST_F(TestLocalChannel, StartServer) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     // Act and assert
     ASSERT_NO_THROW((void)LocalChannelServer(name));
@@ -33,7 +31,7 @@ TEST_F(TestLocalChannel, StartServer) {
 
 TEST_F(TestLocalChannel, ConnectWithoutStart) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     { LocalChannelServer server(name); }
 
@@ -46,7 +44,7 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
 
 TEST_F(TestLocalChannel, Connect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -59,7 +57,7 @@ TEST_F(TestLocalChannel, Connect) {
 
 TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -72,7 +70,7 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
 
 TEST_F(TestLocalChannel, Accept) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -87,7 +85,7 @@ TEST_F(TestLocalChannel, Accept) {
 
 TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -105,7 +103,7 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
 
 TEST_F(TestLocalChannel, WriteToChannel) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -121,7 +119,7 @@ TEST_F(TestLocalChannel, WriteToChannel) {
 
 TEST_F(TestLocalChannel, ReadFromChannel) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -144,7 +142,7 @@ TEST_F(TestLocalChannel, ReadFromChannel) {
 
 TEST_F(TestLocalChannel, PingPong) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -173,7 +171,7 @@ TEST_F(TestLocalChannel, PingPong) {
 
 TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -200,7 +198,7 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-static void StreamClient(LocalChannel& channel) {
+void StreamClient(LocalChannel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -211,7 +209,7 @@ static void StreamClient(LocalChannel& channel) {
 
 TEST_F(TestLocalChannel, Stream) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -228,7 +226,7 @@ TEST_F(TestLocalChannel, Stream) {
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
 
-static void ReceiveBigElement(LocalChannel& channel) {
+void ReceiveBigElement(LocalChannel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -239,7 +237,7 @@ static void ReceiveBigElement(LocalChannel& channel) {
 
 TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     LocalChannelServer server(name);
 
@@ -257,5 +255,7 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
 }
+
+}  // namespace
 
 #endif

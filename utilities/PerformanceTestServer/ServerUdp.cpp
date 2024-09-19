@@ -2,7 +2,7 @@
 
 #include <thread>
 
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
 

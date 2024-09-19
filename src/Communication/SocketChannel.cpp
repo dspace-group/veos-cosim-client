@@ -7,7 +7,7 @@
 #include <cstring>
 #include <thread>
 
-#include "Result.h"
+#include "CoSimHelper.h"
 
 namespace DsVeosCoSim {
 
@@ -162,7 +162,7 @@ bool SocketChannelReader::BeginRead() {
             (void)::memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
             if (_endFrameIndex > BufferSize) {
-                throw CommunicationException("Protocol error. The buffer size is too small.");
+                throw CoSimException("Protocol error. The buffer size is too small.");
             }
 
             sizeToRead = _endFrameIndex - _writeIndex;
@@ -288,7 +288,7 @@ std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilli
     return {};
 }
 
-std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
+std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name) {
     StartupNetwork();
 
     Socket socket(AddressFamily::Uds);
@@ -299,7 +299,7 @@ std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
     return {};
 }
 
-UdsChannelServer::UdsChannelServer(const std::string& name) {
+UdsChannelServer::UdsChannelServer(std::string_view name) {
     StartupNetwork();
 
     _listenSocket = Socket(AddressFamily::Uds);

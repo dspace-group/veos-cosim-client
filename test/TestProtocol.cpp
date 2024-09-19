@@ -15,6 +15,8 @@
 
 using namespace DsVeosCoSim;
 
+namespace {
+
 class TestProtocol : public testing::TestWithParam<ConnectionKind> {
 protected:
     std::unique_ptr<Channel> _senderChannel;
@@ -29,13 +31,13 @@ protected:
             _receiverChannel = std::make_unique<SocketChannel>(Accept(server));
         } else {
 #ifdef _WIN32
-            std::string name = GenerateString("LocalChannel名前");
+            const std::string name = GenerateString("LocalChannel名前");
             LocalChannelServer server(name);
 
             _senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
             _receiverChannel = std::make_unique<LocalChannel>(Accept(server));
 #else
-            std::string name = GenerateString("UdsChannel名前");
+            const std::string name = GenerateString("UdsChannel名前");
             UdsChannelServer server(name);
 
             _senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
@@ -60,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestProtocol,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
                          [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return ToString(info.param);
+                             return std::string(ToString(info.param));
                          });
 
 TEST_P(TestProtocol, SendAndReceiveOk) {
@@ -432,3 +434,5 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
     ASSERT_TRUE(Protocol::ReadUnsetPort(_receiverChannel->GetReader(), receiveServerName));
     AssertEq(sendServerName, receiveServerName);
 }
+
+}  // namespace

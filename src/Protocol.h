@@ -36,7 +36,7 @@ enum class FrameKind {
     UnsetPort
 };
 
-[[nodiscard]] inline std::string ToString(const FrameKind& frameKind) {
+[[nodiscard]] inline std::string_view ToString(const FrameKind& frameKind) {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";
@@ -74,7 +74,7 @@ enum class FrameKind {
             return "UnsetPort";
     }
 
-    return std::to_string(static_cast<int32_t>(frameKind));
+    return "<Invalid FrameKind>";
 }
 
 namespace Protocol {

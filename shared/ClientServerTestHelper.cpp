@@ -3,8 +3,8 @@
 #include "ClientServerTestHelper.h"
 
 #include "BusBuffer.h"
+#include "CoSimHelper.h"
 #include "Generator.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 

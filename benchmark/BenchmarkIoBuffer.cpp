@@ -1,6 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <benchmark/benchmark.h>
+#include <string>
+#include <string_view>
 #include <thread>
 
 #include "CoSimTypes.h"
@@ -35,8 +37,8 @@ void Receive(const IoSignal& signal, IoBuffer& readerIoBuffer, Channel& channel,
 
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             const std::string& writerName,
-             const std::string& readerName,
+             std::string_view writerName,
+             std::string_view readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     IoSignal signal = CreateSignal(DsVeosCoSim_DataType_Int8, DsVeosCoSim_SizeKind_Fixed);

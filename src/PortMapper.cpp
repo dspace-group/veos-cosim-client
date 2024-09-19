@@ -2,10 +2,8 @@
 
 #include "PortMapper.h"
 
-#include "CoSimTypes.h"
-#include "Logger.h"
+#include "CoSimHelper.h"
 #include "Protocol.h"
-#include "Result.h"
 #include "SocketChannel.h"
 
 namespace DsVeosCoSim {
@@ -82,8 +80,8 @@ void PortMapperServer::RunPortMapperServer() {
                     LogTrace("Port mapper client disconnected unexpectedly.");
                 }
             }
-        } catch (const std::exception& exception) {
-            LogError("The following exception occurred in port mapper thread: {}", exception.what());
+        } catch (const std::exception& e) {
+            LogError("The following exception occurred in port mapper thread: {}", e.what());
         }
     }
 }

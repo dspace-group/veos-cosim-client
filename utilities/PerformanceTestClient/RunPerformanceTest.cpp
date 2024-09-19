@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <thread>
 
+#include "CoSimHelper.h"
 #include "Event.h"
 #include "Helper.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 

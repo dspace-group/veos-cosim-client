@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
+#include <string_view>
 
 #include "BackgroundService.h"
 #include "CoSimClient.h"
@@ -27,7 +28,7 @@ CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     return config;
 }
 
-ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, const std::string& serverName, uint16_t port = 0) {
+ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, std::string_view serverName, uint16_t port = 0) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("Client名前");
@@ -39,8 +40,6 @@ ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, const std::stri
     return connectConfig;
 }
 
-}  // namespace
-
 class TestCoSim : public testing::TestWithParam<ConnectionKind> {
 protected:
     void SetUp() override {
@@ -49,7 +48,7 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(Test, TestCoSim, connectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
-    return ToString(info.param);
+    return std::string(ToString(info.param));
 });
 
 TEST_F(TestCoSim, LoadServer) {
@@ -218,7 +217,6 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     ASSERT_TRUE(client.Connect(connectConfig));
 }
 
-#ifdef EXCEPTION_TESTS
 TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     // Arrange
     ConnectionKind connectionKind = GetParam();
@@ -247,6 +245,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     // Assert
     ASSERT_TRUE(stoppedEvent.Wait(1000));
 }
-#endif
 
 // Add more tests
+
+}  // namespace

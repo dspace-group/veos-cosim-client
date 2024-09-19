@@ -4,7 +4,7 @@
 
 #include <bit>
 
-#include "Result.h"
+#include "CoSimHelper.h"
 
 namespace DsVeosCoSim {
 

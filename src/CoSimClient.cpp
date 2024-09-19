@@ -4,9 +4,9 @@
 
 #include <memory>
 
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
 #include "DsVeosCoSim/DsVeosCoSim.h"
-#include "Logger.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 #include "SocketChannel.h"

@@ -9,10 +9,10 @@
 
 #include "ClientServerTestHelper.h"
 #include "CoSimClient.h"
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
 #include "Helper.h"
 #include "LogHelper.h"
-#include "Logger.h"
 
 using namespace DsVeosCoSim;
 
@@ -166,8 +166,8 @@ void RunCallbackBasedCoSimulation() {
     }
 }
 
-void HostClient(std::string_view host, std::string_view serverName) {
-    if (!Connect(host, serverName)) {
+void HostClient(std::string_view host, std::string_view name) {
+    if (!Connect(host, name)) {
         return;
     }
 
@@ -220,7 +220,7 @@ int32_t main(int32_t argc, char** argv) {
     }
 
     std::string host;
-    std::string serverName = "CoSimProxy";
+    std::string name = "CoSimTest";
 
     for (int32_t i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host") == 0) {
@@ -234,7 +234,7 @@ int32_t main(int32_t argc, char** argv) {
 
         if (strcmp(argv[i], "--name") == 0) {
             if (++i < argc) {
-                serverName = argv[i];
+                name = argv[i];
             } else {
                 LogError("No name specified.");
                 return 1;
@@ -244,7 +244,7 @@ int32_t main(int32_t argc, char** argv) {
 
     g_coSimClient = std::make_unique<CoSimClient>();
 
-    HostClient(host, serverName);
+    HostClient(host, name);
 
     Disconnect();
     g_coSimClient.reset();

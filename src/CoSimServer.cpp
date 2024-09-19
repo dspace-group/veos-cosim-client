@@ -4,8 +4,8 @@
 #include <memory>
 #include <thread>
 
+#include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "Logger.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 #include "Socket.h"
@@ -290,7 +290,7 @@ void CoSimServer::StartAccepting() {
             }
         }
 
-        const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
+        std::string_view localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
         LogInfo("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, localIpAddress, port);
     }
 }
