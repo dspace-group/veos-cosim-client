@@ -2,6 +2,8 @@
 
 #include "Generator.h"
 
+#include <format>
+
 using namespace DsVeosCoSim;
 
 int32_t Random(int32_t min, int32_t max) {
@@ -43,7 +45,7 @@ int64_t GenerateI64() {
 }
 
 std::string GenerateString(std::string_view prefix) {
-    return fmt::format("{}{}", prefix, GenerateU32());
+    return std::format("{}{}", prefix, GenerateU32());
 }
 
 DsVeosCoSim_DataType GenerateDataType() {

@@ -21,12 +21,14 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/OsAbstraction>
 )
 
+if(WIN32)
 target_compile_definitions(
   shared
   PUBLIC
   _CRT_SECURE_NO_WARNINGS
   WIN32_LEAN_AND_MEAN
 )
+endif()
 
 target_link_libraries(
   shared

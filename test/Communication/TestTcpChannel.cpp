@@ -2,7 +2,13 @@
 
 #include <gtest/gtest.h>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <vector>
 
 #include "Generator.h"
 #include "Helper.h"

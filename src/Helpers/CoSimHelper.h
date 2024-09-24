@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <fmt/format.h>
+#include <format>
 
 #include "CoSimTypes.h"
 
@@ -16,23 +16,23 @@ void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
 
 template <typename... T>
-void LogError(fmt::format_string<T...> format, T&&... args) {
-    LogError(vformat(format, fmt::make_format_args(args...)));
+void LogError(std::format_string<T...> format, T&&... args) {
+    LogError(std::vformat(format.get(), std::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogWarning(fmt::format_string<T...> format, T&&... args) {
-    LogWarning(vformat(format, fmt::make_format_args(args...)));
+void LogWarning(std::format_string<T...> format, T&&... args) {
+    LogWarning(std::vformat(format.get(), std::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogInfo(fmt::format_string<T...> format, T&&... args) {
-    LogInfo(vformat(format, fmt::make_format_args(args...)));
+void LogInfo(std::format_string<T...> format, T&&... args) {
+    LogInfo(std::vformat(format.get(), std::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogTrace(fmt::format_string<T...> format, T&&... args) {
-    LogTrace(vformat(format, fmt::make_format_args(args...)));
+void LogTrace(std::format_string<T...> format, T&&... args) {
+    LogTrace(std::vformat(format.get(), std::make_format_args(args...)));
 }
 
 #define CheckResultWithMessage(result, message) \
@@ -58,7 +58,7 @@ public:
     }
 
     CoSimException(std::string_view message, int32_t errorCode)
-        : std::runtime_error(fmt::format("{} {}", message, GetSystemErrorMessage(errorCode))) {
+        : std::runtime_error(std::format("{} {}", message, GetSystemErrorMessage(errorCode))) {
     }
 };
 

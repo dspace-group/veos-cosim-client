@@ -1,6 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include "CoSimServer.h"
+
+#include <format>
 #include <memory>
 #include <thread>
 
@@ -426,7 +428,7 @@ bool CoSimServer::WaitForOkFrame() const {
             throw CoSimException(errorMessage);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -440,7 +442,7 @@ bool CoSimServer::WaitForPingOkFrame(Command& command) const {
                                    "Could not read ping ok frame.");
             return true;
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -457,7 +459,7 @@ bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName
             return true;
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -482,7 +484,7 @@ bool CoSimServer::WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime,
             throw CoSimException(errorMessage);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 

@@ -4,6 +4,7 @@
 
 #ifdef _WIN32
 
+#include <cstdint>
 #include <optional>
 #include <string_view>
 

@@ -2,8 +2,8 @@
 
 #include "IoBuffer.h"
 
-#include <fmt/format.h>
 #include <cstring>
+#include <format>
 
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
@@ -19,7 +19,7 @@ void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, std::string_view name) {
         case DsVeosCoSim_SizeKind_Variable:
             return;
         default:
-            throw CoSimException(fmt::format("Unknown size kind '{}' for IO signal '{}'.", ToString(sizeKind), name));
+            throw CoSimException(std::format("Unknown size kind '{}' for IO signal '{}'.", ToString(sizeKind), name));
     }
 }
 
@@ -32,7 +32,7 @@ IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeos
     size_t nextSignalIndex = 0;
     for (const auto& signal : signals) {
         if (signal.length == 0) {
-            throw CoSimException(fmt::format("Invalid length {} for IO signal '{}'.", signal.length, signal.name));
+            throw CoSimException(std::format("Invalid length {} for IO signal '{}'.", signal.length, signal.name));
         }
 
         CheckSizeKind(signal.sizeKind, signal.name);
@@ -40,11 +40,11 @@ IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeos
         const size_t dataTypeSize = GetDataTypeSize(signal.dataType);
         if (dataTypeSize == 0) {
             throw CoSimException(
-                fmt::format("Invalid data type {} for IO signal '{}'.", ToString(signal.dataType), signal.name));
+                std::format("Invalid data type {} for IO signal '{}'.", ToString(signal.dataType), signal.name));
         }
 
         if (_metaDataLookup.contains(signal.id)) {
-            throw CoSimException(fmt::format("Duplicated IO signal id {}.", signal.id));
+            throw CoSimException(std::format("Duplicated IO signal id {}.", signal.id));
         }
 
         const size_t totalDataSize = dataTypeSize * signal.length;
@@ -125,7 +125,7 @@ IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(DsVeosCoSim_IoSignalI
         return search->second;
     }
 
-    throw CoSimException(fmt::format("IO signal id {} is unknown.", signalId));
+    throw CoSimException(std::format("IO signal id {} is unknown.", signalId));
 }
 
 RemoteIoPartBuffer::RemoteIoPartBuffer(CoSimType coSimType,
@@ -165,7 +165,7 @@ void RemoteIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t
     if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
         if (length > metaData.info.length) {
             throw CoSimException(
-                fmt::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
+                std::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
         }
 
         if (data.currentLength != length) {
@@ -178,7 +178,7 @@ void RemoteIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t
         data.currentLength = length;
     } else {
         if (length != metaData.info.length) {
-            throw CoSimException(fmt::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
+            throw CoSimException(std::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
                                              metaData.info.name,
                                              metaData.info.length,
                                              length));
@@ -260,7 +260,7 @@ bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
             CheckResultWithMessage(reader.Read(length), "Could not read current signal length.");
             if (length > metaData.info.length) {
                 throw CoSimException(
-                    fmt::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
+                    std::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
             }
 
             data.currentLength = length;
@@ -356,13 +356,13 @@ void LocalIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t 
     if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
         if (length > metaData.info.length) {
             throw CoSimException(
-                fmt::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
+                std::format("Length of variable sized IO signal '{}' exceeds max size.", metaData.info.name));
         }
 
         currentLengthChanged = dataBuffer->currentLength != length;
     } else {
         if (length != metaData.info.length) {
-            throw CoSimException(fmt::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
+            throw CoSimException(std::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
                                              metaData.info.name,
                                              metaData.info.length,
                                              length));
@@ -473,8 +473,8 @@ IoBuffer::IoBuffer(CoSimType coSimType,
                    std::string_view name,
                    const std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
                    const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals) {
-    std::string outgoingName = fmt::format("{}.Outgoing", name);
-    std::string incomingName = fmt::format("{}.Incoming", name);
+    std::string outgoingName = std::format("{}.Outgoing", name);
+    std::string incomingName = std::format("{}.Incoming", name);
     const std::vector<DsVeosCoSim_IoSignal>* writeSignals = &outgoingSignals;
     const std::vector<DsVeosCoSim_IoSignal>* readSignals = &incomingSignals;
     if (coSimType == CoSimType::Server) {

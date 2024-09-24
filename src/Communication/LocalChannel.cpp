@@ -4,8 +4,8 @@
 
 #include "LocalChannel.h"
 
-#include <fmt/format.h>
 #include <cstdint>
+#include <format>
 #include <mutex>
 
 #include "CoSimHelper.h"
@@ -24,12 +24,12 @@ std::string_view ClientToServerPostFix = "ClientToServer";
 
 std::string GetWriterName(std::string_view name, bool isServer) {
     std::string_view postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-    return fmt::format("{}.{}", name, postfix);
+    return std::format("{}.{}", name, postfix);
 }
 
 std::string GetReaderName(std::string_view name, bool isServer) {
     std::string_view postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-    return fmt::format("{}.{}", name, postfix);
+    return std::format("{}.{}", name, postfix);
 }
 
 constexpr uint32_t MaskIndex(uint32_t index) noexcept {
@@ -45,9 +45,9 @@ LocalChannelBase::LocalChannelBase(std::string_view name, bool isServer) {
 
     bool initShm{};
 
-    const std::string dataName = fmt::format("{}.Data", name);
-    const std::string newDataName = fmt::format("{}.NewData", name);
-    const std::string newSpaceName = fmt::format("{}.NewSpace", name);
+    const std::string dataName = std::format("{}.Data", name);
+    const std::string newDataName = std::format("{}.NewData", name);
+    const std::string newSpaceName = std::format("{}.NewSpace", name);
 
     uint32_t totalSize = BufferSize + sizeof(Header);
 
@@ -148,7 +148,7 @@ bool LocalChannelBase::CheckIfConnectionIsAlive() {
         return false;
     }
 
-    CheckResultWithMessage(IsProcessRunning(counterpartPid), fmt::format("Process with id {} exited.", counterpartPid));
+    CheckResultWithMessage(IsProcessRunning(counterpartPid), std::format("Process with id {} exited.", counterpartPid));
     return true;
 }
 
@@ -306,7 +306,7 @@ std::optional<LocalChannel> TryConnectToLocalChannel(std::string_view name) {
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
     const int32_t currentCounter = counter.fetch_add(1);
-    const std::string specificName = fmt::format("{}.{}", name, currentCounter);
+    const std::string specificName = std::format("{}.{}", name, currentCounter);
 
     return LocalChannel(specificName, false);
 }
@@ -324,7 +324,7 @@ LocalChannelServer::LocalChannelServer(std::string_view name) : _name(name) {
 std::optional<LocalChannel> LocalChannelServer::TryAccept() {
     const int32_t currentCounter = _counter->load();
     if (currentCounter > _lastCounter) {
-        const std::string specificName = fmt::format("{}.{}", _name, _lastCounter);
+        const std::string specificName = std::format("{}.{}", _name, _lastCounter);
         _lastCounter++;
         return LocalChannel(specificName, true);
     }

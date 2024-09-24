@@ -27,8 +27,9 @@ if(BUILD_SHARED_LIBS)
   set(DSVEOSCOSIM_TYPE SHARED)
 endif()
 
-add_subdirectory(shared)
 add_subdirectory(src)
+if(DSVEOSCOSIM_BUILD_TESTS OR DSVEOSCOSIM_BUILD_BENCHMARKS)
+add_subdirectory(shared)
 add_subdirectory(third_party)
 add_subdirectory(third_party/fmt)
 add_subdirectory(utilities/PerformanceTestClient)
@@ -48,6 +49,7 @@ if(DSVEOSCOSIM_BUILD_BENCHMARKS)
   set(BENCHMARK_USE_BUNDLED_GTEST OFF)
   add_subdirectory(third_party/benchmark)
   add_subdirectory(benchmark)
+endif()
 endif()
 
 install(EXPORT DsVeosCoSimTargets

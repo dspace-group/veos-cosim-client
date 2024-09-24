@@ -5,7 +5,10 @@
 #include "SharedMemory.h"
 
 #include <Windows.h>
-#include <fmt/format.h>
+#include <cstddef>
+#include <format>
+#include <string>
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "OsUtilities.h"
@@ -15,7 +18,7 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] std::wstring GetFullSharedMemoryName(std::string_view name) {
-    return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim.SharedMemory.{}", name));
+    return Utf8ToWide(std::format("Local\\dSPACE.VEOS.CoSim.SharedMemory.{}", name));
 }
 
 }  // namespace
@@ -25,7 +28,7 @@ SharedMemory::SharedMemory(std::string_view name, size_t size, Handle handle)
     _data = ::MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size);
     if (!_data) {
         (void)::CloseHandle(_handle);
-        throw CoSimException(fmt::format("Could not map view of shared memory '{}'.", name), GetLastWindowsError());
+        throw CoSimException(std::format("Could not map view of shared memory '{}'.", name), GetLastWindowsError());
     }
 }
 
@@ -56,7 +59,7 @@ SharedMemory SharedMemory::CreateOrOpen(std::string_view name, size_t size) {
     void* handle =
         ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
-        throw CoSimException(fmt::format("Could not create or open shared memory '{}'.", name), GetLastWindowsError());
+        throw CoSimException(std::format("Could not create or open shared memory '{}'.", name), GetLastWindowsError());
     }
 
     return {name, size, handle};
@@ -66,7 +69,7 @@ SharedMemory SharedMemory::OpenExisting(std::string_view name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
-        throw CoSimException(fmt::format("Could not open shared memory '{}'.", name), GetLastWindowsError());
+        throw CoSimException(std::format("Could not open shared memory '{}'.", name), GetLastWindowsError());
     }
 
     return {name, size, handle};

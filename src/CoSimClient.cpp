@@ -2,6 +2,7 @@
 
 #include "CoSimClient.h"
 
+#include <format>
 #include <memory>
 
 #include "CoSimHelper.h"
@@ -21,7 +22,7 @@ namespace {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-}
+}  // namespace
 
 bool CoSimClient::Connect(const ConnectConfig& connectConfig) {
     if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
@@ -247,7 +248,7 @@ void CoSimClient::Terminate(DsVeosCoSim_TerminateReason terminateReason) {
             _nextCommand.exchange(Command::Terminate);
             break;
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            throw CoSimException(fmt::format("Unknown terminate reason {}.", ToString(terminateReason)));
+            throw CoSimException(std::format("Unknown terminate reason {}.", ToString(terminateReason)));
     }
 }
 
@@ -537,7 +538,7 @@ bool CoSimClient::ReceiveConnectResponse() {
             CheckResultWithMessage(OnConnectError(), "Could not handle connect error.");
             return true;
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -609,7 +610,7 @@ bool CoSimClient::RunCallbackBasedCoSimulationInternal() {
                 break;
             }
             default:
-                throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+                throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
         }
     }
 
@@ -652,7 +653,7 @@ bool CoSimClient::PollCommandInternal(DsVeosCoSim_SimulationTime& simulationTime
                 _currentCommand = Command::Ping;
                 break;
             default:
-                throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+                throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
         }
 
         if (returnOnPing || (_currentCommand != Command::Ping)) {

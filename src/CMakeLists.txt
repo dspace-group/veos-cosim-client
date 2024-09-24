@@ -39,15 +39,24 @@ target_include_directories(
 target_compile_definitions(
   ${PROJECT_NAME}
   PRIVATE
-  _CRT_SECURE_NO_WARNINGS
   DSVEOSCOSIM_EXPORT
-  WIN32_LEAN_AND_MEAN
 )
 
+if(WIN32)
+target_compile_definitions(
+  ${PROJECT_NAME}
+  PRIVATE
+  _CRT_SECURE_NO_WARNINGS
+  WIN32_LEAN_AND_MEAN
+)
+endif()
+
+if(WIN32)
 target_link_libraries(
   ${PROJECT_NAME}
-  fmt::fmt
+  WS2_32
 )
+endif()
 
 install(
   TARGETS ${PROJECT_NAME}

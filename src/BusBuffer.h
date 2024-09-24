@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <fmt/format.h>
 #include <concepts>
+#include <format>
 #include <memory>
 #include <mutex>
 #include <string_view>
@@ -135,7 +135,7 @@ public:
         for (const auto& controller : controllers) {
             const auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                throw CoSimException(fmt::format("Duplicated controller id {}.", controller.id));
+                throw CoSimException(std::format("Duplicated controller id {}.", controller.id));
             }
 
             ControllerExtension extension{};
@@ -215,7 +215,7 @@ protected:
             return search->second;
         }
 
-        throw CoSimException(fmt::format("Controller id {} is unknown.", controllerId));
+        throw CoSimException(std::format("Controller id {} is unknown.", controllerId));
     }
 
     std::unordered_map<DsVeosCoSim_BusControllerId, ControllerExtension> _controllers;

@@ -2,6 +2,8 @@
 
 #include "PortMapper.h"
 
+#include <format>
+
 #include "CoSimHelper.h"
 #include "Protocol.h"
 #include "SocketChannel.h"
@@ -101,7 +103,7 @@ bool PortMapperServer::HandleClient(Channel& channel) {
             CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
             return true;
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -117,7 +119,7 @@ bool PortMapperServer::HandleGetPort(Channel& channel) {
     if (search == _ports.end()) {
         CheckResultWithMessage(
             Protocol::SendError(channel.GetWriter(),
-                                fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", name)),
+                                std::format("Could not find port for dSPACE VEOS CoSim server '{}'.", name)),
             "Could not send error frame.");
         return true;
     }
@@ -203,7 +205,7 @@ bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName,
             throw CoSimException(errorMessage);
         }
         default:
-            throw CoSimException(fmt::format("PortMapper_GetPort: Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("PortMapper_GetPort: Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -227,7 +229,7 @@ bool PortMapper_SetPort(std::string_view name, uint16_t port) {
             throw CoSimException(errorString);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 
@@ -251,7 +253,7 @@ bool PortMapper_UnsetPort(std::string_view name) {
             throw CoSimException(errorString);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
     }
 }
 

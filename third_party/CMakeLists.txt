@@ -29,3 +29,11 @@ if(WIN32 AND CMAKE_SYSTEM_VERSION)
     -D_WIN32_WINNT=${version}
   )
 endif()
+
+if(WIN32)
+target_link_libraries(
+  asio
+  bcrypt
+  mswsock
+)
+endif()

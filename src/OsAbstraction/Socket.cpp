@@ -2,6 +2,8 @@
 
 #include "Socket.h"
 
+#include <format>
+
 #include "CoSimHelper.h"
 
 #ifdef _WIN32
@@ -26,10 +28,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cerrno>
-#endif
-
-#ifdef _MSC_VER
-#pragma comment(lib, "WS2_32.Lib")
 #endif
 
 #ifdef _WIN32
@@ -61,10 +59,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 [[nodiscard]] std::string GetUdsPath(std::string_view name) {
 #ifdef _WIN32
     fs::path tempDir = fs::temp_directory_path();
-    fs::path fileDir = tempDir / fmt::format("dSPACE.VEOS.CoSim.{}", name);
+    fs::path fileDir = tempDir / std::format("dSPACE.VEOS.CoSim.{}", name);
     return fileDir.string();
 #else
-    return fmt::format("dSPACE.VEOS.CoSim.{}", name);
+    return std::format("dSPACE.VEOS.CoSim.{}", name);
 #endif
 }
 
