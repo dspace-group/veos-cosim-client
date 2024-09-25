@@ -7,6 +7,7 @@ currentDir=$(dirname "$scriptFile")/.
 
 echo Cleaning ...
 
+rm -rf "$currentDir/obj"
 rm -rf "$currentDir/tmplin"
 
 echo Cleaning finished successfully.
