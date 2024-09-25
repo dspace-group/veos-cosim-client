@@ -42,7 +42,7 @@ State g_state;
 
 std::thread::id g_simulationThreadId;
 
-std::string format_as(State state) {
+[[nodiscard]] std::string ToString(State state) {
     switch (state) {
         case State::Unloaded:
             return "Unloaded";
@@ -54,9 +54,9 @@ std::string format_as(State state) {
             return "Paused";
         case State::Terminated:
             return "Terminated";
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            return "Unknown";
     }
+
+    return "<Unknown State>";
 }
 
 void DoSimulation() {
@@ -111,7 +111,7 @@ void StartSimulation() {
     }
 
     if (g_state != State::Stopped) {
-        LogError("Could not start in state {}.", format_as(g_state));
+        LogError("Could not start in state {}.", ToString(g_state));
         return;
     }
 
@@ -133,7 +133,7 @@ void StopSimulation() {
     }
 
     if ((g_state != State::Running) && (g_state != State::Paused)) {
-        LogError("Could not stop in state {}.", g_state);
+        LogError("Could not stop in state {}.", ToString(g_state));
         return;
     }
 
@@ -152,7 +152,7 @@ void PauseSimulation() {
     }
 
     if (g_state != State::Running) {
-        LogError("Could not pause in state {}.", g_state);
+        LogError("Could not pause in state {}.", ToString(g_state));
         return;
     }
 
@@ -171,7 +171,7 @@ void ContinueSimulation() {
     }
 
     if (g_state != State::Paused) {
-        LogError("Could not start in state {}.", g_state);
+        LogError("Could not start in state {}.", ToString(g_state));
         return;
     }
 
@@ -190,7 +190,7 @@ void TerminateSimulation() {
     }
 
     if (g_state == State::Unloaded) {
-        LogError("Could not terminate in state {}.", g_state);
+        LogError("Could not terminate in state {}.", ToString(g_state));
         return;
     }
 
@@ -234,7 +234,7 @@ void LoadSimulation(bool isClientOptional, std::string_view name) {
     LogInfo("Loading ...");
 
     if (g_state != State::Unloaded) {
-        LogError("Could not load in state {}.", g_state);
+        LogError("Could not load in state {}.", ToString(g_state));
         return;
     }
 

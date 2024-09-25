@@ -5,6 +5,9 @@
 #ifdef _WIN32
 
 #include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 

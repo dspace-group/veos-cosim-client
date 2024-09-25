@@ -2,6 +2,8 @@
 
 #include "CoSimHelper.h"
 
+#include <system_error>
+
 namespace DsVeosCoSim {
 
 namespace {
@@ -43,7 +45,7 @@ void LogTrace(std::string_view message) {
 }
 
 std::string GetSystemErrorMessage(int32_t errorCode) {
-    return fmt::format("Error code: {}. {}", errorCode, std::system_category().message(errorCode));
+    return "Error code: " + std::to_string(errorCode) + ". " + std::system_category().message(errorCode);
 }
 
 }  // namespace DsVeosCoSim

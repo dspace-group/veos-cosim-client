@@ -1,17 +1,29 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
 add_library(
-  ${PROJECT_NAME}
+  DsVeosCoSim
   ${DSVEOSCOSIM_TYPE}
+)
+
+set_target_properties(
+  DsVeosCoSim
+  PROPERTIES
+  SOVERSION 1
+  VERSION 1.1.0
+)
+
+target_sources(
+  DsVeosCoSim
+  PRIVATE
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
   Helpers/CoSimHelper.cpp
   OsAbstraction/Handle.cpp
   OsAbstraction/NamedEvent.cpp
   OsAbstraction/NamedMutex.cpp
+  OsAbstraction/OsUtilities.cpp
   OsAbstraction/SharedMemory.cpp
   OsAbstraction/Socket.cpp
-  OsAbstraction/OsUtilities.cpp
   BusBuffer.cpp
   CoSimClient.cpp
   CoSimServer.cpp
@@ -22,13 +34,13 @@ add_library(
 )
 
 target_include_directories(
-  ${PROJECT_NAME}
+  DsVeosCoSim
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
 )
 
 target_include_directories(
-  ${PROJECT_NAME}
+  DsVeosCoSim
   PRIVATE
   ./
   Communication/
@@ -37,20 +49,34 @@ target_include_directories(
 )
 
 target_compile_definitions(
-  ${PROJECT_NAME}
+  DsVeosCoSim
   PRIVATE
-  _CRT_SECURE_NO_WARNINGS
   DSVEOSCOSIM_EXPORT
-  WIN32_LEAN_AND_MEAN
 )
 
+if(WIN32)
+target_compile_definitions(
+  DsVeosCoSim
+  PRIVATE
+  _CRT_SECURE_NO_WARNINGS
+  WIN32_LEAN_AND_MEAN
+)
+endif()
+
+if(WIN32)
 target_link_libraries(
-  ${PROJECT_NAME}
-  fmt::fmt
+  DsVeosCoSim
+  WS2_32
+)
+endif()
+
+install(
+  TARGETS DsVeosCoSim
+  EXPORT DsVeosCoSimTargets
+  DESTINATION lib
 )
 
 install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT DsVeosCoSimTargets
-  DESTINATION lib)
-install(FILES ../include/DsVeosCoSim/DsVeosCoSim.h DESTINATION include)
+  FILES ../include/DsVeosCoSim/DsVeosCoSim.h
+  DESTINATION include
+)

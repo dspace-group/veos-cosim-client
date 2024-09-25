@@ -96,7 +96,7 @@ void InitializeOutput() {
     DWORD dwMode = 0;
     if (::GetConsoleMode(console, &dwMode) != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        ::SetConsoleMode(console, dwMode);
+        (void)::SetConsoleMode(console, dwMode);
     }
 #endif
 

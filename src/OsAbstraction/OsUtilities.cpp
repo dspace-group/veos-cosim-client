@@ -5,7 +5,9 @@
 #include "OsUtilities.h"
 
 #include <Windows.h>
-#include <fmt/format.h>
+#include <cstdint>
+#include <string>
+#include <string_view>
 
 namespace DsVeosCoSim {
 

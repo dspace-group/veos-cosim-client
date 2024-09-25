@@ -1,7 +1,12 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
 add_executable(
-  ${PROJECT_NAME}Test
+  DsVeosCoSimTest
+)
+
+target_sources(
+  DsVeosCoSimTest
+  PRIVATE
   Communication/TestLocalChannel.cpp
   Communication/TestTcpChannel.cpp
   Communication/TestUdsChannel.cpp
@@ -20,22 +25,22 @@ add_executable(
 )
 
 target_include_directories(
-  ${PROJECT_NAME}Test
+  DsVeosCoSimTest
   PRIVATE
   Helpers
 )
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
   target_compile_definitions(
-    ${PROJECT_NAME}Test
+    DsVeosCoSimTest
     PRIVATE
     EXCEPTION_TESTS
   )
 endif()
 
 target_link_libraries(
-  ${PROJECT_NAME}Test
-  ${PROJECT_NAME}
+  DsVeosCoSimTest
+  DsVeosCoSim
   shared
   GTest::gtest
   GTest::gmock

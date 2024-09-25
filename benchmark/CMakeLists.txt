@@ -1,7 +1,12 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
 add_executable(
-  ${PROJECT_NAME}Benchmark
+  DsVeosCoSimBenchmark
+)
+
+target_sources(
+  DsVeosCoSimBenchmark
+  PRIVATE
   Communication/BenchmarkChannel.cpp
   OsAbstraction/BenchmarkNamedEvent.cpp
   OsAbstraction/BenchmarkSocket.cpp
@@ -11,8 +16,8 @@ add_executable(
 )
 
 target_link_libraries(
-  ${PROJECT_NAME}Benchmark
-  ${PROJECT_NAME}
+  DsVeosCoSimBenchmark
+  DsVeosCoSim
   shared
   benchmark::benchmark
 )

@@ -81,7 +81,7 @@ void PortMapperServer::RunPortMapperServer() {
                 }
             }
         } catch (const std::exception& e) {
-            LogError("The following exception occurred in port mapper thread: {}", e.what());
+            LogError("The following exception occurred in port mapper thread: " + std::string(e.what()));
         }
     }
 }
@@ -101,7 +101,7 @@ bool PortMapperServer::HandleClient(Channel& channel) {
             CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
             return true;
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
     }
 }
 
@@ -110,15 +110,14 @@ bool PortMapperServer::HandleGetPort(Channel& channel) {
     CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
     if (IsPortMapperServerVerbose()) {
-        LogTrace("Get '{}'", name);
+        LogTrace("Get '" + name + "'");
     }
 
     const auto search = _ports.find(name);
     if (search == _ports.end()) {
-        CheckResultWithMessage(
-            Protocol::SendError(channel.GetWriter(),
-                                fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", name)),
-            "Could not send error frame.");
+        CheckResultWithMessage(Protocol::SendError(channel.GetWriter(),
+                                                   "Could not find port for dSPACE VEOS CoSim server '" + name + "'."),
+                               "Could not send error frame.");
         return true;
     }
 
@@ -133,7 +132,7 @@ bool PortMapperServer::HandleSetPort(Channel& channel) {
     CheckResultWithMessage(Protocol::ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
 
     if (IsPortMapperServerVerbose()) {
-        LogTrace("Set '{}':{}", name, port);
+        LogTrace("Set '" + name + "':" + std::to_string(port));
     }
 
     _ports[name] = port;
@@ -151,7 +150,7 @@ bool PortMapperServer::HandleUnsetPort(Channel& channel) {
     CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
     if (IsPortMapperServerVerbose()) {
-        LogTrace("Unset '{}'", name);
+        LogTrace("Unset '" + name + "'");
     }
 
     _ports.erase(name);
@@ -171,14 +170,15 @@ void PortMapperServer::DumpEntries() {
         LogTrace("PortMapper Ports:");
 
         for (auto& [name, port] : _ports) {
-            LogTrace("  '{}': {}", name, port);
+            LogTrace("  '" + name + "': {}" + std::to_string(port));
         }
     }
 }
 
 bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        LogTrace("PortMapper_GetPort(ipAddress: '{}', serverName: '{}')", ipAddress, serverName);
+        LogTrace("PortMapper_GetPort(ipAddress: '" + std::string(ipAddress) + "', serverName: '" +
+                 std::string(serverName) + "')");
     }
 
     std::optional<SocketChannel> channel =
@@ -203,7 +203,7 @@ bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName,
             throw CoSimException(errorMessage);
         }
         default:
-            throw CoSimException(fmt::format("PortMapper_GetPort: Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException("PortMapper_GetPort: Received unexpected frame " + ToString(frameKind) + ".");
     }
 }
 
@@ -227,7 +227,7 @@ bool PortMapper_SetPort(std::string_view name, uint16_t port) {
             throw CoSimException(errorString);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
     }
 }
 
@@ -251,7 +251,7 @@ bool PortMapper_UnsetPort(std::string_view name) {
             throw CoSimException(errorString);
         }
         default:
-            throw CoSimException(fmt::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
     }
 }
 

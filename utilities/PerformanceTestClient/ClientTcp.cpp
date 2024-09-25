@@ -4,6 +4,7 @@
 
 #include "CoSimHelper.h"
 #include "Helper.h"
+#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 #include "Socket.h"

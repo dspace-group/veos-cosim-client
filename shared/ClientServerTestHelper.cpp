@@ -2,6 +2,8 @@
 
 #include "ClientServerTestHelper.h"
 
+#include <fmt/format.h>
+
 #include "BusBuffer.h"
 #include "CoSimHelper.h"
 #include "Generator.h"
@@ -16,7 +18,7 @@ bool g_sendEthMessages;
 bool g_sendLinMessages;
 
 void PrintStatus(bool value, std::string_view what) {
-    LogInfo("{} sending {}.", value ? "Enabled" : "Disabled", what);
+    LogInfo(fmt::format("{} sending {}.", value ? "Enabled" : "Disabled", what));
 }
 
 }  // namespace

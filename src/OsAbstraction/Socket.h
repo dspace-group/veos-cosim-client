@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -15,6 +16,19 @@ enum class AddressFamily {
     Ipv4 = 2,
     Ipv6 = 23
 };
+
+[[nodiscard]] inline std::string_view ToString(AddressFamily addressFamily) {
+    switch (addressFamily) {
+        case DsVeosCoSim::AddressFamily::Ipv4:
+            return "Ipv4";
+        case DsVeosCoSim::AddressFamily::Ipv6:
+            return "Ipv6";
+        case DsVeosCoSim::AddressFamily::Uds:
+            return "Uds";
+    }
+
+    return "<Invalid AddressFamily>";
+}
 
 #ifdef _WIN32
 using socket_t = uintptr_t;
@@ -89,18 +103,5 @@ private:
     AddressFamily _addressFamily{};
     std::string _path;
 };
-
-[[nodiscard]] inline std::string_view format_as(DsVeosCoSim::AddressFamily addressFamily) {
-    switch (addressFamily) {
-        case DsVeosCoSim::AddressFamily::Ipv4:
-            return "Ipv4";
-        case DsVeosCoSim::AddressFamily::Ipv6:
-            return "Ipv6";
-        case DsVeosCoSim::AddressFamily::Uds:
-            return "Uds";
-    }
-
-    return "<Invalid AddressFamily>";
-}
 
 }  // namespace DsVeosCoSim

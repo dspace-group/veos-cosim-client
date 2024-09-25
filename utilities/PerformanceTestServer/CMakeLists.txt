@@ -2,6 +2,11 @@
 
 add_executable(
   PerformanceTestServer
+)
+
+target_sources(
+  PerformanceTestServer
+  PRIVATE
   Program.cpp
   ServerAsioBlocking.cpp
   ServerCoSim.cpp
@@ -16,7 +21,7 @@ add_executable(
 
 target_link_libraries(
   PerformanceTestServer
-  ${PROJECT_NAME}
+  DsVeosCoSim
   shared
   asio
 )

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <fmt/format.h>
+#include <stdexcept>
 
 #include "CoSimTypes.h"
 
@@ -14,26 +14,6 @@ void LogError(std::string_view message);
 void LogWarning(std::string_view message);
 void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
-
-template <typename... T>
-void LogError(fmt::format_string<T...> format, T&&... args) {
-    LogError(vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogWarning(fmt::format_string<T...> format, T&&... args) {
-    LogWarning(vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogInfo(fmt::format_string<T...> format, T&&... args) {
-    LogInfo(vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogTrace(fmt::format_string<T...> format, T&&... args) {
-    LogTrace(vformat(format, fmt::make_format_args(args...)));
-}
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \
@@ -58,7 +38,7 @@ public:
     }
 
     CoSimException(std::string_view message, int32_t errorCode)
-        : std::runtime_error(fmt::format("{} {}", message, GetSystemErrorMessage(errorCode))) {
+        : std::runtime_error(std::string(message) + " " + GetSystemErrorMessage(errorCode)) {
     }
 };
 

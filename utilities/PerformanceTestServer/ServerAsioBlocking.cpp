@@ -1,10 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <fmt/format.h>
 #include <asio.hpp>
 #include <thread>
 
 #include "CoSimHelper.h"
+#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;

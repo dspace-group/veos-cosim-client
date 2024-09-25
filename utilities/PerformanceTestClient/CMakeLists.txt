@@ -2,6 +2,11 @@
 
 add_executable(
   PerformanceTestClient
+)
+
+target_sources(
+  PerformanceTestClient
+  PRIVATE
   ClientAsioBlocking.cpp
   ClientCoSimCallbackBased.cpp
   ClientCoSimPollingBased.cpp
@@ -24,7 +29,7 @@ target_include_directories(
 
 target_link_libraries(
   PerformanceTestClient
-  ${PROJECT_NAME}
+  DsVeosCoSim
   shared
   asio
 )

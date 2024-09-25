@@ -2,11 +2,16 @@
 
 add_executable(
   TestClient
+)
+
+target_sources(
+  TestClient
+  PRIVATE
   Program.cpp
 )
 
 target_link_libraries(
   TestClient
-  ${PROJECT_NAME}
+  DsVeosCoSim
   shared
 )

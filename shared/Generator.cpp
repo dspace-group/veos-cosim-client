@@ -2,6 +2,8 @@
 
 #include "Generator.h"
 
+#include <fmt/format.h>
+
 using namespace DsVeosCoSim;
 
 int32_t Random(int32_t min, int32_t max) {

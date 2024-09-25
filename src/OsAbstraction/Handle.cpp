@@ -5,7 +5,6 @@
 #include "Handle.h"
 
 #include <Windows.h>
-#include <fmt/format.h>
 
 #include "CoSimHelper.h"
 #include "OsUtilities.h"
@@ -52,7 +51,7 @@ bool Handle::Wait(uint32_t milliseconds) const {
         case WAIT_FAILED:
             throw CoSimException("Could not wait for handle.", GetLastWindowsError());
         default:
-            throw CoSimException(fmt::format("Could not wait for handle. Invalid result: {}.", result));
+            throw CoSimException("Could not wait for handle. Invalid result: " + std::to_string(result) + ".");
     }
 }
 
@@ -67,7 +66,8 @@ bool SignalAndWait(const Handle& toSignal, const Handle& toWait, uint32_t millis
         case WAIT_FAILED:
             throw CoSimException("Could not signal and wait for handle.", GetLastWindowsError());
         default:
-            throw CoSimException(fmt::format("Could not signal and wait for handle. Invalid result: {}.", result));
+            throw CoSimException("Could not signal and wait for handle. Invalid result: " + std::to_string(result) +
+                                 ".");
     }
 }
 
