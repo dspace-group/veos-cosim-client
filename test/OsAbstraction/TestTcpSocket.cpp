@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <gtest/gtest.h>
+#include <fmt/format.h>
 #include <vector>
 
 #include "Generator.h"
@@ -39,7 +40,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
                              std::string access = info.param.enableRemoteAccess ? "Remote" : "Local";
-                             return fmt::format("{}_{}", info.param.addressFamily, access);
+                             return fmt::format("{}_{}", ToString(info.param.addressFamily), access);
                          });
 
 TEST_P(TestTcpSocket, Create) {

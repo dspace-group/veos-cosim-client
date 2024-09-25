@@ -2,8 +2,6 @@
 
 #include "BusBuffer.h"
 
-#include <format>
-
 namespace DsVeosCoSim {
 
 namespace {
@@ -200,15 +198,15 @@ BusBuffer::BusBuffer(CoSimType coSimType,
     }
 #endif
 
-    std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-    std::string_view suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+    std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+    std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-    _canTransmitBuffer->Initialize(coSimType, std::format("{}.Can.{}", name, suffixForTransmit), canControllers);
-    _ethTransmitBuffer->Initialize(coSimType, std::format("{}.Eth.{}", name, suffixForTransmit), ethControllers);
-    _linTransmitBuffer->Initialize(coSimType, std::format("{}.Lin.{}", name, suffixForTransmit), linControllers);
-    _canReceiveBuffer->Initialize(coSimType, std::format("{}.Can.{}", name, suffixForReceive), canControllers);
-    _ethReceiveBuffer->Initialize(coSimType, std::format("{}.Eth.{}", name, suffixForReceive), ethControllers);
-    _linReceiveBuffer->Initialize(coSimType, std::format("{}.Lin.{}", name, suffixForReceive), linControllers);
+    _canTransmitBuffer->Initialize(coSimType, std::string(name) + ".Can." + suffixForTransmit, canControllers);
+    _ethTransmitBuffer->Initialize(coSimType, std::string(name) + ".Eth." + suffixForTransmit, ethControllers);
+    _linTransmitBuffer->Initialize(coSimType, std::string(name) + ".Lin." + suffixForTransmit, linControllers);
+    _canReceiveBuffer->Initialize(coSimType, std::string(name) + ".Can." + suffixForReceive, canControllers);
+    _ethReceiveBuffer->Initialize(coSimType, std::string(name) + ".Eth." + suffixForReceive, ethControllers);
+    _linReceiveBuffer->Initialize(coSimType, std::string(name) + ".Lin." + suffixForReceive, linControllers);
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,

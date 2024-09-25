@@ -3,9 +3,9 @@
 #pragma once
 
 #include <concepts>
-#include <format>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -135,7 +135,7 @@ public:
         for (const auto& controller : controllers) {
             const auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                throw CoSimException(std::format("Duplicated controller id {}.", controller.id));
+                throw CoSimException("Duplicated controller id " + std::to_string(controller.id) + ".");
             }
 
             ControllerExtension extension{};
@@ -215,7 +215,7 @@ protected:
             return search->second;
         }
 
-        throw CoSimException(std::format("Controller id {} is unknown.", controllerId));
+        throw CoSimException("Controller id " + std::to_string(controllerId) + " is unknown.");
     }
 
     std::unordered_map<DsVeosCoSim_BusControllerId, ControllerExtension> _controllers;
@@ -263,7 +263,8 @@ protected:
 
         if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
             if (!extension.warningSent) {
-                LogWarning("Queue for controller '{}' is full. Messages are dropped.", extension.info.name);
+                LogWarning("Queue for controller '" + std::string(extension.info.name) +
+                           "' is full. Messages are dropped.");
                 extension.warningSent = true;
             }
 
@@ -326,7 +327,7 @@ protected:
 
             if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
                 if (!extension.warningSent) {
-                    LogWarning("Receive buffer for controller '{}' is full.", extension.info.name);
+                    LogWarning("Receive buffer for controller '" + std::string(extension.info.name) + "' is full.");
                     extension.warningSent = true;
                 }
 
@@ -412,7 +413,8 @@ protected:
 
         if (messageCount.load() == extension.info.queueSize) {
             if (!extension.warningSent) {
-                LogWarning("Queue for controller '{}' is full. Messages are dropped.", extension.info.name);
+                LogWarning("Queue for controller '" + std::string(extension.info.name) +
+                           "' is full. Messages are dropped.");
                 extension.warningSent = true;
             }
 

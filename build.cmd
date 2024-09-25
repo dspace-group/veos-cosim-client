@@ -36,8 +36,7 @@ echo Building %config% %platformToUse% ...
 set buildDir=%currentDir%\tmpwin\%config%\%platformToUse%
 if not exist "%buildDir%" mkdir "%buildDir%" || exit /b 1
 cd "%buildDir%"
-rem cmake ..\..\.. -GNinja -DCMAKE_BUILD_TYPE=%config% -DDSVEOSCOSIM_BUILD_TESTS=ON -DDSVEOSCOSIM_BUILD_BENCHMARKS=ON || exit /b 1
-cmake ..\..\.. -GNinja -DCMAKE_BUILD_TYPE=%config% || exit /b 1
+cmake ..\..\.. -GNinja -DCMAKE_BUILD_TYPE=%config% -DDSVEOSCOSIM_BUILD_TESTS=ON -DDSVEOSCOSIM_BUILD_BENCHMARKS=ON || exit /b 1
 cmake --build . --config %config% || exit /b 1
 
 echo Building %config% %platformToUse% finished successfully.

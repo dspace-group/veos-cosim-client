@@ -3,6 +3,11 @@
 add_library(
   shared
   STATIC
+)
+
+target_sources(
+  shared
+  PRIVATE
   BackgroundService.cpp
   ClientServerTestHelper.cpp
   Generator.cpp
@@ -32,6 +37,6 @@ endif()
 
 target_link_libraries(
   shared
-  ${PROJECT_NAME}
+  DsVeosCoSim
   fmt::fmt
 )

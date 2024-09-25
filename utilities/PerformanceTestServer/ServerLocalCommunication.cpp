@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "CoSimHelper.h"
+#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
 
 #ifdef _WIN32

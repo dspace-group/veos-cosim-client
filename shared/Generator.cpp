@@ -2,7 +2,7 @@
 
 #include "Generator.h"
 
-#include <format>
+#include <fmt/format.h>
 
 using namespace DsVeosCoSim;
 
@@ -45,7 +45,7 @@ int64_t GenerateI64() {
 }
 
 std::string GenerateString(std::string_view prefix) {
-    return std::format("{}{}", prefix, GenerateU32());
+    return fmt::format("{}{}", prefix, GenerateU32());
 }
 
 DsVeosCoSim_DataType GenerateDataType() {

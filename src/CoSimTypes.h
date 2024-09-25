@@ -22,7 +22,7 @@ enum class CoSimType {
     Server
 };
 
-[[nodiscard]] inline std::string_view ToString(CoSimType coSimType) {
+[[nodiscard]] inline std::string ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -103,7 +103,7 @@ enum class Command {
     return "<Invalid DsVeosCoSim_Severity>";
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_TerminateReason terminateReason) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_TerminateReason terminateReason) {
     switch (terminateReason) {
         case DsVeosCoSim_TerminateReason_Finished:
             return "Finished";
@@ -153,7 +153,7 @@ enum class Command {
     return 0;
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_DataType dataType) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_DataType dataType) {
     switch (dataType) {
         case DsVeosCoSim_DataType_Bool:
             return "Bool";
@@ -184,7 +184,7 @@ enum class Command {
     return "<Invalid DsVeosCoSim_DataType>";
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_SizeKind sizeKind) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_SizeKind sizeKind) {
     switch (sizeKind) {
         case DsVeosCoSim_SizeKind_Fixed:
             return "Fixed";

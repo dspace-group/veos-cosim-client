@@ -2,7 +2,6 @@
 
 #include "CoSimClient.h"
 
-#include <format>
 #include <memory>
 
 #include "CoSimHelper.h"
@@ -248,7 +247,7 @@ void CoSimClient::Terminate(DsVeosCoSim_TerminateReason terminateReason) {
             _nextCommand.exchange(Command::Terminate);
             break;
         default:  // NOLINT(clang-diagnostic-covered-switch-default)
-            throw CoSimException(std::format("Unknown terminate reason {}.", ToString(terminateReason)));
+            throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
     }
 }
 
@@ -419,7 +418,7 @@ bool CoSimClient::LocalConnect() {
 #ifdef _WIN32
     std::optional<LocalChannel> channel = TryConnectToLocalChannel(_serverName);
     if (!channel) {
-        LogTrace("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName);
+        LogTrace("Could not connect to local dSPACE VEOS CoSim server '" + _serverName + "'.");
         return false;
     }
 
@@ -427,7 +426,7 @@ bool CoSimClient::LocalConnect() {
 #else
     std::optional<SocketChannel> channel = TryConnectToUdsChannel(_serverName);
     if (!channel) {
-        LogTrace("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName);
+        LogTrace("Could not connect to local dSPACE VEOS CoSim server '" + _serverName + "'.");
         return false;
     }
 
@@ -440,15 +439,17 @@ bool CoSimClient::LocalConnect() {
 
 bool CoSimClient::RemoteConnect() {
     if (_remotePort == 0) {
-        LogInfo("Obtaining TCP port of dSPACE VEOS CoSim server '{}' at {} ...", _serverName, _remoteIpAddress);
+        LogInfo("Obtaining TCP port of dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + " ...");
         CheckResultWithMessage(PortMapper_GetPort(_remoteIpAddress, _serverName, _remotePort),
                                "Could not get port from port mapper.");
     }
 
     if (_serverName.empty()) {
-        LogInfo("Connecting to dSPACE VEOS CoSim server at {}:{} ...", _remoteIpAddress, _remotePort);
+        LogInfo("Connecting to dSPACE VEOS CoSim server at " + _remoteIpAddress + ":" + std::to_string(_remotePort) +
+                "...");
     } else {
-        LogInfo("Connecting to dSPACE VEOS CoSim server '{}' at {}:{} ...", _serverName, _remoteIpAddress, _remotePort);
+        LogInfo("Connecting to dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + ":" +
+                std::to_string(_remotePort) + "...");
     }
 
     std::optional<SocketChannel> channel =
@@ -492,12 +493,14 @@ bool CoSimClient::OnConnectOk() {
     _linControllersExtern = Convert(_linControllers);
 
     if (_connectionKind == ConnectionKind::Local) {
-        LogInfo("Connected to local dSPACE VEOS CoSim server '{}'.", _serverName);
+        LogInfo("Connected to local dSPACE VEOS CoSim server '" + _serverName + "'.");
     } else {
         if (_serverName.empty()) {
-            LogInfo("Connected to dSPACE VEOS CoSim server at {}:{}.", _remoteIpAddress, _remotePort);
+            LogInfo("Connected to dSPACE VEOS CoSim server at " + _remoteIpAddress + ":" + std::to_string(_remotePort) +
+                    ".");
         } else {
-            LogInfo("Connected to dSPACE VEOS CoSim server '{}' at {}:{}.", _serverName, _remoteIpAddress, _remotePort);
+            LogInfo("Connected to dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + ":" +
+                    std::to_string(_remotePort) + ".");
         }
     }
 
@@ -538,7 +541,7 @@ bool CoSimClient::ReceiveConnectResponse() {
             CheckResultWithMessage(OnConnectError(), "Could not handle connect error.");
             return true;
         default:
-            throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
+            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
     }
 }
 
@@ -610,7 +613,7 @@ bool CoSimClient::RunCallbackBasedCoSimulationInternal() {
                 break;
             }
             default:
-                throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
+                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
         }
     }
 
@@ -653,7 +656,7 @@ bool CoSimClient::PollCommandInternal(DsVeosCoSim_SimulationTime& simulationTime
                 _currentCommand = Command::Ping;
                 break;
             default:
-                throw CoSimException(std::format("Received unexpected frame {}.", ToString(frameKind)));
+                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
         }
 
         if (returnOnPing || (_currentCommand != Command::Ping)) {

@@ -2,11 +2,9 @@
 
 #include <thread>
 
-#include "CoSimHelper.h"
+#include "LogHelper.h"
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
-
-using namespace DsVeosCoSim;
 
 namespace {
 

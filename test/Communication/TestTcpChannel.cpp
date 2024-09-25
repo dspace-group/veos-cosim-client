@@ -45,7 +45,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestTcpChannel,
                          testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
-                             return std::string(format_as(info.param.addressFamily));
+                             return std::string(ToString(info.param.addressFamily));
                          });
 
 TEST_F(TestTcpChannel, StartServer) {

@@ -2,8 +2,6 @@
 
 #include "Socket.h"
 
-#include <format>
-
 #include "CoSimHelper.h"
 
 #ifdef _WIN32
@@ -59,10 +57,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 [[nodiscard]] std::string GetUdsPath(std::string_view name) {
 #ifdef _WIN32
     fs::path tempDir = fs::temp_directory_path();
-    fs::path fileDir = tempDir / std::format("dSPACE.VEOS.CoSim.{}", name);
+    fs::path fileDir = tempDir / ("dSPACE.VEOS.CoSim." + std::string(name));
     return fileDir.string();
 #else
-    return std::format("dSPACE.VEOS.CoSim.{}", name);
+    return "dSPACE.VEOS.CoSim." + std::string(name);
 #endif
 }
 
@@ -722,7 +720,7 @@ bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) con
         return false;
     }
 
-    LogError("Could not receive from remote endpoint. {}", GetSystemErrorMessage(errorCode));
+    LogError("Could not receive from remote endpoint. " + GetSystemErrorMessage(errorCode));
     return false;
 }
 
@@ -753,7 +751,7 @@ bool Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
         return false;
     }
 
-    LogError("Could not send to remote endpoint. {}", GetSystemErrorMessage(errorCode));
+    LogError("Could not send to remote endpoint. " + GetSystemErrorMessage(errorCode));
     return false;
 }
 
