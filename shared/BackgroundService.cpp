@@ -2,6 +2,8 @@
 
 #include "BackgroundService.h"
 
+#include <thread>
+
 using namespace DsVeosCoSim;
 
 BackgroundService::BackgroundService(CoSimServer& coSimServer) : _coSimServer(coSimServer) {
@@ -18,5 +20,9 @@ BackgroundService::BackgroundService(CoSimServer& coSimServer) : _coSimServer(co
 
 BackgroundService::~BackgroundService() noexcept {
     _stopEvent.Set();
-    _thread.join();
+    if (std::this_thread::get_id() == _thread.get_id()) {
+        _thread.detach();
+    } else {
+        _thread.join();
+    }
 }
