@@ -62,7 +62,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestProtocol,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
                          [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return std::string(ToString(info.param));
+                             return ToString(info.param);
                          });
 
 TEST_P(TestProtocol, SendAndReceiveOk) {

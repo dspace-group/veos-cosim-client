@@ -3,6 +3,7 @@
 #include "Helper.h"
 
 #include <stdexcept>
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "LogHelper.h"
@@ -86,7 +87,7 @@ Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
     throw std::runtime_error("Could not connect within timeout.");
 }
 
-Socket ConnectSocket(std::string_view name) {
+Socket ConnectSocket(const std::string& name) {
     Socket socket(AddressFamily::Uds);
     if (socket.TryConnect(name)) {
         return socket;
@@ -122,7 +123,7 @@ SocketChannel Accept(const TcpChannelServer& server) {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-SocketChannel ConnectToUdsChannel(std::string_view name) {
+SocketChannel ConnectToUdsChannel(const std::string& name) {
     std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
     if (channel) {
         return std::move(*channel);
@@ -142,7 +143,7 @@ SocketChannel Accept(const UdsChannelServer& server) {
 
 #ifdef _WIN32
 
-LocalChannel ConnectToLocalChannel(std::string_view name) {
+LocalChannel ConnectToLocalChannel(const std::string& name) {
     std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
     if (channel) {
         return std::move(*channel);

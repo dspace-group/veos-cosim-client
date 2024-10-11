@@ -172,7 +172,7 @@ void LinMessage::CheckMaxLength() const {
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      [[maybe_unused]] ConnectionKind connectionKind,
-                     std::string_view name,
+                     const std::string& name,
                      const std::vector<DsVeosCoSim_CanController>& canControllers,
                      const std::vector<DsVeosCoSim_EthController>& ethControllers,
                      const std::vector<DsVeosCoSim_LinController>& linControllers) {
@@ -201,31 +201,31 @@ BusBuffer::BusBuffer(CoSimType coSimType,
     std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
     std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-    _canTransmitBuffer->Initialize(coSimType, std::string(name) + ".Can." + suffixForTransmit, canControllers);
-    _ethTransmitBuffer->Initialize(coSimType, std::string(name) + ".Eth." + suffixForTransmit, ethControllers);
-    _linTransmitBuffer->Initialize(coSimType, std::string(name) + ".Lin." + suffixForTransmit, linControllers);
-    _canReceiveBuffer->Initialize(coSimType, std::string(name) + ".Can." + suffixForReceive, canControllers);
-    _ethReceiveBuffer->Initialize(coSimType, std::string(name) + ".Eth." + suffixForReceive, ethControllers);
-    _linReceiveBuffer->Initialize(coSimType, std::string(name) + ".Lin." + suffixForReceive, linControllers);
+    _canTransmitBuffer->Initialize(coSimType, name + ".Can." + suffixForTransmit, canControllers);
+    _ethTransmitBuffer->Initialize(coSimType, name + ".Eth." + suffixForTransmit, ethControllers);
+    _linTransmitBuffer->Initialize(coSimType, name + ".Lin." + suffixForTransmit, linControllers);
+    _canReceiveBuffer->Initialize(coSimType, name + ".Can." + suffixForReceive, canControllers);
+    _ethReceiveBuffer->Initialize(coSimType, name + ".Eth." + suffixForReceive, ethControllers);
+    _linReceiveBuffer->Initialize(coSimType, name + ".Lin." + suffixForReceive, linControllers);
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
-                     std::string_view name,
+                     const std::string& name,
                      const std::vector<DsVeosCoSim_CanController>& canControllers)
     : BusBuffer(coSimType, connectionKind, name, canControllers, {}, {}) {
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
-                     std::string_view name,
+                     const std::string& name,
                      const std::vector<DsVeosCoSim_EthController>& ethControllers)
     : BusBuffer(coSimType, connectionKind, name, {}, ethControllers, {}) {
 }
 
 BusBuffer::BusBuffer(CoSimType coSimType,
                      ConnectionKind connectionKind,
-                     std::string_view name,
+                     const std::string& name,
                      const std::vector<DsVeosCoSim_LinController>& linControllers)
     : BusBuffer(coSimType, connectionKind, name, {}, {}, linControllers) {
 }

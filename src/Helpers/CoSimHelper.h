@@ -3,6 +3,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string_view>
 
 #include "CoSimTypes.h"
 
@@ -37,8 +38,8 @@ public:
     explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
     }
 
-    CoSimException(std::string_view message, int32_t errorCode)
-        : std::runtime_error(std::string(message) + " " + GetSystemErrorMessage(errorCode)) {
+    CoSimException(const std::string& message, int32_t errorCode)
+        : std::runtime_error(message + " " + GetSystemErrorMessage(errorCode)) {
     }
 };
 

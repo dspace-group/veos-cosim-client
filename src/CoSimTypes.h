@@ -38,7 +38,7 @@ enum class ConnectionKind {
     Local
 };
 
-[[nodiscard]] inline std::string_view ToString(ConnectionKind connectionKind) {
+[[nodiscard]] inline std::string ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";

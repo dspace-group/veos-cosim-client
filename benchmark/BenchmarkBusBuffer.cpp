@@ -2,7 +2,6 @@
 
 #include <benchmark/benchmark.h>
 #include <string>
-#include <string_view>
 #include <thread>
 
 #include "BusBuffer.h"
@@ -42,8 +41,8 @@ void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channe
 template <typename TypeParam>
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             std::string_view senderName,
-             std::string_view receiverName,
+             const std::string& senderName,
+             const std::string& receiverName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     using TController = std::tuple_element_t<0, TypeParam>;

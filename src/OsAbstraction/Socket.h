@@ -17,7 +17,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] inline std::string_view ToString(AddressFamily addressFamily) {
+[[nodiscard]] inline std::string ToString(AddressFamily addressFamily) {
     switch (addressFamily) {
         case DsVeosCoSim::AddressFamily::Ipv4:
             return "Ipv4";
@@ -74,10 +74,10 @@ public:
                                                           uint16_t localPort,
                                                           uint32_t timeoutInMilliseconds);
 
-    [[nodiscard]] bool TryConnect(std::string_view name) const;
+    [[nodiscard]] bool TryConnect(const std::string& name) const;
     void EnableIpv6Only() const;
     void Bind(uint16_t port, bool enableRemoteAccess) const;
-    void Bind(std::string_view name);
+    void Bind(const std::string& name);
     void EnableReuseAddress() const;
     void EnableNoDelay() const;
     void Listen() const;

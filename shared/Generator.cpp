@@ -3,6 +3,7 @@
 #include "Generator.h"
 
 #include <fmt/format.h>
+#include <string_view>
 
 using namespace DsVeosCoSim;
 

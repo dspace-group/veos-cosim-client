@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <string>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -288,7 +289,7 @@ std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilli
     return {};
 }
 
-std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name) {
+std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
     StartupNetwork();
 
     Socket socket(AddressFamily::Uds);
@@ -299,7 +300,7 @@ std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name) {
     return {};
 }
 
-UdsChannelServer::UdsChannelServer(std::string_view name) {
+UdsChannelServer::UdsChannelServer(const std::string& name) {
     StartupNetwork();
 
     _listenSocket = Socket(AddressFamily::Uds);

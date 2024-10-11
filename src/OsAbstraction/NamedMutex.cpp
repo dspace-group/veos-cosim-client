@@ -5,6 +5,8 @@
 #include "NamedMutex.h"
 
 #include <Windows.h>
+#include <cstdint>
+#include <string>
 
 #include "CoSimHelper.h"
 #include "OsUtilities.h"
@@ -13,8 +15,8 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] std::wstring GetFullNamedMutexName(std::string_view name) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + std::string(name));
+[[nodiscard]] std::wstring GetFullNamedMutexName(const std::string& name) {
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + name);
 }
 
 }  // namespace
@@ -22,27 +24,27 @@ namespace {
 NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
-NamedMutex NamedMutex::CreateOrOpen(std::string_view name) {
+NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
-        throw CoSimException("Could not create or open mutex '" + std::string(name) + "'.", GetLastWindowsError());
+        throw CoSimException("Could not create or open mutex '" + name + "'.", GetLastWindowsError());
     }
 
     return NamedMutex(handle);
 }
 
-NamedMutex NamedMutex::OpenExisting(std::string_view name) {
+NamedMutex NamedMutex::OpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
-        throw CoSimException("Could not open mutex '" + std::string(name) + "'.", GetLastWindowsError());
+        throw CoSimException("Could not open mutex '" + name + "'.", GetLastWindowsError());
     }
 
     return NamedMutex(handle);
 }
 
-std::optional<NamedMutex> NamedMutex::TryOpenExisting(std::string_view name) {
+std::optional<NamedMutex> NamedMutex::TryOpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {

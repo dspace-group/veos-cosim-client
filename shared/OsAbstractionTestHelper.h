@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 class InternetAddress final {
 public:
@@ -55,7 +56,7 @@ private:
 
 class Pipe final {
 public:
-    explicit Pipe(std::string_view name);
+    explicit Pipe(const std::string& name);
     ~Pipe();
 
     Pipe(const Pipe&) = delete;

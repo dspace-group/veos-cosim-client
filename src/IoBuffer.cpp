@@ -129,7 +129,7 @@ IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(DsVeosCoSim_IoSignalI
 }
 
 RemoteIoPartBuffer::RemoteIoPartBuffer(CoSimType coSimType,
-                                       [[maybe_unused]] std::string_view name,
+                                       [[maybe_unused]] const std::string& name,
                                        const std::vector<DsVeosCoSim_IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     _dataVector.resize(_metaDataLookup.size());
@@ -281,7 +281,7 @@ bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
 #ifdef _WIN32
 
 LocalIoPartBuffer::LocalIoPartBuffer(CoSimType coSimType,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<DsVeosCoSim_IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     // The memory layout looks like this:
@@ -466,11 +466,11 @@ void LocalIoPartBuffer::FlipBuffers(Data& data) {
 
 IoBuffer::IoBuffer(CoSimType coSimType,
                    [[maybe_unused]] ConnectionKind connectionKind,
-                   std::string_view name,
+                   const std::string& name,
                    const std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
                    const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals) {
-    std::string outgoingName = std::string(name) + ".Outgoing";
-    std::string incomingName = std::string(name) + ".Incoming";
+    std::string outgoingName = name + ".Outgoing";
+    std::string incomingName = name + ".Incoming";
     const std::vector<DsVeosCoSim_IoSignal>* writeSignals = &outgoingSignals;
     const std::vector<DsVeosCoSim_IoSignal>* readSignals = &incomingSignals;
     if (coSimType == CoSimType::Server) {

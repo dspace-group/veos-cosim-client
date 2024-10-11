@@ -5,6 +5,7 @@
 #include <fmt/color.h>
 #include <iomanip>
 #include <sstream>
+#include <string_view>
 
 #include "CoSimHelper.h"
 

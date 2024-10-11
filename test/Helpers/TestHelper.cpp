@@ -15,8 +15,8 @@ CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-std::string GetCounterPart(std::string_view name, ConnectionKind connectionKind) {
-    return connectionKind == ConnectionKind::Local ? std::string(name) : fmt::format("Other{}", name);
+std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
+    return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 
 void AssertByteArray(const void* expected, const void* actual, size_t size) {

@@ -3,6 +3,7 @@
 #include "ClientServerTestHelper.h"
 
 #include <fmt/format.h>
+#include <string_view>
 
 #include "BusBuffer.h"
 #include "CoSimHelper.h"

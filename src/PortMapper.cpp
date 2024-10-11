@@ -2,6 +2,8 @@
 
 #include "PortMapper.h"
 
+#include <string_view>
+
 #include "CoSimHelper.h"
 #include "Protocol.h"
 #include "SocketChannel.h"
@@ -175,10 +177,9 @@ void PortMapperServer::DumpEntries() {
     }
 }
 
-bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
+bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        LogTrace("PortMapper_GetPort(ipAddress: '" + std::string(ipAddress) + "', serverName: '" +
-                 std::string(serverName) + "')");
+        LogTrace("PortMapper_GetPort(ipAddress: '" + ipAddress + "', serverName: '" + serverName + "')");
     }
 
     std::optional<SocketChannel> channel =

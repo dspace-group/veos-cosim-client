@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <string>
 
 #include "CoSimHelper.h"
 #include "NamedMutex.h"
@@ -21,14 +22,14 @@ constexpr uint32_t BufferSize = 64 * 1024;
 std::string ServerToClientPostFix = "ServerToClient";
 std::string ClientToServerPostFix = "ClientToServer";
 
-std::string GetWriterName(std::string_view name, bool isServer) {
+std::string GetWriterName(const std::string& name, bool isServer) {
     std::string postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-    return std::string(name) + "." + postfix;
+    return name + "." + postfix;
 }
 
-std::string GetReaderName(std::string_view name, bool isServer) {
+std::string GetReaderName(const std::string& name, bool isServer) {
     std::string postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-    return std::string(name) + "." + postfix;
+    return name + "." + postfix;
 }
 
 constexpr uint32_t MaskIndex(uint32_t index) noexcept {
@@ -37,16 +38,16 @@ constexpr uint32_t MaskIndex(uint32_t index) noexcept {
 
 }  // namespace
 
-LocalChannelBase::LocalChannelBase(std::string_view name, bool isServer) {
+LocalChannelBase::LocalChannelBase(const std::string& name, bool isServer) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
 
     bool initShm{};
 
-    const std::string dataName = std::string(name) + ".Data";
-    const std::string newDataName = std::string(name) + ".NewData";
-    const std::string newSpaceName = std::string(name) + ".NewSpace";
+    const std::string dataName = name + ".Data";
+    const std::string newDataName = name + ".NewData";
+    const std::string newSpaceName = name + ".NewSpace";
 
     uint32_t totalSize = BufferSize + sizeof(Header);
 
@@ -152,7 +153,7 @@ bool LocalChannelBase::CheckIfConnectionIsAlive() {
     return true;
 }
 
-LocalChannelWriter::LocalChannelWriter(std::string_view name, bool isServer)
+LocalChannelWriter::LocalChannelWriter(const std::string& name, bool isServer)
     : LocalChannelBase(GetWriterName(name, isServer), isServer) {
 }
 
@@ -219,7 +220,7 @@ bool LocalChannelWriter::WaitForFreeSpace(uint32_t& currentSize) {
     return true;
 }
 
-LocalChannelReader::LocalChannelReader(std::string_view name, bool isServer)
+LocalChannelReader::LocalChannelReader(const std::string& name, bool isServer)
     : LocalChannelBase(GetReaderName(name, isServer), isServer) {
 }
 
@@ -278,7 +279,7 @@ bool LocalChannelReader::BeginRead(uint32_t& currentSize) {
     return true;
 }
 
-LocalChannel::LocalChannel(std::string_view name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
+LocalChannel::LocalChannel(const std::string& name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
 }
 
 void LocalChannel::Disconnect() {
@@ -294,7 +295,7 @@ ChannelReader& LocalChannel::GetReader() {
     return _reader;
 }
 
-std::optional<LocalChannel> TryConnectToLocalChannel(std::string_view name) {
+std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
@@ -306,12 +307,12 @@ std::optional<LocalChannel> TryConnectToLocalChannel(std::string_view name) {
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
     const int32_t currentCounter = counter.fetch_add(1);
-    const std::string specificName = std::string(name) + "." + std::to_string(currentCounter);
+    const std::string specificName = name + "." + std::to_string(currentCounter);
 
     return LocalChannel(specificName, false);
 }
 
-LocalChannelServer::LocalChannelServer(std::string_view name) : _name(name) {
+LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
@@ -324,7 +325,7 @@ LocalChannelServer::LocalChannelServer(std::string_view name) : _name(name) {
 std::optional<LocalChannel> LocalChannelServer::TryAccept() {
     const int32_t currentCounter = _counter->load();
     if (currentCounter > _lastCounter) {
-        const std::string specificName = std::string(_name) + "." + std::to_string(_lastCounter);
+        const std::string specificName = _name + "." + std::to_string(_lastCounter);
         _lastCounter++;
         return LocalChannel(specificName, true);
     }

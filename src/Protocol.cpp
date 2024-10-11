@@ -3,6 +3,7 @@
 #include "Protocol.h"
 
 #include <bit>
+#include <string_view>
 
 #include "CoSimHelper.h"
 

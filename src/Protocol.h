@@ -3,6 +3,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include "BusBuffer.h"
 #include "Channel.h"

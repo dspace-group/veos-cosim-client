@@ -2,6 +2,7 @@
 
 #include "CoSimHelper.h"
 
+#include <string_view>
 #include <system_error>
 
 namespace DsVeosCoSim {

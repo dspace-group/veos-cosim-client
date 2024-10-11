@@ -110,11 +110,11 @@ private:
     Socket _listenSocketIpv6;
 };
 
-[[nodiscard]] std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name);
+[[nodiscard]] std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name);
 
 class UdsChannelServer final {
 public:
-    explicit UdsChannelServer(std::string_view name);
+    explicit UdsChannelServer(const std::string& name);
     ~UdsChannelServer() noexcept = default;
 
     UdsChannelServer(const UdsChannelServer&) = delete;

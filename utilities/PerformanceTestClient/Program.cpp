@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <string_view>
+
 #include "CoSimHelper.h"
 #include "Helper.h"
 

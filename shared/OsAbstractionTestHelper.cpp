@@ -3,6 +3,7 @@
 #include "OsAbstractionTestHelper.h"
 
 #include <stdexcept>
+#include <string_view>
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
@@ -140,12 +141,12 @@ Pipe::pipe_t Pipe::CreatePipe(std::string_view name) {
 }
 #endif
 
-Pipe::Pipe(std::string_view name) {
+Pipe::Pipe(const std::string& name) {
 #ifdef _WIN32
-    _name = std::string(R"(\\.\pipe\)") + std::string(name);
+    _name = R"(\\.\pipe\)" + name;
 #else
-    _pipe1 = CreatePipe(std::string("/tmp/Pipe1") + std::string(name));
-    _pipe2 = CreatePipe(std::string("/tmp/Pipe2") + std::string(name));
+    _pipe1 = CreatePipe("/tmp/Pipe1" + name);
+    _pipe2 = CreatePipe("/tmp/Pipe2" + name);
 #endif
 }
 

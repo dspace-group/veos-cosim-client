@@ -3,6 +3,7 @@
 #include "DsVeosCoSim/DsVeosCoSim.h"
 
 #include <memory>
+#include <string_view>
 
 #include "CoSimClient.h"
 #include "CoSimHelper.h"
