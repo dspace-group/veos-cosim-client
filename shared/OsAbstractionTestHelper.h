@@ -38,8 +38,8 @@ public:
     void SetReuseAddress(bool value) const;
     void Listen() const;
 
-    bool SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
-    bool ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
+    [[nodiscard]] bool SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
+    [[nodiscard]] bool ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
 
 private:
 #ifdef _WIN32
@@ -68,8 +68,8 @@ public:
     void Accept();
     void Connect();
 
-    bool Write(const void* source, uint32_t size) const;
-    bool Read(void* destination, uint32_t size) const;
+    [[nodiscard]] bool Write(const void* source, uint32_t size) const;
+    [[nodiscard]] bool Read(void* destination, uint32_t size) const;
 
 private:
 #ifdef _WIN32
@@ -79,7 +79,7 @@ private:
 #endif
 
 #ifndef _WIN32
-    static pipe_t CreatePipe(std::string_view name);
+    [[nodiscard]] static pipe_t CreatePipe(std::string_view name);
 #endif
 
 #ifdef _WIN32

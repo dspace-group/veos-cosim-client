@@ -2,9 +2,10 @@
 
 #include "PortMapper.h"
 
-#include <string_view>
+#include <string>
 
 #include "CoSimHelper.h"
+#include "Environment.h"
 #include "Protocol.h"
 #include "SocketChannel.h"
 
@@ -13,49 +14,6 @@ namespace DsVeosCoSim {
 namespace {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
-
-bool IsPortMapperServerVerbose() {
-    constexpr bool defaultVerbose = false;
-
-    const char* verboseString = std::getenv("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");  // NOLINT(concurrency-mt-unsafe)
-    if (verboseString) {
-        const int32_t verbose = std::atoi(verboseString);  // NOLINT(cert-err34-c)
-        return verbose != 0;
-    }
-
-    return defaultVerbose;
-}
-
-bool IsPortMapperClientVerbose() {
-    constexpr bool defaultVerbose = false;
-
-    const char* verboseString = std::getenv("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");  // NOLINT(concurrency-mt-unsafe)
-    if (verboseString) {
-        const int32_t verbose = std::atoi(verboseString);  // NOLINT(cert-err34-c)
-        return verbose != 0;
-    }
-
-    return defaultVerbose;
-}
-
-[[nodiscard]] uint16_t GetPortMapperPortInitial() {
-    constexpr uint16_t defaultPort = 27027;
-
-    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
-    if (portString) {
-        const int32_t port = std::atoi(portString);  // NOLINT(cert-err34-c)
-        if (port > 0 && port <= UINT16_MAX) {
-            return static_cast<uint16_t>(port);
-        }
-    }
-
-    return defaultPort;
-}
-
-uint16_t GetPortMapperPort() {
-    static uint16_t port = GetPortMapperPortInitial();
-    return port;
-}
 
 }  // namespace
 
@@ -88,7 +46,7 @@ void PortMapperServer::RunPortMapperServer() {
     }
 }
 
-bool PortMapperServer::HandleClient(Channel& channel) {
+[[nodiscard]] bool PortMapperServer::HandleClient(Channel& channel) {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
 
@@ -107,7 +65,7 @@ bool PortMapperServer::HandleClient(Channel& channel) {
     }
 }
 
-bool PortMapperServer::HandleGetPort(Channel& channel) {
+[[nodiscard]] bool PortMapperServer::HandleGetPort(Channel& channel) {
     std::string name;
     CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
@@ -128,7 +86,7 @@ bool PortMapperServer::HandleGetPort(Channel& channel) {
     return true;
 }
 
-bool PortMapperServer::HandleSetPort(Channel& channel) {
+[[nodiscard]] bool PortMapperServer::HandleSetPort(Channel& channel) {
     std::string name;
     uint16_t port = 0;
     CheckResultWithMessage(Protocol::ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
@@ -147,7 +105,7 @@ bool PortMapperServer::HandleSetPort(Channel& channel) {
     return true;
 }
 
-bool PortMapperServer::HandleUnsetPort(Channel& channel) {
+[[nodiscard]] bool PortMapperServer::HandleUnsetPort(Channel& channel) {
     std::string name;
     CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
@@ -177,7 +135,7 @@ void PortMapperServer::DumpEntries() {
     }
 }
 
-bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
+[[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
         LogTrace("PortMapper_GetPort(ipAddress: '" + ipAddress + "', serverName: '" + serverName + "')");
     }
@@ -208,7 +166,7 @@ bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverN
     }
 }
 
-bool PortMapper_SetPort(std::string_view name, uint16_t port) {
+[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port) {
     std::optional<SocketChannel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
@@ -232,7 +190,7 @@ bool PortMapper_SetPort(std::string_view name, uint16_t port) {
     }
 }
 
-bool PortMapper_UnsetPort(std::string_view name) {
+[[nodiscard]] bool PortMapper_UnsetPort(const std::string& name) {
     std::optional<SocketChannel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");

@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <unordered_map>
 
@@ -40,7 +39,7 @@ private:
 };
 
 [[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port);
-[[nodiscard]] bool PortMapper_SetPort(std::string_view name, uint16_t port);
-[[nodiscard]] bool PortMapper_UnsetPort(std::string_view name);
+[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port);
+[[nodiscard]] bool PortMapper_UnsetPort(const std::string& name);
 
 }  // namespace DsVeosCoSim

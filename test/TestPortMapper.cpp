@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "Generator.h"
 #include "LogHelper.h"

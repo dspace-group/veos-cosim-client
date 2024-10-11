@@ -3,6 +3,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 #include "CoSimTypes.h"
@@ -15,6 +16,8 @@ void LogError(std::string_view message);
 void LogWarning(std::string_view message);
 void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
+void LogProtocolBeginTrace(const std::string& message);
+void LogProtocolEndTrace(const std::string& message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \

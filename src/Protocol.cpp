@@ -3,6 +3,7 @@
 #include "Protocol.h"
 
 #include <bit>
+#include <string>
 #include <string_view>
 
 #include "CoSimHelper.h"
@@ -209,83 +210,177 @@ namespace {
 
 namespace Protocol {
 
-bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
+[[nodiscard]] bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReceiveHeader()");
+#endif
+
     CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame header.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReceiveHeader(FrameKind: " + ToString(frameKind) + ")");
+#endif
+
     return true;
 }
 
-bool SendOk(ChannelWriter& writer) {
+[[nodiscard]] bool SendOk(ChannelWriter& writer) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendOk()");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Ok));
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendOk()");
+#endif
+
     return true;
 }
 
-bool SendError(ChannelWriter& writer, std::string_view errorStr) {
+[[nodiscard]] bool SendError(ChannelWriter& writer, const std::string& errorMessage) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendError(ErrorMessage: \"" + errorMessage + "\")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Error));
-    CheckResultWithMessage(WriteString(writer, errorStr), "Could not write error message.");
+    CheckResultWithMessage(WriteString(writer, errorMessage), "Could not write error message.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendError()");
+#endif
+
     return true;
 }
 
-bool ReadError(ChannelReader& reader, std::string& errorStr) {
-    CheckResultWithMessage(ReadString(reader, errorStr), "Could not read error message.");
+[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorMessage) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadError()");
+#endif
+
+    CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadError(ErrorMessage: \"" + errorMessage + "\")");
+#endif
+
     return true;
 }
 
-bool SendPing(ChannelWriter& writer) {
+[[nodiscard]] bool SendPing(ChannelWriter& writer) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendPing()");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Ping));
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendPing()");
+#endif
+
     return true;
 }
 
-bool SendPingOk(ChannelWriter& writer, Command command) {
+[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendPingOk(Command: " + ToString(command) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::PingOk));
     CheckResultWithMessage(writer.Write(command), "Could not write command.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendPingOk()");
+#endif
+
     return true;
 }
 
-bool ReadPingOk(ChannelReader& reader, Command& command) {
+[[nodiscard]] bool ReadPingOk(ChannelReader& reader, Command& command) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadPingOk()");
+#endif
+
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadPingOk(Command: " + ToString(command) + ")");
+#endif
+
     return true;
 }
 
-bool SendConnect(ChannelWriter& writer,
-                 uint32_t protocolVersion,
-                 Mode clientMode,
-                 std::string_view serverName,
-                 std::string_view clientName) {
+[[nodiscard]] bool SendConnect(ChannelWriter& writer,
+                               uint32_t protocolVersion,
+                               Mode clientMode,
+                               const std::string& serverName,
+                               const std::string& clientName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendConnect(ProtocolVersion: " + std::to_string(protocolVersion) +
+                          ", ClientMode: " + ToString(clientMode) + ", ServerName: \"" + serverName +
+                          "\", ClientName: \"" + clientName + "\")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Connect));
     CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
     CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(WriteString(writer, clientName), "Could not write client name.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendConnect()");
+#endif
+
     return true;
 }
 
-bool ReadConnect(ChannelReader& reader,
-                 uint32_t& protocolVersion,
-                 Mode& clientMode,
-                 std::string& serverName,
-                 std::string& clientName) {
+[[nodiscard]] bool ReadConnect(ChannelReader& reader,
+                               uint32_t& protocolVersion,
+                               Mode& clientMode,
+                               std::string& serverName,
+                               std::string& clientName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadConnect()");
+#endif
+
     CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
     CheckResultWithMessage(reader.Read(clientMode), "Could not read client mode.");
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadConnect(ProtocolVersion: " + std::to_string(protocolVersion) +
+                        ", ClientMode: " + ToString(clientMode) + ", ServerName: \"" + serverName +
+                        "\", ClientName: \"" + clientName + "\")");
+#endif
+
     return true;
 }
 
-bool SendConnectOk(ChannelWriter& writer,
-                   uint32_t protocolVersion,
-                   Mode clientMode,
-                   DsVeosCoSim_SimulationTime stepSize,
-                   SimulationState simulationState,
-                   const std::vector<IoSignal>& incomingSignals,
-                   const std::vector<IoSignal>& outgoingSignals,
-                   const std::vector<CanController>& canControllers,
-                   const std::vector<EthController>& ethControllers,
-                   const std::vector<LinController>& linControllers) {
+[[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
+                                 uint32_t protocolVersion,
+                                 Mode clientMode,
+                                 DsVeosCoSim_SimulationTime stepSize,
+                                 SimulationState simulationState,
+                                 const std::vector<IoSignal>& incomingSignals,
+                                 const std::vector<IoSignal>& outgoingSignals,
+                                 const std::vector<CanController>& canControllers,
+                                 const std::vector<EthController>& ethControllers,
+                                 const std::vector<LinController>& linControllers) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace(
+        "SendConnectOk(ProtocolVersion: " + std::to_string(protocolVersion) + ", ClientMode: " + ToString(clientMode) +
+        ", StepSize: " + SimulationTimeToString(stepSize) + ", SimulationState: " + ToString(simulationState) +
+        ", IncomingSignals: " + ToString(incomingSignals) + ", OutgoingSignals: " + ToString(outgoingSignals) +
+        ", CanControllers: " + ToString(canControllers) + ", EthControllers: " + ToString(ethControllers) +
+        ", LinControllers: " + ToString(linControllers) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::ConnectOk));
     CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
     CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
@@ -297,19 +392,28 @@ bool SendConnectOk(ChannelWriter& writer,
     CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
     CheckResultWithMessage(WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendConnectOk()");
+#endif
+
     return true;
 }
 
-bool ReadConnectOk(ChannelReader& reader,
-                   uint32_t& protocolVersion,
-                   Mode& clientMode,
-                   DsVeosCoSim_SimulationTime& stepSize,
-                   SimulationState& simulationState,
-                   std::vector<IoSignal>& incomingSignals,
-                   std::vector<IoSignal>& outgoingSignals,
-                   std::vector<CanController>& canControllers,
-                   std::vector<EthController>& ethControllers,
-                   std::vector<LinController>& linControllers) {
+[[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
+                                 uint32_t& protocolVersion,
+                                 Mode& clientMode,
+                                 DsVeosCoSim_SimulationTime& stepSize,
+                                 SimulationState& simulationState,
+                                 std::vector<IoSignal>& incomingSignals,
+                                 std::vector<IoSignal>& outgoingSignals,
+                                 std::vector<CanController>& canControllers,
+                                 std::vector<EthController>& ethControllers,
+                                 std::vector<LinController>& linControllers) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadConnectOk()");
+#endif
+
     CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
     CheckResultWithMessage(reader.Read(clientMode), "Could not read client mode.");
     CheckResultWithMessage(reader.Read(stepSize), "Could not read step size.");
@@ -319,92 +423,207 @@ bool ReadConnectOk(ChannelReader& reader,
     CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace(
+        "ReadConnectOk(ProtocolVersion: " + std::to_string(protocolVersion) + ", ClientMode: " + ToString(clientMode) +
+        ", StepSize: " + SimulationTimeToString(stepSize) + ", SimulationState: " + ToString(simulationState) +
+        ", IncomingSignals: " + ToString(incomingSignals) + ", OutgoingSignals: " + ToString(outgoingSignals) +
+        ", CanControllers: " + ToString(canControllers) + ", EthControllers: " + ToString(ethControllers) +
+        ", LinControllers: " + ToString(linControllers) + ")");
+#endif
+
     return true;
 }
 
-bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendStart(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Start));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendStart()");
+#endif
+
     return true;
 }
 
-bool ReadStart(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadStart(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadStart()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadStart(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     return true;
 }
 
-bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendStop(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Stop));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendStop()");
+#endif
+
     return true;
 }
 
-bool ReadStop(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadStop(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadStop()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadStop(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     return true;
 }
 
-bool SendTerminate(ChannelWriter& writer,
-                   DsVeosCoSim_SimulationTime simulationTime,
-                   DsVeosCoSim_TerminateReason reason) {
+[[nodiscard]] bool SendTerminate(ChannelWriter& writer,
+                                 DsVeosCoSim_SimulationTime simulationTime,
+                                 DsVeosCoSim_TerminateReason reason) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendTerminate(SimulationTime: " + SimulationTimeToString(simulationTime) +
+                          ", Reason: " + ToString(reason) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Terminate));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.Write(reason), "Could not write reason.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendTerminate()");
+#endif
+
     return true;
 }
 
-bool ReadTerminate(ChannelReader& reader,
-                   DsVeosCoSim_SimulationTime& simulationTime,
-                   DsVeosCoSim_TerminateReason& reason) {
+[[nodiscard]] bool ReadTerminate(ChannelReader& reader,
+                                 DsVeosCoSim_SimulationTime& simulationTime,
+                                 DsVeosCoSim_TerminateReason& reason) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadTerminate()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     CheckResultWithMessage(reader.Read(reason), "Could not read reason.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadTerminate(SimulationTime: " + SimulationTimeToString(simulationTime) +
+                        ", Reason: " + ToString(reason) + ")");
+#endif
+
     return true;
 }
 
-bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendPause(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Pause));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendPause()");
+#endif
+
     return true;
 }
 
-bool ReadPause(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadPause(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadPause()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadPause(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     return true;
 }
 
-bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendContinue(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Continue));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendContinue()");
+#endif
+
     return true;
 }
 
-bool ReadContinue(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadContinue(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadContinue()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     return true;
 }
 
-bool SendStep(ChannelWriter& writer,
-              DsVeosCoSim_SimulationTime simulationTime,
-              const IoBuffer& ioBuffer,
-              const BusBuffer& busBuffer) {
+[[nodiscard]] bool SendStep(ChannelWriter& writer,
+                            DsVeosCoSim_SimulationTime simulationTime,
+                            const IoBuffer& ioBuffer,
+                            const BusBuffer& busBuffer) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::Step));
     CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendStep()");
+#endif
+
     return true;
 }
 
-bool ReadStep(ChannelReader& reader,
-              DsVeosCoSim_SimulationTime& simulationTime,
-              const IoBuffer& ioBuffer,
-              const BusBuffer& busBuffer,
-              const Callbacks& callbacks) {
+[[nodiscard]] bool ReadStep(ChannelReader& reader,
+                            DsVeosCoSim_SimulationTime& simulationTime,
+                            const IoBuffer& ioBuffer,
+                            const BusBuffer& busBuffer,
+                            const Callbacks& callbacks) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadStep()");
+#endif
+
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (callbacks.simulationBeginStepCallback) {
@@ -413,29 +632,48 @@ bool ReadStep(ChannelReader& reader,
 
     CheckResultWithMessage(ioBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read IO buffer data.");
     CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+#endif
+
     return true;
 }
 
-bool SendStepOk(ChannelWriter& writer,
-                DsVeosCoSim_SimulationTime nextSimulationTime,
-                Command command,
-                const IoBuffer& ioBuffer,
-                const BusBuffer& busBuffer) {
+[[nodiscard]] bool SendStepOk(ChannelWriter& writer,
+                              DsVeosCoSim_SimulationTime nextSimulationTime,
+                              Command command,
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendStepOk(NextSimulationTime: " + SimulationTimeToString(nextSimulationTime) +
+                          ", Command: " + ToString(command) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::StepOk));
     CheckResultWithMessage(writer.Write(nextSimulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.Write(command), "Could not write command.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendStepOk()");
+#endif
+
     return true;
 }
 
-bool ReadStepOk(ChannelReader& reader,
-                DsVeosCoSim_SimulationTime& nextSimulationTime,
-                Command& command,
-                const IoBuffer& ioBuffer,
-                const BusBuffer& busBuffer,
-                const Callbacks& callbacks) {
+[[nodiscard]] bool ReadStepOk(ChannelReader& reader,
+                              DsVeosCoSim_SimulationTime& nextSimulationTime,
+                              Command& command,
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer,
+                              const Callbacks& callbacks) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadStepOk()");
+#endif
+
     CheckResultWithMessage(reader.Read(nextSimulationTime), "Could not read simulation time.");
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
 
@@ -447,56 +685,134 @@ bool ReadStepOk(ChannelReader& reader,
                            "Could not read IO buffer data.");
     CheckResultWithMessage(busBuffer.Deserialize(reader, nextSimulationTime, callbacks),
                            "Could not read bus buffer data.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadStepOk(NextSimulationTime: " + SimulationTimeToString(nextSimulationTime) +
+                        ", Command: " + ToString(command) + ")");
+#endif
+
     return true;
 }
 
-bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendSetPort(ServerName: \"" + serverName + "\", Port: " + std::to_string(port) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::SetPort));
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.Write(port), "Could not write port.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendSetPort()");
+#endif
+
     return true;
 }
 
-bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
+[[nodiscard]] bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadSetPort()");
+#endif
+
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadSetPort(ServerName: \"" + serverName + "\", Port: " + std::to_string(port) + ")");
+#endif
+
     return true;
 }
 
-bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendUnsetPort(ServerName: \"" + serverName + "\")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::UnsetPort));
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendUnsetPort()");
+#endif
+
     return true;
 }
 
-bool ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] bool ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadUnsetPort()");
+#endif
+
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadUnsetPort(ServerName: \"" + serverName + "\")");
+#endif
+
     return true;
 }
 
-bool SendGetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] bool SendGetPort(ChannelWriter& writer, const std::string& serverName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendGetPort(ServerName: \"" + serverName + "\")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::GetPort));
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendGetPort()");
+#endif
+
     return true;
 }
 
-bool ReadGetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] bool ReadGetPort(ChannelReader& reader, std::string& serverName) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadGetPort()");
+#endif
+
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadGetPort(ServerName: \"" + serverName + "\")");
+#endif
+
     return true;
 }
 
-bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("SendGetPortOk(Port: " + std::to_string(port) + ")");
+#endif
+
     CheckResult(WriteHeader(writer, FrameKind::GetPortOk));
     CheckResultWithMessage(writer.Write(port), "Could not write port.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("SendGetPortOk()");
+#endif
+
     return true;
 }
 
-bool ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
+[[nodiscard]] bool ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolBeginTrace("ReadGetPortOk()");
+#endif
+
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
+
+#ifdef DSVEOSCOSIM_ENABLE_TRACING
+    LogProtocolEndTrace("ReadGetPortOk(Port: " + std::to_string(port) + ")");
+#endif
+
     return true;
 }
 

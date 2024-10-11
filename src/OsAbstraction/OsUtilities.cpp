@@ -11,7 +11,7 @@
 
 namespace DsVeosCoSim {
 
-std::wstring Utf8ToWide(std::string_view utf8String) {
+[[nodiscard]] std::wstring Utf8ToWide(std::string_view utf8String) {
     if (utf8String.empty()) {
         return {};
     }
@@ -30,11 +30,11 @@ std::wstring Utf8ToWide(std::string_view utf8String) {
     return wideString;
 }
 
-int32_t GetLastWindowsError() {
+[[nodiscard]] int32_t GetLastWindowsError() {
     return static_cast<int32_t>(::GetLastError());
 }
 
-uint32_t GetCurrentProcessId() {
+[[nodiscard]] uint32_t GetCurrentProcessId() {
     static uint32_t processId{};
     if (processId == 0) {
         processId = static_cast<uint32_t>(::GetCurrentProcessId());
@@ -43,7 +43,7 @@ uint32_t GetCurrentProcessId() {
     return processId;
 }
 
-bool IsProcessRunning(uint32_t processId) {
+[[nodiscard]] bool IsProcessRunning(uint32_t processId) {
     void* processHandle = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
     if (processHandle == nullptr) {
         return false;

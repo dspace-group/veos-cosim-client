@@ -60,9 +60,9 @@ public:
     Socket(Socket&&) noexcept;
     Socket& operator=(Socket&&) noexcept;
 
-    static bool IsIpv4Supported();
-    static bool IsIpv6Supported();
-    static bool IsUdsSupported();
+    [[nodiscard]] static bool IsIpv4Supported();
+    [[nodiscard]] static bool IsIpv6Supported();
+    [[nodiscard]] static bool IsUdsSupported();
 
     void Shutdown() const;
     void Close();

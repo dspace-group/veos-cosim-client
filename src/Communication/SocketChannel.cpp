@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -48,7 +49,7 @@ SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other)
     return *this;
 }
 
-bool SocketChannelWriter::Write(const void* source, size_t size) {
+[[nodiscard]] bool SocketChannelWriter::Write(const void* source, size_t size) {
     const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
     while (size > 0) {
@@ -67,7 +68,7 @@ bool SocketChannelWriter::Write(const void* source, size_t size) {
     return true;
 }
 
-bool SocketChannelWriter::EndWrite() {
+[[nodiscard]] bool SocketChannelWriter::EndWrite() {
     uint8_t* sourcePtr = _writeBuffer.data();
 
     // Write header
@@ -123,7 +124,7 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
     return *this;
 }
 
-bool SocketChannelReader::BeginRead() {
+[[nodiscard]] bool SocketChannelReader::BeginRead() {
     _readIndex = HeaderSize;
     int32_t sizeToRead = ReadPacketSize;
     bool readHeader = true;
@@ -173,7 +174,7 @@ bool SocketChannelReader::BeginRead() {
     return true;
 }
 
-bool SocketChannelReader::Read(void* destination, size_t size) {
+[[nodiscard]] bool SocketChannelReader::Read(void* destination, size_t size) {
     auto* bufferPointer = static_cast<uint8_t*>(destination);
 
     while (size > 0) {
@@ -206,7 +207,7 @@ SocketChannel& SocketChannel::operator=(SocketChannel&& other) noexcept {
     return *this;
 }
 
-SocketAddress SocketChannel::GetRemoteAddress() const {
+[[nodiscard]] SocketAddress SocketChannel::GetRemoteAddress() const {
     return _socket.GetRemoteAddress();
 }
 
@@ -214,18 +215,18 @@ void SocketChannel::Disconnect() {
     _socket.Shutdown();
 }
 
-ChannelWriter& SocketChannel::GetWriter() {
+[[nodiscard]] ChannelWriter& SocketChannel::GetWriter() {
     return _writer;
 }
 
-ChannelReader& SocketChannel::GetReader() {
+[[nodiscard]] ChannelReader& SocketChannel::GetReader() {
     return _reader;
 }
 
-std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
-                                                    uint16_t remotePort,
-                                                    uint16_t localPort,
-                                                    uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
+                                                                  uint16_t remotePort,
+                                                                  uint16_t localPort,
+                                                                  uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
     std::optional<Socket> connectedSocket =
@@ -261,11 +262,11 @@ TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) {
     }
 }
 
-uint16_t TcpChannelServer::GetLocalPort() const {
+[[nodiscard]] uint16_t TcpChannelServer::GetLocalPort() const {
     return _port;
 }
 
-std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     do {
         std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
         if (socket) {
@@ -289,7 +290,7 @@ std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilli
     return {};
 }
 
-std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
+[[nodiscard]] std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
     StartupNetwork();
 
     Socket socket(AddressFamily::Uds);
@@ -308,7 +309,7 @@ UdsChannelServer::UdsChannelServer(const std::string& name) {
     _listenSocket.Listen();
 }
 
-std::optional<SocketChannel> UdsChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<SocketChannel> UdsChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
     if (socket) {
         return SocketChannel(std::move(*socket));

@@ -3,6 +3,7 @@
 #include "IoBuffer.h"
 
 #include <cstring>
+#include <string>
 
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
@@ -31,16 +32,14 @@ IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeos
     size_t nextSignalIndex = 0;
     for (const auto& signal : signals) {
         if (signal.length == 0) {
-            throw CoSimException("Invalid length " + std::to_string(signal.length) + " for IO signal '" + signal.name +
-                                 "'.");
+            throw CoSimException("Invalid length 0 for IO signal '" + std::string(signal.name) + "'.");
         }
 
         CheckSizeKind(signal.sizeKind, signal.name);
 
         const size_t dataTypeSize = GetDataTypeSize(signal.dataType);
         if (dataTypeSize == 0) {
-            throw CoSimException("Invalid data type " + ToString(signal.dataType) + " for IO signal '" + signal.name +
-                                 "'.");
+            throw CoSimException("Invalid data type for IO signal '" + std::string(signal.name) + "'.");
         }
 
         if (_metaDataLookup.contains(signal.id)) {
@@ -99,7 +98,7 @@ void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, c
     ReadInternal(signalId, length, value);
 }
 
-bool IoPartBufferBase::Serialize(ChannelWriter& writer) {
+[[nodiscard]] bool IoPartBufferBase::Serialize(ChannelWriter& writer) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
         return SerializeInternal(writer);
@@ -108,9 +107,9 @@ bool IoPartBufferBase::Serialize(ChannelWriter& writer) {
     return SerializeInternal(writer);
 }
 
-bool IoPartBufferBase::Deserialize(ChannelReader& reader,
-                                   DsVeosCoSim_SimulationTime simulationTime,
-                                   const Callbacks& callbacks) {
+[[nodiscard]] bool IoPartBufferBase::Deserialize(ChannelReader& reader,
+                                                 DsVeosCoSim_SimulationTime simulationTime,
+                                                 const Callbacks& callbacks) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
         return DeserializeInternal(reader, simulationTime, callbacks);
@@ -214,7 +213,7 @@ void RemoteIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t&
     *value = data.buffer.data();
 }
 
-bool RemoteIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
+[[nodiscard]] bool RemoteIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
     auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
     CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
     if (_changedSignalsQueue.IsEmpty()) {
@@ -240,9 +239,9 @@ bool RemoteIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
     return true;
 }
 
-bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
-                                             DsVeosCoSim_SimulationTime simulationTime,
-                                             const Callbacks& callbacks) {
+[[nodiscard]] bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
+                                                           DsVeosCoSim_SimulationTime simulationTime,
+                                                           const Callbacks& callbacks) {
     uint32_t ioSignalChangedCount = 0;
     CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -407,7 +406,7 @@ void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& 
     *value = dataBuffer->data;
 }
 
-bool LocalIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
+[[nodiscard]] bool LocalIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
     auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
     CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
     if (_changedSignalsQueue.IsEmpty()) {
@@ -426,9 +425,9 @@ bool LocalIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
     return true;
 }
 
-bool LocalIoPartBuffer::DeserializeInternal(ChannelReader& reader,
-                                            DsVeosCoSim_SimulationTime simulationTime,
-                                            const Callbacks& callbacks) {
+[[nodiscard]] bool LocalIoPartBuffer::DeserializeInternal(ChannelReader& reader,
+                                                          DsVeosCoSim_SimulationTime simulationTime,
+                                                          const Callbacks& callbacks) {
     uint32_t ioSignalChangedCount = 0;
     CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -454,7 +453,7 @@ bool LocalIoPartBuffer::DeserializeInternal(ChannelReader& reader,
     return true;
 }
 
-LocalIoPartBuffer::DataBuffer* LocalIoPartBuffer::GetDataBuffer(size_t offset) const {
+[[nodiscard]] LocalIoPartBuffer::DataBuffer* LocalIoPartBuffer::GetDataBuffer(size_t offset) const {
     return reinterpret_cast<DataBuffer*>((static_cast<uint8_t*>(_sharedMemory.data()) + offset));
 }
 
@@ -511,13 +510,13 @@ void IoBuffer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const voi
     _readBuffer->Read(signalId, length, value);
 }
 
-bool IoBuffer::Serialize(ChannelWriter& writer) const {
+[[nodiscard]] bool IoBuffer::Serialize(ChannelWriter& writer) const {
     return _writeBuffer->Serialize(writer);
 }
 
-bool IoBuffer::Deserialize(ChannelReader& reader,
-                           DsVeosCoSim_SimulationTime simulationTime,
-                           const Callbacks& callbacks) const {
+[[nodiscard]] bool IoBuffer::Deserialize(ChannelReader& reader,
+                                         DsVeosCoSim_SimulationTime simulationTime,
+                                         const Callbacks& callbacks) const {
     return _readBuffer->Deserialize(reader, simulationTime, callbacks);
 }
 

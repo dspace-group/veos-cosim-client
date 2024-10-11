@@ -3,6 +3,7 @@
 #include "Helper.h"
 
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 #include "CoSimHelper.h"
@@ -24,7 +25,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-uint16_t GetNextFreeDynamicPort() {
+[[nodiscard]] uint16_t GetNextFreeDynamicPort() {
     Socket socket(AddressFamily::Ipv4);
     socket.Bind(0, false);
     return socket.GetLocalPort();
@@ -32,7 +33,7 @@ uint16_t GetNextFreeDynamicPort() {
 
 }  // namespace
 
-bool StartUp() {
+[[nodiscard]] bool StartUp() {
     InitializeOutput();
 
     try {
@@ -58,7 +59,7 @@ bool StartUp() {
     return true;
 }
 
-int32_t GetChar() {
+[[nodiscard]] int32_t GetChar() {
 #ifdef _WIN32
     return _getch();
 #else
@@ -78,7 +79,7 @@ int32_t GetChar() {
 #endif
 }
 
-Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
+[[nodiscard]] Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
     std::optional<Socket> connectedSocket = Socket::TryConnect(ipAddress, remotePort, 0, DefaultTimeout);
     if (connectedSocket) {
         return std::move(*connectedSocket);
@@ -87,7 +88,7 @@ Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
     throw std::runtime_error("Could not connect within timeout.");
 }
 
-Socket ConnectSocket(const std::string& name) {
+[[nodiscard]] Socket ConnectSocket(const std::string& name) {
     Socket socket(AddressFamily::Uds);
     if (socket.TryConnect(name)) {
         return socket;
@@ -96,7 +97,7 @@ Socket ConnectSocket(const std::string& name) {
     throw std::runtime_error("Could not connect.");
 }
 
-Socket Accept(const Socket& serverSocket) {
+[[nodiscard]] Socket Accept(const Socket& serverSocket) {
     std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
     if (acceptedSocket) {
         return std::move(*acceptedSocket);
@@ -105,7 +106,7 @@ Socket Accept(const Socket& serverSocket) {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePort) {
+[[nodiscard]] SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePort) {
     std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);
     if (channel) {
         return std::move(*channel);
@@ -114,7 +115,7 @@ SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePor
     throw std::runtime_error("Could not connect within timeout.");
 }
 
-SocketChannel Accept(const TcpChannelServer& server) {
+[[nodiscard]] SocketChannel Accept(const TcpChannelServer& server) {
     std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
@@ -123,7 +124,7 @@ SocketChannel Accept(const TcpChannelServer& server) {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-SocketChannel ConnectToUdsChannel(const std::string& name) {
+[[nodiscard]] SocketChannel ConnectToUdsChannel(const std::string& name) {
     std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
     if (channel) {
         return std::move(*channel);
@@ -132,7 +133,7 @@ SocketChannel ConnectToUdsChannel(const std::string& name) {
     throw std::runtime_error("Could not connect.");
 }
 
-SocketChannel Accept(const UdsChannelServer& server) {
+[[nodiscard]] SocketChannel Accept(const UdsChannelServer& server) {
     std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
@@ -143,7 +144,7 @@ SocketChannel Accept(const UdsChannelServer& server) {
 
 #ifdef _WIN32
 
-LocalChannel ConnectToLocalChannel(const std::string& name) {
+[[nodiscard]] LocalChannel ConnectToLocalChannel(const std::string& name) {
     std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
     if (channel) {
         return std::move(*channel);
@@ -152,7 +153,7 @@ LocalChannel ConnectToLocalChannel(const std::string& name) {
     throw std::runtime_error("Could not connect.");
 }
 
-LocalChannel Accept(LocalChannelServer& server) {
+[[nodiscard]] LocalChannel Accept(LocalChannelServer& server) {
     std::optional<LocalChannel> acceptedChannel = server.TryAccept();
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
@@ -171,7 +172,7 @@ LocalChannel Accept(LocalChannelServer& server) {
     return "::1";
 }
 
-bool SendComplete(const Socket& socket, const void* buffer, size_t length) {
+[[nodiscard]] bool SendComplete(const Socket& socket, const void* buffer, size_t length) {
     const auto* bufferPointer = static_cast<const uint8_t*>(buffer);
     while (length > 0) {
         int32_t sentSize{};
@@ -184,7 +185,7 @@ bool SendComplete(const Socket& socket, const void* buffer, size_t length) {
     return true;
 }
 
-bool ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
+[[nodiscard]] bool ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
         int32_t receivedSize{};

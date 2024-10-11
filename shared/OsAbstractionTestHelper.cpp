@@ -3,6 +3,7 @@
 #include "OsAbstractionTestHelper.h"
 
 #include <stdexcept>
+#include <string>
 #include <string_view>
 
 #ifdef _WIN32
@@ -100,7 +101,7 @@ void UdpSocket::Listen() const {
     }
 }
 
-bool UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
+[[nodiscard]] bool UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
     const auto* const sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
     const auto length = static_cast<int32_t>(sendto(_socket,
@@ -112,7 +113,7 @@ bool UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress&
     return length == static_cast<int32_t>(size);
 }
 
-bool UdpSocket::ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const {
+[[nodiscard]] bool UdpSocket::ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const {
     auto* const destinationPointer = static_cast<char*>(destination);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
     const auto length = static_cast<int32_t>(recvfrom(_socket,
@@ -129,7 +130,7 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 #endif
 
 #ifndef _WIN32
-Pipe::pipe_t Pipe::CreatePipe(std::string_view name) {
+[[nodiscard]] Pipe::pipe_t Pipe::CreatePipe(std::string_view name) {
     mkfifo(name.data(), 0666);
 
     pipe_t pipe = open(name.data(), O_RDWR);
@@ -212,7 +213,7 @@ void Pipe::Connect() {
 #endif
 }
 
-bool Pipe::Write(const void* source, uint32_t size) const {
+[[nodiscard]] bool Pipe::Write(const void* source, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
     BOOL success = ::WriteFile(_pipe, source, size, &processedSize, nullptr);
@@ -223,7 +224,7 @@ bool Pipe::Write(const void* source, uint32_t size) const {
 #endif
 }
 
-bool Pipe::Read(void* destination, uint32_t size) const {
+[[nodiscard]] bool Pipe::Read(void* destination, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
     BOOL success = ReadFile(_pipe, destination, size, &processedSize, nullptr);

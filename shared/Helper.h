@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <stdexcept>  // IWYU pragma: keep, NOLINT
+#include <string>
 #include <string_view>
 
 #include "Communication/SocketChannel.h"

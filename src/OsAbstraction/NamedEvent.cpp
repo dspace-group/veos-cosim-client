@@ -24,7 +24,7 @@ namespace {
 NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::move(handle)), _name(name) {
 }
 
-NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
+[[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
     std::wstring fullName = GetFullNamedEventName(name);
     void* handle = ::CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
@@ -34,7 +34,7 @@ NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
     return {handle, name};
 }
 
-NamedEvent NamedEvent::OpenExisting(const std::string& name) {
+[[nodiscard]] NamedEvent NamedEvent::OpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedEventName(name);
     void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
@@ -44,7 +44,7 @@ NamedEvent NamedEvent::OpenExisting(const std::string& name) {
     return {handle, name};
 }
 
-std::optional<NamedEvent> NamedEvent::TryOpenExisting(const std::string& name) {
+[[nodiscard]] std::optional<NamedEvent> NamedEvent::TryOpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedEventName(name);
     void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
@@ -68,7 +68,7 @@ void NamedEvent::Wait() const {
     (void)Wait(Infinite);
 }
 
-bool NamedEvent::Wait(uint32_t milliseconds) const {
+[[nodiscard]] bool NamedEvent::Wait(uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 

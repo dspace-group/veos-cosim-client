@@ -5,6 +5,8 @@
 #include <memory.h>
 #include <array>
 #include <functional>
+#include <iomanip>
+#include <sstream>
 #include <string>
 #include <string_view>  // NOLINT
 
@@ -16,6 +18,10 @@ constexpr uint32_t CanMessageMaxLength = DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH;  //
 constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
+
+[[nodiscard]] inline std::string SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
+    return std::to_string(DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime)) + " s";
+}
 
 enum class CoSimType {
     Client,
@@ -61,7 +67,7 @@ enum class Command {
     Ping
 };
 
-[[nodiscard]] inline std::string_view ToString(Command command) {
+[[nodiscard]] inline std::string ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -86,7 +92,7 @@ enum class Command {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_Severity severity) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_Severity severity) {
     switch (severity) {
         case DsVeosCoSim_Severity_Error:
             return "Error";
@@ -116,7 +122,7 @@ enum class Command {
     return "<Invalid DsVeosCoSim_TerminateReason>";
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_ConnectionState connectionState) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
     switch (connectionState) {
         case DsVeosCoSim_ConnectionState_Connected:
             return "Connected";
@@ -197,7 +203,7 @@ enum class Command {
     return "<Invalid DsVeosCoSim_SizeKind>";
 }
 
-[[nodiscard]] inline std::string_view ToString(DsVeosCoSim_LinControllerType type) {
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_LinControllerType type) {
     switch (type) {
         case DsVeosCoSim_LinControllerType_Responder:
             return "Responder";
@@ -213,8 +219,16 @@ enum class Command {
 enum class SimulationState {
 };
 
+[[nodiscard]] inline std::string ToString([[maybe_unused]] SimulationState simulationState) {
+    return "<Unused>";
+}
+
 enum class Mode {
 };
+
+[[nodiscard]] inline std::string ToString([[maybe_unused]] Mode mode) {
+    return "<Unused>";
+}
 
 [[nodiscard]] inline std::string CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags) {
     std::string flagsStr;
@@ -330,6 +344,19 @@ enum class Mode {
     return flagsStr;
 }
 
+[[nodiscard]] inline std::string DataToString(const uint8_t* data, size_t dataLength, char separator = 0) {
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (uint32_t i = 0; i < dataLength; i++) {
+        oss << std::setw(2) << static_cast<int32_t>(data[i]);
+        if ((i < dataLength - 1) && separator != 0) {
+            oss << separator;
+        }
+    }
+
+    return oss.str();
+}
+
 struct IoSignal {
     DsVeosCoSim_IoSignalId id{};
     uint32_t length{};
@@ -347,6 +374,33 @@ struct IoSignal {
         return signal;
     }
 };
+
+[[nodiscard]] inline std::string ToString(const IoSignal& signal) {
+    std::string str = "{Id: " + std::to_string(signal.id) + ", Length: " + std::to_string(signal.length) +
+                      ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
+                      ", Name: \"" + signal.name + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<IoSignal>& signals) {
+    std::string str = "[";
+
+    bool first = true;
+    for (const IoSignal& signal : signals) {
+        str.append(ToString(signal));
+
+        if (first) {
+            first = false;
+        } else {
+            str.append(", ");
+        }
+    }
+
+    str.append("]");
+
+    return str;
+}
 
 [[nodiscard]] inline std::vector<DsVeosCoSim_IoSignal> Convert(const std::vector<IoSignal>& signals) {
     std::vector<DsVeosCoSim_IoSignal> ioSignals;
@@ -381,6 +435,35 @@ struct CanController {
     }
 };
 
+[[nodiscard]] inline std::string ToString(const CanController& controller) {
+    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
+                      ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
+                      ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName +
+                      "\", ClusterName: \"" + controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<CanController>& controllers) {
+    std::string str = "[";
+
+    bool first = true;
+    for (const CanController& controller : controllers) {
+        str.append(ToString(controller));
+
+        if (first) {
+            first = false;
+        } else {
+            str.append(", ");
+        }
+    }
+
+    str.append("]");
+
+    return str;
+}
+
 [[nodiscard]] inline std::vector<DsVeosCoSim_CanController> Convert(const std::vector<CanController>& controllers) {
     std::vector<DsVeosCoSim_CanController> canControllers;
     canControllers.reserve(controllers.size());
@@ -414,6 +497,35 @@ struct EthController {
     }
 };
 
+[[nodiscard]] inline std::string ToString(const EthController& controller) {
+    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
+                      DataToString(controller.macAddress.data(), controller.macAddress.size(), ':') + "], Name: \"" +
+                      controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
+                      controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<EthController>& controllers) {
+    std::string str = "[";
+
+    bool first = true;
+    for (const EthController& controller : controllers) {
+        str.append(ToString(controller));
+
+        if (first) {
+            first = false;
+        } else {
+            str.append(", ");
+        }
+    }
+
+    str.append("]");
+
+    return str;
+}
+
 [[nodiscard]] inline std::vector<DsVeosCoSim_EthController> Convert(const std::vector<EthController>& controllers) {
     std::vector<DsVeosCoSim_EthController> ethControllers;
     ethControllers.reserve(controllers.size());
@@ -446,6 +558,34 @@ struct LinController {
         return controller;
     }
 };
+
+[[nodiscard]] inline std::string ToString(const LinController& controller) {
+    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
+                      ", Type: " + ToString(controller.type) + ", Name: \"" + controller.name + "\", ChannelName: \"" +
+                      controller.channelName + "\", ClusterName: \"" + controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<LinController>& controllers) {
+    std::string str = "[";
+
+    bool first = true;
+    for (const LinController& controller : controllers) {
+        str.append(ToString(controller));
+
+        if (first) {
+            first = false;
+        } else {
+            str.append(", ");
+        }
+    }
+
+    str.append("]");
+
+    return str;
+}
 
 [[nodiscard]] inline std::vector<DsVeosCoSim_LinController> Convert(const std::vector<LinController>& controllers) {
     std::vector<DsVeosCoSim_LinController> linControllers;

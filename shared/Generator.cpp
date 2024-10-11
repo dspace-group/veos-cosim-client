@@ -3,11 +3,12 @@
 #include "Generator.h"
 
 #include <fmt/format.h>
+#include <string>
 #include <string_view>
 
 using namespace DsVeosCoSim;
 
-int32_t Random(int32_t min, int32_t max) {
+[[nodiscard]] int32_t Random(int32_t min, int32_t max) {
     static bool first = true;
     if (first) {
         srand(42);  // NOLINT(cert-msc51-cpp)
@@ -25,47 +26,47 @@ void FillWithRandom(uint8_t* data, size_t length) {
     }
 }
 
-uint8_t GenerateU8() {
+[[nodiscard]] uint8_t GenerateU8() {
     return GenerateRandom(static_cast<uint8_t>(0U), static_cast<uint8_t>(UINT8_MAX));
 }
 
-uint16_t GenerateU16() {
+[[nodiscard]] uint16_t GenerateU16() {
     return GenerateRandom(static_cast<uint16_t>(0U), static_cast<uint16_t>(UINT16_MAX));
 }
 
-uint32_t GenerateU32() {
+[[nodiscard]] uint32_t GenerateU32() {
     return GenerateRandom(0U, 123456789U);
 }
 
-uint64_t GenerateU64() {
+[[nodiscard]] uint64_t GenerateU64() {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
 }
 
-int64_t GenerateI64() {
+[[nodiscard]] int64_t GenerateI64() {
     return static_cast<int64_t>(GenerateU64());
 }
 
-std::string GenerateString(std::string_view prefix) {
+[[nodiscard]] std::string GenerateString(std::string_view prefix) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 
-DsVeosCoSim_DataType GenerateDataType() {
+[[nodiscard]] DsVeosCoSim_DataType GenerateDataType() {
     return GenerateRandom(DsVeosCoSim_DataType_Bool, DsVeosCoSim_DataType_Float64);
 }
 
-DsVeosCoSim_SizeKind GenerateSizeKind() {
+[[nodiscard]] DsVeosCoSim_SizeKind GenerateSizeKind() {
     return GenerateRandom(DsVeosCoSim_SizeKind_Fixed, DsVeosCoSim_SizeKind_Variable);
 }
 
-IoSignal CreateSignal() {
+[[nodiscard]] IoSignal CreateSignal() {
     return CreateSignal(GenerateDataType(), GenerateSizeKind());
 }
 
-IoSignal CreateSignal(DsVeosCoSim_DataType dataType) {
+[[nodiscard]] IoSignal CreateSignal(DsVeosCoSim_DataType dataType) {
     return CreateSignal(dataType, GenerateSizeKind());
 }
 
-IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind) {
+[[nodiscard]] IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind) {
     IoSignal signal{};
     signal.id = GenerateU32();
     signal.length = GenerateRandom(1U, 10U);
@@ -75,13 +76,13 @@ IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKi
     return signal;
 }
 
-std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal) {
+[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
     FillWithRandom(data.data(), data.size());
     return data;
 }
 
-std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal) {
+[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal) {
     std::vector<uint8_t> data;
     data.resize(GetDataTypeSize(signal.dataType) * signal.length);
     return data;
@@ -143,7 +144,7 @@ void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerI
     FillWithRandom(message.data.data(), length);
 }
 
-std::vector<IoSignal> CreateSignals(size_t count) {
+[[nodiscard]] std::vector<IoSignal> CreateSignals(size_t count) {
     std::vector<IoSignal> signals;
 
     for (size_t i = 0; i < count; i++) {
@@ -153,7 +154,7 @@ std::vector<IoSignal> CreateSignals(size_t count) {
     return signals;
 }
 
-std::vector<CanController> CreateCanControllers(size_t count) {
+[[nodiscard]] std::vector<CanController> CreateCanControllers(size_t count) {
     std::vector<CanController> controllers;
 
     for (size_t i = 0; i < count; i++) {
@@ -165,7 +166,7 @@ std::vector<CanController> CreateCanControllers(size_t count) {
     return controllers;
 }
 
-std::vector<EthController> CreateEthControllers(size_t count) {
+[[nodiscard]] std::vector<EthController> CreateEthControllers(size_t count) {
     std::vector<EthController> controllers;
 
     for (size_t i = 0; i < count; i++) {
@@ -177,7 +178,7 @@ std::vector<EthController> CreateEthControllers(size_t count) {
     return controllers;
 }
 
-std::vector<LinController> CreateLinControllers(size_t count) {
+[[nodiscard]] std::vector<LinController> CreateLinControllers(size_t count) {
     std::vector<LinController> controllers;
 
     for (size_t i = 0; i < count; i++) {

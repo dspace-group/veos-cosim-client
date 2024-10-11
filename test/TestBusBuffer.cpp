@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <deque>
 #include <memory>
+#include <string>
 #include <thread>
 
 #include "BusBuffer.h"

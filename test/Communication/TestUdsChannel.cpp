@@ -18,7 +18,7 @@ namespace {
 
 constexpr uint32_t BigNumber = 4 * 1024 * 1024;
 
-std::string GenerateName() {
+[[nodiscard]] std::string GenerateName() {
     return GenerateString("UdsChannel");
 }
 

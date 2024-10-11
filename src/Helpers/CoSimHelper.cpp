@@ -2,6 +2,7 @@
 
 #include "CoSimHelper.h"
 
+#include <string>
 #include <string_view>
 #include <system_error>
 
@@ -45,7 +46,15 @@ void LogTrace(std::string_view message) {
     }
 }
 
-std::string GetSystemErrorMessage(int32_t errorCode) {
+void LogProtocolBeginTrace(const std::string& message) {
+    LogTrace("PROT BEGIN " + message);
+}
+
+void LogProtocolEndTrace(const std::string& message) {
+    LogTrace("PROT END   " + message);
+}
+
+[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
     return "Error code: " + std::to_string(errorCode) + ". " + std::system_category().message(errorCode);
 }
 

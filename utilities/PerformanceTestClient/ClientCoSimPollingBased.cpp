@@ -1,7 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <stdexcept>
-#include <string>
 #include <string_view>
 
 #include "CoSimClient.h"

@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
+#include <cstdint>
 #include <string_view>
 
 #include "CoSimHelper.h"

@@ -50,7 +50,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return *this;
 }
 
-SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
+[[nodiscard]] SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     DWORD sizeHigh = 0U;
     auto sizeLow = static_cast<DWORD>(size);
@@ -63,7 +63,7 @@ SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
     return {name, size, handle};
 }
 
-SharedMemory SharedMemory::OpenExisting(const std::string& name, size_t size) {
+[[nodiscard]] SharedMemory SharedMemory::OpenExisting(const std::string& name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
@@ -73,7 +73,7 @@ SharedMemory SharedMemory::OpenExisting(const std::string& name, size_t size) {
     return {name, size, handle};
 }
 
-std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, size_t size) {
+[[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
@@ -83,11 +83,11 @@ std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& nam
     return SharedMemory(name, size, handle);
 }
 
-void* SharedMemory::data() const noexcept {
+[[nodiscard]] void* SharedMemory::data() const noexcept {
     return _data;
 }
 
-size_t SharedMemory::size() const noexcept {
+[[nodiscard]] size_t SharedMemory::size() const noexcept {
     return _size;
 }
 

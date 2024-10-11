@@ -2,6 +2,7 @@
 
 #include "Socket.h"
 
+#include <string>
 #include <string_view>
 
 #include "CoSimHelper.h"
@@ -220,10 +221,10 @@ void SwitchToBlockingMode(const socket_t& socket) {
 #endif
 }
 
-bool ConnectWithTimeout(socket_t& socket,
-                        const sockaddr* socketAddress,
-                        socklen_t sizeOfSocketAddress,
-                        uint32_t timeoutInMilliseconds) {
+[[nodiscard]] bool ConnectWithTimeout(socket_t& socket,
+                                      const sockaddr* socketAddress,
+                                      socklen_t sizeOfSocketAddress,
+                                      uint32_t timeoutInMilliseconds) {
     SwitchToNonBlockingMode(socket);
 
     if (::connect(socket, socketAddress, sizeOfSocketAddress) >= 0) {
@@ -333,7 +334,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     return *this;
 }
 
-bool Socket::IsIpv4Supported() {
+[[nodiscard]] bool Socket::IsIpv4Supported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -349,7 +350,7 @@ bool Socket::IsIpv4Supported() {
     return isSupported;
 }
 
-bool Socket::IsIpv6Supported() {
+[[nodiscard]] bool Socket::IsIpv6Supported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -365,7 +366,7 @@ bool Socket::IsIpv6Supported() {
     return isSupported;
 }
 
-bool Socket::IsUdsSupported() {
+[[nodiscard]] bool Socket::IsUdsSupported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -412,7 +413,7 @@ void Socket::Close() {
     CloseSocket(socket);
 }
 
-bool Socket::IsValid() const {
+[[nodiscard]] bool Socket::IsValid() const {
     return _socket != InvalidSocket;
 }
 
@@ -430,10 +431,10 @@ void Socket::EnableIpv6Only() const {  // NOLINT
 #endif
 }
 
-std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
-                                         uint16_t remotePort,
-                                         uint16_t localPort,
-                                         uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
+                                                       uint16_t remotePort,
+                                                       uint16_t localPort,
+                                                       uint32_t timeoutInMilliseconds) {
     if (remotePort == 0) {
         throw CoSimException("Remote port 0 is not valid.");
     }
@@ -479,7 +480,7 @@ std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
     return {};
 }
 
-bool Socket::TryConnect(const std::string& name) const {
+[[nodiscard]] bool Socket::TryConnect(const std::string& name) const {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {
@@ -598,7 +599,7 @@ void Socket::Listen() const {
     }
 }
 
-std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
     EnsureIsValid();
 
     if (!Poll(_socket, POLLRDNORM, timeoutInMilliseconds)) {
@@ -613,7 +614,7 @@ std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
     return Socket(socket, _addressFamily);
 }
 
-uint16_t Socket::GetLocalPort() const {
+[[nodiscard]] uint16_t Socket::GetLocalPort() const {
     EnsureIsValid();
 
     if (_addressFamily == AddressFamily::Ipv4) {
@@ -627,7 +628,7 @@ uint16_t Socket::GetLocalPort() const {
     return 0;
 }
 
-uint16_t Socket::GetLocalPortForIpv4() const {
+[[nodiscard]] uint16_t Socket::GetLocalPortForIpv4() const {
     sockaddr_in address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
@@ -640,7 +641,7 @@ uint16_t Socket::GetLocalPortForIpv4() const {
     return socketAddress.port;
 }
 
-uint16_t Socket::GetLocalPortForIpv6() const {
+[[nodiscard]] uint16_t Socket::GetLocalPortForIpv6() const {
     sockaddr_in6 address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
@@ -653,7 +654,7 @@ uint16_t Socket::GetLocalPortForIpv6() const {
     return socketAddress.port;
 }
 
-SocketAddress Socket::GetRemoteAddress() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddress() const {
     EnsureIsValid();
 
     if (_addressFamily == AddressFamily::Ipv4) {
@@ -667,7 +668,7 @@ SocketAddress Socket::GetRemoteAddress() const {
     return {"127.0.0.1", 0};
 }
 
-SocketAddress Socket::GetRemoteAddressForIpv4() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv4() const {
     sockaddr_in address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
@@ -679,7 +680,7 @@ SocketAddress Socket::GetRemoteAddressForIpv4() const {
     return ConvertFromInternetAddress(address);
 }
 
-SocketAddress Socket::GetRemoteAddressForIpv6() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv6() const {
     sockaddr_in6 address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
@@ -695,7 +696,7 @@ SocketAddress Socket::GetRemoteAddressForIpv6() const {
     return ConvertFromInternetAddress(address);
 }
 
-bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
+[[nodiscard]] bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
 #ifdef _WIN32
     receivedSize = ::recv(_socket, static_cast<char*>(destination), size, 0);
 #else
@@ -726,7 +727,7 @@ bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) con
     return false;
 }
 
-bool Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
+[[nodiscard]] bool Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
 #ifdef _WIN32
     sentSize = ::send(_socket, static_cast<const char*>(source), size, 0);
 #else

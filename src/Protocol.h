@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 #include "BusBuffer.h"
 #include "Channel.h"
@@ -86,8 +85,8 @@ namespace Protocol {
 
 [[nodiscard]] bool SendOk(ChannelWriter& writer);
 
-[[nodiscard]] bool SendError(ChannelWriter& writer, std::string_view errorStr);
-[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorStr);
+[[nodiscard]] bool SendError(ChannelWriter& writer, const std::string& errorMessage);
+[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorMessage);
 
 [[nodiscard]] bool SendPing(ChannelWriter& writer);
 
@@ -97,8 +96,8 @@ namespace Protocol {
 [[nodiscard]] bool SendConnect(ChannelWriter& writer,
                                uint32_t protocolVersion,
                                Mode clientMode,
-                               std::string_view serverName,
-                               std::string_view clientName);
+                               const std::string& serverName,
+                               const std::string& clientName);
 [[nodiscard]] bool ReadConnect(ChannelReader& reader,
                                uint32_t& protocolVersion,
                                Mode& clientMode,
@@ -167,16 +166,16 @@ namespace Protocol {
                               const BusBuffer& busBuffer,
                               const Callbacks& callbacks);
 
-[[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] bool SendGetPort(ChannelWriter& writer, const std::string& serverName);
 [[nodiscard]] bool ReadGetPort(ChannelReader& reader, std::string& serverName);
 
 [[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port);
 [[nodiscard]] bool ReadGetPortOk(ChannelReader& reader, uint16_t& port);
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port);
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port);
 [[nodiscard]] bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port);
 
-[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, const std::string& serverName);
 [[nodiscard]] bool ReadUnsetPort(ChannelReader& reader, std::string& serverName);
 
 }  // namespace Protocol

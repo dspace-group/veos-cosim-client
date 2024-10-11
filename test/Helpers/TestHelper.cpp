@@ -11,11 +11,11 @@
 
 using namespace DsVeosCoSim;
 
-CoSimType GetCounterPart(CoSimType coSimType) {
+[[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
+[[nodiscard]] std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
     return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 

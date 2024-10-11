@@ -2,6 +2,8 @@
 
 #include "BusBuffer.h"
 
+#include <string>
+
 namespace DsVeosCoSim {
 
 namespace {
@@ -18,7 +20,7 @@ using RemoteLinBuffer = RemoteBusProtocolBuffer<DsVeosCoSim_LinMessage, LinMessa
 
 }  // namespace
 
-bool CanMessage::SerializeTo(ChannelWriter& writer) const {
+[[nodiscard]] bool CanMessage::SerializeTo(ChannelWriter& writer) const {
     CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(id), "Could not write id.");
@@ -28,7 +30,7 @@ bool CanMessage::SerializeTo(ChannelWriter& writer) const {
     return true;
 }
 
-bool CanMessage::DeserializeFrom(ChannelReader& reader) {
+[[nodiscard]] bool CanMessage::DeserializeFrom(ChannelReader& reader) {
     CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(id), "Could not read id.");
@@ -70,7 +72,7 @@ void CanMessage::CheckMaxLength() const {
     }
 }
 
-bool EthMessage::SerializeTo(ChannelWriter& writer) const {
+[[nodiscard]] bool EthMessage::SerializeTo(ChannelWriter& writer) const {
     CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(flags), "Could not write flags.");
@@ -79,7 +81,7 @@ bool EthMessage::SerializeTo(ChannelWriter& writer) const {
     return true;
 }
 
-bool EthMessage::DeserializeFrom(ChannelReader& reader) {
+[[nodiscard]] bool EthMessage::DeserializeFrom(ChannelReader& reader) {
     CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(flags), "Could not read flags.");
@@ -118,7 +120,7 @@ void EthMessage::CheckMaxLength() const {
     }
 }
 
-bool LinMessage::SerializeTo(ChannelWriter& writer) const {
+[[nodiscard]] bool LinMessage::SerializeTo(ChannelWriter& writer) const {
     CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(id), "Could not write id.");
@@ -128,7 +130,7 @@ bool LinMessage::SerializeTo(ChannelWriter& writer) const {
     return true;
 }
 
-bool LinMessage::DeserializeFrom(ChannelReader& reader) {
+[[nodiscard]] bool LinMessage::DeserializeFrom(ChannelReader& reader) {
     CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(id), "Could not read id.");
@@ -240,40 +242,40 @@ void BusBuffer::ClearData() const {
     _linReceiveBuffer->ClearData();
 }
 
-bool BusBuffer::Transmit(const DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool BusBuffer::Transmit(const DsVeosCoSim_CanMessage& message) const {
     return _canTransmitBuffer->Transmit(message);
 }
 
-bool BusBuffer::Transmit(const DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool BusBuffer::Transmit(const DsVeosCoSim_EthMessage& message) const {
     return _ethTransmitBuffer->Transmit(message);
 }
 
-bool BusBuffer::Transmit(const DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool BusBuffer::Transmit(const DsVeosCoSim_LinMessage& message) const {
     return _linTransmitBuffer->Transmit(message);
 }
 
-bool BusBuffer::Receive(DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool BusBuffer::Receive(DsVeosCoSim_CanMessage& message) const {
     return _canReceiveBuffer->Receive(message);
 }
 
-bool BusBuffer::Receive(DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool BusBuffer::Receive(DsVeosCoSim_EthMessage& message) const {
     return _ethReceiveBuffer->Receive(message);
 }
 
-bool BusBuffer::Receive(DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool BusBuffer::Receive(DsVeosCoSim_LinMessage& message) const {
     return _linReceiveBuffer->Receive(message);
 }
 
-bool BusBuffer::Serialize(ChannelWriter& writer) const {
+[[nodiscard]] bool BusBuffer::Serialize(ChannelWriter& writer) const {
     CheckResultWithMessage(_canTransmitBuffer->Serialize(writer), "Could not transmit CAN messages.");
     CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit ETH messages.");
     CheckResultWithMessage(_linTransmitBuffer->Serialize(writer), "Could not transmit LIN messages.");
     return true;
 }
 
-bool BusBuffer::Deserialize(ChannelReader& reader,
-                            DsVeosCoSim_SimulationTime simulationTime,
-                            const Callbacks& callbacks) const {
+[[nodiscard]] bool BusBuffer::Deserialize(ChannelReader& reader,
+                                          DsVeosCoSim_SimulationTime simulationTime,
+                                          const Callbacks& callbacks) const {
     CheckResultWithMessage(_canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback),
                            "Could not receive CAN messages.");
     CheckResultWithMessage(_ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback),

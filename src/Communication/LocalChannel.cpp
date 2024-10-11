@@ -22,17 +22,17 @@ constexpr uint32_t BufferSize = 64 * 1024;
 std::string ServerToClientPostFix = "ServerToClient";
 std::string ClientToServerPostFix = "ClientToServer";
 
-std::string GetWriterName(const std::string& name, bool isServer) {
+[[nodiscard]] std::string GetWriterName(const std::string& name, bool isServer) {
     std::string postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
     return name + "." + postfix;
 }
 
-std::string GetReaderName(const std::string& name, bool isServer) {
+[[nodiscard]] std::string GetReaderName(const std::string& name, bool isServer) {
     std::string postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
     return name + "." + postfix;
 }
 
-constexpr uint32_t MaskIndex(uint32_t index) noexcept {
+[[nodiscard]] constexpr uint32_t MaskIndex(uint32_t index) noexcept {
     return index & (BufferSize - 1);
 }
 
@@ -129,7 +129,7 @@ void LocalChannelBase::Disconnect() const {
     }
 }
 
-bool LocalChannelBase::CheckIfConnectionIsAlive() {
+[[nodiscard]] bool LocalChannelBase::CheckIfConnectionIsAlive() {
     uint32_t counterpartPid = *_counterpartPid;
     if (counterpartPid != 0) {
         _connectionDetected = true;
@@ -157,7 +157,7 @@ LocalChannelWriter::LocalChannelWriter(const std::string& name, bool isServer)
     : LocalChannelBase(GetWriterName(name, isServer), isServer) {
 }
 
-bool LocalChannelWriter::Write(const void* source, size_t size) {
+[[nodiscard]] bool LocalChannelWriter::Write(const void* source, size_t size) {
     const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
     auto totalSizeToCopy = static_cast<uint32_t>(size);
@@ -193,12 +193,12 @@ bool LocalChannelWriter::Write(const void* source, size_t size) {
     return true;
 }
 
-bool LocalChannelWriter::EndWrite() {
+[[nodiscard]] bool LocalChannelWriter::EndWrite() {
     _newDataEvent.Set();
     return true;
 }
 
-bool LocalChannelWriter::WaitForFreeSpace(uint32_t& currentSize) {
+[[nodiscard]] bool LocalChannelWriter::WaitForFreeSpace(uint32_t& currentSize) {
     (void)SignalAndWait(_newDataEvent, _newSpaceEvent, 1);
     currentSize = _writeIndex - _header->readIndex.load();
     if (currentSize < BufferSize) {
@@ -224,7 +224,7 @@ LocalChannelReader::LocalChannelReader(const std::string& name, bool isServer)
     : LocalChannelBase(GetReaderName(name, isServer), isServer) {
 }
 
-bool LocalChannelReader::Read(void* destination, size_t size) {
+[[nodiscard]] bool LocalChannelReader::Read(void* destination, size_t size) {
     auto* bufferPointer = static_cast<uint8_t*>(destination);
 
     auto totalSizeToCopy = static_cast<uint32_t>(size);
@@ -263,7 +263,7 @@ bool LocalChannelReader::Read(void* destination, size_t size) {
     return true;
 }
 
-bool LocalChannelReader::BeginRead(uint32_t& currentSize) {
+[[nodiscard]] bool LocalChannelReader::BeginRead(uint32_t& currentSize) {
     while (!_newDataEvent.Wait(1)) {
         currentSize = _header->writeIndex.load() - _readIndex;
         if (currentSize > 0) {
@@ -287,15 +287,15 @@ void LocalChannel::Disconnect() {
     _reader.Disconnect();
 }
 
-ChannelWriter& LocalChannel::GetWriter() {
+[[nodiscard]] ChannelWriter& LocalChannel::GetWriter() {
     return _writer;
 }
 
-ChannelReader& LocalChannel::GetReader() {
+[[nodiscard]] ChannelReader& LocalChannel::GetReader() {
     return _reader;
 }
 
-std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name) {
+[[nodiscard]] std::optional<LocalChannel> TryConnectToLocalChannel(const std::string& name) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
@@ -322,7 +322,7 @@ LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
     _counter->store(0);
 }
 
-std::optional<LocalChannel> LocalChannelServer::TryAccept() {
+[[nodiscard]] std::optional<LocalChannel> LocalChannelServer::TryAccept() {
     const int32_t currentCounter = _counter->load();
     if (currentCounter > _lastCounter) {
         const std::string specificName = _name + "." + std::to_string(_lastCounter);

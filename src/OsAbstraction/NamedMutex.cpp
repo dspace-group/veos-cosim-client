@@ -24,7 +24,7 @@ namespace {
 NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
-NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
+[[nodiscard]] NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
@@ -34,7 +34,7 @@ NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
     return NamedMutex(handle);
 }
 
-NamedMutex NamedMutex::OpenExisting(const std::string& name) {
+[[nodiscard]] NamedMutex NamedMutex::OpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
@@ -44,7 +44,7 @@ NamedMutex NamedMutex::OpenExisting(const std::string& name) {
     return NamedMutex(handle);
 }
 
-std::optional<NamedMutex> NamedMutex::TryOpenExisting(const std::string& name) {
+[[nodiscard]] std::optional<NamedMutex> NamedMutex::TryOpenExisting(const std::string& name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
@@ -58,7 +58,7 @@ void NamedMutex::lock() const {
     (void)lock(Infinite);
 }
 
-bool NamedMutex::lock(uint32_t milliseconds) const {
+[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 
