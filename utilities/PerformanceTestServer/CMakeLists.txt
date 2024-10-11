@@ -8,7 +8,6 @@ target_sources(
   PerformanceTestServer
   PRIVATE
   Program.cpp
-  ServerAsioBlocking.cpp
   ServerCoSim.cpp
   ServerEvents.cpp
   ServerLocalCommunication.cpp
@@ -23,5 +22,4 @@ target_link_libraries(
   PerformanceTestServer
   DsVeosCoSim
   shared
-  asio
 )

@@ -7,7 +7,6 @@ add_executable(
 target_sources(
   PerformanceTestClient
   PRIVATE
-  ClientAsioBlocking.cpp
   ClientCoSimCallbackBased.cpp
   ClientCoSimPollingBased.cpp
   ClientEvents.cpp
@@ -31,5 +30,4 @@ target_link_libraries(
   PerformanceTestClient
   DsVeosCoSim
   shared
-  asio
 )

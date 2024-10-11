@@ -3,7 +3,6 @@
 #include "CoSimHelper.h"
 #include "Helper.h"
 
-extern void RunAsioBlockingTest(std::string_view host);
 extern void RunTcpTest(std::string_view host);
 extern void RunUdpTest(std::string_view host);
 extern void RunUdsTest();
@@ -23,7 +22,6 @@ int32_t main(int32_t argc, char* argv[]) {
 
     if (argc > 1) {
         RunTcpTest(argv[1]);
-        RunAsioBlockingTest(argv[1]);
         RunUdpTest(argv[1]);
 
         LogTrace("----------------------------------------\n");
@@ -33,7 +31,6 @@ int32_t main(int32_t argc, char* argv[]) {
         RunCoSimPollingTest(argv[1]);
     } else {
         RunTcpTest("127.0.0.1");
-        RunAsioBlockingTest("127.0.0.1");
         RunUdpTest("127.0.0.1");
         RunUdsTest();
         RunPipeTest();
