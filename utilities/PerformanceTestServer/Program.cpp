@@ -1,10 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <cstdint>
 #include <future>
 
 #include "Helper.h"
 
-extern void StartAsioBlockingServer();
 extern void StartUdpServer();
 extern void StartTcpServer();
 extern void StartUdsServer();
@@ -19,7 +19,6 @@ int32_t main() {
         return 1;
     }
 
-    StartAsioBlockingServer();
     StartTcpServer();
     StartUdpServer();
     StartUdsServer();

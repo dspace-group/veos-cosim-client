@@ -3,8 +3,8 @@
 #include "LogHelper.h"
 
 #include <fmt/color.h>
-#include <iomanip>
 #include <sstream>
+#include <string_view>
 
 #include "CoSimHelper.h"
 
@@ -26,19 +26,6 @@ fmt::text_style white = fg(fmt::color::white);
 fmt::text_style gray = fg(fmt::color::light_gray);
 fmt::text_style blue = fg(fmt::color::dodger_blue);
 fmt::text_style violet = fg(fmt::color::fuchsia);
-
-[[nodiscard]] std::string DataToString(const uint8_t* data, uint32_t dataLength, char separator = 0) {
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0');
-    for (uint32_t i = 0; i < dataLength; i++) {
-        oss << std::setw(2) << static_cast<int32_t>(data[i]);
-        if ((i < dataLength - 1) && separator != 0) {
-            oss << separator;
-        }
-    }
-
-    return oss.str();
-}
 
 [[nodiscard]] std::string DataTypeValueToString(const void* value, uint32_t index, DsVeosCoSim_DataType dataType) {
     switch (dataType) {
@@ -239,6 +226,6 @@ void ClearLastMessage() {
     g_lastMessage = "";
 }
 
-std::string GetLastMessage() {
+[[nodiscard]] std::string GetLastMessage() {
     return g_lastMessage;
 }

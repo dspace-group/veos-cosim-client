@@ -10,8 +10,8 @@
 
 #include "CoSimTypes.h"
 
-DsVeosCoSim::CoSimType GetCounterPart(DsVeosCoSim::CoSimType coSimType);
-std::string GetCounterPart(std::string_view name, DsVeosCoSim::ConnectionKind connectionKind);
+[[nodiscard]] DsVeosCoSim::CoSimType GetCounterPart(DsVeosCoSim::CoSimType coSimType);
+[[nodiscard]] std::string GetCounterPart(const std::string& name, DsVeosCoSim::ConnectionKind connectionKind);
 
 void AssertByteArray(const void* expected, const void* actual, size_t size);
 

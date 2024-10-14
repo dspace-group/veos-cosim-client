@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <string>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -25,7 +24,7 @@ struct Param {
     AddressFamily addressFamily{};
 };
 
-std::vector<Param> GetValues() {
+[[nodiscard]] std::vector<Param> GetValues() {
     std::vector<Param> values;
 
     if (Socket::IsIpv4Supported()) {
@@ -45,7 +44,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestTcpChannel,
                          testing::ValuesIn(GetValues()),
                          [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
-                             return std::string(ToString(info.param.addressFamily));
+                             return ToString(info.param.addressFamily);
                          });
 
 TEST_F(TestTcpChannel, StartServer) {

@@ -2,7 +2,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <string>
 #include <string_view>
 
 #include "BackgroundService.h"
@@ -18,7 +17,7 @@ namespace {
 
 auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
-CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
+[[nodiscard]] CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     CoSimServerConfig config{};
     config.serverName = GenerateString("Server名前");
     config.startPortMapper = false;
@@ -28,7 +27,9 @@ CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
     return config;
 }
 
-ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, std::string_view serverName, uint16_t port = 0) {
+[[nodiscard]] ConnectConfig CreateConnectConfig(ConnectionKind connectionKind,
+                                                std::string_view serverName,
+                                                uint16_t port = 0) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("Client名前");
@@ -47,8 +48,8 @@ protected:
     }
 };
 
-INSTANTIATE_TEST_SUITE_P(Test, TestCoSim, connectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
-    return std::string(ToString(info.param));
+INSTANTIATE_TEST_SUITE_P(, TestCoSim, connectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
+    return ToString(info.param);
 });
 
 TEST_F(TestCoSim, LoadServer) {

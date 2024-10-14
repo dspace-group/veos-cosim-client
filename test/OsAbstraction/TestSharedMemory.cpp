@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
+#include <string>
 
 #include "Generator.h"
 #include "SharedMemory.h"
@@ -11,7 +12,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-std::string GenerateName() {
+[[nodiscard]] std::string GenerateName() {
     return GenerateString("SharedMemory名前\xF0\x9F\x98\x80");
 }
 

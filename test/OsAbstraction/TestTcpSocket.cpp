@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 #include <fmt/format.h>
+#include <string>
 #include <vector>
 
 #include "Generator.h"
@@ -17,7 +18,7 @@ struct Param {
     bool enableRemoteAccess{};
 };
 
-std::vector<Param> GetValues() {
+[[nodiscard]] std::vector<Param> GetValues() {
     std::vector<Param> values;
 
     if (Socket::IsIpv4Supported()) {

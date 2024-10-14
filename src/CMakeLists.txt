@@ -18,6 +18,7 @@ target_sources(
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
   Helpers/CoSimHelper.cpp
+  Helpers/Environment.cpp
   OsAbstraction/Handle.cpp
   OsAbstraction/NamedEvent.cpp
   OsAbstraction/NamedMutex.cpp

@@ -6,14 +6,14 @@
 
 #include <cstdint>
 #include <optional>
-#include <string_view>
+#include <string>
 
 #include "Handle.h"
 
 namespace DsVeosCoSim {
 
 class NamedEvent final {
-    explicit NamedEvent(Handle handle);
+    NamedEvent(Handle handle, const std::string& name);
 
 public:
     NamedEvent() = default;
@@ -25,9 +25,9 @@ public:
     NamedEvent(NamedEvent&&) noexcept = default;
     NamedEvent& operator=(NamedEvent&&) noexcept = default;
 
-    [[nodiscard]] static NamedEvent CreateOrOpen(std::string_view name);
-    [[nodiscard]] static NamedEvent OpenExisting(std::string_view name);
-    [[nodiscard]] static std::optional<NamedEvent> TryOpenExisting(std::string_view name);
+    [[nodiscard]] static NamedEvent CreateOrOpen(const std::string& name);
+    [[nodiscard]] static NamedEvent OpenExisting(const std::string& name);
+    [[nodiscard]] static std::optional<NamedEvent> TryOpenExisting(const std::string& name);
 
     operator Handle&() noexcept;  // NOLINT
 
@@ -37,6 +37,7 @@ public:
 
 private:
     Handle _handle;
+    std::string _name;
 };
 
 }  // namespace DsVeosCoSim

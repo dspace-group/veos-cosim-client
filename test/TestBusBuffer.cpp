@@ -1,10 +1,11 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <deque>
+#include <fmt/format.h>
 #include <memory>
+#include <string>
 #include <thread>
 
 #include "BusBuffer.h"
@@ -245,7 +246,7 @@ using Parameters = Types<Param<CanController,
 class NameGenerator {
 public:
     template <typename T>
-    static std::string GetName([[maybe_unused]] int32_t index) {  // NOLINT
+    static std::string GetName([[maybe_unused]] int32_t index) {
         using TController = typename T::Controller;
         CoSimType coSimType = T::GetCoSimType();
         ConnectionKind connectionKind = T::GetConnectionKind();

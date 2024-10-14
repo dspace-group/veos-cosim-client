@@ -2,6 +2,9 @@
 
 #include "Socket.h"
 
+#include <string>
+#include <string_view>
+
 #include "CoSimHelper.h"
 
 #ifdef _WIN32
@@ -12,6 +15,7 @@
 #include <filesystem>
 #else
 #include <arpa/inet.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -25,7 +29,6 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <cerrno>
 #endif
 
 #ifdef _WIN32
@@ -54,13 +57,13 @@ constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 #endif
 
-[[nodiscard]] std::string GetUdsPath(std::string_view name) {
+[[nodiscard]] std::string GetUdsPath(const std::string& name) {
 #ifdef _WIN32
     fs::path tempDir = fs::temp_directory_path();
-    fs::path fileDir = tempDir / ("dSPACE.VEOS.CoSim." + std::string(name));
+    fs::path fileDir = tempDir / ("dSPACE.VEOS.CoSim." + name);
     return fileDir.string();
 #else
-    return "dSPACE.VEOS.CoSim." + std::string(name);
+    return "dSPACE.VEOS.CoSim." + name;
 #endif
 }
 
@@ -75,10 +78,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     return static_cast<int64_t>(largeInteger.QuadPart / 10000);
 #else
-    timeval tv{};
-    (void)::gettimeofday(&tv, nullptr);
+    timeval currentTime{};
+    (void)::gettimeofday(&currentTime, nullptr);
 
-    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    return (currentTime.tv_sec * 1000) + (currentTime.tv_usec / 1000);
 #endif
 }
 
@@ -113,13 +116,13 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     socketAddress.port = ::ntohs(ipv4Address.sin_port);
 
     if (ipv4Address.sin_addr.s_addr != 0) {
-        char ipAddressArray[INET_ADDRSTRLEN]{};
-        const char* result = ::inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddressArray, INET_ADDRSTRLEN);
+        std::string ipAddress(INET_ADDRSTRLEN, '\0');
+        const char* result = ::inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
         if (!result) {
             throw CoSimException("Could not get address information.", GetLastNetworkError());
         }
 
-        socketAddress.ipAddress = ipAddressArray;
+        socketAddress.ipAddress = ipAddress;
     } else {
         socketAddress.ipAddress = "127.0.0.1";
     }
@@ -131,13 +134,13 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     SocketAddress socketAddress;
     socketAddress.port = ::ntohs(ipv6Address.sin6_port);
 
-    char ipAddressArray[INET6_ADDRSTRLEN]{};
-    const char* result = ::inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddressArray, INET6_ADDRSTRLEN);
+    std::string ipAddress(INET6_ADDRSTRLEN, '\0');
+    const char* result = ::inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
     if (!result) {
         throw CoSimException("Could not get address information.", GetLastNetworkError());
     }
 
-    socketAddress.ipAddress = ipAddressArray;
+    socketAddress.ipAddress = ipAddress;
 
     return socketAddress;
 }
@@ -218,10 +221,10 @@ void SwitchToBlockingMode(const socket_t& socket) {
 #endif
 }
 
-bool ConnectWithTimeout(socket_t& socket,
-                        const sockaddr* socketAddress,
-                        socklen_t sizeOfSocketAddress,
-                        uint32_t timeoutInMilliseconds) {
+[[nodiscard]] bool ConnectWithTimeout(socket_t& socket,
+                                      const sockaddr* socketAddress,
+                                      socklen_t sizeOfSocketAddress,
+                                      uint32_t timeoutInMilliseconds) {
     SwitchToNonBlockingMode(socket);
 
     if (::connect(socket, socketAddress, sizeOfSocketAddress) >= 0) {
@@ -272,26 +275,25 @@ void StartupNetwork() {
 #endif
 }
 
-Socket::Socket(AddressFamily addressFamily) {
-    _addressFamily = addressFamily;
+Socket::Socket(AddressFamily addressFamily) : _addressFamily(addressFamily) {
     int32_t protocol{};
-    int32_t af{};
+    int32_t domain{};
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             protocol = IPPROTO_TCP;
-            af = AF_INET;
+            domain = AF_INET;
             break;
         case AddressFamily::Ipv6:
             protocol = IPPROTO_TCP;
-            af = AF_INET6;
+            domain = AF_INET6;
             break;
         case AddressFamily::Uds:
             protocol = 0;
-            af = AF_UNIX;
+            domain = AF_UNIX;
             break;
     }
 
-    _socket = ::socket(af, SOCK_STREAM, protocol);
+    _socket = ::socket(domain, SOCK_STREAM, protocol);
 
     if (_socket == InvalidSocket) {
         throw CoSimException("Could not create socket.", GetLastNetworkError());
@@ -308,9 +310,9 @@ Socket::~Socket() noexcept {
 Socket::Socket(Socket&& other) noexcept {
     Close();
 
-    _socket = other._socket;
-    _addressFamily = other._addressFamily;
-    _path = other._path;
+    _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
@@ -331,7 +333,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     return *this;
 }
 
-bool Socket::IsIpv4Supported() {
+[[nodiscard]] bool Socket::IsIpv4Supported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -347,7 +349,7 @@ bool Socket::IsIpv4Supported() {
     return isSupported;
 }
 
-bool Socket::IsIpv6Supported() {
+[[nodiscard]] bool Socket::IsIpv6Supported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -363,7 +365,7 @@ bool Socket::IsIpv6Supported() {
     return isSupported;
 }
 
-bool Socket::IsUdsSupported() {
+[[nodiscard]] bool Socket::IsUdsSupported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -410,11 +412,11 @@ void Socket::Close() {
     CloseSocket(socket);
 }
 
-bool Socket::IsValid() const {
+[[nodiscard]] bool Socket::IsValid() const {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {  // NOLINT
+void Socket::EnableIpv6Only() const {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
@@ -428,10 +430,10 @@ void Socket::EnableIpv6Only() const {  // NOLINT
 #endif
 }
 
-std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
-                                         uint16_t remotePort,
-                                         uint16_t localPort,
-                                         uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
+                                                       uint16_t remotePort,
+                                                       uint16_t localPort,
+                                                       uint32_t timeoutInMilliseconds) {
     if (remotePort == 0) {
         throw CoSimException("Remote port 0 is not valid.");
     }
@@ -477,7 +479,7 @@ std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
     return {};
 }
 
-bool Socket::TryConnect(std::string_view name) const {
+[[nodiscard]] bool Socket::TryConnect(const std::string& name) const {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {
@@ -537,7 +539,7 @@ void Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
     }
 }
 
-void Socket::Bind(std::string_view name) {
+void Socket::Bind(const std::string& name) {
     EnsureIsValid();
 
     if (_addressFamily != AddressFamily::Uds) {
@@ -596,7 +598,7 @@ void Socket::Listen() const {
     }
 }
 
-std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
     EnsureIsValid();
 
     if (!Poll(_socket, POLLRDNORM, timeoutInMilliseconds)) {
@@ -611,7 +613,7 @@ std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
     return Socket(socket, _addressFamily);
 }
 
-uint16_t Socket::GetLocalPort() const {
+[[nodiscard]] uint16_t Socket::GetLocalPort() const {
     EnsureIsValid();
 
     if (_addressFamily == AddressFamily::Ipv4) {
@@ -625,7 +627,7 @@ uint16_t Socket::GetLocalPort() const {
     return 0;
 }
 
-uint16_t Socket::GetLocalPortForIpv4() const {
+[[nodiscard]] uint16_t Socket::GetLocalPortForIpv4() const {
     sockaddr_in address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
@@ -638,7 +640,7 @@ uint16_t Socket::GetLocalPortForIpv4() const {
     return socketAddress.port;
 }
 
-uint16_t Socket::GetLocalPortForIpv6() const {
+[[nodiscard]] uint16_t Socket::GetLocalPortForIpv6() const {
     sockaddr_in6 address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
@@ -651,7 +653,7 @@ uint16_t Socket::GetLocalPortForIpv6() const {
     return socketAddress.port;
 }
 
-SocketAddress Socket::GetRemoteAddress() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddress() const {
     EnsureIsValid();
 
     if (_addressFamily == AddressFamily::Ipv4) {
@@ -665,7 +667,7 @@ SocketAddress Socket::GetRemoteAddress() const {
     return {"127.0.0.1", 0};
 }
 
-SocketAddress Socket::GetRemoteAddressForIpv4() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv4() const {
     sockaddr_in address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
@@ -677,7 +679,7 @@ SocketAddress Socket::GetRemoteAddressForIpv4() const {
     return ConvertFromInternetAddress(address);
 }
 
-SocketAddress Socket::GetRemoteAddressForIpv6() const {
+[[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv6() const {
     sockaddr_in6 address{};
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
@@ -693,7 +695,7 @@ SocketAddress Socket::GetRemoteAddressForIpv6() const {
     return ConvertFromInternetAddress(address);
 }
 
-bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
+[[nodiscard]] bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
 #ifdef _WIN32
     receivedSize = ::recv(_socket, static_cast<char*>(destination), size, 0);
 #else
@@ -724,7 +726,7 @@ bool Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) con
     return false;
 }
 
-bool Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
+[[nodiscard]] bool Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
 #ifdef _WIN32
     sentSize = ::send(_socket, static_cast<const char*>(source), size, 0);
 #else

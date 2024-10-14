@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <string>
+#include <string_view>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -19,20 +21,14 @@ constexpr int32_t ReadPacketSize = 1024;
 
 }  // namespace
 
-SocketChannelWriter::SocketChannelWriter(Socket* socket) : _socket(socket) {
-    _writeIndex = HeaderSize;
-
+SocketChannelWriter::SocketChannelWriter(Socket* socket) : _socket(socket), _writeIndex(HeaderSize) {
     _writeBuffer.resize(BufferSize);
 }
 
-SocketChannelWriter::SocketChannelWriter(SocketChannelWriter&& other) noexcept {
-    _socket = other._socket;
-    _writeIndex = other._writeIndex;
-    _writeBuffer = other._writeBuffer;
-
+SocketChannelWriter::SocketChannelWriter(SocketChannelWriter&& other) noexcept
+    : _socket(other._socket), _writeIndex(other._writeIndex), _writeBuffer(std::move(other._writeBuffer)) {
     other._socket = nullptr;
     other._writeIndex = 0;
-    other._writeBuffer.clear();
 }
 
 SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other) noexcept {
@@ -47,7 +43,7 @@ SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other)
     return *this;
 }
 
-bool SocketChannelWriter::Write(const void* source, size_t size) {
+[[nodiscard]] bool SocketChannelWriter::Write(const void* source, size_t size) {
     const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
     while (size > 0) {
@@ -66,7 +62,7 @@ bool SocketChannelWriter::Write(const void* source, size_t size) {
     return true;
 }
 
-bool SocketChannelWriter::EndWrite() {
+[[nodiscard]] bool SocketChannelWriter::EndWrite() {
     uint8_t* sourcePtr = _writeBuffer.data();
 
     // Write header
@@ -84,21 +80,16 @@ bool SocketChannelWriter::EndWrite() {
     return true;
 }
 
-SocketChannelReader::SocketChannelReader(Socket* socket) : _socket(socket) {
-    _readIndex = HeaderSize;
-    _writeIndex = 0;
-    _endFrameIndex = 0;
-
+SocketChannelReader::SocketChannelReader(Socket* socket) : _socket(socket), _readIndex(HeaderSize) {
     _readBuffer.resize(BufferSize);
 }
 
-SocketChannelReader::SocketChannelReader(SocketChannelReader&& other) noexcept {
-    _socket = other._socket;
-    _readIndex = other._readIndex;
-    _writeIndex = other._writeIndex;
-    _endFrameIndex = other._endFrameIndex;
-    _readBuffer = other._readBuffer;
-
+SocketChannelReader::SocketChannelReader(SocketChannelReader&& other) noexcept
+    : _socket(other._socket),
+      _readIndex(other._readIndex),
+      _writeIndex(other._writeIndex),
+      _endFrameIndex(other._endFrameIndex),
+      _readBuffer(std::move(other._readBuffer)) {
     other._socket = nullptr;
     other._readIndex = 0;
     other._writeIndex = 0;
@@ -122,7 +113,7 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
     return *this;
 }
 
-bool SocketChannelReader::BeginRead() {
+[[nodiscard]] bool SocketChannelReader::BeginRead() {
     _readIndex = HeaderSize;
     int32_t sizeToRead = ReadPacketSize;
     bool readHeader = true;
@@ -172,7 +163,7 @@ bool SocketChannelReader::BeginRead() {
     return true;
 }
 
-bool SocketChannelReader::Read(void* destination, size_t size) {
+[[nodiscard]] bool SocketChannelReader::Read(void* destination, size_t size) {
     auto* bufferPointer = static_cast<uint8_t*>(destination);
 
     while (size > 0) {
@@ -205,7 +196,7 @@ SocketChannel& SocketChannel::operator=(SocketChannel&& other) noexcept {
     return *this;
 }
 
-SocketAddress SocketChannel::GetRemoteAddress() const {
+[[nodiscard]] SocketAddress SocketChannel::GetRemoteAddress() const {
     return _socket.GetRemoteAddress();
 }
 
@@ -213,18 +204,18 @@ void SocketChannel::Disconnect() {
     _socket.Shutdown();
 }
 
-ChannelWriter& SocketChannel::GetWriter() {
+[[nodiscard]] ChannelWriter& SocketChannel::GetWriter() {
     return _writer;
 }
 
-ChannelReader& SocketChannel::GetReader() {
+[[nodiscard]] ChannelReader& SocketChannel::GetReader() {
     return _reader;
 }
 
-std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
-                                                    uint16_t remotePort,
-                                                    uint16_t localPort,
-                                                    uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
+                                                                  uint16_t remotePort,
+                                                                  uint16_t localPort,
+                                                                  uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
     std::optional<Socket> connectedSocket =
@@ -237,10 +228,8 @@ std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAdd
     return {};
 }
 
-TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) {
+TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) : _port(port) {
     StartupNetwork();
-
-    _port = port;
 
     if (Socket::IsIpv4Supported()) {
         _listenSocketIpv4 = Socket(AddressFamily::Ipv4);
@@ -260,11 +249,11 @@ TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) {
     }
 }
 
-uint16_t TcpChannelServer::GetLocalPort() const {
+[[nodiscard]] uint16_t TcpChannelServer::GetLocalPort() const {
     return _port;
 }
 
-std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     do {
         std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
         if (socket) {
@@ -288,7 +277,7 @@ std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilli
     return {};
 }
 
-std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name) {
+[[nodiscard]] std::optional<SocketChannel> TryConnectToUdsChannel(const std::string& name) {
     StartupNetwork();
 
     Socket socket(AddressFamily::Uds);
@@ -299,7 +288,7 @@ std::optional<SocketChannel> TryConnectToUdsChannel(std::string_view name) {
     return {};
 }
 
-UdsChannelServer::UdsChannelServer(std::string_view name) {
+UdsChannelServer::UdsChannelServer(const std::string& name) {
     StartupNetwork();
 
     _listenSocket = Socket(AddressFamily::Uds);
@@ -307,7 +296,7 @@ UdsChannelServer::UdsChannelServer(std::string_view name) {
     _listenSocket.Listen();
 }
 
-std::optional<SocketChannel> UdsChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<SocketChannel> UdsChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
     if (socket) {
         return SocketChannel(std::move(*socket));

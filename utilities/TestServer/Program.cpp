@@ -3,6 +3,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -290,6 +291,7 @@ void UnloadSimulation() {
     LogInfo("Unloading ...");
 
     StopSimulationThread();
+    g_backgroundService.reset();
     g_server.reset();
     g_state = State::Unloaded;
 

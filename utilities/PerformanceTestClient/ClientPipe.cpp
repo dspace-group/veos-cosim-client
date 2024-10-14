@@ -1,5 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
+#include <cstdint>
+#include <string_view>
+
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
@@ -19,14 +23,14 @@ void PipeClientRun([[maybe_unused]] std::string_view host,
         Pipe pipe(PipeName);
         pipe.Connect();
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(pipe.Write(buffer, BufferSize));
+            MUST_BE_TRUE(pipe.Write(buffer.data(), BufferSize));
 
-            MUST_BE_TRUE(pipe.Read(buffer, BufferSize));
+            MUST_BE_TRUE(pipe.Read(buffer.data(), BufferSize));
 
             counter++;
         }

@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <thread>
 
 #include "LogHelper.h"
@@ -12,18 +13,18 @@ void PipeServerRun() {
     try {
         LogTrace("Pipe server is listening on pipe {} ...", PipeName);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         while (true) {
             Pipe pipe(PipeName);
             pipe.Accept();
 
             while (true) {
-                if (!pipe.Read(buffer, BufferSize)) {
+                if (!pipe.Read(buffer.data(), BufferSize)) {
                     break;
                 }
 
-                if (!pipe.Write(buffer, BufferSize)) {
+                if (!pipe.Write(buffer.data(), BufferSize)) {
                     break;
                 }
             }

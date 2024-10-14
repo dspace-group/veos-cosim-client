@@ -3,6 +3,8 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 #include "CoSimTypes.h"
 
@@ -14,6 +16,8 @@ void LogError(std::string_view message);
 void LogWarning(std::string_view message);
 void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
+void LogProtocolBeginTrace(const std::string& message);
+void LogProtocolEndTrace(const std::string& message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \
@@ -37,8 +41,8 @@ public:
     explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
     }
 
-    CoSimException(std::string_view message, int32_t errorCode)
-        : std::runtime_error(std::string(message) + " " + GetSystemErrorMessage(errorCode)) {
+    CoSimException(const std::string& message, int32_t errorCode)
+        : std::runtime_error(message + " " + GetSystemErrorMessage(errorCode)) {
     }
 };
 

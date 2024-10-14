@@ -3,7 +3,9 @@
 #pragma once
 
 #include <cstdint>
-#include <stdexcept>  // IWYU pragma: keep, NOLINT
+#include <stdexcept>  // IWYU pragma: keep
+#include <string>
+#include <string_view>
 
 #include "Communication/SocketChannel.h"
 #include "OsAbstraction/Socket.h"
@@ -32,18 +34,18 @@ constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
 [[nodiscard]] bool StartUp();
 
 [[nodiscard]] DsVeosCoSim::Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort);
-[[nodiscard]] DsVeosCoSim::Socket ConnectSocket(std::string_view name);
+[[nodiscard]] DsVeosCoSim::Socket ConnectSocket(const std::string& name);
 [[nodiscard]] DsVeosCoSim::Socket Accept(const DsVeosCoSim::Socket& serverSocket);
 
 [[nodiscard]] DsVeosCoSim::SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePort);
 [[nodiscard]] DsVeosCoSim::SocketChannel Accept(const DsVeosCoSim::TcpChannelServer& server);
 
-[[nodiscard]] DsVeosCoSim::SocketChannel ConnectToUdsChannel(std::string_view name);
+[[nodiscard]] DsVeosCoSim::SocketChannel ConnectToUdsChannel(const std::string& name);
 [[nodiscard]] DsVeosCoSim::SocketChannel Accept(const DsVeosCoSim::UdsChannelServer& server);
 
 #ifdef _WIN32
 
-[[nodiscard]] DsVeosCoSim::LocalChannel ConnectToLocalChannel(std::string_view name);
+[[nodiscard]] DsVeosCoSim::LocalChannel ConnectToLocalChannel(const std::string& name);
 [[nodiscard]] DsVeosCoSim::LocalChannel Accept(DsVeosCoSim::LocalChannelServer& server);
 
 #endif

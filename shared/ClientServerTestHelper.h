@@ -24,9 +24,9 @@ void SwitchSendingCanMessages();
 void SwitchSendingEthMessages();
 void SwitchSendingLinMessages();
 
-bool IsSendingIoSignalsEnabled();
-bool IsSendingCanMessagesEnabled();
-bool IsSendingEthMessagesEnabled();
-bool IsSendingLinMessagesEnabled();
+[[nodiscard]] bool IsSendingIoSignalsEnabled();
+[[nodiscard]] bool IsSendingCanMessagesEnabled();
+[[nodiscard]] bool IsSendingEthMessagesEnabled();
+[[nodiscard]] bool IsSendingLinMessagesEnabled();
 
 [[nodiscard]] bool SendSomeData(DsVeosCoSim_SimulationTime simulationTime, const RunTimeInfo& runTimeInfo);

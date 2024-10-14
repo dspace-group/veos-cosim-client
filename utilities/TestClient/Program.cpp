@@ -4,6 +4,7 @@
 #include <cstring>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -67,6 +68,10 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime) {
     connectConfig.serverName = serverName;
     connectConfig.remoteIpAddress = host;
     CheckResultWithMessage(g_coSimClient->Connect(connectConfig), "Could not connect.");
+    LogTrace("");
+
+    LogTrace("Step size: {}", g_coSimClient->GetStepSize());
+    LogTrace("");
 
     g_runTimeInfo.canControllers = g_coSimClient->GetCanControllers();
     if (!g_runTimeInfo.canControllers.empty()) {

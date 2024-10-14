@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include <string_view>
 #include <thread>
 
 #include "Generator.h"
@@ -18,7 +17,7 @@ namespace {
     return GenerateString("Event名前\xF0\x9F\x98\x80");
 }
 
-void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
+void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
     NamedEvent event1 = NamedEvent::OpenExisting(eventName1);
     NamedEvent event2 = NamedEvent::OpenExisting(eventName2);
 

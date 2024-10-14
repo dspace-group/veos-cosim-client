@@ -3,6 +3,7 @@
 -DDSVEOSCOSIM_EXPORT
 -DWIN32_LEAN_AND_MEAN
 -D_CRT_SECURE_NO_WARNINGS
+-DDSVEOSCOSIM_ENABLE_TRACING
 -DEXCEPTION_TESTS
 -Wall
 -Wextra
@@ -16,8 +17,6 @@
 -Isrc/OsAbstraction
 -Itest
 -Itest/Helpers
--isystem
-third_party/asio/asio/include
 -isystem
 third_party/benchmark/include
 -isystem

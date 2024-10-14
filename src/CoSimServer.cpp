@@ -3,6 +3,7 @@
 #include "CoSimServer.h"
 
 #include <memory>
+#include <string>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -155,7 +156,7 @@ void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const 
     _ioBuffer->Read(signalId, length, value);
 }
 
-bool CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -163,7 +164,7 @@ bool CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) const {
     return _busBuffer->Transmit(message);
 }
 
-bool CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -171,7 +172,7 @@ bool CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) const {
     return _busBuffer->Transmit(message);
 }
 
-bool CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -200,7 +201,7 @@ void CoSimServer::BackgroundService() {
     HandlePendingCommand(command);
 }
 
-uint16_t CoSimServer::GetLocalPort() const {
+[[nodiscard]] uint16_t CoSimServer::GetLocalPort() const {
     if (_tcpChannelServer) {
         return _tcpChannelServer->GetLocalPort();
     }
@@ -208,42 +209,42 @@ uint16_t CoSimServer::GetLocalPort() const {
     return 0;
 }
 
-bool CoSimServer::StartInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::StartInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::StopInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::StopInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::TerminateInternal(DsVeosCoSim_SimulationTime simulationTime,
-                                    DsVeosCoSim_TerminateReason reason) const {
+[[nodiscard]] bool CoSimServer::TerminateInternal(DsVeosCoSim_SimulationTime simulationTime,
+                                                  DsVeosCoSim_TerminateReason reason) const {
     CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                            "Could not send terminate frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::PauseInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::PauseInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::ContinueInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::ContinueInternal(DsVeosCoSim_SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                            "Could not send continue frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-bool CoSimServer::StepInternal(DsVeosCoSim_SimulationTime simulationTime,
-                               DsVeosCoSim_SimulationTime& nextSimulationTime,
-                               Command& command) const {
+[[nodiscard]] bool CoSimServer::StepInternal(DsVeosCoSim_SimulationTime simulationTime,
+                                             DsVeosCoSim_SimulationTime& nextSimulationTime,
+                                             Command& command) const {
     CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
                            "Could not send step frame.");
     CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
@@ -262,7 +263,7 @@ void CoSimServer::CloseConnection() {
     StartAccepting();
 }
 
-bool CoSimServer::Ping(Command& command) const {
+[[nodiscard]] bool CoSimServer::Ping(Command& command) const {
     CheckResultWithMessage(Protocol::SendPing(_channel->GetWriter()), "Could not send ping frame.");
     CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
     return true;
@@ -320,7 +321,7 @@ void CoSimServer::StopAccepting() {
 #endif
 }
 
-bool CoSimServer::AcceptChannel() {
+[[nodiscard]] bool CoSimServer::AcceptChannel() {
     if (_channel) {
         return true;
     }
@@ -357,7 +358,7 @@ bool CoSimServer::AcceptChannel() {
     return false;
 }
 
-bool CoSimServer::OnHandleConnect() {
+[[nodiscard]] bool CoSimServer::OnHandleConnect() {
     uint32_t clientProtocolVersion{};
     std::string clientName;
     CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName), "Could not receive connect frame.");
@@ -414,11 +415,11 @@ bool CoSimServer::OnHandleConnect() {
     return true;
 }
 
-bool CoSimServer::WaitForOkFrame() const {
+[[nodiscard]] bool CoSimServer::WaitForOkFrame() const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {
@@ -432,11 +433,11 @@ bool CoSimServer::WaitForOkFrame() const {
     }
 }
 
-bool CoSimServer::WaitForPingOkFrame(Command& command) const {
+[[nodiscard]] bool CoSimServer::WaitForPingOkFrame(Command& command) const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::PingOk:
             CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                    "Could not read ping ok frame.");
@@ -446,11 +447,11 @@ bool CoSimServer::WaitForPingOkFrame(Command& command) const {
     }
 }
 
-bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
+[[nodiscard]] bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Connect: {
             Mode mode{};
             std::string serverName;
@@ -463,11 +464,11 @@ bool CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName
     }
 }
 
-bool CoSimServer::WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime, Command& command) const {
+[[nodiscard]] bool CoSimServer::WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime, Command& command) const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::StepOk:
             CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                         simulationTime,
@@ -511,7 +512,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
         case Command::None:
         case Command::Step:
         case Command::Ping:
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
+        default:
             break;
     }
 }
