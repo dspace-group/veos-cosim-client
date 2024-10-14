@@ -50,7 +50,7 @@ void PortMapperServer::RunPortMapperServer() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::GetPort:
             CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
             return true;
@@ -149,7 +149,7 @@ void PortMapperServer::DumpEntries() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::GetPortOk: {
             CheckResultWithMessage(Protocol::ReadGetPortOk(channel->GetReader(), port),
                                    "Could not receive port ok frame.");
@@ -176,7 +176,7 @@ void PortMapperServer::DumpEntries() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {
@@ -200,7 +200,7 @@ void PortMapperServer::DumpEntries() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {

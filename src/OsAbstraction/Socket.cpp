@@ -416,7 +416,7 @@ void Socket::Close() {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {  // NOLINT
+void Socket::EnableIpv6Only() const {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;

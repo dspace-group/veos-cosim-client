@@ -70,7 +70,7 @@ void RunTest(benchmark::State& state,
     FillWithRandom(sendMessage, controller.id);
     sendMessage.length = static_cast<uint32_t>(sendMessage.data.size());
 
-    for (auto _ : state) {  // NOLINT(readability-identifier-length)
+    for (auto _ : state) {
         for (size_t i = 0; i < count; i++) {
             MUST_BE_TRUE(transmitterBusBuffer.Transmit(sendMessage));
         }

@@ -18,7 +18,7 @@ void EventSet(benchmark::State& state) {
 
     NamedEvent event = NamedEvent::CreateOrOpen(name);
 
-    for (auto _ : state) {  // NOLINT(readability-identifier-length)
+    for (auto _ : state) {
         event.Set();
     }
 }
@@ -28,7 +28,7 @@ void EventSetAndWait(benchmark::State& state) {
 
     NamedEvent event = NamedEvent::CreateOrOpen(name);
 
-    for (auto _ : state) {  // NOLINT(readability-identifier-length)
+    for (auto _ : state) {
         event.Set();
         event.Wait();
     }
@@ -56,7 +56,7 @@ void EventRoundtrip(benchmark::State& state) {
     stopThread = false;
     std::jthread thread(WaitAndSet, eventName1, eventName2);
 
-    for (auto _ : state) {  // NOLINT(readability-identifier-length)
+    for (auto _ : state) {
         event1.Set();
         event2.Wait();
     }

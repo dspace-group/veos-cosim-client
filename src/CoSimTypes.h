@@ -8,7 +8,7 @@
 #include <memory.h>
 #include <sstream>
 #include <string>
-#include <string_view>  // NOLINT
+#include <string_view>
 
 #include "DsVeosCoSim/DsVeosCoSim.h"
 

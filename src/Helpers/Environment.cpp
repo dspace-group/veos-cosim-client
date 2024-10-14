@@ -12,7 +12,7 @@ namespace {
 [[nodiscard]] bool GetBoolValue(const std::string& name) {
     const char* stringValue = std::getenv(name.c_str());
     if (stringValue) {
-        const int32_t intValue = std::atoi(stringValue);  // NOLINT(cert-err34-c)
+        const int32_t intValue = std::atoi(stringValue);
         return intValue != 0;
     }
 
@@ -24,7 +24,7 @@ namespace {
 
     const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");
     if (portString) {
-        const int32_t port = std::atoi(portString);  // NOLINT(cert-err34-c)
+        const int32_t port = std::atoi(portString);
         if (port > 0 && port <= UINT16_MAX) {
             return static_cast<uint16_t>(port);
         }

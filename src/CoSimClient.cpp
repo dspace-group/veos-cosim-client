@@ -249,7 +249,7 @@ void CoSimClient::Terminate(DsVeosCoSim_TerminateReason terminateReason) {
         case DsVeosCoSim_TerminateReason_Error:
             _nextCommand.exchange(Command::Terminate);
             break;
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
+        default:
             throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
     }
 }
@@ -535,8 +535,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind)  // NOLINT(clang-diagnostic-switch-enum)
-    {
+    switch (frameKind) {
         case FrameKind::ConnectOk:
             CheckResultWithMessage(OnConnectOk(), "Could not handle connect ok.");
             return true;
@@ -553,7 +552,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+        switch (frameKind) {
             case FrameKind::Step: {
                 CheckResultWithMessage(OnStep(), "Could not handle step.");
                 if (!_isConnected) {
@@ -632,7 +631,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     while (true) {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
-        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+        switch (frameKind) {
             case FrameKind::Step:
                 CheckResultWithMessage(OnStep(), "Could not handle step.");
                 _currentCommand = Command::Step;
@@ -680,7 +679,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
 }
 
 [[nodiscard]] bool CoSimClient::FinishCommandInternal() {
-    switch (_currentCommand) {  // NOLINT(clang-diagnostic-switch, clang-diagnostic-switch-enum)
+    switch (_currentCommand) {
         case Command::Start:
         case Command::Stop:
         case Command::Terminate:
@@ -788,7 +787,7 @@ void CoSimClient::EnsureIsConnected() const {
 }
 
 void CoSimClient::EnsureIsInResponderModeBlocking() {
-    switch (_responderMode) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (_responderMode) {
         case ResponderMode::Unknown:
             _responderMode = ResponderMode::Blocking;
             break;
@@ -801,7 +800,7 @@ void CoSimClient::EnsureIsInResponderModeBlocking() {
 }
 
 void CoSimClient::EnsureIsInResponderModeNonBlocking() {
-    switch (_responderMode) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (_responderMode) {
         case ResponderMode::Unknown:
             _responderMode = ResponderMode::NonBlocking;
             break;

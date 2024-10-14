@@ -419,7 +419,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {
@@ -437,7 +437,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::PingOk:
             CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                    "Could not read ping ok frame.");
@@ -451,7 +451,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::Connect: {
             Mode mode{};
             std::string serverName;
@@ -468,7 +468,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
+    switch (frameKind) {
         case FrameKind::StepOk:
             CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                         simulationTime,
@@ -512,7 +512,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
         case Command::None:
         case Command::Step:
         case Command::Ping:
-        default:  // NOLINT(clang-diagnostic-covered-switch-default)
+        default:
             break;
     }
 }

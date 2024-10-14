@@ -50,7 +50,7 @@ void DsVeosCoSim_Destroy(DsVeosCoSim_Handle handle) {
     delete client;
 }
 
-DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -119,7 +119,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle,
 }
 
 DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle,
-                                                            DsVeosCoSim_Callbacks callbacks) {  // NOLINT
+                                                            DsVeosCoSim_Callbacks callbacks) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -141,7 +141,7 @@ DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle h
 }
 
 DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle handle,
-                                                             DsVeosCoSim_Callbacks callbacks) {  // NOLINT
+                                                             DsVeosCoSim_Callbacks callbacks) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);

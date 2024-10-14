@@ -14,7 +14,7 @@ namespace DsVeosCoSim {
 namespace {
 
 void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
-    switch (sizeKind) {  // NOLINT
+    switch (sizeKind) {
         case DsVeosCoSim_SizeKind_Fixed:
         case DsVeosCoSim_SizeKind_Variable:
             return;

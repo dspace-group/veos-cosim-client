@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cstdint>
-#include <stdexcept>  // IWYU pragma: keep, NOLINT
+#include <stdexcept>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 

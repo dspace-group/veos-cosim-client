@@ -36,7 +36,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
             Command command{};
             MUST_BE_TRUE(coSimClient.PollCommand(simulationTime, command, false));
 
-            switch (command) {  // NOLINT(clang-diagnostic-switch-enum)
+            switch (command) {
                 case Command::Step:
                     counter++;
                     break;
