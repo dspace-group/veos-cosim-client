@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -18,17 +19,17 @@ void RemoteCommunicationServerRun() {
 
         TcpChannelServer server(CommunicationPort, true);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         while (true) {
             std::optional<SocketChannel> acceptedChannel = server.TryAccept(Infinite);
 
             while (true) {
-                if (!acceptedChannel->GetReader().Read(buffer, BufferSize)) {
+                if (!acceptedChannel->GetReader().Read(buffer.data(), BufferSize)) {
                     break;
                 }
 
-                if (!acceptedChannel->GetWriter().Write(buffer, BufferSize)) {
+                if (!acceptedChannel->GetWriter().Write(buffer.data(), BufferSize)) {
                     break;
                 }
 

@@ -15,6 +15,7 @@
 #include <filesystem>
 #else
 #include <arpa/inet.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -28,7 +29,6 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <cerrno>
 #endif
 
 #ifdef _WIN32
@@ -78,10 +78,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     return static_cast<int64_t>(largeInteger.QuadPart / 10000);
 #else
-    timeval tv{};
-    (void)::gettimeofday(&tv, nullptr);
+    timeval currentTime{};
+    (void)::gettimeofday(&currentTime, nullptr);
 
-    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    return (currentTime.tv_sec * 1000) + (currentTime.tv_usec / 1000);
 #endif
 }
 
@@ -116,13 +116,13 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     socketAddress.port = ::ntohs(ipv4Address.sin_port);
 
     if (ipv4Address.sin_addr.s_addr != 0) {
-        char ipAddressArray[INET_ADDRSTRLEN]{};
-        const char* result = ::inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddressArray, INET_ADDRSTRLEN);
+        std::string ipAddress(INET_ADDRSTRLEN, '\0');
+        const char* result = ::inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
         if (!result) {
             throw CoSimException("Could not get address information.", GetLastNetworkError());
         }
 
-        socketAddress.ipAddress = ipAddressArray;
+        socketAddress.ipAddress = ipAddress;
     } else {
         socketAddress.ipAddress = "127.0.0.1";
     }
@@ -134,13 +134,13 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     SocketAddress socketAddress;
     socketAddress.port = ::ntohs(ipv6Address.sin6_port);
 
-    char ipAddressArray[INET6_ADDRSTRLEN]{};
-    const char* result = ::inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddressArray, INET6_ADDRSTRLEN);
+    std::string ipAddress(INET6_ADDRSTRLEN, '\0');
+    const char* result = ::inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
     if (!result) {
         throw CoSimException("Could not get address information.", GetLastNetworkError());
     }
 
-    socketAddress.ipAddress = ipAddressArray;
+    socketAddress.ipAddress = ipAddress;
 
     return socketAddress;
 }
@@ -275,26 +275,25 @@ void StartupNetwork() {
 #endif
 }
 
-Socket::Socket(AddressFamily addressFamily) {
-    _addressFamily = addressFamily;
+Socket::Socket(AddressFamily addressFamily) : _addressFamily(addressFamily) {
     int32_t protocol{};
-    int32_t af{};
+    int32_t domain{};
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             protocol = IPPROTO_TCP;
-            af = AF_INET;
+            domain = AF_INET;
             break;
         case AddressFamily::Ipv6:
             protocol = IPPROTO_TCP;
-            af = AF_INET6;
+            domain = AF_INET6;
             break;
         case AddressFamily::Uds:
             protocol = 0;
-            af = AF_UNIX;
+            domain = AF_UNIX;
             break;
     }
 
-    _socket = ::socket(af, SOCK_STREAM, protocol);
+    _socket = ::socket(domain, SOCK_STREAM, protocol);
 
     if (_socket == InvalidSocket) {
         throw CoSimException("Could not create socket.", GetLastNetworkError());
@@ -311,9 +310,9 @@ Socket::~Socket() noexcept {
 Socket::Socket(Socket&& other) noexcept {
     Close();
 
-    _socket = other._socket;
-    _addressFamily = other._addressFamily;
-    _path = other._path;
+    _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
 
     other._socket = InvalidSocket;
     other._addressFamily = {};

@@ -11,13 +11,13 @@ using namespace DsVeosCoSim;
 [[nodiscard]] int32_t Random(int32_t min, int32_t max) {
     static bool first = true;
     if (first) {
-        srand(42);  // NOLINT(cert-msc51-cpp)
+        srand(42);
         first = false;
     }
 
     const int32_t diff = max + 1 - min;
 
-    return min + rand() % diff;  // NOLINT(concurrency-mt-unsafe)
+    return min + rand() % diff;
 }
 
 void FillWithRandom(uint8_t* data, size_t length) {

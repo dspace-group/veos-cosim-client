@@ -58,7 +58,7 @@ void RunTest(benchmark::State& state,
                         std::ref(stopThread),
                         std::ref(endEvent));
 
-    for (auto _ : state) {
+    for (auto _ : state) {  // NOLINT(readability-identifier-length)
         writeValue[0]++;
         writerIoBuffer.Write(signal.id, signal.length, writeValue.data());
 

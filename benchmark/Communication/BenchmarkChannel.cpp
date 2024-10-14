@@ -39,7 +39,7 @@ void RunTest(benchmark::State& state, Channel& channel1, Channel& channel2) {
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
-    for (auto _ : state) {
+    for (auto _ : state) {  // NOLINT(readability-identifier-length)
         MUST_BE_TRUE(channel2.GetWriter().Write(buffer.data(), buffer.size()));
         MUST_BE_TRUE(channel2.GetWriter().EndWrite());
         MUST_BE_TRUE(channel2.GetReader().Read(buffer.data(), buffer.size()));

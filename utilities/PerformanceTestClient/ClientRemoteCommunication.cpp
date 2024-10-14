@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <string_view>  // IWYU pragma: keep
+#include <array>
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "Helper.h"
@@ -20,15 +21,15 @@ void RemoteCommunicationClientRun(std::string_view host,
     try {
         std::optional<SocketChannel> channel = *TryConnectToTcpChannel(host, CommunicationPort, 0, Infinite);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(channel->GetWriter().Write(buffer, BufferSize));
+            MUST_BE_TRUE(channel->GetWriter().Write(buffer.data(), BufferSize));
             MUST_BE_TRUE(channel->GetWriter().EndWrite());
 
-            MUST_BE_TRUE(channel->GetReader().Read(buffer, BufferSize));
+            MUST_BE_TRUE(channel->GetReader().Read(buffer.data(), BufferSize));
 
             counter++;
         }

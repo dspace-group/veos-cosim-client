@@ -26,9 +26,7 @@ void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
 }  // namespace
 
 IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeosCoSim_IoSignal>& signals)
-    : _changedSignalsQueue(signals.size()) {
-    _coSimType = coSimType;
-
+    : _coSimType(coSimType), _changedSignalsQueue(signals.size()) {
     size_t nextSignalIndex = 0;
     for (const auto& signal : signals) {
         if (signal.length == 0) {

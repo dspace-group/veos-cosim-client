@@ -34,7 +34,7 @@ void RunTest(benchmark::State& state, Socket& socket1, Socket& socket2) {
     bool stopThread{};
     std::jthread thread(CounterPart, std::ref(socket1), std::ref(stopThread), size);
 
-    for (auto _ : state) {
+    for (auto _ : state) {  // NOLINT(readability-identifier-length)
         MUST_BE_TRUE(SendComplete(socket2, buffer.data(), buffer.size()));
         MUST_BE_TRUE(ReceiveComplete(socket2, buffer.data(), buffer.size()));
     }

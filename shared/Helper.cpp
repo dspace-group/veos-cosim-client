@@ -15,9 +15,9 @@
 #include <Windows.h>
 #include <conio.h>
 #else
+#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
-#include <cstdlib>
 
 #endif
 
@@ -63,7 +63,7 @@ namespace {
 #ifdef _WIN32
     return _getch();
 #else
-    termios oldt;
+    termios oldt{};
     tcgetattr(STDIN_FILENO, &oldt);
 
     termios newt = oldt;
@@ -71,11 +71,11 @@ namespace {
 
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-    int32_t ch = getchar();
+    int32_t character = getchar();
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-    return ch;
+    return character;
 #endif
 }
 

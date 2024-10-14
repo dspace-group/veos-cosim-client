@@ -10,7 +10,7 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool GetBoolValue(const std::string& name) {
-    const char* stringValue = std::getenv(name.c_str());  // NOLINT(concurrency-mt-unsafe)
+    const char* stringValue = std::getenv(name.c_str());
     if (stringValue) {
         const int32_t intValue = std::atoi(stringValue);  // NOLINT(cert-err34-c)
         return intValue != 0;
@@ -22,7 +22,7 @@ namespace {
 [[nodiscard]] uint16_t GetPortMapperPortInitial() {
     constexpr uint16_t defaultPort = 27027;
 
-    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
+    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");
     if (portString) {
         const int32_t port = std::atoi(portString);  // NOLINT(cert-err34-c)
         if (port > 0 && port <= UINT16_MAX) {

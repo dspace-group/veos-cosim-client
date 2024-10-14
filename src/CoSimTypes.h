@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <memory.h>
 #include <array>
 #include <functional>
 #include <iomanip>
+#include <memory.h>
 #include <sstream>
 #include <string>
 #include <string_view>  // NOLINT

@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <string_view>
 
 #include "CoSimHelper.h"
@@ -20,14 +21,14 @@ void UdpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counte
         const InternetAddress sendAddress(host, UdpPort);
         InternetAddress receiveAddress(host, UdpPort);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(clientSocket.SendTo(buffer, BufferSize, sendAddress));
+            MUST_BE_TRUE(clientSocket.SendTo(buffer.data(), BufferSize, sendAddress));
 
-            MUST_BE_TRUE(clientSocket.ReceiveFrom(buffer, BufferSize, receiveAddress));
+            MUST_BE_TRUE(clientSocket.ReceiveFrom(buffer.data(), BufferSize, receiveAddress));
 
             counter++;
         }

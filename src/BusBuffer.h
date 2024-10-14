@@ -24,23 +24,24 @@
 namespace DsVeosCoSim {
 
 template <typename TControllerExtern>
-concept ControllerExtern = requires(TControllerExtern e) {
-    { e.queueSize } -> std::same_as<uint32_t&>;
-    { e.name } -> std::same_as<const char*&>;
+concept ControllerExtern = requires(TControllerExtern controllerExtern) {
+    { controllerExtern.queueSize } -> std::same_as<uint32_t&>;
+    { controllerExtern.name } -> std::same_as<const char*&>;
 };
 
 template <typename TMessageExtern>
-concept MessageExtern = requires(TMessageExtern e) {
-    { e.controllerId } -> std::same_as<uint32_t&>;
+concept MessageExtern = requires(TMessageExtern messageExtern) {
+    { messageExtern.controllerId } -> std::same_as<uint32_t&>;
 };
 
 template <typename TMessage, typename TMessageExtern>
-concept Message = requires(TMessage& m, TMessageExtern& e, ChannelWriter& writer, ChannelReader& reader) {
-    { std::as_const(m).SerializeTo(writer) };
-    { m.DeserializeFrom(reader) };
-    { std::as_const(m).WriteTo(e) };
-    { m.ReadFrom(std::as_const(e)) };
-};
+concept Message =
+    requires(TMessage& message, TMessageExtern& messageExtern, ChannelWriter& writer, ChannelReader& reader) {
+        { std::as_const(message).SerializeTo(writer) };
+        { message.DeserializeFrom(reader) };
+        { std::as_const(message).WriteTo(messageExtern) };
+        { message.ReadFrom(std::as_const(messageExtern)) };
+    };
 
 struct CanMessage {
     DsVeosCoSim_SimulationTime timestamp{};

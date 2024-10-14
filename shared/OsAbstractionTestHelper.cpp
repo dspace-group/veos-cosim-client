@@ -133,7 +133,7 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 [[nodiscard]] Pipe::pipe_t Pipe::CreatePipe(std::string_view name) {
     mkfifo(name.data(), 0666);
 
-    pipe_t pipe = open(name.data(), O_RDWR);
+    pipe_t pipe = open(name.data(), O_RDWR | O_CLOEXEC);
     if (pipe < 0) {
         throw std::runtime_error("Could not open pipe.");
     }
@@ -220,7 +220,7 @@ void Pipe::Connect() {
     return (success != 0) && (size == processedSize);
 #else
     ssize_t length = write(_writePipe, source, size);
-    return length == (ssize_t)size;
+    return length == static_cast<ssize_t>(size);
 #endif
 }
 
@@ -231,6 +231,6 @@ void Pipe::Connect() {
     return (success != 0) && (size == processedSize);
 #else
     ssize_t length = read(_readPipe, destination, size);
-    return length == (ssize_t)size;
+    return length == static_cast<ssize_t>(size);
 #endif
 }

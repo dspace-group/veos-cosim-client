@@ -21,20 +21,14 @@ constexpr int32_t ReadPacketSize = 1024;
 
 }  // namespace
 
-SocketChannelWriter::SocketChannelWriter(Socket* socket) : _socket(socket) {
-    _writeIndex = HeaderSize;
-
+SocketChannelWriter::SocketChannelWriter(Socket* socket) : _socket(socket), _writeIndex(HeaderSize) {
     _writeBuffer.resize(BufferSize);
 }
 
-SocketChannelWriter::SocketChannelWriter(SocketChannelWriter&& other) noexcept {
-    _socket = other._socket;
-    _writeIndex = other._writeIndex;
-    _writeBuffer = other._writeBuffer;
-
+SocketChannelWriter::SocketChannelWriter(SocketChannelWriter&& other) noexcept
+    : _socket(other._socket), _writeIndex(other._writeIndex), _writeBuffer(std::move(other._writeBuffer)) {
     other._socket = nullptr;
     other._writeIndex = 0;
-    other._writeBuffer.clear();
 }
 
 SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other) noexcept {
@@ -86,21 +80,16 @@ SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other)
     return true;
 }
 
-SocketChannelReader::SocketChannelReader(Socket* socket) : _socket(socket) {
-    _readIndex = HeaderSize;
-    _writeIndex = 0;
-    _endFrameIndex = 0;
-
+SocketChannelReader::SocketChannelReader(Socket* socket) : _socket(socket), _readIndex(HeaderSize) {
     _readBuffer.resize(BufferSize);
 }
 
-SocketChannelReader::SocketChannelReader(SocketChannelReader&& other) noexcept {
-    _socket = other._socket;
-    _readIndex = other._readIndex;
-    _writeIndex = other._writeIndex;
-    _endFrameIndex = other._endFrameIndex;
-    _readBuffer = other._readBuffer;
-
+SocketChannelReader::SocketChannelReader(SocketChannelReader&& other) noexcept
+    : _socket(other._socket),
+      _readIndex(other._readIndex),
+      _writeIndex(other._writeIndex),
+      _endFrameIndex(other._endFrameIndex),
+      _readBuffer(std::move(other._readBuffer)) {
     other._socket = nullptr;
     other._readIndex = 0;
     other._writeIndex = 0;
@@ -239,10 +228,8 @@ void SocketChannel::Disconnect() {
     return {};
 }
 
-TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) {
+TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) : _port(port) {
     StartupNetwork();
-
-    _port = port;
 
     if (Socket::IsIpv4Supported()) {
         _listenSocketIpv4 = Socket(AddressFamily::Ipv4);

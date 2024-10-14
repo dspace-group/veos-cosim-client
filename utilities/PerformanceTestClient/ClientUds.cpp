@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <string_view>
 
 #include "CoSimHelper.h"
@@ -21,13 +22,13 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
         Socket clientSocket(AddressFamily::Uds);
         MUST_BE_TRUE(clientSocket.TryConnect(UdsName));
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(SendComplete(clientSocket, buffer, BufferSize));
-            MUST_BE_TRUE(ReceiveComplete(clientSocket, buffer, BufferSize));
+            MUST_BE_TRUE(SendComplete(clientSocket, buffer.data(), BufferSize));
+            MUST_BE_TRUE(ReceiveComplete(clientSocket, buffer.data(), BufferSize));
 
             counter++;
         }
