@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <thread>
 
 #include "Helper.h"
@@ -20,18 +21,18 @@ void TcpServerRun() {
 
         LogTrace("TCP server is listening on port {} ...", TcpPort);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         while (true) {
             std::optional<Socket> acceptedSocket = serverSocket.TryAccept(Infinite);
             acceptedSocket->EnableNoDelay();
 
             while (true) {
-                if (!ReceiveComplete(*acceptedSocket, buffer, BufferSize)) {
+                if (!ReceiveComplete(*acceptedSocket, buffer.data(), BufferSize)) {
                     break;
                 }
 
-                if (!SendComplete(*acceptedSocket, buffer, BufferSize)) {
+                if (!SendComplete(*acceptedSocket, buffer.data(), BufferSize)) {
                     break;
                 }
             }

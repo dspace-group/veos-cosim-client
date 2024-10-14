@@ -22,19 +22,15 @@ namespace {
 }  // namespace
 
 SharedMemory::SharedMemory(const std::string& name, size_t size, Handle handle)
-    : _size(size), _handle(std::move(handle)) {
-    _data = ::MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size);
+    : _size(size), _handle(std::move(handle)), _data(::MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
     if (!_data) {
         (void)::CloseHandle(_handle);
         throw CoSimException("Could not map view of shared memory '" + name + "'.", GetLastWindowsError());
     }
 }
 
-SharedMemory::SharedMemory(SharedMemory&& sharedMemory) noexcept {
-    _size = sharedMemory._size;
-    _handle = std::move(sharedMemory._handle);
-    _data = sharedMemory._data;
-
+SharedMemory::SharedMemory(SharedMemory&& sharedMemory) noexcept
+    : _size(sharedMemory._size), _handle(std::move(sharedMemory._handle)), _data(sharedMemory._data) {
     sharedMemory._size = {};
     sharedMemory._data = {};
 }

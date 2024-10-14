@@ -18,9 +18,7 @@ Handle::~Handle() noexcept {
     (void)::CloseHandle(_handle);
 }
 
-Handle::Handle(Handle&& other) noexcept {
-    _handle = other._handle;
-
+Handle::Handle(Handle&& other) noexcept : _handle(other._handle) {
     other._handle = {};
 }
 

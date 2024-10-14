@@ -89,16 +89,14 @@ LocalChannelBase::~LocalChannelBase() noexcept {
     Disconnect();
 }
 
-LocalChannelBase::LocalChannelBase(LocalChannelBase&& other) noexcept {
-    _newDataEvent = std::move(other._newDataEvent);
-    _newSpaceEvent = std::move(other._newSpaceEvent);
-    _sharedMemory = std::move(other._sharedMemory);
-
-    _header = other._header;
-    _data = other._data;
-    _counterpartPid = other._counterpartPid;
-    _ownPid = other._ownPid;
-
+LocalChannelBase::LocalChannelBase(LocalChannelBase&& other) noexcept
+    : _newDataEvent(std::move(other._newDataEvent)),
+      _newSpaceEvent(std::move(other._newSpaceEvent)),
+      _header(other._header),
+      _data(other._data),
+      _counterpartPid(other._counterpartPid),
+      _ownPid(other._ownPid),
+      _sharedMemory(std::move(other._sharedMemory)) {
     other._header = {};
     other._data = {};
     other._counterpartPid = {};
@@ -318,7 +316,8 @@ LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
     std::lock_guard lock(mutex);
 
     _sharedMemory = SharedMemory::CreateOrOpen(_name, ServerSharedMemorySize);
-    _counter = static_cast<std::atomic<int32_t>*>(_sharedMemory.data());
+    _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+        _sharedMemory.data());
     _counter->store(0);
 }
 

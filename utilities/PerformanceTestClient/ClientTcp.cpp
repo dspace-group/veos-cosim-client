@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <string_view>  // IWYU pragma: keep
+#include <array>
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "Helper.h"
@@ -22,13 +23,13 @@ void TcpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counte
 
         clientSocket->EnableNoDelay();
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(SendComplete(*clientSocket, buffer, BufferSize));
-            MUST_BE_TRUE(ReceiveComplete(*clientSocket, buffer, BufferSize));
+            MUST_BE_TRUE(SendComplete(*clientSocket, buffer.data(), BufferSize));
+            MUST_BE_TRUE(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
 
             counter++;
         }

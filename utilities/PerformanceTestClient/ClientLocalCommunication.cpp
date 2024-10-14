@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <cstdint>
 #include <string_view>
 
@@ -30,15 +31,15 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
         std::optional<SocketChannel> channel = *TryConnectToUdsChannel(LocalName);
 #endif
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            MUST_BE_TRUE(channel->GetWriter().Write(buffer, BufferSize));
+            MUST_BE_TRUE(channel->GetWriter().Write(buffer.data(), BufferSize));
             MUST_BE_TRUE(channel->GetWriter().EndWrite());
 
-            MUST_BE_TRUE(channel->GetReader().Read(buffer, BufferSize));
+            MUST_BE_TRUE(channel->GetReader().Read(buffer.data(), BufferSize));
 
             counter++;
         }
