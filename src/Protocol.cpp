@@ -2,7 +2,6 @@
 
 #include "Protocol.h"
 
-#include <bit>
 #include <string>
 #include <string_view>
 
@@ -817,7 +816,5 @@ namespace Protocol {
 }
 
 }  // namespace Protocol
-
-static_assert(std::endian::native == std::endian::little, "Only supported on little endian platforms.");
 
 }  // namespace DsVeosCoSim

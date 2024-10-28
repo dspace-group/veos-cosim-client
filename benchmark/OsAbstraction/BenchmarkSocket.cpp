@@ -32,7 +32,7 @@ void RunTest(benchmark::State& state, Socket& socket1, Socket& socket2) {
     buffer.resize(size);
 
     bool stopThread{};
-    std::jthread thread(CounterPart, std::ref(socket1), std::ref(stopThread), size);
+    std::thread thread(CounterPart, std::ref(socket1), std::ref(stopThread), size);
 
     for (auto _ : state) {
         MUST_BE_TRUE(SendComplete(socket2, buffer.data(), buffer.size()));
@@ -41,6 +41,8 @@ void RunTest(benchmark::State& state, Socket& socket1, Socket& socket2) {
 
     stopThread = true;
     MUST_BE_TRUE(SendComplete(socket2, buffer.data(), buffer.size()));
+
+    thread.join();
 }
 
 void SocketTcpRoundtrip(benchmark::State& state) {

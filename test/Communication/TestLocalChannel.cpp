@@ -38,7 +38,9 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     // Arrange
     const std::string name = GenerateName();
 
-    { LocalChannelServer server(name); }
+    {
+        LocalChannelServer server(name);
+    }
 
     // Act
     std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
@@ -221,7 +223,7 @@ TEST_F(TestLocalChannel, Stream) {
     LocalChannel connectedChannel = ConnectToLocalChannel(name);
     LocalChannel acceptedChannel = Accept(server);
 
-    std::jthread thread(StreamClient, std::ref(connectedChannel));
+    std::thread thread(StreamClient, std::ref(connectedChannel));
 
     // Act and assert
     for (uint32_t i = 0; i < BigNumber; i++) {
@@ -229,6 +231,8 @@ TEST_F(TestLocalChannel, Stream) {
     }
 
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 void ReceiveBigElement(LocalChannel& channel) {
@@ -249,7 +253,7 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     LocalChannel connectedChannel = ConnectToLocalChannel(name);
     LocalChannel acceptedChannel = Accept(server);
 
-    std::jthread thread(ReceiveBigElement, std::ref(connectedChannel));
+    std::thread thread(ReceiveBigElement, std::ref(connectedChannel));
 
     const auto sendArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
@@ -259,6 +263,8 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     // Act and assert
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 }  // namespace

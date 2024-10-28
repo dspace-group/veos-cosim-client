@@ -59,12 +59,12 @@ void RunTest(benchmark::State& state,
     bool stopThread{};
     Event endEvent;
 
-    std::jthread thread(ReceiveMessages<TypeParam>,
-                        count,
-                        std::ref(receiverBusBuffer),
-                        std::ref(receiverChannel),
-                        std::ref(stopThread),
-                        std::ref(endEvent));
+    std::thread thread(ReceiveMessages<TypeParam>,
+                       count,
+                       std::ref(receiverBusBuffer),
+                       std::ref(receiverChannel),
+                       std::ref(stopThread),
+                       std::ref(endEvent));
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
@@ -91,6 +91,8 @@ void RunTest(benchmark::State& state,
 
     MUST_BE_TRUE(transmitterBusBuffer.Serialize(senderChannel.GetWriter()));
     MUST_BE_TRUE(senderChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 template <typename TypeParam>

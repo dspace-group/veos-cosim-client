@@ -172,7 +172,7 @@ void CoSimClient::SetCallbacks(const Callbacks& callbacks) {
 
     SetCallbacks(callbacks);
 
-    if (!RunCallbackBasedCoSimulationInternal()) [[unlikely]] {
+    if (!RunCallbackBasedCoSimulationInternal()) {
         CloseConnection();
         return false;
     }
@@ -197,7 +197,7 @@ void CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
         throw CoSimException("Call to FinishCommand() for last command is missing.");
     }
 
-    if (!PollCommandInternal(simulationTime, command, returnOnPing)) [[unlikely]] {
+    if (!PollCommandInternal(simulationTime, command, returnOnPing)) {
         CloseConnection();
         return false;
     }
@@ -213,7 +213,7 @@ void CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
         throw CoSimException("Call to PollCommand(...) is missing.");
     }
 
-    if (!FinishCommandInternal()) [[unlikely]] {
+    if (!FinishCommandInternal()) {
         CloseConnection();
         return false;
     }

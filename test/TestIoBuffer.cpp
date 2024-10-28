@@ -1,9 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <deque>
-#include <fmt/format.h>
 #include <string>
 #include <thread>
 
@@ -44,12 +44,14 @@ void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {
     SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel receiverChannel = Accept(server);
 
-    std::jthread thread([&] {
+    std::thread thread([&] {
         ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {}));
     });
 
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 struct EventData {

@@ -1,9 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <deque>
-#include <fmt/format.h>
 #include <memory>
 #include <string>
 #include <thread>
@@ -59,12 +59,14 @@ void Transfer(ConnectionKind connectionKind, BusBuffer& senderBusBuffer, BusBuff
 #endif
     }
 
-    std::jthread thread([&] {
+    std::thread thread([&] {
         ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), {}, {}));
     });
 
     ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
     ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
+
+    thread.join();
 }
 
 template <typename TControllerExtern, typename TMessage>

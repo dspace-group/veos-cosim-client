@@ -34,7 +34,7 @@ void RunTest(benchmark::State& state, Channel& channel1, Channel& channel2) {
     size_t size = state.range(0);
 
     bool stopThread{};
-    std::jthread thread(CounterPart, std::ref(channel1), std::ref(stopThread), size);
+    std::thread thread(CounterPart, std::ref(channel1), std::ref(stopThread), size);
 
     std::vector<uint8_t> buffer;
     buffer.resize(size);
@@ -48,6 +48,8 @@ void RunTest(benchmark::State& state, Channel& channel1, Channel& channel2) {
     stopThread = true;
     MUST_BE_TRUE(channel2.GetWriter().Write(buffer.data(), buffer.size()));
     MUST_BE_TRUE(channel2.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 void TcpChannelRoundtrip(benchmark::State& state) {

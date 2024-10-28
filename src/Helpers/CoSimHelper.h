@@ -21,17 +21,17 @@ void LogProtocolEndTrace(const std::string& message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \
-        if (!(result)) [[unlikely]] {           \
+        if (!(result)) {                        \
             LogTrace(message);                  \
             return false;                       \
         }                                       \
     } while (0)
 
-#define CheckResult(result)           \
-    do {                              \
-        if (!(result)) [[unlikely]] { \
-            return false;             \
-        }                             \
+#define CheckResult(result) \
+    do {                    \
+        if (!(result)) {    \
+            return false;   \
+        }                   \
     } while (0)
 
 [[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode);

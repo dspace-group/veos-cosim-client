@@ -185,13 +185,16 @@ TEST_F(TestNamedEvent, SetAndWaitInDifferentThreads) {
     NamedEvent event1 = NamedEvent::CreateOrOpen(firstName);
     NamedEvent event2 = NamedEvent::CreateOrOpen(secondName);
 
-    std::jthread thread(WaitAndSet, firstName, secondName);
+    std::thread thread(WaitAndSet, firstName, secondName);
 
     // Act
     ASSERT_NO_THROW(event1.Set());
     ASSERT_NO_THROW(event2.Wait());
 
     // Assert
+
+    // Cleanup
+    thread.join();
 }
 
 }  // namespace
