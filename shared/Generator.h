@@ -25,9 +25,6 @@ template <typename T>
 [[nodiscard]] int64_t GenerateI64();
 [[nodiscard]] std::string GenerateString(std::string_view prefix);
 
-[[nodiscard]] DsVeosCoSim_DataType GenerateDataType();
-[[nodiscard]] DsVeosCoSim_SizeKind GenerateSizeKind();
-
 [[nodiscard]] DsVeosCoSim::IoSignal CreateSignal();
 [[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType);
 [[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind);
