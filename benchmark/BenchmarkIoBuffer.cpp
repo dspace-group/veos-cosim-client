@@ -51,12 +51,12 @@ void RunTest(benchmark::State& state,
     bool stopThread{};
     Event endEvent;
 
-    std::jthread thread(Receive,
-                        std::ref(signal),
-                        std::ref(readerIoBuffer),
-                        std::ref(receiverChannel),
-                        std::ref(stopThread),
-                        std::ref(endEvent));
+    std::thread thread(Receive,
+                       std::ref(signal),
+                       std::ref(readerIoBuffer),
+                       std::ref(receiverChannel),
+                       std::ref(stopThread),
+                       std::ref(endEvent));
 
     for (auto _ : state) {
         writeValue[0]++;
@@ -75,6 +75,8 @@ void RunTest(benchmark::State& state,
 
     MUST_BE_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     MUST_BE_TRUE(senderChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 void TcpIo(benchmark::State& state) {

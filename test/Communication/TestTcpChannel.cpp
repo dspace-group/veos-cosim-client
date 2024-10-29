@@ -328,7 +328,7 @@ TEST_P(TestTcpChannel, Stream) {
     SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
     SocketChannel acceptedChannel = Accept(server);
 
-    std::jthread thread(StreamClient, std::ref(connectedChannel));
+    std::thread thread(StreamClient, std::ref(connectedChannel));
 
     // Act and assert
     for (uint32_t i = 0; i < BigNumber; i++) {
@@ -336,6 +336,8 @@ TEST_P(TestTcpChannel, Stream) {
     }
 
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 void ReceiveBigElement(SocketChannel& channel) {
@@ -358,7 +360,7 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
     SocketChannel acceptedChannel = Accept(server);
 
-    std::jthread thread(ReceiveBigElement, std::ref(connectedChannel));
+    std::thread thread(ReceiveBigElement, std::ref(connectedChannel));
 
     const auto sendArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
@@ -368,6 +370,8 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     // Act and assert
     ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
     ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+
+    thread.join();
 }
 
 }  // namespace

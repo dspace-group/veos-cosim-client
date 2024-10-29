@@ -2,7 +2,6 @@
 
 #include "Protocol.h"
 
-#include <bit>
 #include <string>
 #include <string_view>
 
@@ -375,7 +374,7 @@ namespace Protocol {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace(
         "SendConnectOk(ProtocolVersion: " + std::to_string(protocolVersion) + ", ClientMode: " + ToString(clientMode) +
-        ", StepSize: " + SimulationTimeToString(stepSize) + ", SimulationState: " + ToString(simulationState) +
+        ", StepSize: " + SimulationTimeToString(stepSize) + " s, SimulationState: " + ToString(simulationState) +
         ", IncomingSignals: " + ToString(incomingSignals) + ", OutgoingSignals: " + ToString(outgoingSignals) +
         ", CanControllers: " + ToString(canControllers) + ", EthControllers: " + ToString(ethControllers) +
         ", LinControllers: " + ToString(linControllers) + ")");
@@ -427,7 +426,7 @@ namespace Protocol {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolEndTrace(
         "ReadConnectOk(ProtocolVersion: " + std::to_string(protocolVersion) + ", ClientMode: " + ToString(clientMode) +
-        ", StepSize: " + SimulationTimeToString(stepSize) + ", SimulationState: " + ToString(simulationState) +
+        ", StepSize: " + SimulationTimeToString(stepSize) + " s, SimulationState: " + ToString(simulationState) +
         ", IncomingSignals: " + ToString(incomingSignals) + ", OutgoingSignals: " + ToString(outgoingSignals) +
         ", CanControllers: " + ToString(canControllers) + ", EthControllers: " + ToString(ethControllers) +
         ", LinControllers: " + ToString(linControllers) + ")");
@@ -438,7 +437,7 @@ namespace Protocol {
 
 [[nodiscard]] bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolBeginTrace("SendStart(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolBeginTrace("SendStart(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Start));
@@ -460,7 +459,7 @@ namespace Protocol {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolEndTrace("ReadStart(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolEndTrace("ReadStart(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     return true;
@@ -468,7 +467,7 @@ namespace Protocol {
 
 [[nodiscard]] bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolBeginTrace("SendStop(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolBeginTrace("SendStop(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Stop));
@@ -490,7 +489,7 @@ namespace Protocol {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolEndTrace("ReadStop(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolEndTrace("ReadStop(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     return true;
@@ -501,7 +500,7 @@ namespace Protocol {
                                  DsVeosCoSim_TerminateReason reason) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendTerminate(SimulationTime: " + SimulationTimeToString(simulationTime) +
-                          ", Reason: " + ToString(reason) + ")");
+                          " s, Reason: " + ToString(reason) + ")");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Terminate));
@@ -528,7 +527,7 @@ namespace Protocol {
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolEndTrace("ReadTerminate(SimulationTime: " + SimulationTimeToString(simulationTime) +
-                        ", Reason: " + ToString(reason) + ")");
+                        " s, Reason: " + ToString(reason) + ")");
 #endif
 
     return true;
@@ -536,7 +535,7 @@ namespace Protocol {
 
 [[nodiscard]] bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolBeginTrace("SendPause(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolBeginTrace("SendPause(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Pause));
@@ -558,7 +557,7 @@ namespace Protocol {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolEndTrace("ReadPause(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolEndTrace("ReadPause(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     return true;
@@ -566,7 +565,7 @@ namespace Protocol {
 
 [[nodiscard]] bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolBeginTrace("SendContinue(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolBeginTrace("SendContinue(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Continue));
@@ -588,7 +587,7 @@ namespace Protocol {
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolEndTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolEndTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     return true;
@@ -599,7 +598,7 @@ namespace Protocol {
                             const IoBuffer& ioBuffer,
                             const BusBuffer& busBuffer) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolBeginTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolBeginTrace("SendStep(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::Step));
@@ -634,7 +633,7 @@ namespace Protocol {
     CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
-    LogProtocolEndTrace("ReadStep(SimulationTime: " + SimulationTimeToString(simulationTime) + ")");
+    LogProtocolEndTrace("ReadStep(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
 
     return true;
@@ -647,7 +646,7 @@ namespace Protocol {
                               const BusBuffer& busBuffer) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendStepOk(NextSimulationTime: " + SimulationTimeToString(nextSimulationTime) +
-                          ", Command: " + ToString(command) + ")");
+                          " s, Command: " + ToString(command) + ")");
 #endif
 
     CheckResult(WriteHeader(writer, FrameKind::StepOk));
@@ -688,7 +687,7 @@ namespace Protocol {
 
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolEndTrace("ReadStepOk(NextSimulationTime: " + SimulationTimeToString(nextSimulationTime) +
-                        ", Command: " + ToString(command) + ")");
+                        " s, Command: " + ToString(command) + ")");
 #endif
 
     return true;
@@ -817,7 +816,5 @@ namespace Protocol {
 }
 
 }  // namespace Protocol
-
-static_assert(std::endian::native == std::endian::little, "Only supported on little endian platforms.");
 
 }  // namespace DsVeosCoSim

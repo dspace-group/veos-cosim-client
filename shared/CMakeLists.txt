@@ -8,8 +8,6 @@ add_library(
 target_sources(
   shared
   PRIVATE
-  BackgroundService.cpp
-  ClientServerTestHelper.cpp
   Generator.cpp
   Helper.cpp
   LogHelper.cpp

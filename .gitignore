@@ -4,3 +4,5 @@ obj/
 tmplin/
 tmpwin/
 .mono/
+
+debug.log

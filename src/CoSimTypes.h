@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include <memory.h>
+
 #include <array>
 #include <functional>
 #include <iomanip>
-#include <memory.h>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -20,7 +21,28 @@ constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;  //
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
 
 [[nodiscard]] inline std::string SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return std::to_string(DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime)) + " s";
+    return std::to_string(DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
+}
+
+[[nodiscard]] inline std::string ToString(DsVeosCoSim_Result result) {
+    switch (result) {
+        case DsVeosCoSim_Result_Ok:
+            return "Ok";
+        case DsVeosCoSim_Result_Error:
+            return "Error";
+        case DsVeosCoSim_Result_Empty:
+            return "Empty";
+        case DsVeosCoSim_Result_Full:
+            return "Full";
+        case DsVeosCoSim_Result_InvalidArgument:
+            return "InvalidArgument";
+        case DsVeosCoSim_Result_Disconnected:
+            return "Disconnected";
+        case DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
+    }
+
+    return "<Invalid DsVeosCoSim_Result>";
 }
 
 enum class CoSimType {
@@ -203,6 +225,52 @@ enum class Command {
     return "<Invalid DsVeosCoSim_SizeKind>";
 }
 
+[[nodiscard]] inline std::string DataTypeValueToString(DsVeosCoSim_DataType dataType,
+                                                       uint32_t index,
+                                                       const void* value) {
+    switch (dataType) {
+        case DsVeosCoSim_DataType_Bool:
+            return std::to_string(static_cast<const uint8_t*>(value)[index]);
+        case DsVeosCoSim_DataType_Int8:
+            return std::to_string(static_cast<const int8_t*>(value)[index]);
+        case DsVeosCoSim_DataType_Int16:
+            return std::to_string(static_cast<const int16_t*>(value)[index]);
+        case DsVeosCoSim_DataType_Int32:
+            return std::to_string(static_cast<const int32_t*>(value)[index]);
+        case DsVeosCoSim_DataType_Int64:
+            return std::to_string(static_cast<const int64_t*>(value)[index]);
+        case DsVeosCoSim_DataType_UInt8:
+            return std::to_string(static_cast<const uint8_t*>(value)[index]);
+        case DsVeosCoSim_DataType_UInt16:
+            return std::to_string(static_cast<const uint16_t*>(value)[index]);
+        case DsVeosCoSim_DataType_UInt32:
+            return std::to_string(static_cast<const uint32_t*>(value)[index]);
+        case DsVeosCoSim_DataType_UInt64:
+            return std::to_string(static_cast<const uint64_t*>(value)[index]);
+        case DsVeosCoSim_DataType_Float32:
+            return std::to_string(static_cast<const float*>(value)[index]);
+        case DsVeosCoSim_DataType_Float64:
+            return std::to_string(static_cast<const double*>(value)[index]);
+        case DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
+    }
+
+    throw std::runtime_error("Invalid data type.");
+}
+
+[[nodiscard]] inline std::string ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value) {
+    std::ostringstream oss;
+    for (uint32_t i = 0; i < length; i++) {
+        if (i > 0) {
+            oss << " ";
+        }
+
+        oss << DataTypeValueToString(dataType, i, value);
+    }
+
+    return oss.str();
+}
+
 [[nodiscard]] inline std::string ToString(DsVeosCoSim_LinControllerType type) {
     switch (type) {
         case DsVeosCoSim_LinControllerType_Responder:
@@ -217,10 +285,28 @@ enum class Command {
 }
 
 enum class SimulationState {
+    Unloaded,
+    Stopped,
+    Running,
+    Paused,
+    Terminated
 };
 
 [[nodiscard]] inline std::string ToString([[maybe_unused]] SimulationState simulationState) {
-    return "<Unused>";
+    switch (simulationState) {
+        case SimulationState::Unloaded:
+            return "Unloaded";
+        case SimulationState::Stopped:
+            return "Stopped";
+        case SimulationState::Running:
+            return "Running";
+        case SimulationState::Paused:
+            return "Paused";
+        case SimulationState::Terminated:
+            return "Terminated";
+    }
+
+    return "<Unknown SimulationState>";
 }
 
 enum class Mode {
@@ -357,6 +443,14 @@ enum class Mode {
     return oss.str();
 }
 
+[[nodiscard]] inline std::string IoDataToString(DsVeosCoSim_SimulationTime simulationTime,
+                                                const DsVeosCoSim_IoSignal& ioSignal,
+                                                uint32_t length,
+                                                const void* value) {
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + ioSignal.name + "," +
+           std::to_string(length) + "," + DsVeosCoSim_ValueToString(ioSignal.dataType, length, value);
+}
+
 struct IoSignal {
     DsVeosCoSim_IoSignalId id{};
     uint32_t length{};
@@ -375,7 +469,7 @@ struct IoSignal {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const IoSignal& signal) {
+[[nodiscard]] inline std::string ToString(const DsVeosCoSim_IoSignal& signal) {
     std::string str = "{Id: " + std::to_string(signal.id) + ", Length: " + std::to_string(signal.length) +
                       ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
                       ", Name: \"" + signal.name + "\"}";
@@ -413,6 +507,14 @@ struct IoSignal {
     return ioSignals;
 }
 
+[[nodiscard]] inline std::string CanMessageToString(DsVeosCoSim_SimulationTime simulationTime,
+                                                    const DsVeosCoSim_CanController& controller,
+                                                    const DsVeosCoSim_CanMessage& message) {
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
+           std::to_string(message.id) + "," + std::to_string(message.length) + "," +
+           DataToString(message.data, message.length, '-') + ",CAN," + CanMessageFlagsToString(message.flags);
+}
+
 struct CanController {
     DsVeosCoSim_BusControllerId id{};
     uint32_t queueSize{};
@@ -435,7 +537,7 @@ struct CanController {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const CanController& controller) {
+[[nodiscard]] inline std::string ToString(const DsVeosCoSim_CanController& controller) {
     std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
                       ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
@@ -475,6 +577,28 @@ struct CanController {
     return canControllers;
 }
 
+[[nodiscard]] inline std::string EthMessageToString(DsVeosCoSim_SimulationTime simulationTime,
+                                                    const DsVeosCoSim_EthController& controller,
+                                                    const DsVeosCoSim_EthMessage& message) {
+    const uint8_t* data = message.data;
+    const uint32_t length = message.length;
+
+    if (length >= 14) {
+        const std::string macAddress1 = DataToString(message.data, 6, ':');
+        const std::string macAddress2 = DataToString(message.data + 6, 6, ':');
+        const std::string ethernetType = DataToString(message.data + 12, 2);
+
+        return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
+               macAddress2 + "-" + macAddress1 + "," + std::to_string(length - 14) + "," +
+               DataToString(data + 14, length - 14, '-') + ",ETH," + ethernetType + "," +
+               EthMessageFlagsToString(message.flags);
+    }
+
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
+           std::to_string(length) + "," + DataToString(data, length, '-') + ",ETH," +
+           EthMessageFlagsToString(message.flags);
+}
+
 struct EthController {
     DsVeosCoSim_BusControllerId id{};
     uint32_t queueSize{};
@@ -497,10 +621,10 @@ struct EthController {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const EthController& controller) {
+[[nodiscard]] inline std::string ToString(const DsVeosCoSim_EthController& controller) {
     std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
-                      DataToString(controller.macAddress.data(), controller.macAddress.size(), ':') + "], Name: \"" +
+                      DataToString(controller.macAddress, sizeof(controller.macAddress), ':') + "], Name: \"" +
                       controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
                       controller.clusterName + "\"}";
 
@@ -537,6 +661,14 @@ struct EthController {
     return ethControllers;
 }
 
+[[nodiscard]] inline std::string LinMessageToString(DsVeosCoSim_SimulationTime simulationTime,
+                                                    const DsVeosCoSim_LinController& controller,
+                                                    const DsVeosCoSim_LinMessage& message) {
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
+           std::to_string(message.id) + "," + std::to_string(message.length) + "," +
+           DataToString(message.data, message.length, '-') + ",LIN," + LinMessageFlagsToString(message.flags);
+}
+
 struct LinController {
     DsVeosCoSim_BusControllerId id{};
     uint32_t queueSize{};
@@ -559,7 +691,7 @@ struct LinController {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const LinController& controller) {
+[[nodiscard]] inline std::string ToString(const DsVeosCoSim_LinController& controller) {
     std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
                       ", Type: " + ToString(controller.type) + ", Name: \"" + controller.name + "\", ChannelName: \"" +

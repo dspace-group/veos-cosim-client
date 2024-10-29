@@ -15,7 +15,6 @@
 #include <filesystem>
 #else
 #include <arpa/inet.h>
-#include <cerrno>
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -29,6 +28,7 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <cerrno>
 #endif
 
 #ifdef _WIN32
@@ -702,7 +702,7 @@ void Socket::Listen() const {
     receivedSize = static_cast<int32_t>(::recv(_socket, destination, size, MSG_NOSIGNAL));
 #endif
 
-    if (receivedSize > 0) [[likely]] {
+    if (receivedSize > 0) {
         return true;
     }
 
@@ -733,7 +733,7 @@ void Socket::Listen() const {
     sentSize = static_cast<int32_t>(::send(_socket, source, size, MSG_NOSIGNAL));
 #endif
 
-    if (sentSize > 0) [[likely]] {
+    if (sentSize > 0) {
         return true;
     }
 
@@ -758,7 +758,7 @@ void Socket::Listen() const {
 }
 
 void Socket::EnsureIsValid() const {
-    if (!IsValid()) [[unlikely]] {
+    if (!IsValid()) {
         throw CoSimException("Socket is not valid.");
     }
 }

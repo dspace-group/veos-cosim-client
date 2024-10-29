@@ -40,7 +40,7 @@ IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeos
             throw CoSimException("Invalid data type for IO signal '" + std::string(signal.name) + "'.");
         }
 
-        if (_metaDataLookup.contains(signal.id)) {
+        if (_metaDataLookup.find(signal.id) != _metaDataLookup.end()) {
             throw CoSimException("Duplicated IO signal id " + std::to_string(signal.id) + ".");
         }
 

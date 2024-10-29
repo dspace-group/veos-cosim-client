@@ -54,7 +54,7 @@ void EventRoundtrip(benchmark::State& state) {
     NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
 
     stopThread = false;
-    std::jthread thread(WaitAndSet, eventName1, eventName2);
+    std::thread thread(WaitAndSet, eventName1, eventName2);
 
     for (auto _ : state) {
         event1.Set();
@@ -63,6 +63,8 @@ void EventRoundtrip(benchmark::State& state) {
 
     stopThread = true;
     event1.Set();
+
+    thread.join();
 }
 
 }  // namespace

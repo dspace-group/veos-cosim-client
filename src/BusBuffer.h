@@ -2,11 +2,9 @@
 
 #pragma once
 
-#include <concepts>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "Channel.h"
@@ -22,26 +20,6 @@
 #endif
 
 namespace DsVeosCoSim {
-
-template <typename TControllerExtern>
-concept ControllerExtern = requires(TControllerExtern controllerExtern) {
-    { controllerExtern.queueSize } -> std::same_as<uint32_t&>;
-    { controllerExtern.name } -> std::same_as<const char*&>;
-};
-
-template <typename TMessageExtern>
-concept MessageExtern = requires(TMessageExtern messageExtern) {
-    { messageExtern.controllerId } -> std::same_as<uint32_t&>;
-};
-
-template <typename TMessage, typename TMessageExtern>
-concept Message =
-    requires(TMessage& message, TMessageExtern& messageExtern, ChannelWriter& writer, ChannelReader& reader) {
-        { std::as_const(message).SerializeTo(writer) };
-        { message.DeserializeFrom(reader) };
-        { std::as_const(message).WriteTo(messageExtern) };
-        { message.ReadFrom(std::as_const(messageExtern)) };
-    };
 
 struct CanMessage {
     DsVeosCoSim_SimulationTime timestamp{};
@@ -102,7 +80,7 @@ private:
     void CheckMaxLength() const;
 };
 
-template <MessageExtern TMessageExtern, ControllerExtern TControllerExtern>
+template <typename TMessageExtern, typename TControllerExtern>
 class BusProtocolBufferBase {
 protected:
     using Callback = std::function<void(DsVeosCoSim_SimulationTime, const TControllerExtern&, const TMessageExtern&)>;
@@ -225,7 +203,7 @@ private:
     std::mutex _mutex;
 };
 
-template <MessageExtern TMessageExtern, Message<TMessageExtern> TMessage, ControllerExtern TControllerExtern>
+template <typename TMessageExtern, typename TMessage, typename TControllerExtern>
 class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
     using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
     using Extension = typename Base::ControllerExtension;
@@ -349,7 +327,7 @@ private:
 
 #ifdef _WIN32
 
-template <MessageExtern TMessageExtern, Message<TMessageExtern> TMessage, ControllerExtern TControllerExtern>
+template <typename TMessageExtern, typename TMessage, typename TControllerExtern>
 class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
     using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
     using Extension = typename Base::ControllerExtension;

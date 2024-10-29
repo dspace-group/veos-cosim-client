@@ -10,8 +10,17 @@ target_sources(
   Program.cpp
 )
 
+target_include_directories(
+  TestServer
+  PUBLIC
+  ../../src
+  ../../src/Communication
+  ../../src/Helpers
+  ../../src/OsAbstraction
+)
+
 target_link_libraries(
   TestServer
   DsVeosCoSim
-  shared
+  fmt::fmt
 )

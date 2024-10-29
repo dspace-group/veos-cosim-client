@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 #include <string_view>
 
-#include "BackgroundService.h"
 #include "CoSimClient.h"
 #include "CoSimServer.h"
 #include "CoSimTypes.h"
@@ -14,6 +13,41 @@
 using namespace DsVeosCoSim;
 
 namespace {
+
+class BackgroundThread final {
+public:
+    explicit BackgroundThread(DsVeosCoSim::CoSimServer& coSimServer) : _coSimServer(coSimServer) {
+        _thread = std::thread([this] {
+            while (!_stopEvent.Wait(1)) {
+                try {
+                    _coSimServer.BackgroundService();
+                } catch (const std::exception& e) {
+                    LogError(e.what());
+                }
+            }
+        });
+    }
+
+    ~BackgroundThread() noexcept {
+        _stopEvent.Set();
+        if (std::this_thread::get_id() == _thread.get_id()) {
+            _thread.detach();
+        } else {
+            _thread.join();
+        }
+    }
+
+    BackgroundThread(const BackgroundThread&) = delete;
+    BackgroundThread& operator=(const BackgroundThread&) = delete;
+
+    BackgroundThread(BackgroundThread&&) = delete;
+    BackgroundThread& operator=(BackgroundThread&&) = delete;
+
+private:
+    DsVeosCoSim::CoSimServer& _coSimServer;
+    DsVeosCoSim::Event _stopEvent;
+    std::thread _thread;
+};
 
 auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
@@ -187,7 +221,7 @@ TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundService backgroundService(server);
+    BackgroundThread backgroundThread(server);
 
     uint16_t port = server.GetLocalPort();
 
@@ -207,7 +241,7 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundService backgroundService(server);
+    BackgroundThread backgroundThread(server);
 
     uint16_t port = server.GetLocalPort();
 
@@ -232,7 +266,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundService backgroundService(server);
+    BackgroundThread backgroundThread(server);
 
     uint16_t port = server.GetLocalPort();
 
