@@ -27,12 +27,12 @@ if(DSVEOSCOSIM_BUILD_TESTS)
   add_subdirectory(test)
   add_subdirectory(utilities/TestClient)
   add_subdirectory(utilities/TestServer)
+  add_subdirectory(utilities/PerformanceTestClient)
+  add_subdirectory(utilities/PerformanceTestServer)
 endif()
 
 if(DSVEOSCOSIM_BUILD_BENCHMARKS)
   add_subdirectory(benchmark)
-  add_subdirectory(utilities/PerformanceTestClient)
-  add_subdirectory(utilities/PerformanceTestServer)
 endif()
 
 install(EXPORT DsVeosCoSimTargets

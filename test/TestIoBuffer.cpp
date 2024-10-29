@@ -1,8 +1,11 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <fmt/format.h>
+
 #include <gmock/gmock.h>
+
 #include <gtest/gtest.h>
+
 #include <deque>
 #include <string>
 #include <thread>

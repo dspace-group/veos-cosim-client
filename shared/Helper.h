@@ -16,18 +16,12 @@
 
 constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
 
-#ifndef CTRL
-#define CTRL(c) ((c) & 037)
-#endif
-
 #define MUST_BE_TRUE(actual)                             \
     do {                                                 \
         if (!(actual)) {                                 \
             throw std::runtime_error("Invalid result."); \
         }                                                \
     } while (0)
-
-[[nodiscard]] int32_t GetChar();
 
 constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
 

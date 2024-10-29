@@ -13,5 +13,5 @@ target_sources(
 target_link_libraries(
   TestClient
   DsVeosCoSim
-  shared
+  fmt::fmt
 )
