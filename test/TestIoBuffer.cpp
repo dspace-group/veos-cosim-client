@@ -22,11 +22,9 @@
 using namespace DsVeosCoSim;
 using namespace testing;
 
-namespace {
-
 auto coSimTypes = testing::Values(CoSimType::Client, CoSimType::Server);
 
-auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
+auto ioBufferConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
 auto dataTypes = testing::Values(DsVeosCoSim_DataType_Bool,
                                  DsVeosCoSim_DataType_Int8,
@@ -114,7 +112,7 @@ protected:
 
 INSTANTIATE_TEST_SUITE_P(Test,
                          TestIoBufferWithCoSimType,
-                         testing::Combine(coSimTypes, connectionKinds),
+                         testing::Combine(coSimTypes, ioBufferConnectionKinds),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
                              return fmt::format("{}_{}",
                                                 ToString(std::get<0>(info.param)),
@@ -141,7 +139,7 @@ protected:
 INSTANTIATE_TEST_SUITE_P(
     ,
     TestIoBuffer,
-    testing::Combine(coSimTypes, connectionKinds, dataTypes),
+    testing::Combine(coSimTypes, ioBufferConnectionKinds, dataTypes),
     [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DsVeosCoSim_DataType>>& info) {
         return fmt::format("{}_{}_{}",
                            ToString(std::get<0>(info.param)),
@@ -712,5 +710,3 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     // Act and assert
     TransferWithEvents(writerIoBuffer, readerIoBuffer, {});
 }
-
-}  // namespace
