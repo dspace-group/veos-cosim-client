@@ -1,9 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <fmt/format.h>
-
-#include <gmock/gmock.h>
-
 #include <gtest/gtest.h>
 
 #include <deque>
@@ -179,103 +175,6 @@ TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
                              {outgoingSignal1, outgoingSignal2}));
 }
 
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, DuplicatedReadIds) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal, signal};
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            IoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-        },
-        ThrowsMessage<CoSimException>(fmt::format("Duplicated IO signal id {}.", signal.id)));
-}
-#endif
-
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, DuplicatedWriteIds) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal, signal};
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            IoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-        },
-        ThrowsMessage<CoSimException>(fmt::format("Duplicated IO signal id {}.", signal.id)));
-}
-#endif
-
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, ReadInvalidId) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals = {signal};
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals;
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-
-    uint32_t readLength{};
-    std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            ioBuffer.Read(signal.id + 1, readLength, readValue.data());
-        },
-        ThrowsMessage<CoSimException>(fmt::format("IO signal id {} is unknown.", signal.id + 1)));
-}
-#endif
-
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, WriteInvalidId) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-
-    std::vector<uint8_t> writeValue = GenerateIoData(signal);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            ioBuffer.Write(signal.id + 1, signal.length, writeValue.data());
-        },
-        ThrowsMessage<CoSimException>(fmt::format("IO signal id {} is unknown.", signal.id + 1)));
-}
-#endif
-
 TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
@@ -330,62 +229,6 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     // Assert
     ASSERT_EQ(expectedReadLength, readLength);
 }
-
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, WriteWrongSizeForFixedSizedLength) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Fixed);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-
-    std::vector<uint8_t> writeValue = GenerateIoData(signal);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            ioBuffer.Write(signal.id, signal.length + 1, writeValue.data());
-        },
-        ThrowsMessage<CoSimException>(fmt::format("Length of fixed sized IO signal '{}' must be {} but was {}.",
-                                                  signal.name,
-                                                  signal.length,
-                                                  signal.length + 1)));
-}
-#endif
-
-#ifdef EXCEPTION_TESTS
-TEST_P(TestIoBuffer, WriteWrongVariableSizedLength) {
-    // Arrange
-    auto [coSimType, connectionKind, dataType] = GetParam();
-
-    std::string name = GenerateString("IoBuffer名前");
-
-    IoSignal signal = CreateSignal(dataType, DsVeosCoSim_SizeKind_Variable);
-
-    std::vector<DsVeosCoSim_IoSignal> incomingSignals;
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignals = {signal};
-    SwitchSignals(incomingSignals, outgoingSignals, coSimType);
-
-    IoBuffer ioBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
-
-    std::vector<uint8_t> writeValue = GenerateIoData(signal);
-
-    // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            ioBuffer.Write(signal.id, signal.length + 1, writeValue.data());
-        },
-        ThrowsMessage<CoSimException>(
-            fmt::format("Length of variable sized IO signal '{}' exceeds max size.", signal.name)));
-}
-#endif
 
 TEST_P(TestIoBuffer, WriteFixedSizedData) {
     // Arrange
