@@ -390,11 +390,11 @@ You can work with the demo on Windows and Ubuntu 20.04 LTS.
 
 Additionally, you must have the following:
 
-- CMake 3.13 or higher
+- CMake 3.15 or higher
 
 - Either of the following compilers:
 
-  - GCC 10 or higher
+  - GCC 7 or higher
 
   - MSVC 2022 or higher
 

@@ -41,9 +41,8 @@ void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {
     SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel receiverChannel = Accept(server);
 
-    std::thread thread([&] {
-        ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {}));
-    });
+    std::thread thread(
+        [&] { ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), GenerateI64(), {})); });
 
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());
@@ -79,9 +78,8 @@ void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std:
         expectedCallbacks.pop_front();
     };
 
-    std::thread thread([&] {
-        ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks));
-    });
+    std::thread thread(
+        [&] { ASSERT_TRUE(readerIoBuffer.Deserialize(receiverChannel.GetReader(), simulationTime, callbacks)); });
 
     ASSERT_TRUE(writerIoBuffer.Serialize(senderChannel.GetWriter()));
     ASSERT_TRUE(senderChannel.GetWriter().EndWrite());

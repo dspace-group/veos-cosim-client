@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <gtest/gtest.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -36,9 +37,7 @@ TEST_F(TestUdsChannel, ConnectWithoutStart) {
     // Arrange
     std::string name = GenerateName();
 
-    {
-        UdsChannelServer server(name);
-    }
+    { UdsChannelServer server(name); }
 
     // Act
     std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);

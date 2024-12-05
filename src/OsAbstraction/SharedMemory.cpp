@@ -5,6 +5,7 @@
 #include "SharedMemory.h"
 
 #include <Windows.h>
+
 #include <cstddef>
 #include <string>
 

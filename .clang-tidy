@@ -1,53 +1,54 @@
 ---
-Checks:    '*,
-            -altera-struct-pack-align,
-            -altera-unroll-loops,
-            -android-cloexec-accept,
-            -android-cloexec-socket,
-            -bugprone-easily-swappable-parameters,
-            -cert-err34-c,
-            -cert-err58-cpp,
-            -cert-msc30-c,
-            -cert-msc32-c,
-            -cert-msc50-cpp,
-            -cert-msc51-cpp,
-            -concurrency-mt-unsafe,
-            -cppcoreguidelines-avoid-c-arrays,
-            -cppcoreguidelines-avoid-do-while,
-            -cppcoreguidelines-avoid-magic-numbers,
-            -cppcoreguidelines-avoid-non-const-global-variables,
-            -cppcoreguidelines-macro-usage,
-            -cppcoreguidelines-non-private-member-variables-in-classes,
-            -cppcoreguidelines-owning-memory,
-            -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-            -cppcoreguidelines-pro-bounds-constant-array-index,
-            -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-            -cppcoreguidelines-pro-type-vararg,
-            -cppcoreguidelines-pro-type-reinterpret-cast,
-            -fuchsia-default-arguments-calls,
-            -fuchsia-default-arguments-declarations,
-            -fuchsia-statically-constructed-objects,
-            -google-build-using-namespace,
-            -google-runtime-int,
-            -hicpp-avoid-c-arrays,
-            -hicpp-no-array-decay,
-            -hicpp-vararg,
-            -hicpp-signed-bitwise,
-            -llvmlibc-callee-namespace,
-            -llvmlibc-implementation-in-namespace,
-            -llvmlibc-restrict-system-libc-headers,
-            -misc-non-private-member-variables-in-classes,
-            -modernize-use-trailing-return-type,
-            -readability-function-cognitive-complexity,
-            -readability-identifier-length,
-            -readability-magic-numbers'
+Checks:  '*,
+          -altera-struct-pack-align,
+          -altera-unroll-loops,
+          -android-cloexec-accept,
+          -android-cloexec-socket,
+          -bugprone-easily-swappable-parameters,
+          -cert-err34-c,
+          -cert-err58-cpp,
+          -cert-msc30-c,
+          -cert-msc32-c,
+          -cert-msc50-cpp,
+          -cert-msc51-cpp,
+          -concurrency-mt-unsafe,
+          -cppcoreguidelines-avoid-c-arrays,
+          -cppcoreguidelines-avoid-do-while,
+          -cppcoreguidelines-avoid-magic-numbers,
+          -cppcoreguidelines-avoid-non-const-global-variables,
+          -cppcoreguidelines-macro-usage,
+          -cppcoreguidelines-non-private-member-variables-in-classes,
+          -cppcoreguidelines-owning-memory,
+          -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+          -cppcoreguidelines-pro-bounds-constant-array-index,
+          -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+          -cppcoreguidelines-pro-type-vararg,
+          -cppcoreguidelines-pro-type-reinterpret-cast,
+          -fuchsia-default-arguments-calls,
+          -fuchsia-default-arguments-declarations,
+          -fuchsia-statically-constructed-objects,
+          -google-build-using-namespace,
+          -google-runtime-int,
+          -hicpp-avoid-c-arrays,
+          -hicpp-no-array-decay,
+          -hicpp-vararg,
+          -hicpp-signed-bitwise,
+          -llvm-include-order,
+          -llvmlibc-callee-namespace,
+          -llvmlibc-implementation-in-namespace,
+          -llvmlibc-restrict-system-libc-headers,
+          -misc-non-private-member-variables-in-classes,
+          -modernize-use-trailing-return-type,
+          -readability-function-cognitive-complexity,
+          -readability-identifier-length,
+          -readability-magic-numbers'
 
 CheckOptions:
-  - { key: readability-identifier-naming.ClassCase,                     value: CamelCase }
-  - { key: readability-identifier-naming.PublicMethodCase,              value: CamelCase }
-  - { key: readability-identifier-naming.ProtectedMethodCase,           value: CamelCase }
-  - { key: readability-identifier-naming.PrivateMethodCase,             value: CamelCase }
-  - { key: readability-identifier-naming.PrivateMemberCase,             value: camelBack }
-  - { key: readability-identifier-naming.PrivateMemberPrefix,           value: '_' }
-  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: 1}
+- { key: readability-identifier-naming.ClassCase,                     value: CamelCase }
+- { key: readability-identifier-naming.PublicMethodCase,              value: CamelCase }
+- { key: readability-identifier-naming.ProtectedMethodCase,           value: CamelCase }
+- { key: readability-identifier-naming.PrivateMethodCase,             value: CamelCase }
+- { key: readability-identifier-naming.PrivateMemberCase,             value: camelBack }
+- { key: readability-identifier-naming.PrivateMemberPrefix,           value: '_' }
+- { key: readability-implicit-bool-conversion.AllowPointerConditions, value: 1}
 ...

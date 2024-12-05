@@ -5,6 +5,7 @@
 #include "OsUtilities.h"
 
 #include <Windows.h>
+
 #include <cstdint>
 #include <string>
 #include <string_view>

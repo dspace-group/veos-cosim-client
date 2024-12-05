@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
+#include <array>
 #include <cstdint>
 #include <string_view>
 
@@ -24,15 +25,15 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
         NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
         SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            ::memcpy(sharedMemory.data(), buffer, BufferSize);
+            ::memcpy(sharedMemory.data(), buffer.data(), BufferSize);
             beginEvent.Set();
             endEvent.Wait();
-            ::memcpy(buffer, sharedMemory.data(), BufferSize);
+            ::memcpy(buffer.data(), sharedMemory.data(), BufferSize);
             buffer[0]++;
 
             counter++;

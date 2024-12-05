@@ -12,6 +12,7 @@
 #include <WinSock2.h>
 #include <Windows.h>
 #include <afunix.h>
+
 #include <filesystem>
 #else
 #include <arpa/inet.h>
@@ -28,6 +29,7 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
+
 #include <cerrno>
 #endif
 
@@ -472,7 +474,7 @@ void Socket::EnableIpv6Only() const {
         }
 
         ::freeaddrinfo(addressInfo);
-        return connectedSocket;
+        return std::optional<Socket>(std::move(connectedSocket));
     }
 
     freeaddrinfo(addressInfo);

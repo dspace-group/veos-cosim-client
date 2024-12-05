@@ -123,7 +123,7 @@ private:
 
     ResponderMode _responderMode{};
     Command _currentCommand{};
-    std::atomic<Command> _nextCommand;
+    std::atomic<Command> _nextCommand{};
 
     std::vector<IoSignal> _incomingSignals;
     std::vector<IoSignal> _outgoingSignals;

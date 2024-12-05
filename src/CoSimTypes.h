@@ -447,8 +447,8 @@ enum class Mode {
                                                 const DsVeosCoSim_IoSignal& ioSignal,
                                                 uint32_t length,
                                                 const void* value) {
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + ioSignal.name + "," +
-           std::to_string(length) + "," + DsVeosCoSim_ValueToString(ioSignal.dataType, length, value);
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + ioSignal.name + "," + std::to_string(length) +
+           "," + DsVeosCoSim_ValueToString(ioSignal.dataType, length, value);
 }
 
 struct IoSignal {
@@ -588,15 +588,13 @@ struct CanController {
         const std::string macAddress2 = DataToString(message.data + 6, 6, ':');
         const std::string ethernetType = DataToString(message.data + 12, 2);
 
-        return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-               macAddress2 + "-" + macAddress1 + "," + std::to_string(length - 14) + "," +
-               DataToString(data + 14, length - 14, '-') + ",ETH," + ethernetType + "," +
-               EthMessageFlagsToString(message.flags);
+        return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," + macAddress2 + "-" +
+               macAddress1 + "," + std::to_string(length - 14) + "," + DataToString(data + 14, length - 14, '-') +
+               ",ETH," + ethernetType + "," + EthMessageFlagsToString(message.flags);
     }
 
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-           std::to_string(length) + "," + DataToString(data, length, '-') + ",ETH," +
-           EthMessageFlagsToString(message.flags);
+    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," + std::to_string(length) +
+           "," + DataToString(data, length, '-') + ",ETH," + EthMessageFlagsToString(message.flags);
 }
 
 struct EthController {

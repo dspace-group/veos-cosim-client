@@ -1,7 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <gtest/gtest.h>
 #include <fmt/format.h>
+#include <gtest/gtest.h>
+
 #include <string>
 #include <vector>
 

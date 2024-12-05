@@ -61,9 +61,7 @@ protected:
 INSTANTIATE_TEST_SUITE_P(,
                          TestProtocol,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
-                         [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return ToString(info.param);
-                         });
+                         [](const testing::TestParamInfo<ConnectionKind>& info) { return ToString(info.param); });
 
 TEST_P(TestProtocol, SendAndReceiveOk) {
     // Arrange

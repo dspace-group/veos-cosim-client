@@ -15,9 +15,10 @@
 #include <Windows.h>
 #include <conio.h>
 #else
-#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
+
+#include <cstdlib>
 #endif
 
 using namespace DsVeosCoSim;

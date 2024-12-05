@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <deque>
 #include <memory>
 #include <string>
@@ -59,9 +60,7 @@ void Transfer(ConnectionKind connectionKind, BusBuffer& senderBusBuffer, BusBuff
 #endif
     }
 
-    std::thread thread([&] {
-        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), {}, {}));
-    });
+    std::thread thread([&] { ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), {}, {})); });
 
     ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
     ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
@@ -139,9 +138,8 @@ void Transfer(ConnectionKind connectionKind,
         };
     }
 
-    std::thread thread([&] {
-        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), simulationTime, callbacks));
-    });
+    std::thread thread(
+        [&] { ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), simulationTime, callbacks)); });
 
     ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
     ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
@@ -299,11 +297,8 @@ TYPED_TEST(TestBusBuffer, InitializeControllersWithDuplicatedIds) {
     FillWithRandom(controller);
 
     // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            BusBuffer(coSimType, connectionKind, name, {controller, controller});
-        },
-        ThrowsMessage<CoSimException>(fmt::format("Duplicated controller id {}.", controller.id)));
+    ASSERT_THAT([&]() { BusBuffer(coSimType, connectionKind, name, {controller, controller}); },
+                ThrowsMessage<CoSimException>(fmt::format("Duplicated controller id {}.", controller.id)));
 }
 #endif
 

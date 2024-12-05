@@ -1,8 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <fmt/format.h>
+
 #include <string>
 
 #include "Generator.h"
@@ -56,12 +57,9 @@ TEST_F(TestPortMapper, GetWithoutSet) {
     uint16_t port{};
 
     // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            (void)PortMapper_GetPort("127.0.0.1", serverName, port);
-        },
-        ThrowsMessage<CoSimException>(
-            fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
+    ASSERT_THAT([&]() { (void)PortMapper_GetPort("127.0.0.1", serverName, port); },
+                ThrowsMessage<CoSimException>(
+                    fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
 }
 #endif
 
@@ -80,12 +78,9 @@ TEST_F(TestPortMapper, GetAfterUnset) {
     uint16_t port{};
 
     // Act and assert
-    ASSERT_THAT(
-        [&]() {
-            (void)PortMapper_GetPort("127.0.0.1", serverName, port);
-        },
-        ThrowsMessage<CoSimException>(
-            fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
+    ASSERT_THAT([&]() { (void)PortMapper_GetPort("127.0.0.1", serverName, port); },
+                ThrowsMessage<CoSimException>(
+                    fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
 }
 #endif
 

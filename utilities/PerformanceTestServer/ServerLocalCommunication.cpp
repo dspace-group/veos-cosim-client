@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <array>
 #include <chrono>
 #include <thread>
 
@@ -27,7 +28,7 @@ void LocalCommunicationServerRun() {
         UdsChannelServer server(LocalName);
 #endif
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         while (true) {
 #ifdef _WIN32
@@ -45,11 +46,11 @@ void LocalCommunicationServerRun() {
             }
 
             while (true) {
-                if (!acceptedChannel->GetReader().Read(buffer, BufferSize)) {
+                if (!acceptedChannel->GetReader().Read(buffer.data(), BufferSize)) {
                     break;
                 }
 
-                if (!acceptedChannel->GetWriter().Write(buffer, BufferSize)) {
+                if (!acceptedChannel->GetWriter().Write(buffer.data(), BufferSize)) {
                     break;
                 }
 

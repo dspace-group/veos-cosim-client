@@ -5,6 +5,7 @@
 #include "NamedEvent.h"
 
 #include <Windows.h>
+
 #include <cstdint>
 #include <string>
 
