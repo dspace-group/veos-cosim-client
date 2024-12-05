@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
+#include <array>
 #include <thread>
 
 #include "LogHelper.h"
@@ -14,7 +15,7 @@ void EventsServerRun() {
     try {
         LogTrace("Events server listening on SHM {} ...", ShmName);
 
-        char buffer[BufferSize]{};
+        std::array<char, BufferSize> buffer{};
 
         NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
         NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
@@ -22,9 +23,9 @@ void EventsServerRun() {
 
         while (true) {
             beginEvent.Wait();
-            ::memcpy(buffer, sharedMemory.data(), BufferSize);
+            ::memcpy(buffer.data(), sharedMemory.data(), BufferSize);
             buffer[0]++;
-            ::memcpy(sharedMemory.data(), buffer, BufferSize);
+            ::memcpy(sharedMemory.data(), buffer.data(), BufferSize);
             endEvent.Set();
         }
     } catch (const std::exception& e) {

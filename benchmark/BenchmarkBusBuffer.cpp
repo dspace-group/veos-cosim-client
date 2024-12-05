@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <benchmark/benchmark.h>
+
 #include <string>
 #include <thread>
 

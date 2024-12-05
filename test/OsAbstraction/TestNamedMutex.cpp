@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
+
 #include <string>
 
 #include "Generator.h"

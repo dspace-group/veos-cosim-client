@@ -2,6 +2,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <string_view>
 
 #include "CoSimClient.h"
@@ -259,9 +260,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     Event stoppedEvent;
 
     CoSimServerConfig config = CreateServerConfig();
-    config.simulationStoppedCallback = [&](DsVeosCoSim_SimulationTime) {
-        stoppedEvent.Set();
-    };
+    config.simulationStoppedCallback = [&](DsVeosCoSim_SimulationTime) { stoppedEvent.Set(); };
 
     CoSimServer server;
     server.Load(config);

@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <benchmark/benchmark.h>
+
 #include <string>
 #include <thread>
 

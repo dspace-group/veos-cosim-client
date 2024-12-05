@@ -24,9 +24,7 @@ void CoSimServerRun() {
         config.logCallback = OnLogCallback;
         config.startPortMapper = false;
         config.registerAtPortMapper = false;
-        config.simulationStoppedCallback = [&stopSimulation](DsVeosCoSim_SimulationTime) {
-            stopSimulation = true;
-        };
+        config.simulationStoppedCallback = [&stopSimulation](DsVeosCoSim_SimulationTime) { stopSimulation = true; };
 
         CoSimServer server;
         server.Load(config);

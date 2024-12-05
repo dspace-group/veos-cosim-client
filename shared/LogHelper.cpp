@@ -3,6 +3,7 @@
 #include "LogHelper.h"
 
 #include <fmt/color.h>
+
 #include <string_view>
 
 #include "CoSimHelper.h"

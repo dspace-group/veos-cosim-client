@@ -18,9 +18,7 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 }  // namespace
 
 PortMapperServer::PortMapperServer(bool enableRemoteAccess) : _server(GetPortMapperPort(), enableRemoteAccess) {
-    _thread = std::thread([this] {
-        RunPortMapperServer();
-    });
+    _thread = std::thread([this] { RunPortMapperServer(); });
 }
 
 PortMapperServer::~PortMapperServer() noexcept {

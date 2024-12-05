@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -38,9 +39,7 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     // Arrange
     const std::string name = GenerateName();
 
-    {
-        LocalChannelServer server(name);
-    }
+    { LocalChannelServer server(name); }
 
     // Act
     std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);

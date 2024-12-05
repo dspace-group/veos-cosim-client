@@ -76,10 +76,10 @@ public:
     }
 
 private:
-    uint32_t _capacity{};         // Read by reader and writer
-    std::atomic<uint32_t> _size;  // Read and written by reader and writer
-    uint32_t _readIndex{};        // Read and written by reader
-    uint32_t _writeIndex{};       // Read and written by writer
+    uint32_t _capacity{};           // Read by reader and writer
+    std::atomic<uint32_t> _size{};  // Read and written by reader and writer
+    uint32_t _readIndex{};          // Read and written by reader
+    uint32_t _writeIndex{};         // Read and written by writer
 
     // Zero sized array would be correct here, since the items are inside a shared memory. But that leads to
     // warnings, so we add set the size to 1

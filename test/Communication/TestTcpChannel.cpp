@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <gtest/gtest.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
