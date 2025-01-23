@@ -11,7 +11,7 @@ template <typename T>
 class RingBuffer final {
 public:
     RingBuffer() = default;
-    explicit RingBuffer(size_t capacity) {
+    explicit RingBuffer(const size_t capacity) {
         _items.resize(capacity);
     }
 
@@ -41,13 +41,13 @@ public:
         return _size == _items.size();
     }
 
-    void PushBack(const T& element) {
+    void PushBack(T&& element) {
         if (IsFull()) {
             throw std::runtime_error("Ring buffer is full.");
         }
 
-        size_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = element;
+        const size_t currentWriteIndex = _writeIndex;
+        _items[currentWriteIndex] = std::move(element);
 
         ++_writeIndex;
         if (_writeIndex == _items.size()) {

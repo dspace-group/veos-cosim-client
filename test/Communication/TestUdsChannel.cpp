@@ -26,7 +26,7 @@ class TestUdsChannel : public testing::Test {};
 
 TEST_F(TestUdsChannel, StartServer) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     // Act and assert
     ASSERT_NO_THROW((void)UdsChannelServer(name));
@@ -34,14 +34,14 @@ TEST_F(TestUdsChannel, StartServer) {
 
 TEST_F(TestUdsChannel, ConnectWithoutStart) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     {
-        UdsChannelServer server(name);
+        UdsChannelServer server(name);  // NOLINT
     }
 
     // Act
-    std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);
+    const std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);
 
     // Assert
     ASSERT_FALSE(connectedChannel);
@@ -49,12 +49,12 @@ TEST_F(TestUdsChannel, ConnectWithoutStart) {
 
 TEST_F(TestUdsChannel, Connect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    UdsChannelServer server(name);  // NOLINT
 
     // Act
-    std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);
+    const std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);
 
     // Assert
     ASSERT_TRUE(connectedChannel);
@@ -62,12 +62,12 @@ TEST_F(TestUdsChannel, Connect) {
 
 TEST_F(TestUdsChannel, AcceptWithoutConnect) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     // Act
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept();
+    const std::optional<SocketChannel> acceptedChannel = server.TryAccept();
 
     // Assert
     ASSERT_FALSE(acceptedChannel);
@@ -75,14 +75,14 @@ TEST_F(TestUdsChannel, AcceptWithoutConnect) {
 
 TEST_F(TestUdsChannel, Accept) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     (void)ConnectToUdsChannel(name);
 
     // Act
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    const std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -92,7 +92,7 @@ TEST_F(TestUdsChannel, AcceptAfterDisconnect) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
 
@@ -110,10 +110,10 @@ TEST_F(TestUdsChannel, WriteToChannel) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
-    SocketChannel acceptedChannel = Accept(server);
+    const SocketChannel acceptedChannel = Accept(server);  // NOLINT
 
     const uint32_t sendValue = GenerateU32();
 
@@ -126,7 +126,7 @@ TEST_F(TestUdsChannel, ReadFromChannel) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
     SocketChannel acceptedChannel = Accept(server);
@@ -149,7 +149,7 @@ TEST_F(TestUdsChannel, PingPong) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
     SocketChannel acceptedChannel = Accept(server);
@@ -163,7 +163,7 @@ TEST_F(TestUdsChannel, PingPong) {
             receiveChannel = &connectedChannel;
         }
 
-        uint16_t sendValue = GenerateU16();
+        const uint16_t sendValue = GenerateU16();
         ASSERT_TRUE(sendChannel->GetWriter().Write(sendValue));
         ASSERT_TRUE(sendChannel->GetWriter().EndWrite());
 
@@ -178,7 +178,7 @@ TEST_F(TestUdsChannel, SendTwoFramesAtOnce) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
     SocketChannel acceptedChannel = Accept(server);
@@ -216,7 +216,7 @@ TEST_F(TestUdsChannel, Stream) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
     SocketChannel acceptedChannel = Accept(server);
@@ -246,7 +246,7 @@ TEST_F(TestUdsChannel, SendAndReceiveBigElement) {
     // Arrange
     std::string name = GenerateName();
 
-    UdsChannelServer server(name);
+    const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
     SocketChannel acceptedChannel = Accept(server);

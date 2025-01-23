@@ -1,8 +1,9 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <fmt/format.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <fmt/format.h>
 #include <string>
 
 #include "Generator.h"
@@ -14,7 +15,7 @@ using namespace testing;
 
 namespace {
 
-class TestPortMapper : public testing::Test {
+class TestPortMapper : public Test {
 protected:
     void SetUp() override {
         ClearLastMessage();
@@ -30,7 +31,7 @@ TEST_F(TestPortMapper, StartOfServer) {
 
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -49,7 +50,7 @@ TEST_F(TestPortMapper, SetAndGet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetWithoutSet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -68,7 +69,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetAfterUnset) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -91,7 +92,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
 
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 

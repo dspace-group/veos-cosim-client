@@ -13,10 +13,10 @@ namespace DsVeosCoSim {
 
 namespace {
 
-void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
+void CheckSizeKind(const SizeKind sizeKind, const std::string& name) {
     switch (sizeKind) {
-        case DsVeosCoSim_SizeKind_Fixed:
-        case DsVeosCoSim_SizeKind_Variable:
+        case SizeKind::Fixed:
+        case SizeKind::Variable:
             return;
         default:
             throw CoSimException("Unknown size kind '" + ToString(sizeKind) + "' for IO signal '" + name + "'.");
@@ -25,7 +25,7 @@ void CheckSizeKind(DsVeosCoSim_SizeKind sizeKind, const std::string& name) {
 
 }  // namespace
 
-IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeosCoSim_IoSignal>& signals)
+IoPartBufferBase::IoPartBufferBase(const CoSimType coSimType, const std::vector<IoSignal>& signals)
     : _coSimType(coSimType), _changedSignalsQueue(signals.size()) {
     size_t nextSignalIndex = 0;
     for (const auto& signal : signals) {
@@ -40,8 +40,8 @@ IoPartBufferBase::IoPartBufferBase(CoSimType coSimType, const std::vector<DsVeos
             throw CoSimException("Invalid data type for IO signal '" + std::string(signal.name) + "'.");
         }
 
-        if (_metaDataLookup.find(signal.id) != _metaDataLookup.end()) {
-            throw CoSimException("Duplicated IO signal id " + std::to_string(signal.id) + ".");
+        if (_metaDataLookup.find(signal.id) != _metaDataLookup.end()) {  // NOLINT
+            throw CoSimException("Duplicated IO signal id " + ToString(signal.id) + ".");
         }
 
         const size_t totalDataSize = dataTypeSize * signal.length;
@@ -66,7 +66,7 @@ void IoPartBufferBase::ClearData() {
     ClearDataInternal();
 }
 
-void IoPartBufferBase::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) {
+void IoPartBufferBase::Write(const IoSignalId signalId, const uint32_t length, const void* value) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
         WriteInternal(signalId, length, value);
@@ -76,7 +76,7 @@ void IoPartBufferBase::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, c
     WriteInternal(signalId, length, value);
 }
 
-void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) {
+void IoPartBufferBase::Read(const IoSignalId signalId, uint32_t& length, void* value) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
         ReadInternal(signalId, length, value);
@@ -86,7 +86,7 @@ void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, v
     ReadInternal(signalId, length, value);
 }
 
-void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) {
+void IoPartBufferBase::Read(const IoSignalId signalId, uint32_t& length, const void** value) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
         ReadInternal(signalId, length, value);
@@ -106,7 +106,7 @@ void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, c
 }
 
 [[nodiscard]] bool IoPartBufferBase::Deserialize(ChannelReader& reader,
-                                                 DsVeosCoSim_SimulationTime simulationTime,
+                                                 const SimulationTime simulationTime,
                                                  const Callbacks& callbacks) {
     if (_coSimType == CoSimType::Client) {
         std::lock_guard lock(_mutex);
@@ -116,24 +116,24 @@ void IoPartBufferBase::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, c
     return DeserializeInternal(reader, simulationTime, callbacks);
 }
 
-IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(DsVeosCoSim_IoSignalId signalId) {
+IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(const IoSignalId signalId) {
     const auto search = _metaDataLookup.find(signalId);
     if (search != _metaDataLookup.end()) {
         return search->second;
     }
 
-    throw CoSimException("IO signal id " + std::to_string(signalId) + " is unknown.");
+    throw CoSimException("IO signal id " + ToString(signalId) + " is unknown.");
 }
 
-RemoteIoPartBuffer::RemoteIoPartBuffer(CoSimType coSimType,
+RemoteIoPartBuffer::RemoteIoPartBuffer(const CoSimType coSimType,
                                        [[maybe_unused]] const std::string& name,
-                                       const std::vector<DsVeosCoSim_IoSignal>& signals)
+                                       const std::vector<IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     _dataVector.resize(_metaDataLookup.size());
     for (auto& [signalId, metaData] : _metaDataLookup) {
         Data data{};
         data.buffer.resize(metaData.totalDataSize);
-        if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Fixed) {
+        if (metaData.info.sizeKind == SizeKind::Fixed) {
             data.currentLength = metaData.info.length;
         }
 
@@ -147,7 +147,7 @@ void RemoteIoPartBuffer::ClearDataInternal() {
     for (auto& [signalId, metaData] : _metaDataLookup) {
         Data& data = _dataVector[metaData.signalIndex];
         data.isChanged = false;
-        if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+        if (metaData.info.sizeKind == SizeKind::Variable) {
             data.currentLength = 0;
         }
 
@@ -155,11 +155,11 @@ void RemoteIoPartBuffer::ClearDataInternal() {
     }
 }
 
-void RemoteIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) {
+void RemoteIoPartBuffer::WriteInternal(const IoSignalId signalId, const uint32_t length, const void* value) {
     MetaData& metaData = FindMetaData(signalId);
     Data& data = _dataVector[metaData.signalIndex];
 
-    if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+    if (metaData.info.sizeKind == SizeKind::Variable) {
         if (length > metaData.info.length) {
             throw CoSimException("Length of variable sized IO signal '" + std::string(metaData.info.name) +
                                  "' exceeds max size.");
@@ -182,11 +182,11 @@ void RemoteIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t
 
     const size_t totalSize = metaData.dataTypeSize * length;
 
-    if (::memcmp(data.buffer.data(), value, totalSize) == 0) {
+    if (memcmp(data.buffer.data(), value, totalSize) == 0) {
         return;
     }
 
-    (void)::memcpy(data.buffer.data(), value, totalSize);
+    (void)memcpy(data.buffer.data(), value, totalSize);
 
     if (!data.isChanged) {
         data.isChanged = true;
@@ -194,37 +194,37 @@ void RemoteIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t
     }
 }
 
-void RemoteIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) {
-    MetaData& metaData = FindMetaData(signalId);
-    Data& data = _dataVector[metaData.signalIndex];
+void RemoteIoPartBuffer::ReadInternal(const IoSignalId signalId, uint32_t& length, void* value) {
+    const MetaData& metaData = FindMetaData(signalId);
+    const Data& data = _dataVector[metaData.signalIndex];
 
     length = data.currentLength;
     const size_t totalSize = metaData.dataTypeSize * length;
-    (void)::memcpy(value, data.buffer.data(), totalSize);
+    (void)memcpy(value, data.buffer.data(), totalSize);
 }
 
-void RemoteIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) {
-    MetaData& metaData = FindMetaData(signalId);
-    Data& data = _dataVector[metaData.signalIndex];
+void RemoteIoPartBuffer::ReadInternal(const IoSignalId signalId, uint32_t& length, const void** value) {
+    const MetaData& metaData = FindMetaData(signalId);
+    const Data& data = _dataVector[metaData.signalIndex];
 
     length = data.currentLength;
     *value = data.buffer.data();
 }
 
 [[nodiscard]] bool RemoteIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
-    auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
+    const auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
     CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
     if (_changedSignalsQueue.IsEmpty()) {
         return true;
     }
 
     while (!_changedSignalsQueue.IsEmpty()) {
-        MetaData* metaData = _changedSignalsQueue.PopFront();
+        const MetaData* metaData = _changedSignalsQueue.PopFront();
         Data& data = _dataVector[metaData->signalIndex];
 
         CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
 
-        if (metaData->info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+        if (metaData->info.sizeKind == SizeKind::Variable) {
             CheckResultWithMessage(writer.Write(data.currentLength), "Could not write current signal length.");
         }
 
@@ -238,19 +238,19 @@ void RemoteIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t&
 }
 
 [[nodiscard]] bool RemoteIoPartBuffer::DeserializeInternal(ChannelReader& reader,
-                                                           DsVeosCoSim_SimulationTime simulationTime,
+                                                           const SimulationTime simulationTime,
                                                            const Callbacks& callbacks) {
     uint32_t ioSignalChangedCount = 0;
     CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
 
     for (uint32_t i = 0; i < ioSignalChangedCount; i++) {
-        DsVeosCoSim_IoSignalId signalId{};
+        IoSignalId signalId{};
         CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
         MetaData& metaData = FindMetaData(signalId);
         Data& data = _dataVector[metaData.signalIndex];
 
-        if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+        if (metaData.info.sizeKind == SizeKind::Variable) {
             uint32_t length = 0;
             CheckResultWithMessage(reader.Read(length), "Could not read current signal length.");
             if (length > metaData.info.length) {
@@ -277,9 +277,9 @@ void RemoteIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t&
 
 #ifdef _WIN32
 
-LocalIoPartBuffer::LocalIoPartBuffer(CoSimType coSimType,
+LocalIoPartBuffer::LocalIoPartBuffer(const CoSimType coSimType,
                                      const std::string& name,
-                                     const std::vector<DsVeosCoSim_IoSignal>& signals)
+                                     const std::vector<IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     // The memory layout looks like this:
     // for each signal:
@@ -307,10 +307,10 @@ LocalIoPartBuffer::LocalIoPartBuffer(CoSimType coSimType,
     }
 
     for (auto& [signalId, metaData] : _metaDataLookup) {
-        Data& data = _dataVector[metaData.signalIndex];
+        const Data& data = _dataVector[metaData.signalIndex];
         DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
         DataBuffer* backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
-        if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Fixed) {
+        if (metaData.info.sizeKind == SizeKind::Fixed) {
             dataBuffer->currentLength = metaData.info.length;
             backupDataBuffer->currentLength = metaData.info.length;
         }
@@ -331,24 +331,24 @@ void LocalIoPartBuffer::ClearDataInternal() {
             FlipBuffers(data);
         }
 
-        if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+        if (metaData.info.sizeKind == SizeKind::Variable) {
             dataBuffer->currentLength = 0;
             backupDataBuffer->currentLength = 0;
         }
 
-        (void)::memset(dataBuffer->data, 0, metaData.dataTypeSize * metaData.info.length);
-        (void)::memset(backupDataBuffer->data, 0, metaData.dataTypeSize * metaData.info.length);
+        (void)memset(dataBuffer->data, 0, metaData.dataTypeSize * metaData.info.length);
+        (void)memset(backupDataBuffer->data, 0, metaData.dataTypeSize * metaData.info.length);
     }
 }
 
-void LocalIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) {
+void LocalIoPartBuffer::WriteInternal(const IoSignalId signalId, const uint32_t length, const void* value) {
     MetaData& metaData = FindMetaData(signalId);
     Data& data = _dataVector[metaData.signalIndex];
 
     DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
     bool currentLengthChanged{};
-    if (metaData.info.sizeKind == DsVeosCoSim_SizeKind_Variable) {
+    if (metaData.info.sizeKind == SizeKind::Variable) {
         if (length > metaData.info.length) {
             throw CoSimException("Length of variable sized IO signal '" + std::string(metaData.info.name) +
                                  "' exceeds max size.");
@@ -364,7 +364,7 @@ void LocalIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t 
 
     const size_t totalSize = metaData.dataTypeSize * length;
 
-    bool dataChanged = ::memcmp(dataBuffer->data, value, totalSize) != 0;
+    const bool dataChanged = memcmp(dataBuffer->data, value, totalSize) != 0;
 
     if (!currentLengthChanged && !dataChanged) {
         return;
@@ -379,40 +379,40 @@ void LocalIoPartBuffer::WriteInternal(DsVeosCoSim_IoSignalId signalId, uint32_t 
 
     dataBuffer->currentLength = length;
     if (dataChanged) {
-        (void)::memcpy(dataBuffer->data, value, totalSize);
+        (void)memcpy(dataBuffer->data, value, totalSize);
     }
 }
 
-void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) {
-    MetaData& metaData = FindMetaData(signalId);
-    Data& data = _dataVector[metaData.signalIndex];
+void LocalIoPartBuffer::ReadInternal(const IoSignalId signalId, uint32_t& length, void* value) {
+    const MetaData& metaData = FindMetaData(signalId);
+    const Data& data = _dataVector[metaData.signalIndex];
 
-    DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+    const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
     length = dataBuffer->currentLength;
     const size_t totalSize = metaData.dataTypeSize * length;
-    (void)::memcpy(value, dataBuffer->data, totalSize);
+    (void)memcpy(value, dataBuffer->data, totalSize);
 }
 
-void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) {
-    MetaData& metaData = FindMetaData(signalId);
-    Data& data = _dataVector[metaData.signalIndex];
+void LocalIoPartBuffer::ReadInternal(const IoSignalId signalId, uint32_t& length, const void** value) {
+    const MetaData& metaData = FindMetaData(signalId);
+    const Data& data = _dataVector[metaData.signalIndex];
 
-    DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+    const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
     length = dataBuffer->currentLength;
     *value = dataBuffer->data;
 }
 
 [[nodiscard]] bool LocalIoPartBuffer::SerializeInternal(ChannelWriter& writer) {
-    auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
+    const auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
     CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
     if (_changedSignalsQueue.IsEmpty()) {
         return true;
     }
 
     while (!_changedSignalsQueue.IsEmpty()) {
-        MetaData* metaData = _changedSignalsQueue.PopFront();
+        const MetaData* metaData = _changedSignalsQueue.PopFront();
         Data& data = _dataVector[metaData->signalIndex];
 
         CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
@@ -424,13 +424,13 @@ void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& 
 }
 
 [[nodiscard]] bool LocalIoPartBuffer::DeserializeInternal(ChannelReader& reader,
-                                                          DsVeosCoSim_SimulationTime simulationTime,
+                                                          const SimulationTime simulationTime,
                                                           const Callbacks& callbacks) {
     uint32_t ioSignalChangedCount = 0;
     CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
 
     for (uint32_t i = 0; i < ioSignalChangedCount; i++) {
-        DsVeosCoSim_IoSignalId signalId{};
+        IoSignalId signalId{};
         CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
         MetaData& metaData = FindMetaData(signalId);
@@ -438,7 +438,7 @@ void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& 
 
         FlipBuffers(data);
 
-        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         if (callbacks.incomingSignalChangedCallback) {
             callbacks.incomingSignalChangedCallback(simulationTime,
@@ -451,7 +451,7 @@ void LocalIoPartBuffer::ReadInternal(DsVeosCoSim_IoSignalId signalId, uint32_t& 
     return true;
 }
 
-[[nodiscard]] LocalIoPartBuffer::DataBuffer* LocalIoPartBuffer::GetDataBuffer(size_t offset) const {
+[[nodiscard]] LocalIoPartBuffer::DataBuffer* LocalIoPartBuffer::GetDataBuffer(const size_t offset) const {
     return reinterpret_cast<DataBuffer*>((static_cast<uint8_t*>(_sharedMemory.data()) + offset));
 }
 
@@ -462,14 +462,14 @@ void LocalIoPartBuffer::FlipBuffers(Data& data) {
 #endif
 
 IoBuffer::IoBuffer(CoSimType coSimType,
-                   [[maybe_unused]] ConnectionKind connectionKind,
+                   [[maybe_unused]] const ConnectionKind connectionKind,
                    const std::string& name,
-                   const std::vector<DsVeosCoSim_IoSignal>& incomingSignals,
-                   const std::vector<DsVeosCoSim_IoSignal>& outgoingSignals) {
+                   const std::vector<IoSignal>& incomingSignals,
+                   const std::vector<IoSignal>& outgoingSignals) {
     std::string outgoingName = name + ".Outgoing";
     std::string incomingName = name + ".Incoming";
-    const std::vector<DsVeosCoSim_IoSignal>* writeSignals = &outgoingSignals;
-    const std::vector<DsVeosCoSim_IoSignal>* readSignals = &incomingSignals;
+    const std::vector<IoSignal>* writeSignals = &outgoingSignals;
+    const std::vector<IoSignal>* readSignals = &incomingSignals;
     if (coSimType == CoSimType::Server) {
         std::swap(incomingName, outgoingName);
         writeSignals = &incomingSignals;
@@ -496,15 +496,15 @@ void IoBuffer::ClearData() const {
     _writeBuffer->ClearData();
 }
 
-void IoBuffer::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) const {
+void IoBuffer::Write(const IoSignalId signalId, const uint32_t length, const void* value) const {
     _writeBuffer->Write(signalId, length, value);
 }
 
-void IoBuffer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, void* value) const {
+void IoBuffer::Read(const IoSignalId signalId, uint32_t& length, void* value) const {
     _readBuffer->Read(signalId, length, value);
 }
 
-void IoBuffer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) const {
+void IoBuffer::Read(const IoSignalId signalId, uint32_t& length, const void** value) const {
     _readBuffer->Read(signalId, length, value);
 }
 
@@ -513,7 +513,7 @@ void IoBuffer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const voi
 }
 
 [[nodiscard]] bool IoBuffer::Deserialize(ChannelReader& reader,
-                                         DsVeosCoSim_SimulationTime simulationTime,
+                                         const SimulationTime simulationTime,
                                          const Callbacks& callbacks) const {
     return _readBuffer->Deserialize(reader, simulationTime, callbacks);
 }

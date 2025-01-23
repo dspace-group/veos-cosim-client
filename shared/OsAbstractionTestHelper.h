@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -18,7 +19,7 @@ public:
     InternetAddress& operator=(InternetAddress&&) = delete;
 
 private:
-    uint8_t _address[16]{};
+    std::array<uint8_t, 16> _address{};
 };
 
 class UdpSocket final {

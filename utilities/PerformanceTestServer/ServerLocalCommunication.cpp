@@ -65,6 +65,6 @@ void LocalCommunicationServerRun() {
 
 }  // namespace
 
-void StartLocalCommunicationServer() {
+void StartLocalCommunicationServer() {  // NOLINT
     std::thread(LocalCommunicationServerRun).detach();
 }

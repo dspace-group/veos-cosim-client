@@ -5,7 +5,6 @@
 #include <thread>
 
 #include "CoSimTypes.h"
-#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Event.h"
 #include "Generator.h"
 #include "Helper.h"
@@ -16,17 +15,22 @@
 #include "LocalChannel.h"
 #endif
 
+using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 namespace {
 
-void Receive(const IoSignal& signal, IoBuffer& readerIoBuffer, Channel& channel, bool& stopThread, Event& endEvent) {
+void Receive(const IoSignalContainer& signal,
+             const IoBuffer& readerIoBuffer,
+             Channel& channel,
+             const bool& stopThread,
+             Event& endEvent) {
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
 
     while (!stopThread) {
-        MUST_BE_TRUE(readerIoBuffer.Deserialize(channel.GetReader(), 0, {}));
+        MUST_BE_TRUE(readerIoBuffer.Deserialize(channel.GetReader(), 0ns, {}));
 
         readerIoBuffer.Read(signal.id, readLength, readValue.data());
 
@@ -35,16 +39,16 @@ void Receive(const IoSignal& signal, IoBuffer& readerIoBuffer, Channel& channel,
 }
 
 void RunTest(benchmark::State& state,
-             ConnectionKind connectionKind,
+             const ConnectionKind connectionKind,
              const std::string& writerName,
              const std::string& readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
-    IoSignal signal = CreateSignal(DsVeosCoSim_DataType_Int8, DsVeosCoSim_SizeKind_Fixed);
+    IoSignalContainer signal = CreateSignal(DataType::Int8, SizeKind::Fixed);
     signal.length = static_cast<uint32_t>(state.range(0));
 
-    IoBuffer writerIoBuffer(CoSimType::Server, connectionKind, writerName, {signal}, {});
-    IoBuffer readerIoBuffer(CoSimType::Client, connectionKind, readerName, {signal}, {});
+    const IoBuffer writerIoBuffer(CoSimType::Server, connectionKind, writerName, {static_cast<IoSignal>(signal)}, {});
+    const IoBuffer readerIoBuffer(CoSimType::Client, connectionKind, readerName, {static_cast<IoSignal>(signal)}, {});
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -81,39 +85,39 @@ void RunTest(benchmark::State& state,
 
 void TcpIo(benchmark::State& state) {
     TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+    const uint16_t port = server.GetLocalPort();
 
     SocketChannel senderChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel receiverChannel = Accept(server);
 
-    std::string writerName = GenerateString("BenchmarkIoWriter名前");
-    std::string readerName = GenerateString("BenchmarkIoReader名前");
+    const std::string writerName = GenerateString("BenchmarkIoWriter名前");
+    const std::string readerName = GenerateString("BenchmarkIoReader名前");
 
     RunTest(state, ConnectionKind::Remote, writerName, readerName, senderChannel, receiverChannel);
 }
 
 void UdsIo(benchmark::State& state) {
-    std::string serverName = GenerateString("Server");
+    const std::string serverName = GenerateString("Server");
     UdsChannelServer server(serverName);
 
     SocketChannel senderChannel = ConnectToUdsChannel(serverName);
     SocketChannel receiverChannel = Accept(server);
 
-    std::string writerName = GenerateString("BenchmarkIoWriter名前");
-    std::string readerName = GenerateString("BenchmarkIoReader名前");
+    const std::string writerName = GenerateString("BenchmarkIoWriter名前");
+    const std::string readerName = GenerateString("BenchmarkIoReader名前");
 
     RunTest(state, ConnectionKind::Remote, writerName, readerName, senderChannel, receiverChannel);
 }
 
 #ifdef _WIN32
 void LocalIo(benchmark::State& state) {
-    std::string serverName = GenerateString("Server名前");
+    const std::string serverName = GenerateString("Server名前");
     LocalChannelServer server(serverName);
 
     LocalChannel senderChannel = ConnectToLocalChannel(serverName);
     LocalChannel receiverChannel = Accept(server);
 
-    std::string name = GenerateString("BenchmarkIo名前");
+    const std::string name = GenerateString("BenchmarkIo名前");
 
     RunTest(state, ConnectionKind::Local, name, name, senderChannel, receiverChannel);
 }

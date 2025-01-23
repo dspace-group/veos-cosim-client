@@ -17,7 +17,7 @@ namespace {
 }
 
 void DifferentThread(const std::string& name, int32_t& counter) {
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     for (int32_t i = 0; i < 10000; i++) {
         ASSERT_NO_THROW(mutex.lock());
@@ -30,7 +30,7 @@ class TestNamedMutex : public testing::Test {};
 
 TEST_F(TestNamedMutex, CreateAndDestroy) {
     // Arrange
-    std::string name = GenerateName();
+    const std::string name = GenerateName();
 
     // Act and assert
     ASSERT_NO_THROW((void)NamedMutex::CreateOrOpen(name));
@@ -38,8 +38,8 @@ TEST_F(TestNamedMutex, CreateAndDestroy) {
 
 TEST_F(TestNamedMutex, LockAndUnlockOnSameMutex) {
     // Arrange
-    std::string name = GenerateName();
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const std::string name = GenerateName();
+    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     // Act and assert
     ASSERT_NO_THROW(mutex.lock());
@@ -48,8 +48,8 @@ TEST_F(TestNamedMutex, LockAndUnlockOnSameMutex) {
 
 TEST_F(TestNamedMutex, LockAndUnlockOnDifferentMutexes) {
     // Arrange
-    std::string name = GenerateName();
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const std::string name = GenerateName();
+    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
     int32_t counter{};
 
     auto thread = std::thread(DifferentThread, name, std::ref(counter));

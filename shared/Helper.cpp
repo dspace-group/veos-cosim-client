@@ -15,9 +15,10 @@
 #include <Windows.h>
 #include <conio.h>
 #else
-#include <cstdlib>
 #include <termios.h>
 #include <unistd.h>
+#include <cstdlib>
+
 #endif
 
 using namespace DsVeosCoSim;
@@ -25,7 +26,7 @@ using namespace DsVeosCoSim;
 namespace {
 
 [[nodiscard]] uint16_t GetNextFreeDynamicPort() {
-    Socket socket(AddressFamily::Ipv4);
+    const Socket socket(AddressFamily::Ipv4);
     socket.Bind(0, false);
     return socket.GetLocalPort();
 }
@@ -43,12 +44,13 @@ namespace {
     }
 
     try {
-        uint16_t portMapperPort = GetNextFreeDynamicPort();
-        std::string portMapperPortString = std::to_string(portMapperPort);
+        const uint16_t portMapperPort = GetNextFreeDynamicPort();
+        const std::string portMapperPortString = std::to_string(portMapperPort);
 #ifdef _WIN32
-        (void)::SetEnvironmentVariableA("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString.c_str());
+        const std::string environmentString = "VEOS_COSIM_PORTMAPPER_PORT=" + portMapperPortString;
+        (void)_putenv(environmentString.c_str());
 #else
-        (void)::setenv("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString.c_str(), 1);
+        (void)setenv("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString.c_str(), 1);
 #endif
     } catch (const std::exception& e) {
         LogError(e.what());
@@ -58,8 +60,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] Socket ConnectSocket(std::string_view ipAddress, uint16_t remotePort) {
-    std::optional<Socket> connectedSocket = Socket::TryConnect(ipAddress, remotePort, 0, DefaultTimeout);
+[[nodiscard]] Socket ConnectSocket(const std::string_view ipAddress, const uint16_t remotePort) {
+    std::optional<Socket> connectedSocket = Socket::TryConnect(ipAddress, remotePort, 0, DefaultTimeout);  // NOLINT
     if (connectedSocket) {
         return std::move(*connectedSocket);
     }
@@ -77,7 +79,7 @@ namespace {
 }
 
 [[nodiscard]] Socket Accept(const Socket& serverSocket) {
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);  // NOLINT
     if (acceptedSocket) {
         return std::move(*acceptedSocket);
     }
@@ -85,8 +87,8 @@ namespace {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-[[nodiscard]] SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePort) {
-    std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);
+[[nodiscard]] SocketChannel ConnectToTcpChannel(const std::string_view ipAddress, const uint16_t remotePort) {
+    std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);  // NOLINT
     if (channel) {
         return std::move(*channel);
     }
@@ -95,7 +97,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel Accept(const TcpChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);  // NOLINT
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }
@@ -104,7 +106,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel ConnectToUdsChannel(const std::string& name) {
-    std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
+    std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);  // NOLINT
     if (channel) {
         return std::move(*channel);
     }
@@ -113,7 +115,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel Accept(const UdsChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);  // NOLINT
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }
@@ -124,7 +126,7 @@ namespace {
 #ifdef _WIN32
 
 [[nodiscard]] LocalChannel ConnectToLocalChannel(const std::string& name) {
-    std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
+    std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);  // NOLINT
     if (channel) {
         return std::move(*channel);
     }
@@ -133,7 +135,7 @@ namespace {
 }
 
 [[nodiscard]] LocalChannel Accept(LocalChannelServer& server) {
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    std::optional<LocalChannel> acceptedChannel = server.TryAccept();  // NOLINT
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }
@@ -143,7 +145,7 @@ namespace {
 
 #endif
 
-[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
+[[nodiscard]] std::string_view GetLoopBackAddress(const AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
         return "127.0.0.1";
     }

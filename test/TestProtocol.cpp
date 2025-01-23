@@ -22,10 +22,10 @@ protected:
     std::unique_ptr<Channel> _senderChannel;
     std::unique_ptr<Channel> _receiverChannel;
 
-    void CustomSetUp(ConnectionKind connectionKind) {
+    void CustomSetUp(const ConnectionKind connectionKind) {
         if (connectionKind == ConnectionKind::Remote) {
             TcpChannelServer server(0, true);
-            uint16_t port = server.GetLocalPort();
+            const uint16_t port = server.GetLocalPort();
 
             _senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
             _receiverChannel = std::make_unique<SocketChannel>(Accept(server));
@@ -158,13 +158,13 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
 
     const uint32_t sendProtocolVersion = GenerateU32();
     constexpr Mode sendMode{};
-    const DsVeosCoSim_SimulationTime sendStepSize = GenerateI64();
+    const SimulationTime sendStepSize = GenerateSimulationTime();
     constexpr SimulationState sendSimulationState{};
-    const std::vector<IoSignal> sendIncomingSignals = CreateSignals(2);
-    const std::vector<IoSignal> sendOutgoingSignals = CreateSignals(3);
-    const std::vector<CanController> sendCanControllers = CreateCanControllers(4);
-    const std::vector<EthController> sendEthControllers = CreateEthControllers(5);
-    const std::vector<LinController> sendLinControllers = CreateLinControllers(6);
+    const std::vector<IoSignalContainer> sendIncomingSignals = CreateSignals(2);
+    const std::vector<IoSignalContainer> sendOutgoingSignals = CreateSignals(3);
+    const std::vector<CanControllerContainer> sendCanControllers = CreateCanControllers(4);
+    const std::vector<EthControllerContainer> sendEthControllers = CreateEthControllers(5);
+    const std::vector<LinControllerContainer> sendLinControllers = CreateLinControllers(6);
 
     // Act
     ASSERT_TRUE(Protocol::SendConnectOk(_senderChannel->GetWriter(),
@@ -183,13 +183,13 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
 
     uint32_t receiveProtocolVersion{};
     Mode receiveMode{};
-    DsVeosCoSim_SimulationTime receiveStepSize{};
+    SimulationTime receiveStepSize{};
     SimulationState receiveSimulationState{};
-    std::vector<IoSignal> receiveIncomingSignals;
-    std::vector<IoSignal> receiveOutgoingSignals;
-    std::vector<CanController> receiveCanControllers;
-    std::vector<EthController> receiveEthControllers;
-    std::vector<LinController> receiveLinControllers;
+    std::vector<IoSignalContainer> receiveIncomingSignals;
+    std::vector<IoSignalContainer> receiveOutgoingSignals;
+    std::vector<CanControllerContainer> receiveCanControllers;
+    std::vector<EthControllerContainer> receiveEthControllers;
+    std::vector<LinControllerContainer> receiveLinControllers;
     ASSERT_TRUE(Protocol::ReadConnectOk(_receiverChannel->GetReader(),
                                         receiveProtocolVersion,
                                         receiveMode,
@@ -203,18 +203,18 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ(static_cast<int32_t>(sendMode), static_cast<int32_t>(receiveMode));
     ASSERT_EQ(sendStepSize, receiveStepSize);
-    AssertEq(sendIncomingSignals, receiveIncomingSignals);
-    AssertEq(sendOutgoingSignals, receiveOutgoingSignals);
-    AssertEq(sendCanControllers, receiveCanControllers);
-    AssertEq(sendEthControllers, receiveEthControllers);
-    AssertEq(sendLinControllers, receiveLinControllers);
+    AssertEq<IoSignalContainer, IoSignal>(sendIncomingSignals, receiveIncomingSignals);
+    AssertEq<IoSignalContainer, IoSignal>(sendOutgoingSignals, receiveOutgoingSignals);
+    AssertEq<CanControllerContainer, CanController>(sendCanControllers, receiveCanControllers);
+    AssertEq<EthControllerContainer, EthController>(sendEthControllers, receiveEthControllers);
+    AssertEq<LinControllerContainer, LinController>(sendLinControllers, receiveLinControllers);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStart) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendStart(_senderChannel->GetWriter(), sendSimulationTime));
@@ -222,7 +222,7 @@ TEST_P(TestProtocol, SendAndReceiveStart) {
     // Assert
     AssertFrame(FrameKind::Start);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     ASSERT_TRUE(Protocol::ReadStart(_receiverChannel->GetReader(), receiveSimulationTime));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
@@ -231,7 +231,7 @@ TEST_P(TestProtocol, SendAndReceiveStop) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendStop(_senderChannel->GetWriter(), sendSimulationTime));
@@ -239,7 +239,7 @@ TEST_P(TestProtocol, SendAndReceiveStop) {
     // Assert
     AssertFrame(FrameKind::Stop);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     ASSERT_TRUE(Protocol::ReadStop(_receiverChannel->GetReader(), receiveSimulationTime));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
@@ -248,9 +248,8 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
-    const DsVeosCoSim_TerminateReason sendTerminateReason =
-        GenerateRandom(DsVeosCoSim_TerminateReason_Finished, DsVeosCoSim_TerminateReason_Error);
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    const TerminateReason sendTerminateReason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
 
     // Act
     ASSERT_TRUE(Protocol::SendTerminate(_senderChannel->GetWriter(), sendSimulationTime, sendTerminateReason));
@@ -258,8 +257,8 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
     // Assert
     AssertFrame(FrameKind::Terminate);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
-    DsVeosCoSim_TerminateReason receiveTerminateReason{};
+    SimulationTime receiveSimulationTime{};
+    TerminateReason receiveTerminateReason{};
     ASSERT_TRUE(Protocol::ReadTerminate(_receiverChannel->GetReader(), receiveSimulationTime, receiveTerminateReason));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
     ASSERT_EQ(sendTerminateReason, receiveTerminateReason);
@@ -269,7 +268,7 @@ TEST_P(TestProtocol, SendAndReceivePause) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendPause(_senderChannel->GetWriter(), sendSimulationTime));
@@ -277,7 +276,7 @@ TEST_P(TestProtocol, SendAndReceivePause) {
     // Assert
     AssertFrame(FrameKind::Pause);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     ASSERT_TRUE(Protocol::ReadPause(_receiverChannel->GetReader(), receiveSimulationTime));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
@@ -286,7 +285,7 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendContinue(_senderChannel->GetWriter(), sendSimulationTime));
@@ -294,25 +293,25 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
     // Assert
     AssertFrame(FrameKind::Continue);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     ASSERT_TRUE(Protocol::ReadContinue(_receiverChannel->GetReader(), receiveSimulationTime));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStep) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
     CustomSetUp(connectionKind);
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     const std::string ioBufferName = GenerateString("IoBuffer名前");
-    IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    const IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
+    const IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
     const std::string busBufferName = GenerateString("BusBuffer名前");
-    BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, {});
-    BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, {});
+    const BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
+    const BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
     ASSERT_TRUE(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, clientIoBuffer, clientBusBuffer));
@@ -320,7 +319,7 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
     // Assert
     AssertFrame(FrameKind::Step);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     ASSERT_TRUE(
         Protocol::ReadStep(_receiverChannel->GetReader(), receiveSimulationTime, serverIoBuffer, serverBusBuffer, {}));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
@@ -328,20 +327,20 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
 
 TEST_P(TestProtocol, SendAndReceiveStepOk) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
     CustomSetUp(connectionKind);
 
-    const DsVeosCoSim_SimulationTime sendSimulationTime = GenerateI64();
+    const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     const auto sendCommand = static_cast<Command>(GenerateU32());
 
     const std::string ioBufferName = GenerateString("IoBuffer名前");
-    IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    const IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
+    const IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
     const std::string busBufferName = GenerateString("BusBuffer名前");
-    BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, {});
-    BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, {});
+    const BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
+    const BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
     ASSERT_TRUE(Protocol::SendStepOk(_senderChannel->GetWriter(),
@@ -353,7 +352,7 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     // Assert
     AssertFrame(FrameKind::StepOk);
 
-    DsVeosCoSim_SimulationTime receiveSimulationTime{};
+    SimulationTime receiveSimulationTime{};
     Command receiveCommand{};
     ASSERT_TRUE(Protocol::ReadStepOk(_receiverChannel->GetReader(),
                                      receiveSimulationTime,

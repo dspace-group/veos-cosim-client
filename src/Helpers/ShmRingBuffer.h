@@ -20,7 +20,7 @@ public:
     ShmRingBuffer(ShmRingBuffer&& other) = delete;
     ShmRingBuffer& operator=(ShmRingBuffer&& other) = delete;
 
-    void Initialize(uint32_t capacity) {
+    void Initialize(const uint32_t capacity) {
         _capacity = capacity;
     }
 
@@ -42,13 +42,13 @@ public:
         return _size == _capacity;
     }
 
-    void PushBack(const T& element) {
+    void PushBack(T&& element) {
         if (IsFull()) {
             throw std::runtime_error("SHM ring buffer is full.");
         }
 
-        uint32_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = element;
+        const uint32_t currentWriteIndex = _writeIndex;
+        _items[currentWriteIndex] = std::move(element);
 
         ++_writeIndex;
         if (_writeIndex == _capacity) {

@@ -17,7 +17,7 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 }  // namespace
 
-PortMapperServer::PortMapperServer(bool enableRemoteAccess) : _server(GetPortMapperPort(), enableRemoteAccess) {
+PortMapperServer::PortMapperServer(const bool enableRemoteAccess) : _server(GetPortMapperPort(), enableRemoteAccess) {
     _thread = std::thread([this] {
         RunPortMapperServer();
     });
@@ -166,7 +166,7 @@ void PortMapperServer::DumpEntries() {
     }
 }
 
-[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port) {
+[[nodiscard]] bool PortMapper_SetPort(const std::string& name, const uint16_t port) {
     std::optional<SocketChannel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");

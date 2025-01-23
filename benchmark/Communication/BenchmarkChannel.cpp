@@ -17,7 +17,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void CounterPart(Channel& channel, bool& stopThread, size_t size) {
+void CounterPart(Channel& channel, const bool& stopThread, const size_t size) {
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
@@ -31,7 +31,7 @@ void CounterPart(Channel& channel, bool& stopThread, size_t size) {
 }
 
 void RunTest(benchmark::State& state, Channel& channel1, Channel& channel2) {
-    size_t size = state.range(0);
+    const size_t size = state.range(0);
 
     bool stopThread{};
     std::thread thread(CounterPart, std::ref(channel1), std::ref(stopThread), size);
@@ -53,8 +53,8 @@ void RunTest(benchmark::State& state, Channel& channel1, Channel& channel2) {
 }
 
 void TcpChannelRoundtrip(benchmark::State& state) {
-    TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+    const TcpChannelServer server(0, true);
+    const uint16_t port = server.GetLocalPort();
 
     SocketChannel connectedChannel = ConnectToTcpChannel("127.0.0.1", port);
     SocketChannel acceptedChannel = Accept(server);
@@ -63,7 +63,7 @@ void TcpChannelRoundtrip(benchmark::State& state) {
 }
 
 void UdsChannelRoundtrip(benchmark::State& state) {
-    std::string serverName = GenerateString("Server");
+    const std::string serverName = GenerateString("Server");
 
     UdsChannelServer server(serverName);
 
@@ -75,7 +75,7 @@ void UdsChannelRoundtrip(benchmark::State& state) {
 
 #ifdef _WIN32
 void LocalChannelRoundtrip(benchmark::State& state) {
-    std::string serverName = GenerateString("Server名前");
+    const std::string serverName = GenerateString("Server名前");
     LocalChannelServer server(serverName);
 
     LocalChannel connectedChannel = ConnectToLocalChannel(serverName);

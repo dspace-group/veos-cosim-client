@@ -2,55 +2,108 @@
 
 #pragma once
 
-#include <memory.h>
+#include <memory.h>  // IWYU pragma: keep
 
 #include <array>
+#include <chrono>
 #include <functional>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 #include "DsVeosCoSim/DsVeosCoSim.h"
 
 namespace DsVeosCoSim {
+
+#define ENUM_BITMASK_OPS(TEnum)                                                    \
+    constexpr TEnum operator&(const TEnum lhs, const TEnum rhs) noexcept {         \
+        return static_cast<TEnum>(uint32_t(lhs) & uint32_t(rhs));                  \
+    }                                                                              \
+                                                                                   \
+    constexpr TEnum operator|(const TEnum lhs, const TEnum rhs) noexcept {         \
+        return static_cast<TEnum>(uint32_t(lhs) | uint32_t(rhs));                  \
+    }                                                                              \
+                                                                                   \
+    constexpr TEnum operator^(const TEnum lhs, const TEnum rhs) noexcept {         \
+        return static_cast<TEnum>(uint32_t(lhs) ^ uint32_t(rhs));                  \
+    }                                                                              \
+                                                                                   \
+    constexpr TEnum operator~(const TEnum lhs) noexcept {                          \
+        return static_cast<TEnum>(~uint32_t(lhs));                                 \
+    }                                                                              \
+                                                                                   \
+    constexpr bool HasFlag(const TEnum flags, const TEnum testFlag) noexcept {     \
+        return (flags & testFlag) == testFlag;                                     \
+    }                                                                              \
+                                                                                   \
+    constexpr TEnum ClearFlag(const TEnum flags, const TEnum clearFlag) noexcept { \
+        return flags & ~clearFlag;                                                 \
+    }
 
 constexpr uint32_t CanMessageMaxLength = DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t EthMessageMaxLength = DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t LinMessageMaxLength = DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH;  // NOLINT
 constexpr uint32_t EthAddressLength = DSVEOSCOSIM_ETH_ADDRESS_LENGTH;
 
-[[nodiscard]] inline std::string SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return std::to_string(DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime));
-}
+using SimulationTime = std::chrono::nanoseconds;
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_Result result) {
-    switch (result) {
-        case DsVeosCoSim_Result_Ok:
-            return "Ok";
-        case DsVeosCoSim_Result_Error:
-            return "Error";
-        case DsVeosCoSim_Result_Empty:
-            return "Empty";
-        case DsVeosCoSim_Result_Full:
-            return "Full";
-        case DsVeosCoSim_Result_InvalidArgument:
-            return "InvalidArgument";
-        case DsVeosCoSim_Result_Disconnected:
-            return "Disconnected";
-        case DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
+[[nodiscard]] inline std::string SimulationTimeToString(const SimulationTime simulationTime) {
+    const int64_t nanoseconds = simulationTime.count();
+    std::string representation = std::to_string(nanoseconds);
+
+    const size_t length = representation.size();
+    if (length < 10) {
+        const size_t countOfMissingZerosInFront = 10 - length;
+        representation.insert(representation.begin(), countOfMissingZerosInFront, '0');
     }
 
-    return "<Invalid DsVeosCoSim_Result>";
+    representation.insert(representation.size() - 9, ".");
+    while (representation[representation.size() - 1] == '0') {
+        representation.pop_back();
+    }
+
+    if (representation[representation.size() - 1] == '.') {
+        representation.pop_back();
+    }
+
+    return representation;
 }
 
-enum class CoSimType {
+enum class Result : uint32_t {
+    Ok = DsVeosCoSim_Result_Ok,
+    Error = DsVeosCoSim_Result_Error,
+    Empty = DsVeosCoSim_Result_Empty,
+    Full = DsVeosCoSim_Result_Full,
+    InvalidArgument = DsVeosCoSim_Result_InvalidArgument,
+    Disconnected = DsVeosCoSim_Result_Disconnected,
+};
+
+[[nodiscard]] inline std::string ToString(const Result result) {
+    switch (result) {
+        case Result::Ok:
+            return "Ok";
+        case Result::Error:
+            return "Error";
+        case Result::Empty:
+            return "Empty";
+        case Result::Full:
+            return "Full";
+        case Result::InvalidArgument:
+            return "InvalidArgument";
+        case Result::Disconnected:
+            return "Disconnected";
+    }
+
+    return "<Invalid Result>";
+}
+
+enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
-[[nodiscard]] inline std::string ToString(CoSimType coSimType) {
+[[nodiscard]] inline std::string ToString(const CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -61,12 +114,12 @@ enum class CoSimType {
     return "<Invalid CoSimType>";
 }
 
-enum class ConnectionKind {
+enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
 
-[[nodiscard]] inline std::string ToString(ConnectionKind connectionKind) {
+[[nodiscard]] inline std::string ToString(const ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -77,7 +130,7 @@ enum class ConnectionKind {
     return "<Invalid ConnectionKind>";
 }
 
-enum class Command {
+enum class Command : uint32_t {  // NOLINT
     None = DsVeosCoSim_Command_None,
     Step = DsVeosCoSim_Command_Step,
     Start = DsVeosCoSim_Command_Start,
@@ -89,7 +142,7 @@ enum class Command {
     Ping
 };
 
-[[nodiscard]] inline std::string ToString(Command command) {
+[[nodiscard]] inline std::string ToString(const Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -114,151 +167,173 @@ enum class Command {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_Severity severity) {
+enum class Severity : uint32_t {
+    Error = DsVeosCoSim_Severity_Error,
+    Warning = DsVeosCoSim_Severity_Warning,
+    Info = DsVeosCoSim_Severity_Info,
+    Trace = DsVeosCoSim_Severity_Trace
+};
+
+[[nodiscard]] inline std::string ToString(const Severity severity) {
     switch (severity) {
-        case DsVeosCoSim_Severity_Error:
+        case Severity::Error:
             return "Error";
-        case DsVeosCoSim_Severity_Warning:
+        case Severity::Warning:
             return "Warning";
-        case DsVeosCoSim_Severity_Info:
+        case Severity::Info:
             return "Info";
-        case DsVeosCoSim_Severity_Trace:
+        case Severity::Trace:
             return "Trace";
-        case DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
-    return "<Invalid DsVeosCoSim_Severity>";
+    return "<Invalid Severity>";
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_TerminateReason terminateReason) {
+enum class TerminateReason : uint32_t {  // NOLINT
+    Finished = DsVeosCoSim_TerminateReason_Finished,
+    Error = DsVeosCoSim_TerminateReason_Error
+};
+
+[[nodiscard]] inline std::string ToString(const TerminateReason terminateReason) {
     switch (terminateReason) {
-        case DsVeosCoSim_TerminateReason_Finished:
+        case TerminateReason::Finished:
             return "Finished";
-        case DsVeosCoSim_TerminateReason_Error:
+        case TerminateReason::Error:
             return "Error";
-        case DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
-    return "<Invalid DsVeosCoSim_TerminateReason>";
+    return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_ConnectionState connectionState) {
+enum class ConnectionState : uint32_t {
+    Connected = DsVeosCoSim_ConnectionState_Connected,
+    Disconnected = DsVeosCoSim_ConnectionState_Disconnected
+};
+
+[[nodiscard]] inline std::string ToString(const ConnectionState connectionState) {
     switch (connectionState) {
-        case DsVeosCoSim_ConnectionState_Connected:
+        case ConnectionState::Connected:
             return "Connected";
-        case DsVeosCoSim_ConnectionState_Disconnected:
+        case ConnectionState::Disconnected:
             return "Disconnected";
-        case DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
-    return "<Invalid DsVeosCoSim_ConnectionState>";
+    return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] inline size_t GetDataTypeSize(DsVeosCoSim_DataType dataType) {
+enum class DataType : uint32_t {
+    Bool = DsVeosCoSim_DataType_Bool,
+    Int8 = DsVeosCoSim_DataType_Int8,
+    Int16 = DsVeosCoSim_DataType_Int16,
+    Int32 = DsVeosCoSim_DataType_Int32,
+    Int64 = DsVeosCoSim_DataType_Int64,
+    UInt8 = DsVeosCoSim_DataType_UInt8,
+    UInt16 = DsVeosCoSim_DataType_UInt16,
+    UInt32 = DsVeosCoSim_DataType_UInt32,
+    UInt64 = DsVeosCoSim_DataType_UInt64,
+    Float32 = DsVeosCoSim_DataType_Float32,
+    Float64 = DsVeosCoSim_DataType_Float64
+};
+
+[[nodiscard]] inline size_t GetDataTypeSize(const DataType dataType) {
     switch (dataType) {
-        case DsVeosCoSim_DataType_Bool:
-        case DsVeosCoSim_DataType_Int8:
-        case DsVeosCoSim_DataType_UInt8:
+        case DataType::Bool:
+        case DataType::Int8:
+        case DataType::UInt8:
             return 1;
-        case DsVeosCoSim_DataType_Int16:
-        case DsVeosCoSim_DataType_UInt16:
+        case DataType::Int16:
+        case DataType::UInt16:
             return 2;
-        case DsVeosCoSim_DataType_Int32:
-        case DsVeosCoSim_DataType_UInt32:
-        case DsVeosCoSim_DataType_Float32:
+        case DataType::Int32:
+        case DataType::UInt32:
+        case DataType::Float32:
             return 4;
-        case DsVeosCoSim_DataType_Int64:
-        case DsVeosCoSim_DataType_UInt64:
-        case DsVeosCoSim_DataType_Float64:
+        case DataType::Int64:
+        case DataType::UInt64:
+        case DataType::Float64:
             return 8;
-        case DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
     return 0;
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_DataType dataType) {
+[[nodiscard]] inline std::string ToString(const DataType dataType) {
     switch (dataType) {
-        case DsVeosCoSim_DataType_Bool:
+        case DataType::Bool:
             return "Bool";
-        case DsVeosCoSim_DataType_Int8:
+        case DataType::Int8:
             return "Int8";
-        case DsVeosCoSim_DataType_Int16:
+        case DataType::Int16:
             return "Int16";
-        case DsVeosCoSim_DataType_Int32:
+        case DataType::Int32:
             return "Int32";
-        case DsVeosCoSim_DataType_Int64:
+        case DataType::Int64:
             return "Int64";
-        case DsVeosCoSim_DataType_UInt8:
+        case DataType::UInt8:
             return "UInt8";
-        case DsVeosCoSim_DataType_UInt16:
+        case DataType::UInt16:
             return "UInt16";
-        case DsVeosCoSim_DataType_UInt32:
+        case DataType::UInt32:
             return "UInt32";
-        case DsVeosCoSim_DataType_UInt64:
+        case DataType::UInt64:
             return "UInt64";
-        case DsVeosCoSim_DataType_Float32:
+        case DataType::Float32:
             return "Float32";
-        case DsVeosCoSim_DataType_Float64:
+        case DataType::Float64:
             return "Float64";
-        case DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
-    return "<Invalid DsVeosCoSim_DataType>";
+    return "<Invalid DataType>";
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_SizeKind sizeKind) {
+enum class SizeKind : uint32_t {
+    Fixed = DsVeosCoSim_SizeKind_Fixed,
+    Variable = DsVeosCoSim_SizeKind_Variable
+};
+
+[[nodiscard]] inline std::string ToString(const SizeKind sizeKind) {
     switch (sizeKind) {
-        case DsVeosCoSim_SizeKind_Fixed:
+        case SizeKind::Fixed:
             return "Fixed";
-        case DsVeosCoSim_SizeKind_Variable:
+        case SizeKind::Variable:
             return "Variable";
-        case DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
-    return "<Invalid DsVeosCoSim_SizeKind>";
+    return "<Invalid SizeKind>";
 }
 
-[[nodiscard]] inline std::string DataTypeValueToString(DsVeosCoSim_DataType dataType,
-                                                       uint32_t index,
+[[nodiscard]] inline std::string DataTypeValueToString(const DataType dataType,
+                                                       const uint32_t index,
                                                        const void* value) {
     switch (dataType) {
-        case DsVeosCoSim_DataType_Bool:
+        case DataType::Bool:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
-        case DsVeosCoSim_DataType_Int8:
+        case DataType::Int8:
             return std::to_string(static_cast<const int8_t*>(value)[index]);
-        case DsVeosCoSim_DataType_Int16:
+        case DataType::Int16:
             return std::to_string(static_cast<const int16_t*>(value)[index]);
-        case DsVeosCoSim_DataType_Int32:
+        case DataType::Int32:
             return std::to_string(static_cast<const int32_t*>(value)[index]);
-        case DsVeosCoSim_DataType_Int64:
+        case DataType::Int64:
             return std::to_string(static_cast<const int64_t*>(value)[index]);
-        case DsVeosCoSim_DataType_UInt8:
+        case DataType::UInt8:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
-        case DsVeosCoSim_DataType_UInt16:
+        case DataType::UInt16:
             return std::to_string(static_cast<const uint16_t*>(value)[index]);
-        case DsVeosCoSim_DataType_UInt32:
+        case DataType::UInt32:
             return std::to_string(static_cast<const uint32_t*>(value)[index]);
-        case DsVeosCoSim_DataType_UInt64:
+        case DataType::UInt64:
             return std::to_string(static_cast<const uint64_t*>(value)[index]);
-        case DsVeosCoSim_DataType_Float32:
+        case DataType::Float32:
             return std::to_string(static_cast<const float*>(value)[index]);
-        case DsVeosCoSim_DataType_Float64:
+        case DataType::Float64:
             return std::to_string(static_cast<const double*>(value)[index]);
-        case DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
     }
 
     throw std::runtime_error("Invalid data type.");
 }
 
-[[nodiscard]] inline std::string ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value) {
+[[nodiscard]] inline std::string ValueToString(const DataType dataType, const uint32_t length, const void* value) {
     std::ostringstream oss;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {
@@ -271,19 +346,6 @@ enum class Command {
     return oss.str();
 }
 
-[[nodiscard]] inline std::string ToString(DsVeosCoSim_LinControllerType type) {
-    switch (type) {
-        case DsVeosCoSim_LinControllerType_Responder:
-            return "Responder";
-        case DsVeosCoSim_LinControllerType_Commander:
-            return "Commander";
-        case DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_:
-            break;
-    }
-
-    return "<Invalid DsVeosCoSim_LinControllerType>";
-}
-
 enum class SimulationState {
     Unloaded,
     Stopped,
@@ -292,7 +354,7 @@ enum class SimulationState {
     Terminated
 };
 
-[[nodiscard]] inline std::string ToString([[maybe_unused]] SimulationState simulationState) {
+[[nodiscard]] inline std::string ToString(const SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -312,125 +374,11 @@ enum class SimulationState {
 enum class Mode {
 };
 
-[[nodiscard]] inline std::string ToString([[maybe_unused]] Mode mode) {
+[[nodiscard]] inline std::string ToString([[maybe_unused]] const Mode mode) {
     return "<Unused>";
 }
 
-[[nodiscard]] inline std::string CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags) {
-    std::string flagsStr;
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_Loopback) != 0) {
-        flagsStr += ",Loopback";
-    }
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_Error) != 0) {
-        flagsStr += ",Error";
-    }
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_Drop) != 0) {
-        flagsStr += ",Drop";
-    }
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_ExtendedId) != 0) {
-        flagsStr += ",ExtendedId";
-    }
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_BitRateSwitch) != 0) {
-        flagsStr += ",BitRateSwitch";
-    }
-
-    if ((flags & DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat) != 0) {
-        flagsStr += ",FlexibleDataRateFormat";
-    }
-
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
-    }
-
-    return flagsStr;
-}
-
-[[nodiscard]] inline std::string EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags) {
-    std::string flagsStr;
-
-    if ((flags & DsVeosCoSim_EthMessageFlags_Loopback) != 0) {
-        flagsStr += ",Loopback";
-    }
-
-    if ((flags & DsVeosCoSim_EthMessageFlags_Error) != 0) {
-        flagsStr += ",Error";
-    }
-
-    if ((flags & DsVeosCoSim_EthMessageFlags_Drop) != 0) {
-        flagsStr += ",Drop";
-    }
-
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
-    }
-
-    return flagsStr;
-}
-
-[[nodiscard]] inline std::string LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags) {
-    std::string flagsStr;
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Loopback) != 0) {
-        flagsStr += ",Loopback";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Error) != 0) {
-        flagsStr += ",Error";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Drop) != 0) {
-        flagsStr += ",Drop";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Header) != 0) {
-        flagsStr += ",Header";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Response) != 0) {
-        flagsStr += ",Response";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_WakeEvent) != 0) {
-        flagsStr += ",WakeEvent";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_SleepEvent) != 0) {
-        flagsStr += ",SleepEvent";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_EnhancedChecksum) != 0) {
-        flagsStr += ",EnhancedChecksum";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_TransferOnce) != 0) {
-        flagsStr += ",TransferOnce";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_ParityFailure) != 0) {
-        flagsStr += ",ParityFailure";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_Collision) != 0) {
-        flagsStr += ",Collision";
-    }
-
-    if ((flags & DsVeosCoSim_LinMessageFlags_NoResponse) != 0) {
-        flagsStr += ",NoResponse";
-    }
-
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
-    }
-
-    return flagsStr;
-}
-
-[[nodiscard]] inline std::string DataToString(const uint8_t* data, size_t dataLength, char separator = 0) {
+[[nodiscard]] inline std::string DataToString(const uint8_t* data, const size_t dataLength, const char separator = 0) {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     for (uint32_t i = 0; i < dataLength; i++) {
@@ -443,23 +391,30 @@ enum class Mode {
     return oss.str();
 }
 
-[[nodiscard]] inline std::string IoDataToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                const DsVeosCoSim_IoSignal& ioSignal,
-                                                uint32_t length,
-                                                const void* value) {
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + ioSignal.name + "," +
-           std::to_string(length) + "," + DsVeosCoSim_ValueToString(ioSignal.dataType, length, value);
+enum class IoSignalId : uint32_t {
+};
+
+[[nodiscard]] inline std::string ToString(const IoSignalId signalId) {
+    return std::to_string(static_cast<uint32_t>(signalId));
 }
 
 struct IoSignal {
-    DsVeosCoSim_IoSignalId id{};
+    IoSignalId id{};
     uint32_t length{};
-    DsVeosCoSim_DataType dataType{};
-    DsVeosCoSim_SizeKind sizeKind{};
+    DataType dataType{};
+    SizeKind sizeKind{};
+    const char* name;
+};
+
+struct IoSignalContainer {
+    IoSignalId id{};
+    uint32_t length{};
+    DataType dataType{};
+    SizeKind sizeKind{};
     std::string name;
 
-    [[nodiscard]] operator DsVeosCoSim_IoSignal() const {  // NOLINT
-        DsVeosCoSim_IoSignal signal{};
+    [[nodiscard]] explicit operator IoSignal() const {
+        IoSignal signal{};
         signal.id = id;
         signal.length = length;
         signal.dataType = dataType;
@@ -469,19 +424,35 @@ struct IoSignal {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const DsVeosCoSim_IoSignal& signal) {
-    std::string str = "{Id: " + std::to_string(signal.id) + ", Length: " + std::to_string(signal.length) +
+[[nodiscard]] inline std::string IoDataToString(const SimulationTime simulationTime,
+                                                const IoSignal& ioSignal,
+                                                const uint32_t length,
+                                                const void* value) {
+    return SimulationTimeToString(simulationTime) + "," + ioSignal.name + "," + std::to_string(length) + "," +
+           ValueToString(ioSignal.dataType, length, value);
+}
+
+[[nodiscard]] inline std::string ToString(const IoSignal& signal) {
+    std::string str = "{Id: " + ToString(signal.id) + ", Length: " + std::to_string(signal.length) +
                       ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
                       ", Name: \"" + signal.name + "\"}";
 
     return str;
 }
 
-[[nodiscard]] inline std::string ToString(const std::vector<IoSignal>& signals) {
+[[nodiscard]] inline std::string ToString(const IoSignalContainer& signal) {
+    std::string str = "{Id: " + ToString(signal.id) + ", Length: " + std::to_string(signal.length) +
+                      ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
+                      ", Name: \"" + signal.name + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<IoSignalContainer>& signals) {
     std::string str = "[";
 
     bool first = true;
-    for (const IoSignal& signal : signals) {
+    for (const IoSignalContainer& signal : signals) {
         str.append(ToString(signal));
 
         if (first) {
@@ -496,27 +467,88 @@ struct IoSignal {
     return str;
 }
 
-[[nodiscard]] inline std::vector<DsVeosCoSim_IoSignal> Convert(const std::vector<IoSignal>& signals) {
-    std::vector<DsVeosCoSim_IoSignal> ioSignals;
+[[nodiscard]] inline std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signals) {
+    std::vector<IoSignal> ioSignals;
     ioSignals.reserve(signals.size());
 
     for (const auto& signal : signals) {
-        ioSignals.push_back(signal);
+        ioSignals.push_back(static_cast<IoSignal>(signal));
     }
 
     return ioSignals;
 }
 
-[[nodiscard]] inline std::string CanMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                    const DsVeosCoSim_CanController& controller,
-                                                    const DsVeosCoSim_CanMessage& message) {
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-           std::to_string(message.id) + "," + std::to_string(message.length) + "," +
-           DataToString(message.data, message.length, '-') + ",CAN," + CanMessageFlagsToString(message.flags);
+enum class BusControllerId : uint32_t {
+};
+
+[[nodiscard]] inline std::string ToString(BusControllerId busControllerId) {
+    return std::to_string(static_cast<uint32_t>(busControllerId));
+}
+
+enum class BusMessageId : uint32_t {
+};
+
+[[nodiscard]] inline std::string ToString(BusMessageId busMessageId) {
+    return std::to_string(static_cast<uint32_t>(busMessageId));
+}
+
+enum class CanMessageFlags : uint32_t {
+    Loopback = DsVeosCoSim_CanMessageFlags_Loopback,
+    Error = DsVeosCoSim_CanMessageFlags_Error,
+    Drop = DsVeosCoSim_CanMessageFlags_Drop,
+    ExtendedId = DsVeosCoSim_CanMessageFlags_ExtendedId,
+    BitRateSwitch = DsVeosCoSim_CanMessageFlags_BitRateSwitch,
+    FlexibleDataRateFormat = DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat
+};
+
+ENUM_BITMASK_OPS(CanMessageFlags);
+
+[[nodiscard]] inline std::string CanMessageFlagsToString(const CanMessageFlags flags) {
+    std::string flagsStr;
+
+    if (HasFlag(flags, CanMessageFlags::Loopback)) {
+        flagsStr += ",Loopback";
+    }
+
+    if (HasFlag(flags, CanMessageFlags::Error)) {
+        flagsStr += ",Error";
+    }
+
+    if (HasFlag(flags, CanMessageFlags::Drop)) {
+        flagsStr += ",Drop";
+    }
+
+    if (HasFlag(flags, CanMessageFlags::ExtendedId)) {
+        flagsStr += ",ExtendedId";
+    }
+
+    if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
+        flagsStr += ",BitRateSwitch";
+    }
+
+    if (HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
+        flagsStr += ",FlexibleDataRateFormat";
+    }
+
+    if (!flagsStr.empty()) {
+        flagsStr.erase(0, 1);
+    }
+
+    return flagsStr;
 }
 
 struct CanController {
-    DsVeosCoSim_BusControllerId id{};
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    uint64_t flexibleDataRateBitsPerSecond{};
+    const char* name;
+    const char* channelName;
+    const char* clusterName;
+};
+
+struct CanControllerContainer {
+    BusControllerId id{};
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
     uint64_t flexibleDataRateBitsPerSecond{};
@@ -524,8 +556,8 @@ struct CanController {
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] operator DsVeosCoSim_CanController() const {  // NOLINT
-        DsVeosCoSim_CanController controller{};
+    [[nodiscard]] explicit operator CanController() const {
+        CanController controller{};
         controller.id = id;
         controller.queueSize = queueSize;
         controller.bitsPerSecond = bitsPerSecond;
@@ -537,8 +569,25 @@ struct CanController {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const DsVeosCoSim_CanController& controller) {
-    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+struct CanMessage {
+    SimulationTime timestamp;
+    BusControllerId controllerId;
+    BusMessageId id;
+    CanMessageFlags flags;
+    uint32_t length;
+    const uint8_t* data;
+};
+
+[[nodiscard]] inline std::string CanMessageToString(const SimulationTime simulationTime,
+                                                    const CanController& controller,
+                                                    const CanMessage& message) {
+    return SimulationTimeToString(simulationTime) + "," + controller.name + "," + ToString(message.id) + "," +
+           std::to_string(message.length) + "," + DataToString(message.data, message.length, '-') + ",CAN," +
+           CanMessageFlagsToString(message.flags);
+}
+
+[[nodiscard]] inline std::string ToString(const CanController& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
                       ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
                       ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName +
@@ -547,11 +596,21 @@ struct CanController {
     return str;
 }
 
-[[nodiscard]] inline std::string ToString(const std::vector<CanController>& controllers) {
+[[nodiscard]] inline std::string ToString(const CanControllerContainer& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
+                      ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
+                      ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName +
+                      "\", ClusterName: \"" + controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<CanControllerContainer>& controllers) {
     std::string str = "[";
 
     bool first = true;
-    for (const CanController& controller : controllers) {
+    for (const CanControllerContainer& controller : controllers) {
         str.append(ToString(controller));
 
         if (first) {
@@ -566,20 +625,91 @@ struct CanController {
     return str;
 }
 
-[[nodiscard]] inline std::vector<DsVeosCoSim_CanController> Convert(const std::vector<CanController>& controllers) {
-    std::vector<DsVeosCoSim_CanController> canControllers;
+[[nodiscard]] inline std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers) {
+    std::vector<CanController> canControllers;
     canControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        canControllers.push_back(controller);
+        canControllers.push_back(static_cast<CanController>(controller));
     }
 
     return canControllers;
 }
 
-[[nodiscard]] inline std::string EthMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                    const DsVeosCoSim_EthController& controller,
-                                                    const DsVeosCoSim_EthMessage& message) {
+enum class EthMessageFlags : uint32_t {
+    Loopback = DsVeosCoSim_EthMessageFlags_Loopback,
+    Error = DsVeosCoSim_EthMessageFlags_Error,
+    Drop = DsVeosCoSim_EthMessageFlags_Drop
+};
+
+ENUM_BITMASK_OPS(EthMessageFlags);
+
+[[nodiscard]] inline std::string EthMessageFlagsToString(const EthMessageFlags flags) {
+    std::string flagsStr;
+
+    if (HasFlag(flags, EthMessageFlags::Loopback)) {
+        flagsStr += ",Loopback";
+    }
+
+    if (HasFlag(flags, EthMessageFlags::Error)) {
+        flagsStr += ",Error";
+    }
+
+    if (HasFlag(flags, EthMessageFlags::Drop)) {
+        flagsStr += ",Drop";
+    }
+
+    if (!flagsStr.empty()) {
+        flagsStr.erase(0, 1);
+    }
+
+    return flagsStr;
+}
+
+struct EthController {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    std::array<uint8_t, EthAddressLength> macAddress{};
+    const char* name;
+    const char* channelName;
+    const char* clusterName;
+};
+
+struct EthControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    std::array<uint8_t, EthAddressLength> macAddress{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
+
+    [[nodiscard]] explicit operator EthController() const {
+        EthController controller{};
+        controller.id = id;
+        controller.queueSize = queueSize;
+        controller.bitsPerSecond = bitsPerSecond;
+        controller.macAddress = macAddress;
+        controller.name = name.c_str();
+        controller.channelName = channelName.c_str();
+        controller.clusterName = clusterName.c_str();
+        return controller;
+    }
+};
+
+struct EthMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    EthMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+};
+
+[[nodiscard]] inline std::string EthMessageToString(const SimulationTime simulationTime,
+                                                    const EthController& controller,
+                                                    const EthMessage& message) {
     const uint8_t* data = message.data;
     const uint32_t length = message.length;
 
@@ -588,54 +718,40 @@ struct CanController {
         const std::string macAddress2 = DataToString(message.data + 6, 6, ':');
         const std::string ethernetType = DataToString(message.data + 12, 2);
 
-        return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-               macAddress2 + "-" + macAddress1 + "," + std::to_string(length - 14) + "," +
-               DataToString(data + 14, length - 14, '-') + ",ETH," + ethernetType + "," +
-               EthMessageFlagsToString(message.flags);
+        return SimulationTimeToString(simulationTime) + "," + controller.name + "," + macAddress2 + "-" + macAddress1 +
+               "," + std::to_string(length - 14) + "," + DataToString(data + 14, length - 14, '-') + ",ETH," +
+               ethernetType + "," + EthMessageFlagsToString(message.flags);
     }
 
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-           std::to_string(length) + "," + DataToString(data, length, '-') + ",ETH," +
-           EthMessageFlagsToString(message.flags);
+    return SimulationTimeToString(simulationTime) + "," + controller.name + "," + std::to_string(length) + "," +
+           DataToString(data, length, '-') + ",ETH," + EthMessageFlagsToString(message.flags);
 }
 
-struct EthController {
-    DsVeosCoSim_BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    std::array<uint8_t, EthAddressLength> macAddress{};
-    std::string name;
-    std::string channelName;
-    std::string clusterName;
-
-    [[nodiscard]] operator DsVeosCoSim_EthController() const {  // NOLINT
-        DsVeosCoSim_EthController controller{};
-        controller.id = id;
-        controller.queueSize = queueSize;
-        controller.bitsPerSecond = bitsPerSecond;
-        (void)::memcpy(controller.macAddress, macAddress.data(), EthAddressLength);
-        controller.name = name.c_str();
-        controller.channelName = channelName.c_str();
-        controller.clusterName = clusterName.c_str();
-        return controller;
-    }
-};
-
-[[nodiscard]] inline std::string ToString(const DsVeosCoSim_EthController& controller) {
-    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+[[nodiscard]] inline std::string ToString(const EthController& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
-                      DataToString(controller.macAddress, sizeof(controller.macAddress), ':') + "], Name: \"" +
+                      DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':') + "], Name: \"" +
                       controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
                       controller.clusterName + "\"}";
 
     return str;
 }
 
-[[nodiscard]] inline std::string ToString(const std::vector<EthController>& controllers) {
+[[nodiscard]] inline std::string ToString(const EthControllerContainer& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
+                      DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':') + "], Name: \"" +
+                      controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
+                      controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<EthControllerContainer>& controllers) {
     std::string str = "[";
 
     bool first = true;
-    for (const EthController& controller : controllers) {
+    for (const EthControllerContainer& controller : controllers) {
         str.append(ToString(controller));
 
         if (first) {
@@ -650,36 +766,129 @@ struct EthController {
     return str;
 }
 
-[[nodiscard]] inline std::vector<DsVeosCoSim_EthController> Convert(const std::vector<EthController>& controllers) {
-    std::vector<DsVeosCoSim_EthController> ethControllers;
+[[nodiscard]] inline std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers) {
+    std::vector<EthController> ethControllers;
     ethControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        ethControllers.push_back(controller);
+        ethControllers.push_back(static_cast<EthController>(controller));
     }
 
     return ethControllers;
 }
 
-[[nodiscard]] inline std::string LinMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                    const DsVeosCoSim_LinController& controller,
-                                                    const DsVeosCoSim_LinMessage& message) {
-    return DsVeosCoSim_SimulationTimeToString(simulationTime) + "," + controller.name + "," +
-           std::to_string(message.id) + "," + std::to_string(message.length) + "," +
-           DataToString(message.data, message.length, '-') + ",LIN," + LinMessageFlagsToString(message.flags);
+enum class LinControllerType : uint32_t {
+    Responder = DsVeosCoSim_LinControllerType_Responder,
+    Commander = DsVeosCoSim_LinControllerType_Commander
+};
+
+[[nodiscard]] inline std::string ToString(const LinControllerType type) {
+    switch (type) {
+        case LinControllerType::Responder:
+            return "Responder";
+        case LinControllerType::Commander:
+            return "Commander";
+    }
+
+    return "<Invalid LinControllerType>";
+}
+
+enum class LinMessageFlags : uint32_t {
+    Loopback = DsVeosCoSim_LinMessageFlags_Loopback,
+    Error = DsVeosCoSim_LinMessageFlags_Error,
+    Drop = DsVeosCoSim_LinMessageFlags_Drop,
+    Header = DsVeosCoSim_LinMessageFlags_Header,
+    Response = DsVeosCoSim_LinMessageFlags_Response,
+    WakeEvent = DsVeosCoSim_LinMessageFlags_WakeEvent,
+    SleepEvent = DsVeosCoSim_LinMessageFlags_SleepEvent,
+    EnhancedChecksum = DsVeosCoSim_LinMessageFlags_EnhancedChecksum,
+    TransferOnce = DsVeosCoSim_LinMessageFlags_TransferOnce,
+    ParityFailure = DsVeosCoSim_LinMessageFlags_ParityFailure,
+    Collision = DsVeosCoSim_LinMessageFlags_Collision,
+    NoResponse = DsVeosCoSim_LinMessageFlags_NoResponse
+};
+
+ENUM_BITMASK_OPS(LinMessageFlags);
+
+[[nodiscard]] inline std::string LinMessageFlagsToString(const LinMessageFlags flags) {
+    std::string flagsStr;
+
+    if (HasFlag(flags, LinMessageFlags::Loopback)) {
+        flagsStr += ",Loopback";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::Error)) {
+        flagsStr += ",Error";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::Drop)) {
+        flagsStr += ",Drop";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::Header)) {
+        flagsStr += ",Header";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::Response)) {
+        flagsStr += ",Response";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::WakeEvent)) {
+        flagsStr += ",WakeEvent";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::SleepEvent)) {
+        flagsStr += ",SleepEvent";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::EnhancedChecksum)) {
+        flagsStr += ",EnhancedChecksum";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::TransferOnce)) {
+        flagsStr += ",TransferOnce";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::ParityFailure)) {
+        flagsStr += ",ParityFailure";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::Collision)) {
+        flagsStr += ",Collision";
+    }
+
+    if (HasFlag(flags, LinMessageFlags::NoResponse)) {
+        flagsStr += ",NoResponse";
+    }
+
+    if (!flagsStr.empty()) {
+        flagsStr.erase(0, 1);
+    }
+
+    return flagsStr;
 }
 
 struct LinController {
-    DsVeosCoSim_BusControllerId id{};
+    BusControllerId id{};
     uint32_t queueSize{};
     uint64_t bitsPerSecond{};
-    DsVeosCoSim_LinControllerType type{};
+    LinControllerType type{};
+    const char* name;
+    const char* channelName;
+    const char* clusterName;
+};
+
+struct LinControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    LinControllerType type{};
     std::string name;
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] operator DsVeosCoSim_LinController() const {  // NOLINT
-        DsVeosCoSim_LinController controller{};
+    [[nodiscard]] explicit operator LinController() const {
+        LinController controller{};
         controller.id = id;
         controller.queueSize = queueSize;
         controller.bitsPerSecond = bitsPerSecond;
@@ -691,8 +900,25 @@ struct LinController {
     }
 };
 
-[[nodiscard]] inline std::string ToString(const DsVeosCoSim_LinController& controller) {
-    std::string str = "{Id: " + std::to_string(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+struct LinMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    BusMessageId id{};
+    LinMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+};
+
+[[nodiscard]] inline std::string LinMessageToString(const SimulationTime simulationTime,
+                                                    const LinController& controller,
+                                                    const LinMessage& message) {
+    return SimulationTimeToString(simulationTime) + "," + controller.name + "," + ToString(message.id) + "," +
+           std::to_string(message.length) + "," + DataToString(message.data, message.length, '-') + ",LIN," +
+           LinMessageFlagsToString(message.flags);
+}
+
+[[nodiscard]] inline std::string ToString(const LinController& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
                       ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
                       ", Type: " + ToString(controller.type) + ", Name: \"" + controller.name + "\", ChannelName: \"" +
                       controller.channelName + "\", ClusterName: \"" + controller.clusterName + "\"}";
@@ -700,11 +926,20 @@ struct LinController {
     return str;
 }
 
-[[nodiscard]] inline std::string ToString(const std::vector<LinController>& controllers) {
+[[nodiscard]] inline std::string ToString(const LinControllerContainer& controller) {
+    std::string str = "{Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
+                      ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
+                      ", Type: " + ToString(controller.type) + ", Name: \"" + controller.name + "\", ChannelName: \"" +
+                      controller.channelName + "\", ClusterName: \"" + controller.clusterName + "\"}";
+
+    return str;
+}
+
+[[nodiscard]] inline std::string ToString(const std::vector<LinControllerContainer>& controllers) {
     std::string str = "[";
 
     bool first = true;
-    for (const LinController& controller : controllers) {
+    for (const LinControllerContainer& controller : controllers) {
         str.append(ToString(controller));
 
         if (first) {
@@ -719,35 +954,29 @@ struct LinController {
     return str;
 }
 
-[[nodiscard]] inline std::vector<DsVeosCoSim_LinController> Convert(const std::vector<LinController>& controllers) {
-    std::vector<DsVeosCoSim_LinController> linControllers;
+[[nodiscard]] inline std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers) {
+    std::vector<LinController> linControllers;
     linControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        linControllers.push_back(controller);
+        linControllers.push_back(static_cast<LinController>(controller));
     }
 
     return linControllers;
 }
 
-using LogCallback = std::function<void(DsVeosCoSim_Severity, std::string_view)>;
+using LogCallback = std::function<void(Severity, std::string_view)>;
 
-using SimulationCallback = std::function<void(DsVeosCoSim_SimulationTime simulationTime)>;
-using SimulationTerminatedCallback =
-    std::function<void(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason)>;
-using IncomingSignalChangedCallback = std::function<void(DsVeosCoSim_SimulationTime simulationTime,
-                                                         const DsVeosCoSim_IoSignal& ioSignal,
-                                                         uint32_t length,
-                                                         const void* value)>;
-using CanMessageReceivedCallback = std::function<void(DsVeosCoSim_SimulationTime simulationTime,
-                                                      const DsVeosCoSim_CanController& controller,
-                                                      const DsVeosCoSim_CanMessage& message)>;
-using EthMessageReceivedCallback = std::function<void(DsVeosCoSim_SimulationTime simulationTime,
-                                                      const DsVeosCoSim_EthController& controller,
-                                                      const DsVeosCoSim_EthMessage& message)>;
-using LinMessageReceivedCallback = std::function<void(DsVeosCoSim_SimulationTime simulationTime,
-                                                      const DsVeosCoSim_LinController& controller,
-                                                      const DsVeosCoSim_LinMessage& message)>;
+using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
+using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason reason)>;
+using IncomingSignalChangedCallback =
+    std::function<void(SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value)>;
+using CanMessageReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const CanController& controller, const CanMessage& message)>;
+using EthMessageReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const EthController& controller, const EthMessage& message)>;
+using LinMessageReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const LinController& controller, const LinMessage& message)>;
 
 struct Callbacks {
     DsVeosCoSim_Callbacks callbacks;

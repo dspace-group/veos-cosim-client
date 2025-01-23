@@ -10,21 +10,23 @@
 
 using namespace DsVeosCoSim;
 
+namespace {
+
 void EventsServerRun() {
     try {
         LogTrace("Events server listening on SHM {} ...", ShmName);
 
         char buffer[BufferSize]{};
 
-        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
+        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
+        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
 
         while (true) {
             beginEvent.Wait();
-            ::memcpy(buffer, sharedMemory.data(), BufferSize);
+            (void)memcpy(buffer, sharedMemory.data(), BufferSize);
             buffer[0]++;
-            ::memcpy(sharedMemory.data(), buffer, BufferSize);
+            (void)memcpy(sharedMemory.data(), buffer, BufferSize);
             endEvent.Set();
         }
     } catch (const std::exception& e) {
@@ -32,10 +34,12 @@ void EventsServerRun() {
     }
 }
 
-void StartEventsServer() {
+}  // namespace
+
+void StartEventsServer() {  // NOLINT
     std::thread(EventsServerRun).detach();
 }
 #else
-void StartEventsServer() {
+void StartEventsServer() {  // NOLINT
 }
 #endif

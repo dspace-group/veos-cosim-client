@@ -24,7 +24,7 @@ void CoSimServerRun() {
         config.logCallback = OnLogCallback;
         config.startPortMapper = false;
         config.registerAtPortMapper = false;
-        config.simulationStoppedCallback = [&stopSimulation](DsVeosCoSim_SimulationTime) {
+        config.simulationStoppedCallback = [&stopSimulation](SimulationTime) {
             stopSimulation = true;
         };
 
@@ -32,16 +32,16 @@ void CoSimServerRun() {
         server.Load(config);
 
         while (true) {
-            DsVeosCoSim_SimulationTime simulationTime{};
+            SimulationTime simulationTime{};
             server.Start(simulationTime);
 
             stopSimulation = false;
 
             while (!stopSimulation) {
-                DsVeosCoSim_SimulationTime nextSimulationTime{};
+                SimulationTime nextSimulationTime{};
                 server.Step(simulationTime, nextSimulationTime);
 
-                simulationTime++;
+                ++simulationTime;
             }
         }
     } catch (const std::exception& e) {
@@ -51,6 +51,6 @@ void CoSimServerRun() {
 
 }  // namespace
 
-void StartCoSimServer() {
+void StartCoSimServer() {  // NOLINT
     std::thread(CoSimServerRun).detach();
 }

@@ -44,6 +44,6 @@ void TcpServerRun() {
 
 }  // namespace
 
-void StartTcpServer() {
+void StartTcpServer() {  // NOLINT
     std::thread(TcpServerRun).detach();
 }

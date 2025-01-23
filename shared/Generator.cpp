@@ -3,35 +3,60 @@
 #include "Generator.h"
 
 #include <fmt/format.h>
+
 #include <string>
+
 #include <string_view>
 
+#include "CoSimTypes.h"
+
+using namespace std::chrono;
 using namespace DsVeosCoSim;
 
-[[nodiscard]] int32_t Random(int32_t min, int32_t max) {
+namespace {
+
+[[nodiscard]] DataType GenerateDataType() {
+    return GenerateRandom(DataType::Bool, DataType::Float64);
+}
+
+[[nodiscard]] SizeKind GenerateSizeKind() {
+    return GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
+}
+
+[[nodiscard]] BusControllerId GenerateBusControllerId() {
+    return static_cast<BusControllerId>(GenerateU32());
+}
+
+[[nodiscard]] BusMessageId GenerateBusMessageId() {
+    return static_cast<BusMessageId>(GenerateU32());
+}
+
+}  // namespace
+
+[[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
     static bool first = true;
     if (first) {
-        srand(42);
+        srand(42);  // NOLINT
         first = false;
     }
 
     const int32_t diff = max + 1 - min;
 
-    return min + rand() % diff;
+    return min + (rand() % diff);  // NOLINT
 }
 
-void FillWithRandom(uint8_t* data, size_t length) {
+void FillWithRandom(uint8_t* data, const size_t length) {
     for (size_t i = 0; i < length; i++) {
         data[i] = GenerateU8();
     }
 }
 
 [[nodiscard]] uint8_t GenerateU8() {
-    return GenerateRandom(static_cast<uint8_t>(0U), static_cast<uint8_t>(UINT8_MAX));
+    return GenerateRandom(static_cast<uint8_t>(0U), static_cast<uint8_t>(255U));
 }
 
 [[nodiscard]] uint16_t GenerateU16() {
-    return GenerateRandom(static_cast<uint16_t>(0U), static_cast<uint16_t>(UINT16_MAX));
+    return GenerateRandom(static_cast<uint16_t>(0U), static_cast<uint16_t>(65535U));
 }
 
 [[nodiscard]] uint32_t GenerateU32() {
@@ -50,25 +75,21 @@ void FillWithRandom(uint8_t* data, size_t length) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 
-[[nodiscard]] DsVeosCoSim_DataType GenerateDataType() {
-    return GenerateRandom(DsVeosCoSim_DataType_Bool, DsVeosCoSim_DataType_Float64);
+[[nodiscard]] SimulationTime GenerateSimulationTime() {
+    return SimulationTime(abs(GenerateI64()));
 }
 
-[[nodiscard]] DsVeosCoSim_SizeKind GenerateSizeKind() {
-    return GenerateRandom(DsVeosCoSim_SizeKind_Fixed, DsVeosCoSim_SizeKind_Variable);
-}
-
-[[nodiscard]] IoSignal CreateSignal() {
+[[nodiscard]] IoSignalContainer CreateSignal() {
     return CreateSignal(GenerateDataType(), GenerateSizeKind());
 }
 
-[[nodiscard]] IoSignal CreateSignal(DsVeosCoSim_DataType dataType) {
+[[nodiscard]] IoSignalContainer CreateSignal(const DataType dataType) {
     return CreateSignal(dataType, GenerateSizeKind());
 }
 
-[[nodiscard]] IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind) {
-    IoSignal signal{};
-    signal.id = GenerateU32();
+[[nodiscard]] IoSignalContainer CreateSignal(const DataType dataType, const SizeKind sizeKind) {
+    IoSignalContainer signal{};
+    signal.id = static_cast<IoSignalId>(GenerateU32());
     signal.length = GenerateRandom(1U, 10U);
     signal.dataType = dataType;
     signal.sizeKind = sizeKind;
@@ -76,20 +97,20 @@ void FillWithRandom(uint8_t* data, size_t length) {
     return signal;
 }
 
-[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal) {
+[[nodiscard]] std::vector<uint8_t> GenerateIoData(const IoSignalContainer& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
     FillWithRandom(data.data(), data.size());
     return data;
 }
 
-[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal) {
+[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const IoSignalContainer& signal) {
     std::vector<uint8_t> data;
     data.resize(GetDataTypeSize(signal.dataType) * signal.length);
     return data;
 }
 
-void FillWithRandom(CanController& controller) {
-    controller.id = GenerateU32();
+void FillWithRandom(CanControllerContainer& controller) {
+    controller.id = GenerateBusControllerId();
     controller.queueSize = 100;
     controller.bitsPerSecond = GenerateU64();
     controller.flexibleDataRateBitsPerSecond = GenerateU64();
@@ -98,8 +119,8 @@ void FillWithRandom(CanController& controller) {
     controller.clusterName = GenerateString("CanCluster名前\xF0\x9F\x98\x80");
 }
 
-void FillWithRandom(EthController& controller) {
-    controller.id = GenerateU32();
+void FillWithRandom(EthControllerContainer& controller) {
+    controller.id = GenerateBusControllerId();
     controller.queueSize = 100;
     controller.bitsPerSecond = GenerateU64();
     FillWithRandom(controller.macAddress.data(), EthAddressLength);
@@ -108,44 +129,46 @@ void FillWithRandom(EthController& controller) {
     controller.clusterName = GenerateString("EthCluster名前\xF0\x9F\x98\x80");
 }
 
-void FillWithRandom(LinController& controller) {
-    controller.id = GenerateU32();
+void FillWithRandom(LinControllerContainer& controller) {
+    controller.id = GenerateBusControllerId();
     controller.queueSize = 100;
     controller.bitsPerSecond = GenerateU64();
-    controller.type = GenerateRandom(DsVeosCoSim_LinControllerType_Responder, DsVeosCoSim_LinControllerType_Commander);
+    controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
     controller.name = GenerateString("LinController名前\xF0\x9F\x98\x80");
     controller.channelName = GenerateString("LinChannel名前\xF0\x9F\x98\x80");
     controller.clusterName = GenerateString("LinCluster名前\xF0\x9F\x98\x80");
 }
 
-void FillWithRandom(CanMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+void FillWithRandom(CanMessageContainer& message, const BusControllerId controllerId) {
     const uint32_t length = GenerateRandom(1U, CanMessageMaxLength);
     message.controllerId = controllerId;
-    message.id = GenerateU32();
-    message.timestamp = GenerateI64();
+    message.id = GenerateBusMessageId();
+    message.timestamp = GenerateSimulationTime();
     message.length = length;
+    message.flags = CanMessageFlags::FlexibleDataRateFormat;
     FillWithRandom(message.data.data(), length);
 }
 
-void FillWithRandom(EthMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+void FillWithRandom(EthMessageContainer& message, const BusControllerId controllerId) {
     const uint32_t length = GenerateRandom(1U, EthMessageMaxLength);
     message.controllerId = controllerId;
-    message.timestamp = GenerateI64();
+    message.timestamp = GenerateSimulationTime();
     message.length = length;
     FillWithRandom(message.data.data(), length);
 }
 
-void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerId) {
+void FillWithRandom(LinMessageContainer& message, const BusControllerId controllerId) {
     const uint32_t length = GenerateRandom(1U, LinMessageMaxLength);
     message.controllerId = controllerId;
-    message.id = GenerateU32();
-    message.timestamp = GenerateI64();
+    message.id = GenerateBusMessageId();
+    message.timestamp = GenerateSimulationTime();
     message.length = length;
     FillWithRandom(message.data.data(), length);
 }
 
-[[nodiscard]] std::vector<IoSignal> CreateSignals(size_t count) {
-    std::vector<IoSignal> signals;
+[[nodiscard]] std::vector<IoSignalContainer> CreateSignals(const size_t count) {
+    std::vector<IoSignalContainer> signals;
+    signals.reserve(count);
 
     for (size_t i = 0; i < count; i++) {
         signals.push_back(CreateSignal());
@@ -154,11 +177,11 @@ void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerI
     return signals;
 }
 
-[[nodiscard]] std::vector<CanController> CreateCanControllers(size_t count) {
-    std::vector<CanController> controllers;
+[[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(const size_t count) {
+    std::vector<CanControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {
-        CanController controller{};
+        CanControllerContainer controller{};
         FillWithRandom(controller);
         controllers.push_back(controller);
     }
@@ -166,11 +189,11 @@ void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerI
     return controllers;
 }
 
-[[nodiscard]] std::vector<EthController> CreateEthControllers(size_t count) {
-    std::vector<EthController> controllers;
+[[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(const size_t count) {
+    std::vector<EthControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {
-        EthController controller{};
+        EthControllerContainer controller{};
         FillWithRandom(controller);
         controllers.push_back(controller);
     }
@@ -178,11 +201,11 @@ void FillWithRandom(LinMessage& message, DsVeosCoSim_BusControllerId controllerI
     return controllers;
 }
 
-[[nodiscard]] std::vector<LinController> CreateLinControllers(size_t count) {
-    std::vector<LinController> controllers;
+[[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(const size_t count) {
+    std::vector<LinControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {
-        LinController controller{};
+        LinControllerContainer controller{};
         FillWithRandom(controller);
         controllers.push_back(controller);
     }

@@ -25,8 +25,8 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 }
 
 [[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
-    std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = ::CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not create event '" + name + "'.", GetLastWindowsError());
     }
@@ -35,8 +35,8 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 }
 
 [[nodiscard]] NamedEvent NamedEvent::OpenExisting(const std::string& name) {
-    std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not open event '" + name + "'.", GetLastWindowsError());
     }
@@ -45,8 +45,8 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 }
 
 [[nodiscard]] std::optional<NamedEvent> NamedEvent::TryOpenExisting(const std::string& name) {
-    std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = ::OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedEventName(name);
+    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         return {};
     }
@@ -58,8 +58,8 @@ NamedEvent::operator Handle&() noexcept {
     return _handle;
 }
 
-void NamedEvent::Set() {
-    if (::SetEvent(_handle) == FALSE) {
+void NamedEvent::Set() const {
+    if (SetEvent(_handle) == FALSE) {
         throw CoSimException("Could not set event '" + _name + "'.", GetLastWindowsError());
     }
 }
@@ -68,7 +68,7 @@ void NamedEvent::Wait() const {
     (void)Wait(Infinite);
 }
 
-[[nodiscard]] bool NamedEvent::Wait(uint32_t milliseconds) const {
+[[nodiscard]] bool NamedEvent::Wait(const uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 

@@ -39,11 +39,11 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     const std::string name = GenerateName();
 
     {
-        LocalChannelServer server(name);
+        const LocalChannelServer server(name);  // NOLINT
     }
 
     // Act
-    std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
+    const std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
 
     // Assert
     ASSERT_FALSE(connectedChannel);
@@ -53,10 +53,10 @@ TEST_F(TestLocalChannel, Connect) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const LocalChannelServer server(name);  // NOLINT
 
     // Act
-    std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
+    const std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
 
     // Assert
     ASSERT_TRUE(connectedChannel);
@@ -69,7 +69,7 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     LocalChannelServer server(name);
 
     // Act
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
 
     // Assert
     ASSERT_FALSE(acceptedChannel);
@@ -84,7 +84,7 @@ TEST_F(TestLocalChannel, Accept) {
     (void)ConnectToLocalChannel(name);
 
     // Act
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -102,7 +102,7 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     connectedChannel.Disconnect();
 
     // Act
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -115,7 +115,7 @@ TEST_F(TestLocalChannel, WriteToChannel) {
     LocalChannelServer server(name);
 
     LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const LocalChannel acceptedChannel = Accept(server);  // NOLINT
 
     const uint32_t sendValue = GenerateU32();
 
@@ -185,8 +185,8 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     LocalChannel connectedChannel = ConnectToLocalChannel(name);
     LocalChannel acceptedChannel = Accept(server);
 
-    uint32_t sendValue1 = GenerateU32();
-    uint64_t sendValue2 = GenerateU64();
+    const uint32_t sendValue1 = GenerateU32();
+    const uint64_t sendValue2 = GenerateU64();
     uint32_t receiveValue1{};
     uint32_t receiveValue2{};
 

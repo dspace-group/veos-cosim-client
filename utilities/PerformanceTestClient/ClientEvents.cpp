@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 #include <cstdint>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 #include "CoSimHelper.h"
 #include "LogHelper.h"
@@ -20,19 +20,19 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
                      uint64_t& counter,
                      const bool& isStopped) {
     try {
-        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
+        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
+        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
 
         char buffer[BufferSize]{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            ::memcpy(sharedMemory.data(), buffer, BufferSize);
+            (void)memcpy(sharedMemory.data(), buffer, BufferSize);
             beginEvent.Set();
             endEvent.Wait();
-            ::memcpy(buffer, sharedMemory.data(), BufferSize);
+            (void)memcpy(buffer, sharedMemory.data(), BufferSize);
             buffer[0]++;
 
             counter++;
@@ -45,7 +45,7 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunEventsTest() {
+void RunEventsTest() {  // NOLINT
     LogTrace("Event:");
     RunPerformanceTest(EventsClientRun, "");
     LogTrace("");

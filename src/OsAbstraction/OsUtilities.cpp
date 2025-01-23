@@ -11,27 +11,27 @@
 
 namespace DsVeosCoSim {
 
-[[nodiscard]] std::wstring Utf8ToWide(std::string_view utf8String) {
+[[nodiscard]] std::wstring Utf8ToWide(const std::string_view utf8String) {
     if (utf8String.empty()) {
         return {};
     }
 
-    int32_t sizeNeeded =
-        ::MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
+    const int32_t sizeNeeded =
+        MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
 
     std::wstring wideString(sizeNeeded, L'\0');
-    (void)::MultiByteToWideChar(CP_UTF8,
-                                0,
-                                utf8String.data(),
-                                static_cast<int32_t>(utf8String.size()),
-                                wideString.data(),
-                                sizeNeeded);
+    (void)MultiByteToWideChar(CP_UTF8,
+                              0,
+                              utf8String.data(),
+                              static_cast<int32_t>(utf8String.size()),
+                              wideString.data(),
+                              sizeNeeded);
 
     return wideString;
 }
 
 [[nodiscard]] int32_t GetLastWindowsError() {
-    return static_cast<int32_t>(::GetLastError());
+    return static_cast<int32_t>(GetLastError());
 }
 
 [[nodiscard]] uint32_t GetCurrentProcessId() {
@@ -43,14 +43,14 @@ namespace DsVeosCoSim {
     return processId;
 }
 
-[[nodiscard]] bool IsProcessRunning(uint32_t processId) {
-    void* processHandle = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
+[[nodiscard]] bool IsProcessRunning(const uint32_t processId) {
+    void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
     if (processHandle == nullptr) {
         return false;
     }
 
     DWORD exitCode{};
-    BOOL result = GetExitCodeProcess(processHandle, &exitCode);
+    const BOOL result = GetExitCodeProcess(processHandle, &exitCode);
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
