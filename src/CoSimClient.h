@@ -75,7 +75,6 @@ public:
     [[nodiscard]] bool Receive(LinMessage& message) const;
 
 private:
-    void SetCallbacks(const Callbacks& callbacks);
     void ResetDataFromPreviousConnect();
 
     [[nodiscard]] bool LocalConnect();

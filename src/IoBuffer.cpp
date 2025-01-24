@@ -7,7 +7,6 @@
 
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "DsVeosCoSim/DsVeosCoSim.h"
 
 namespace DsVeosCoSim {
 

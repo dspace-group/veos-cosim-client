@@ -7,7 +7,6 @@
 
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 #include "SocketChannel.h"
@@ -71,106 +70,11 @@ void CoSimClient::Disconnect() {
     return ConnectionState::Disconnected;
 }
 
-void CoSimClient::SetCallbacks(const Callbacks& callbacks) {
-    _callbacks = callbacks;
-
-    if (_callbacks.callbacks.canMessageReceivedCallback) {
-        _callbacks.canMessageReceivedCallback =
-            [this](const SimulationTime simulationTime, const CanController& canController, const CanMessage& message) {
-                _callbacks.callbacks.canMessageReceivedCallback(
-                    simulationTime.count(),
-                    reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
-                    reinterpret_cast<const DsVeosCoSim_CanMessage*>(&message),
-                    _callbacks.callbacks.userData);
-            };
-    }
-
-    if (_callbacks.callbacks.ethMessageReceivedCallback) {
-        _callbacks.ethMessageReceivedCallback =
-            [this](const SimulationTime simulationTime, const EthController& ethController, const EthMessage& message) {
-                _callbacks.callbacks.ethMessageReceivedCallback(
-                    simulationTime.count(),
-                    reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
-                    reinterpret_cast<const DsVeosCoSim_EthMessage*>(&message),
-                    _callbacks.callbacks.userData);
-            };
-    }
-
-    if (_callbacks.callbacks.linMessageReceivedCallback) {
-        _callbacks.linMessageReceivedCallback =
-            [this](const SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
-                _callbacks.callbacks.linMessageReceivedCallback(
-                    simulationTime.count(),
-                    reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
-                    reinterpret_cast<const DsVeosCoSim_LinMessage*>(&message),
-                    _callbacks.callbacks.userData);
-            };
-    }
-
-    if (_callbacks.callbacks.incomingSignalChangedCallback) {
-        _callbacks.incomingSignalChangedCallback = [this](const SimulationTime simulationTime,
-                                                          const IoSignal& ioSignal,
-                                                          const uint32_t length,
-                                                          const void* value) {
-            _callbacks.callbacks.incomingSignalChangedCallback(simulationTime.count(),
-                                                               reinterpret_cast<const DsVeosCoSim_IoSignal*>(&ioSignal),
-                                                               length,
-                                                               value,
-                                                               _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationStartedCallback) {
-        _callbacks.simulationStartedCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationStartedCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationStoppedCallback) {
-        _callbacks.simulationStoppedCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationStoppedCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationPausedCallback) {
-        _callbacks.simulationPausedCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationPausedCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationContinuedCallback) {
-        _callbacks.simulationContinuedCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationContinuedCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationTerminatedCallback) {
-        _callbacks.simulationTerminatedCallback = [this](const SimulationTime simulationTime,
-                                                         const TerminateReason reason) {
-            _callbacks.callbacks.simulationTerminatedCallback(simulationTime.count(),
-                                                              static_cast<DsVeosCoSim_TerminateReason>(reason),
-                                                              _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationBeginStepCallback) {
-        _callbacks.simulationBeginStepCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationBeginStepCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationEndStepCallback) {
-        _callbacks.simulationEndStepCallback = [this](const SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationEndStepCallback(simulationTime.count(), _callbacks.callbacks.userData);
-        };
-    }
-}
-
 [[nodiscard]] bool CoSimClient::RunCallbackBasedCoSimulation(const Callbacks& callbacks) {
     EnsureIsConnected();
     EnsureIsInResponderModeBlocking();
 
-    SetCallbacks(callbacks);
+    _callbacks = callbacks;
 
     if (!RunCallbackBasedCoSimulationInternal()) {
         CloseConnection();
@@ -184,7 +88,7 @@ void CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
     EnsureIsConnected();
     EnsureIsInResponderModeNonBlocking();
 
-    SetCallbacks(callbacks);
+    _callbacks = callbacks;
 }
 
 [[nodiscard]] bool CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command, const bool returnOnPing) {

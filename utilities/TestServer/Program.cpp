@@ -96,8 +96,9 @@ SimulationState State;
 
 Event StopBackgroundThreadFlag;
 std::thread BackgroundThread;
-
 std::thread::id SimulationThreadId;
+
+std::mutex Mutex;
 
 void PrintStatus(const bool value, const std::string& what) {
     if (value) {
@@ -189,6 +190,7 @@ void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     const size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     const std::vector<uint8_t> data = GenerateBytes(length);
 
+    std::lock_guard lock(Mutex);
     Server->Write(ioSignal.id, static_cast<uint32_t>(length), data.data());
 }
 
@@ -203,6 +205,7 @@ void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     message.length = length;
     message.data = data.data();
 
+    std::lock_guard lock(Mutex);
     return Server->Transmit(message);
 }
 
@@ -216,6 +219,7 @@ void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     message.length = length;
     message.data = data.data();
 
+    std::lock_guard lock(Mutex);
     return Server->Transmit(message);
 }
 
@@ -230,6 +234,7 @@ void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     message.length = length;
     message.data = data.data();
 
+    std::lock_guard lock(Mutex);
     return Server->Transmit(message);
 }
 
@@ -275,6 +280,7 @@ void StartBackgroundThread() {
     BackgroundThread = std::thread([] {
         while (!StopBackgroundThreadFlag.Wait(1)) {
             try {
+                std::lock_guard lock(Mutex);
                 Server->BackgroundService();
             } catch (const std::exception& e) {
                 LogError(e.what());
@@ -306,6 +312,7 @@ void DoSimulation() {
         }
 
         SimulationTime nextSimulationTime{};
+        std::lock_guard lock(Mutex);
         Server->Step(CurrentTime, nextSimulationTime);
 
         if (nextSimulationTime > CurrentTime) {
@@ -354,9 +361,11 @@ void StartSimulation() {
 
     CurrentTime = 0ns;
     LogInfo("Starting ...");
-    StopBackgroundThread();
 
-    Server->Start(CurrentTime);
+    {
+        std::lock_guard lock(Mutex);
+        Server->Start(CurrentTime);
+    }
 
     StartSimulationThread();
     State = SimulationState::Running;
@@ -377,7 +386,11 @@ void StopSimulation() {
     LogInfo("Stopping ...");
 
     StopSimulationThread();
-    Server->Stop(CurrentTime);
+    {
+        std::lock_guard lock(Mutex);
+        Server->Stop(CurrentTime);
+    }
+
     State = SimulationState::Stopped;
 
     LogInfo("Stopped.");
@@ -396,7 +409,12 @@ void PauseSimulation() {
     LogInfo("Pausing ...");
 
     StopSimulationThread();
-    Server->Pause(CurrentTime);
+
+    {
+        std::lock_guard lock(Mutex);
+        Server->Pause(CurrentTime);
+    }
+
     State = SimulationState::Paused;
 
     LogInfo("Paused.");
@@ -413,7 +431,11 @@ void ContinueSimulation() {
     }
 
     LogInfo("Continuing ...");
-    Server->Continue(CurrentTime);
+
+    {
+        std::lock_guard lock(Mutex);
+        Server->Continue(CurrentTime);
+    }
 
     StartSimulationThread();
     State = SimulationState::Running;
@@ -435,7 +457,11 @@ void TerminateSimulation() {
 
     StopSimulationThread();
 
-    Server->Terminate(CurrentTime, TerminateReason::Error);
+    {
+        std::lock_guard lock(Mutex);
+        Server->Terminate(CurrentTime, TerminateReason::Error);
+    }
+
     State = SimulationState::Terminated;
 
     LogInfo("Terminated.");
@@ -443,28 +469,28 @@ void TerminateSimulation() {
 
 void OnSimulationStartedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation started event.");
-    StartSimulation();
+    std::thread(StartSimulation).detach();
 }
 
 void OnSimulationStoppedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation stopped event.");
-    StopSimulation();
+    std::thread(StopSimulation).detach();
 }
 
 void OnSimulationPausedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation paused event.");
-    PauseSimulation();
+    std::thread(PauseSimulation).detach();
 }
 
 void OnSimulationContinuedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation continued event.");
-    ContinueSimulation();
+    std::thread(ContinueSimulation).detach();
 }
 
 void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime,
                                     [[maybe_unused]] TerminateReason terminateReason) {
     LogInfo("Received simulation continued event.");
-    TerminateSimulation();
+    std::thread(TerminateSimulation).detach();
 }
 
 [[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers() {
@@ -570,8 +596,12 @@ void LoadSimulation(const bool isClientOptional, const std::string_view name) {
     Config.incomingSignals = CreateIncomingSignals();
     Config.outgoingSignals = CreateOutgoingSignals();
 
-    Server = std::make_unique<CoSimServer>();
-    Server->Load(Config);
+    {
+        std::lock_guard lock(Mutex);
+        Server = std::make_unique<CoSimServer>();
+        Server->Load(Config);
+    }
+
     State = SimulationState::Stopped;
 
     StartBackgroundThread();
@@ -584,7 +614,12 @@ void UnloadSimulation() {
 
     StopSimulationThread();
     StopBackgroundThread();
-    Server.reset();
+
+    {
+        std::lock_guard lock(Mutex);
+        Server.reset();
+    }
+
     State = SimulationState::Unloaded;
 
     LogInfo("Unloaded.");
