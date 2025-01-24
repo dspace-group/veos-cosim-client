@@ -10,6 +10,8 @@
 
 using namespace DsVeosCoSim;
 
+namespace {
+
 void UdsServerRun() {
     try {
         Socket serverSocket(AddressFamily::Uds);
@@ -39,6 +41,8 @@ void UdsServerRun() {
     }
 }
 
-void StartUdsServer() {
+}  // namespace
+
+void StartUdsServer() {  // NOLINT
     std::thread(UdsServerRun).detach();
 }

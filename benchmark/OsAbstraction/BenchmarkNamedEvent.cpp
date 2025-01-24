@@ -15,9 +15,9 @@ using namespace DsVeosCoSim;
 namespace {
 
 void EventSet(benchmark::State& state) {
-    std::string name = GenerateString("Event名前");
+    const std::string name = GenerateString("Event名前");
 
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    const NamedEvent event = NamedEvent::CreateOrOpen(name);
 
     for (auto _ : state) {
         event.Set();
@@ -25,9 +25,9 @@ void EventSet(benchmark::State& state) {
 }
 
 void EventSetAndWait(benchmark::State& state) {
-    std::string name = GenerateString("Event名前");
+    const std::string name = GenerateString("Event名前");
 
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    const NamedEvent event = NamedEvent::CreateOrOpen(name);
 
     for (auto _ : state) {
         event.Set();
@@ -35,26 +35,26 @@ void EventSetAndWait(benchmark::State& state) {
     }
 }
 
-bool stopThread;
+bool StopThread;
 
 void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
-    NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
+    const NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
+    const NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
 
-    while (!stopThread) {
+    while (!StopThread) {
         event1.Wait();
         event2.Set();
     }
 }
 
 void EventRoundtrip(benchmark::State& state) {
-    std::string eventName1 = GenerateString("Event名前");
-    std::string eventName2 = GenerateString("Event名前");
+    const std::string eventName1 = GenerateString("Event名前");
+    const std::string eventName2 = GenerateString("Event名前");
 
-    NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
+    const NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
+    const NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
 
-    stopThread = false;
+    StopThread = false;
     std::thread thread(WaitAndSet, eventName1, eventName2);
 
     for (auto _ : state) {
@@ -62,7 +62,7 @@ void EventRoundtrip(benchmark::State& state) {
         event2.Wait();
     }
 
-    stopThread = true;
+    StopThread = true;
     event1.Set();
 
     thread.join();

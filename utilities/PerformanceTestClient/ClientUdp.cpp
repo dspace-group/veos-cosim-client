@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void UdpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void UdpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
         const UdpSocket clientSocket;
 
@@ -40,7 +40,7 @@ void UdpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counte
 
 }  // namespace
 
-void RunUdpTest(std::string_view host) {
+void RunUdpTest(const std::string_view host) {  // NOLINT
     LogTrace("UDP:");
     RunPerformanceTest(UdpClientRun, host);
     LogTrace("");

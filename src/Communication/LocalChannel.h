@@ -39,8 +39,8 @@ protected:
     struct Header {
         uint32_t serverPid{};
         uint32_t clientPid{};
-        alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> writeIndex;
-        alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex;
+        alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> writeIndex{};
+        alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex{};
     };
 
     NamedEvent _newDataEvent;

@@ -26,7 +26,7 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
                                  const bool& isStopped) {
     try {
 #ifdef _WIN32
-        std::optional<LocalChannel> channel = *TryConnectToLocalChannel(LocalName);
+        std::optional channel = *TryConnectToLocalChannel(LocalName);
 #else
         std::optional<SocketChannel> channel = *TryConnectToUdsChannel(LocalName);
 #endif
@@ -51,7 +51,7 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunLocalCommunicationTest() {
+void RunLocalCommunicationTest() {  // NOLINT
     LogTrace("Local Communication:");
     RunPerformanceTest(LocalCommunicationClientRun, "");
     LogTrace("");

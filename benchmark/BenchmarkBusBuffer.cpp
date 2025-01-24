@@ -2,6 +2,7 @@
 
 #include <benchmark/benchmark.h>
 
+#include <chrono>  // IWYU pragma: keep
 #include <string>
 #include <thread>
 
@@ -15,13 +16,14 @@
 #include "LocalChannel.h"
 #endif
 
+using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 namespace {
 
-using CanTypes = std::tuple<CanController, DsVeosCoSim_CanController, CanMessage, DsVeosCoSim_CanMessage>;
-using EthTypes = std::tuple<EthController, DsVeosCoSim_EthController, EthMessage, DsVeosCoSim_EthMessage>;
-using LinTypes = std::tuple<LinController, DsVeosCoSim_LinController, LinMessage, DsVeosCoSim_LinMessage>;
+using CanTypes = std::tuple<CanControllerContainer, CanController, CanMessageContainer, CanMessage>;
+using EthTypes = std::tuple<EthControllerContainer, EthController, EthMessageContainer, EthMessage>;
+using LinTypes = std::tuple<LinControllerContainer, LinController, LinMessageContainer, LinMessage>;
 
 template <typename TypeParam>
 void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channel, bool& stopThread, Event& endEvent) {
@@ -29,7 +31,7 @@ void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channe
 
     while (!stopThread) {
         TMessageExtern receiveMessage{};
-        MUST_BE_TRUE(receiverBusBuffer.Deserialize(channel.GetReader(), 0, {}));
+        MUST_BE_TRUE(receiverBusBuffer.Deserialize(channel.GetReader(), 0ns, {}));
 
         for (size_t i = 0; i < count; i++) {
             MUST_BE_TRUE(receiverBusBuffer.Receive(receiveMessage));
@@ -47,15 +49,23 @@ void RunTest(benchmark::State& state,
              Channel& senderChannel,
              Channel& receiverChannel) {
     using TController = std::tuple_element_t<0, TypeParam>;
+    using TControllerExtern = std::tuple_element_t<1, TypeParam>;
     using TMessage = std::tuple_element_t<2, TypeParam>;
+    using TMessageExtern = std::tuple_element_t<3, TypeParam>;
 
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer transmitterBusBuffer(CoSimType::Server, connectionKind, senderName, {controller});
-    BusBuffer receiverBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller});
+    BusBuffer transmitterBusBuffer(CoSimType::Server,
+                                   connectionKind,
+                                   senderName,
+                                   {static_cast<TControllerExtern>(controller)});
+    BusBuffer receiverBusBuffer(CoSimType::Client,
+                                connectionKind,
+                                receiverName,
+                                {static_cast<TControllerExtern>(controller)});
 
-    size_t count = state.range(0);
+    const size_t count = state.range(0);
 
     bool stopThread{};
     Event endEvent;
@@ -73,7 +83,7 @@ void RunTest(benchmark::State& state,
 
     for (auto _ : state) {
         for (size_t i = 0; i < count; i++) {
-            MUST_BE_TRUE(transmitterBusBuffer.Transmit(sendMessage));
+            MUST_BE_TRUE(transmitterBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
         }
 
         MUST_BE_TRUE(transmitterBusBuffer.Serialize(senderChannel.GetWriter()));
@@ -87,7 +97,7 @@ void RunTest(benchmark::State& state,
     // The receiver thread is probably in receive function which is blocking. So we wake it up by sending everything one
     // last time
     for (size_t i = 0; i < count; i++) {
-        MUST_BE_TRUE(transmitterBusBuffer.Transmit(sendMessage));
+        MUST_BE_TRUE(transmitterBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
     MUST_BE_TRUE(transmitterBusBuffer.Serialize(senderChannel.GetWriter()));

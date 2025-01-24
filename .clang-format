@@ -1,13 +1,13 @@
-BasedOnStyle: Google
 AccessModifierOffset: -4
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Never
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
+AllowShortLambdasOnASingleLine: None
+BasedOnStyle: Chromium
 BinPackArguments: false
 BinPackParameters: false
 ColumnLimit: 120
-DerivePointerAlignment: false
 IndentWidth: 4
 InsertBraces: true
-InsertNewlineAtEOF: true

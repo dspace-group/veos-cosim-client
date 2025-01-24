@@ -26,8 +26,8 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
 [[nodiscard]] NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
-    std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = ::CreateMutexW(nullptr, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedMutexName(name);
+    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not create or open mutex '" + name + "'.", GetLastWindowsError());
     }
@@ -36,8 +36,8 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
 [[nodiscard]] NamedMutex NamedMutex::OpenExisting(const std::string& name) {
-    std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedMutexName(name);
+    void* handle = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not open mutex '" + name + "'.", GetLastWindowsError());
     }
@@ -46,8 +46,8 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
 [[nodiscard]] std::optional<NamedMutex> NamedMutex::TryOpenExisting(const std::string& name) {
-    std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = ::OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullNamedMutexName(name);
+    void* handle = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());
     if (!handle) {
         return NamedMutex();
     }
@@ -55,16 +55,16 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
     return NamedMutex(handle);
 }
 
-void NamedMutex::lock() const {
+void NamedMutex::lock() const {  // NOLINT
     (void)lock(Infinite);
 }
 
-[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {
+[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {  // NOLINT
     return _handle.Wait(milliseconds);
 }
 
-void NamedMutex::unlock() const {
-    (void)::ReleaseMutex(_handle);
+void NamedMutex::unlock() const {  // NOLINT
+    (void)ReleaseMutex(_handle);
 }
 
 }  // namespace DsVeosCoSim

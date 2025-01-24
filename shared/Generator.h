@@ -24,24 +24,26 @@ template <typename T>
 [[nodiscard]] uint64_t GenerateU64();
 [[nodiscard]] int64_t GenerateI64();
 [[nodiscard]] std::string GenerateString(std::string_view prefix);
+[[nodiscard]] DsVeosCoSim::SimulationTime GenerateSimulationTime();
 
-[[nodiscard]] DsVeosCoSim::IoSignal CreateSignal();
-[[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType);
-[[nodiscard]] DsVeosCoSim::IoSignal CreateSignal(DsVeosCoSim_DataType dataType, DsVeosCoSim_SizeKind sizeKind);
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal();
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal(DsVeosCoSim::DataType dataType);
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal(DsVeosCoSim::DataType dataType,
+                                                          DsVeosCoSim::SizeKind sizeKind);
 
-[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim_IoSignal& signal);
-[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim_IoSignal& signal);
+[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim::IoSignalContainer& signal);
+[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim::IoSignalContainer& signal);
 
-void FillWithRandom(DsVeosCoSim::CanController& controller);
-void FillWithRandom(DsVeosCoSim::EthController& controller);
-void FillWithRandom(DsVeosCoSim::LinController& controller);
+void FillWithRandom(DsVeosCoSim::CanControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::EthControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::LinControllerContainer& controller);
 
-void FillWithRandom(DsVeosCoSim::CanMessage& message, DsVeosCoSim_BusControllerId controllerId);
-void FillWithRandom(DsVeosCoSim::EthMessage& message, DsVeosCoSim_BusControllerId controllerId);
-void FillWithRandom(DsVeosCoSim::LinMessage& message, DsVeosCoSim_BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::CanMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::EthMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::LinMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
 
-[[nodiscard]] std::vector<DsVeosCoSim::IoSignal> CreateSignals(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::IoSignalContainer> CreateSignals(size_t count);
 
-[[nodiscard]] std::vector<DsVeosCoSim::CanController> CreateCanControllers(size_t count);
-[[nodiscard]] std::vector<DsVeosCoSim::EthController> CreateEthControllers(size_t count);
-[[nodiscard]] std::vector<DsVeosCoSim::LinController> CreateLinControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::CanControllerContainer> CreateCanControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::EthControllerContainer> CreateEthControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::LinControllerContainer> CreateLinControllers(size_t count);

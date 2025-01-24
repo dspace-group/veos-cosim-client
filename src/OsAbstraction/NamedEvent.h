@@ -31,7 +31,7 @@ public:
 
     operator Handle&() noexcept;  // NOLINT
 
-    void Set();
+    void Set() const;
     void Wait() const;
     [[nodiscard]] bool Wait(uint32_t milliseconds) const;
 

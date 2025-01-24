@@ -19,7 +19,7 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
                   uint64_t& counter,
                   const bool& isStopped) {
     try {
-        Socket clientSocket(AddressFamily::Uds);
+        const Socket clientSocket(AddressFamily::Uds);
         MUST_BE_TRUE(clientSocket.TryConnect(UdsName));
 
         std::array<char, BufferSize> buffer{};
@@ -40,7 +40,7 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunUdsTest() {
+void RunUdsTest() {  // NOLINT
     LogTrace("Unix Domain Socket:");
     RunPerformanceTest(UdsClientRun, "");
     LogTrace("");

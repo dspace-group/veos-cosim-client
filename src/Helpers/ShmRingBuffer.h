@@ -20,7 +20,7 @@ public:
     ShmRingBuffer(ShmRingBuffer&& other) = delete;
     ShmRingBuffer& operator=(ShmRingBuffer&& other) = delete;
 
-    void Initialize(uint32_t capacity) {
+    void Initialize(const uint32_t capacity) {
         _capacity = capacity;
     }
 
@@ -42,13 +42,13 @@ public:
         return _size == _capacity;
     }
 
-    void PushBack(const T& element) {
+    void PushBack(T&& element) {
         if (IsFull()) {
             throw std::runtime_error("SHM ring buffer is full.");
         }
 
-        uint32_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = element;
+        const uint32_t currentWriteIndex = _writeIndex;
+        _items[currentWriteIndex] = std::move(element);
 
         ++_writeIndex;
         if (_writeIndex == _capacity) {
@@ -79,7 +79,7 @@ private:
     uint32_t _capacity{};           // Read by reader and writer
     std::atomic<uint32_t> _size{};  // Read and written by reader and writer
     uint32_t _readIndex{};          // Read and written by reader
-    uint32_t _writeIndex{};         // Read and written by writer
+    uint32_t _writeIndex{};         // Read and written by writerF
 
     // Zero sized array would be correct here, since the items are inside a shared memory. But that leads to
     // warnings, so we add set the size to 1

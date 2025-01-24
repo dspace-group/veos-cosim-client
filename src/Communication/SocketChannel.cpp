@@ -53,7 +53,7 @@ SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other)
             continue;
         }
 
-        (void)::memcpy(&_writeBuffer[_writeIndex], bufferPointer, sizeToCopy);
+        (void)memcpy(&_writeBuffer[_writeIndex], bufferPointer, sizeToCopy);
         _writeIndex += sizeToCopy;
         bufferPointer += sizeToCopy;
         size -= sizeToCopy;
@@ -66,7 +66,7 @@ SocketChannelWriter& SocketChannelWriter::operator=(SocketChannelWriter&& other)
     uint8_t* sourcePtr = _writeBuffer.data();
 
     // Write header
-    (void)::memcpy(sourcePtr, &_writeIndex, sizeof _writeIndex);
+    (void)memcpy(sourcePtr, &_writeIndex, sizeof _writeIndex);
 
     while (_writeIndex > 0) {
         int32_t sentSize{};
@@ -121,14 +121,14 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
     // Did we read more than one frame the last time?
     if (_writeIndex > _endFrameIndex) {
         const int32_t bytesToMove = _writeIndex - _endFrameIndex;
-        (void)::memcpy(_readBuffer.data(), &_readBuffer[_endFrameIndex], bytesToMove);
+        (void)memcpy(_readBuffer.data(), &_readBuffer[_endFrameIndex], bytesToMove);
 
         _writeIndex -= _endFrameIndex;
 
         // Did we read at least HeaderSize bytes more?
         if (bytesToMove >= HeaderSize) {
             readHeader = false;
-            (void)::memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
+            (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
             // Did we read at least an entire second frame?
             if (_writeIndex >= _endFrameIndex) {
@@ -150,7 +150,7 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
 
         if (readHeader && _writeIndex >= HeaderSize) {
             readHeader = false;
-            (void)::memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
+            (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
             if (_endFrameIndex > BufferSize) {
                 throw CoSimException("Protocol error. The buffer size is too small.");
@@ -173,7 +173,7 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
             continue;
         }
 
-        (void)::memcpy(bufferPointer, &_readBuffer[_readIndex], sizeToCopy);
+        (void)memcpy(bufferPointer, &_readBuffer[_readIndex], sizeToCopy);
         _readIndex += sizeToCopy;
         bufferPointer += sizeToCopy;
         size -= sizeToCopy;
@@ -212,13 +212,13 @@ void SocketChannel::Disconnect() {
     return _reader;
 }
 
-[[nodiscard]] std::optional<SocketChannel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
-                                                                  uint16_t remotePort,
-                                                                  uint16_t localPort,
-                                                                  uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<SocketChannel> TryConnectToTcpChannel(const std::string_view remoteIpAddress,
+                                                                  const uint16_t remotePort,
+                                                                  const uint16_t localPort,
+                                                                  const uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
-    std::optional<Socket> connectedSocket =
+    std::optional<Socket> connectedSocket =  // NOLINT
         Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds);
     if (connectedSocket) {
         connectedSocket->EnableNoDelay();
@@ -228,7 +228,7 @@ void SocketChannel::Disconnect() {
     return {};
 }
 
-TcpChannelServer::TcpChannelServer(uint16_t port, bool enableRemoteAccess) : _port(port) {
+TcpChannelServer::TcpChannelServer(const uint16_t port, const bool enableRemoteAccess) : _port(port) {
     StartupNetwork();
 
     if (Socket::IsIpv4Supported()) {
@@ -296,8 +296,8 @@ UdsChannelServer::UdsChannelServer(const std::string& name) {
     _listenSocket.Listen();
 }
 
-[[nodiscard]] std::optional<SocketChannel> UdsChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
-    std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
+[[nodiscard]] std::optional<SocketChannel> UdsChannelServer::TryAccept(const uint32_t timeoutInMilliseconds) const {
+    std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);  // NOLINT
     if (socket) {
         return SocketChannel(std::move(*socket));
     }

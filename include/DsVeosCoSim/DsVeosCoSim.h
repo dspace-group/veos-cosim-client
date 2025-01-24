@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+#include <cstddef>
 #include <string>
 #endif
 
@@ -128,7 +129,7 @@ typedef enum DsVeosCoSim_Result {  // NOLINT
      */
     DsVeosCoSim_Result_Disconnected,
 
-    DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_Result;
 
 /**
@@ -170,7 +171,7 @@ typedef enum DsVeosCoSim_Command {  // NOLINT
      */
     DsVeosCoSim_Command_Continue,
 
-    DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_Command;
 
 /**
@@ -197,7 +198,7 @@ typedef enum DsVeosCoSim_Severity {  // NOLINT
      */
     DsVeosCoSim_Severity_Trace,
 
-    DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_Severity;
 
 /**
@@ -214,7 +215,7 @@ typedef enum DsVeosCoSim_TerminateReason {  // NOLINT
      */
     DsVeosCoSim_TerminateReason_Error,
 
-    DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_TerminateReason;
 
 /**
@@ -231,7 +232,7 @@ typedef enum DsVeosCoSim_ConnectionState {  // NOLINT
      */
     DsVeosCoSim_ConnectionState_Connected,
 
-    DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_ConnectionState;
 
 /**
@@ -293,7 +294,7 @@ typedef enum DsVeosCoSim_DataType {  // NOLINT
      */
     DsVeosCoSim_DataType_Float64,
 
-    DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_DataType;
 
 /**
@@ -310,7 +311,7 @@ typedef enum DsVeosCoSim_SizeKind {  // NOLINT
      */
     DsVeosCoSim_SizeKind_Variable,
 
-    DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_SizeKind;
 
 /**
@@ -584,7 +585,7 @@ typedef enum DsVeosCoSim_LinControllerType {  // NOLINT
      */
     DsVeosCoSim_LinControllerType_Commander,
 
-    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
 } DsVeosCoSim_LinControllerType;
 
 /**

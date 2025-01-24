@@ -22,10 +22,10 @@ namespace {
 
 }  // namespace
 
-SharedMemory::SharedMemory(const std::string& name, size_t size, Handle handle)
-    : _size(size), _handle(std::move(handle)), _data(::MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
+SharedMemory::SharedMemory(const std::string& name, const size_t size, Handle handle)
+    : _size(size), _handle(std::move(handle)), _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
     if (!_data) {
-        (void)::CloseHandle(_handle);
+        (void)CloseHandle(_handle);
         throw CoSimException("Could not map view of shared memory '" + name + "'.", GetLastWindowsError());
     }
 }
@@ -48,11 +48,11 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 }
 
 [[nodiscard]] SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
-    std::wstring fullName = GetFullSharedMemoryName(name);
-    DWORD sizeHigh = 0U;
-    auto sizeLow = static_cast<DWORD>(size);
+    const std::wstring fullName = GetFullSharedMemoryName(name);
+    constexpr DWORD sizeHigh{};
+    const auto sizeLow = static_cast<DWORD>(size);
     void* handle =
-        ::CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
+        CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not create or open shared memory '" + name + "'.", GetLastWindowsError());
     }
@@ -61,8 +61,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 }
 
 [[nodiscard]] SharedMemory SharedMemory::OpenExisting(const std::string& name, size_t size) {
-    std::wstring fullName = GetFullSharedMemoryName(name);
-    void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
+    const std::wstring fullName = GetFullSharedMemoryName(name);
+    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         throw CoSimException("Could not open shared memory '" + name + "'.", GetLastWindowsError());
     }
@@ -70,9 +70,9 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return {name, size, handle};
 }
 
-[[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, size_t size) {
-    std::wstring fullName = GetFullSharedMemoryName(name);
-    void* handle = ::OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
+[[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, const size_t size) {
+    const std::wstring fullName = GetFullSharedMemoryName(name);
+    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         return {};
     }

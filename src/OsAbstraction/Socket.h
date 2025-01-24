@@ -17,13 +17,13 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] inline std::string ToString(AddressFamily addressFamily) {
+[[nodiscard]] inline std::string ToString(const AddressFamily addressFamily) {
     switch (addressFamily) {
-        case DsVeosCoSim::AddressFamily::Ipv4:
+        case AddressFamily::Ipv4:
             return "Ipv4";
-        case DsVeosCoSim::AddressFamily::Ipv6:
+        case AddressFamily::Ipv6:
             return "Ipv6";
-        case DsVeosCoSim::AddressFamily::Uds:
+        case AddressFamily::Uds:
             return "Uds";
     }
 
@@ -31,7 +31,7 @@ enum class AddressFamily {
 }
 
 #ifdef _WIN32
-using socket_t = uintptr_t;
+using socket_t = uintptr_t;  // NOLINT
 constexpr socket_t InvalidSocket = UINTPTR_MAX;
 #else
 using socket_t = int32_t;

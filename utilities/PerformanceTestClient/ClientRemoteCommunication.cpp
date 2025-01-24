@@ -14,12 +14,12 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void RemoteCommunicationClientRun(std::string_view host,
+void RemoteCommunicationClientRun(const std::string_view host,
                                   Event& connectedEvent,
                                   uint64_t& counter,
                                   const bool& isStopped) {
     try {
-        std::optional<SocketChannel> channel = *TryConnectToTcpChannel(host, CommunicationPort, 0, Infinite);
+        std::optional channel = *TryConnectToTcpChannel(host, CommunicationPort, 0, Infinite);
 
         std::array<char, BufferSize> buffer{};
 
@@ -41,7 +41,7 @@ void RemoteCommunicationClientRun(std::string_view host,
 
 }  // namespace
 
-void RunRemoteCommunicationTest(std::string_view host) {
+void RunRemoteCommunicationTest(const std::string_view host) {  // NOLINT
     LogTrace("Remote Communication:");
     RunPerformanceTest(RemoteCommunicationClientRun, host);
     LogTrace("");

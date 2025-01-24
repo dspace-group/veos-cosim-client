@@ -42,7 +42,7 @@ void PipeClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunPipeTest() {
+void RunPipeTest() {  // NOLINT
     LogTrace("Pipes:");
     RunPerformanceTest(PipeClientRun, "");
     LogTrace("");

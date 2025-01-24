@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
         CoSimClient coSimClient;
         ConnectConfig connectConfig{};
@@ -32,7 +32,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
         coSimClient.StartPollingBasedCoSimulation({});
 
         while (!isStopped) {
-            DsVeosCoSim_SimulationTime simulationTime{};
+            SimulationTime simulationTime{};
             Command command{};
             MUST_BE_TRUE(coSimClient.PollCommand(simulationTime, command, false));
 
@@ -62,7 +62,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
 
 }  // namespace
 
-void RunCoSimPollingTest(std::string_view host) {
+void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
     if (host.empty()) {
         LogTrace("Local dSPACE VEOS CoSim Polling:");
     } else {

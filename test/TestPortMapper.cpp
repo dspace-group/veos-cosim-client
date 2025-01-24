@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <fmt/format.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -15,7 +16,7 @@ using namespace testing;
 
 namespace {
 
-class TestPortMapper : public testing::Test {
+class TestPortMapper : public Test {
 protected:
     void SetUp() override {
         ClearLastMessage();
@@ -31,7 +32,7 @@ TEST_F(TestPortMapper, StartOfServer) {
 
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -50,23 +51,26 @@ TEST_F(TestPortMapper, SetAndGet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetWithoutSet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
     uint16_t port{};
 
     // Act and assert
-    ASSERT_THAT([&]() { (void)PortMapper_GetPort("127.0.0.1", serverName, port); },
-                ThrowsMessage<CoSimException>(
-                    fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
+    ASSERT_THAT(
+        [&]() {
+            (void)PortMapper_GetPort("127.0.0.1", serverName, port);
+        },
+        ThrowsMessage<CoSimException>(
+            fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
 }
 #endif
 
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetAfterUnset) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -78,15 +82,18 @@ TEST_F(TestPortMapper, GetAfterUnset) {
     uint16_t port{};
 
     // Act and assert
-    ASSERT_THAT([&]() { (void)PortMapper_GetPort("127.0.0.1", serverName, port); },
-                ThrowsMessage<CoSimException>(
-                    fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
+    ASSERT_THAT(
+        [&]() {
+            (void)PortMapper_GetPort("127.0.0.1", serverName, port);
+        },
+        ThrowsMessage<CoSimException>(
+            fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", serverName)));
 }
 #endif
 
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
-    PortMapperServer portMapperServer(false);
+    const PortMapperServer portMapperServer(false);  // NOLINT
 
     const std::string serverName = GenerateString("Server名前");
 

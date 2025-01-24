@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <fmt/format.h>
+
 #include <gtest/gtest.h>
 
 #include <string>
@@ -47,7 +48,7 @@ INSTANTIATE_TEST_SUITE_P(,
 
 TEST_P(TestTcpSocket, Create) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
     // Act and assert
     ASSERT_NO_THROW(Socket(param.addressFamily));
@@ -55,9 +56,9 @@ TEST_P(TestTcpSocket, Create) {
 
 TEST_P(TestTcpSocket, Bind) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
 
     // Act and assert
     ASSERT_NO_THROW(serverSocket.Bind(0, param.enableRemoteAccess));
@@ -65,13 +66,13 @@ TEST_P(TestTcpSocket, Bind) {
 
 TEST_P(TestTcpSocket, LocalPortIsNotZeroAfterBind) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
 
     // Act
-    uint16_t localPort = serverSocket.GetLocalPort();
+    const uint16_t localPort = serverSocket.GetLocalPort();
 
     // Assert
     ASSERT_NE(localPort, 0);
@@ -79,9 +80,9 @@ TEST_P(TestTcpSocket, LocalPortIsNotZeroAfterBind) {
 
 TEST_P(TestTcpSocket, Listen) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
 
     // Act and assert
@@ -91,14 +92,15 @@ TEST_P(TestTcpSocket, Listen) {
 #ifdef _WIN32
 TEST_P(TestTcpSocket, ConnectWithoutListening) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    const uint16_t port = serverSocket.GetLocalPort();
 
     // Act
-    std::optional<Socket> connectedSocket = Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0);
+    const std::optional<Socket> connectedSocket =
+        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0);
 
     // Assert
     ASSERT_FALSE(connectedSocket);
@@ -107,15 +109,15 @@ TEST_P(TestTcpSocket, ConnectWithoutListening) {
 
 TEST_P(TestTcpSocket, Connect) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
     // Act
-    std::optional<Socket> connectedSocket =
+    const std::optional<Socket> connectedSocket =
         Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
 
     // Assert
@@ -124,14 +126,14 @@ TEST_P(TestTcpSocket, Connect) {
 
 TEST_P(TestTcpSocket, AcceptWithoutConnect) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
     serverSocket.Listen();
 
     // Act
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept();
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept();
 
     // Assert
     ASSERT_FALSE(acceptedSocket);
@@ -139,17 +141,17 @@ TEST_P(TestTcpSocket, AcceptWithoutConnect) {
 
 TEST_P(TestTcpSocket, Accept) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
     (void)ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
 
     // Act
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(acceptedSocket);
@@ -157,19 +159,19 @@ TEST_P(TestTcpSocket, Accept) {
 
 TEST_P(TestTcpSocket, PortsAfterConnectAndAccept) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
-    Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
+    const Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
 
-    Socket acceptedSocket = Accept(serverSocket);
+    const Socket acceptedSocket = Accept(serverSocket);
 
     // Act
-    uint16_t connectedSocketLocalPort = connectedSocket.GetLocalPort();
+    const uint16_t connectedSocketLocalPort = connectedSocket.GetLocalPort();
 
     // Assert
     ASSERT_NE(connectedSocketLocalPort, port);
@@ -181,16 +183,16 @@ TEST_P(TestTcpSocket, PortsAfterConnectAndAccept) {
 
 TEST_P(TestTcpSocket, SendAndReceive) {
     // Arrange
-    Param param = GetParam();
+    const Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    const Socket serverSocket(param.addressFamily);
     serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
-    Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
+    const Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
 
-    Socket acceptedSocket = Accept(serverSocket);
+    const Socket acceptedSocket = Accept(serverSocket);
 
     const uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
