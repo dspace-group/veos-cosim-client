@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void CounterPart(Socket& socket, bool& stopThread, size_t size) {
+void CounterPart(const Socket& socket, const bool& stopThread, const size_t size) {
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
@@ -26,7 +26,7 @@ void CounterPart(Socket& socket, bool& stopThread, size_t size) {
     }
 }
 
-void RunTest(benchmark::State& state, Socket& socket1, Socket& socket2) {
+void RunTest(benchmark::State& state, Socket& socket1, const Socket& socket2) {
     size_t size = state.range(0);
 
     std::vector<uint8_t> buffer;
@@ -47,30 +47,30 @@ void RunTest(benchmark::State& state, Socket& socket1, Socket& socket2) {
 }
 
 void SocketTcpRoundtrip(benchmark::State& state) {
-    Socket server(AddressFamily::Ipv4);
+    const Socket server(AddressFamily::Ipv4);
     server.EnableReuseAddress();
     server.Bind(0, false);
-    uint16_t port = server.GetLocalPort();
+    const uint16_t port = server.GetLocalPort();
     server.Listen();
 
     Socket connectedSocket = ConnectSocket("127.0.0.1", port);
     connectedSocket.EnableNoDelay();
 
-    Socket acceptedSocket = Accept(server);
+    const Socket acceptedSocket = Accept(server);
     acceptedSocket.EnableNoDelay();
 
     RunTest(state, connectedSocket, acceptedSocket);
 }
 
 void SocketUdsRoundtrip(benchmark::State& state) {
-    std::string path = GenerateString("UdsPath");
+    const std::string path = GenerateString("UdsPath");
 
     Socket server(AddressFamily::Uds);
     server.Bind(path);
     server.Listen();
 
     Socket connectedSocket = ConnectSocket(path);
-    Socket acceptedSocket = Accept(server);
+    const Socket acceptedSocket = Accept(server);
 
     RunTest(state, connectedSocket, acceptedSocket);
 }

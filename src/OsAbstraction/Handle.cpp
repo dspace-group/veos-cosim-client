@@ -15,7 +15,7 @@ Handle::Handle(void* handle) : _handle(handle) {
 }
 
 Handle::~Handle() noexcept {
-    (void)::CloseHandle(_handle);
+    (void)CloseHandle(_handle);
 }
 
 Handle::Handle(Handle&& other) noexcept : _handle(other._handle) {
@@ -38,8 +38,8 @@ void Handle::Wait() const {
     (void)Wait(Infinite);
 }
 
-[[nodiscard]] bool Handle::Wait(uint32_t milliseconds) const {
-    DWORD result = ::WaitForSingleObject(_handle, milliseconds);
+[[nodiscard]] bool Handle::Wait(const uint32_t milliseconds) const {
+    const DWORD result = WaitForSingleObject(_handle, milliseconds);
     switch (result) {
         case WAIT_OBJECT_0:
             return true;
@@ -53,8 +53,8 @@ void Handle::Wait() const {
     }
 }
 
-[[nodiscard]] bool SignalAndWait(const Handle& toSignal, const Handle& toWait, uint32_t milliseconds) {
-    DWORD result = ::SignalObjectAndWait(toSignal, toWait, milliseconds, FALSE);
+[[nodiscard]] bool SignalAndWait(const Handle& toSignal, const Handle& toWait, const uint32_t milliseconds) {
+    const DWORD result = SignalObjectAndWait(toSignal, toWait, milliseconds, FALSE);
     switch (result) {
         case WAIT_OBJECT_0:
             return true;

@@ -3,46 +3,46 @@
 #include "CoSimHelper.h"
 
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 #include <system_error>
 
 namespace DsVeosCoSim {
 
 namespace {
 
-LogCallback g_logCallback;
+LogCallback LogCallbackHandler;
 
 }  // namespace
 
 void SetLogCallback(LogCallback logCallback) {
-    g_logCallback = std::move(logCallback);
+    LogCallbackHandler = std::move(logCallback);
 }
 
-void LogError(std::string_view message) {
-    const auto logCallback = g_logCallback;
+void LogError(const std::string_view message) {
+    const auto logCallback = LogCallbackHandler;
     if (logCallback) {
-        logCallback(DsVeosCoSim_Severity_Error, message.data());
+        logCallback(Severity::Error, message.data());
     }
 }
 
-void LogWarning(std::string_view message) {
-    const auto logCallback = g_logCallback;
+void LogWarning(const std::string_view message) {
+    const auto logCallback = LogCallbackHandler;
     if (logCallback) {
-        logCallback(DsVeosCoSim_Severity_Warning, message);
+        logCallback(Severity::Warning, message);
     }
 }
 
-void LogInfo(std::string_view message) {
-    const auto logCallback = g_logCallback;
+void LogInfo(const std::string_view message) {
+    const auto logCallback = LogCallbackHandler;
     if (logCallback) {
-        logCallback(DsVeosCoSim_Severity_Info, message);
+        logCallback(Severity::Info, message);
     }
 }
 
-void LogTrace(std::string_view message) {
-    const auto logCallback = g_logCallback;
+void LogTrace(const std::string_view message) {
+    const auto logCallback = LogCallbackHandler;
     if (logCallback) {
-        logCallback(DsVeosCoSim_Severity_Trace, message);
+        logCallback(Severity::Trace, message);
     }
 }
 
@@ -54,7 +54,7 @@ void LogProtocolEndTrace(const std::string& message) {
     LogTrace("PROT END   " + message);
 }
 
-[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
+[[nodiscard]] std::string GetSystemErrorMessage(const int32_t errorCode) {
     return "Error code: " + std::to_string(errorCode) + ". " + std::system_category().message(errorCode);
 }
 

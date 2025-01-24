@@ -13,7 +13,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
         CoSimClient coSimClient;
         ConnectConfig connectConfig{};
@@ -29,7 +29,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
         connectedEvent.Set();
 
         Callbacks callbacks{};
-        callbacks.simulationEndStepCallback = [&](DsVeosCoSim_SimulationTime) {
+        callbacks.simulationEndStepCallback = [&](SimulationTime) {
             if (isStopped) {
                 coSimClient.Disconnect();
             }
@@ -46,7 +46,7 @@ void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& coun
 
 }  // namespace
 
-void RunCoSimCallbackTest(std::string_view host) {
+void RunCoSimCallbackTest(const std::string_view host) {  // NOLINT
     if (host.empty()) {
         LogTrace("Local dSPACE VEOS CoSim Callback:");
     } else {

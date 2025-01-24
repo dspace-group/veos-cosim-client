@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 #include "CoSimTypes.h"
 
@@ -38,10 +38,10 @@ void LogProtocolEndTrace(const std::string& message);
 
 class CoSimException final : public std::runtime_error {
 public:
-    explicit CoSimException(std::string_view message) : std::runtime_error(message.data()) {
+    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {
     }
 
-    CoSimException(const std::string& message, int32_t errorCode)
+    CoSimException(const std::string& message, const int32_t errorCode)
         : std::runtime_error(message + " " + GetSystemErrorMessage(errorCode)) {
     }
 };

@@ -16,9 +16,9 @@ public:
         _conditionVariable.notify_one();
     }
 
-    [[nodiscard]] bool Wait(uint32_t timeoutInMilliseconds) {
+    [[nodiscard]] bool Wait(const uint32_t timeoutInMilliseconds) {
         std::unique_lock lock(_mutex);
-        bool result = _conditionVariable.wait_for(lock, std::chrono::milliseconds(timeoutInMilliseconds), [this] {
+        const bool result = _conditionVariable.wait_for(lock, std::chrono::milliseconds(timeoutInMilliseconds), [this] {
             return _signaled;
         });
         _signaled = false;

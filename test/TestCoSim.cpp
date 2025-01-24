@@ -3,7 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 #include "CoSimClient.h"
 #include "CoSimServer.h"
@@ -11,13 +11,14 @@
 #include "Generator.h"
 #include "LogHelper.h"
 
+using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 namespace {
 
 class BackgroundThread final {
 public:
-    explicit BackgroundThread(DsVeosCoSim::CoSimServer& coSimServer) : _coSimServer(coSimServer) {
+    explicit BackgroundThread(CoSimServer& coSimServer) : _coSimServer(coSimServer) {
         _thread = std::thread([this] {
             while (!_stopEvent.Wait(1)) {
                 try {
@@ -45,14 +46,14 @@ public:
     BackgroundThread& operator=(BackgroundThread&&) = delete;
 
 private:
-    DsVeosCoSim::CoSimServer& _coSimServer;
-    DsVeosCoSim::Event _stopEvent;
+    CoSimServer& _coSimServer;
+    Event _stopEvent;
     std::thread _thread;
 };
 
-auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
+auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
-[[nodiscard]] CoSimServerConfig CreateServerConfig(bool isClientOptional = false) {
+[[nodiscard]] CoSimServerConfig CreateServerConfig(const bool isClientOptional = false) {
     CoSimServerConfig config{};
     config.serverName = GenerateString("Server名前");
     config.startPortMapper = false;
@@ -62,9 +63,9 @@ auto connectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
     return config;
 }
 
-[[nodiscard]] ConnectConfig CreateConnectConfig(ConnectionKind connectionKind,
-                                                std::string_view serverName,
-                                                uint16_t port = 0) {
+[[nodiscard]] ConnectConfig CreateConnectConfig(const ConnectionKind connectionKind,
+                                                const std::string_view serverName,
+                                                const uint16_t port = 0) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("Client名前");
@@ -83,7 +84,7 @@ protected:
     }
 };
 
-INSTANTIATE_TEST_SUITE_P(, TestCoSim, connectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
+INSTANTIATE_TEST_SUITE_P(, TestCoSim, ConnectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
     return ToString(info.param);
 });
 
@@ -104,7 +105,7 @@ TEST_F(TestCoSim, StartServerWithoutOptionalClient) {
     CoSimServer server;
     server.Load(config);
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    const SimulationTime simulationTime = GenerateSimulationTime();
 
     // Act and assert
     ASSERT_NO_THROW(server.Start(simulationTime));
@@ -116,9 +117,9 @@ TEST_F(TestCoSim, StopServerWithoutOptionalClient) {
 
     CoSimServer server;
     server.Load(config);
-    server.Start(GenerateI64());
+    server.Start(GenerateSimulationTime());
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    const SimulationTime simulationTime = GenerateSimulationTime();
 
     // Act and assert
     ASSERT_NO_THROW(server.Stop(simulationTime));
@@ -130,9 +131,9 @@ TEST_F(TestCoSim, PauseServerWithoutOptionalClient) {
 
     CoSimServer server;
     server.Load(config);
-    server.Start(GenerateI64());
+    server.Start(GenerateSimulationTime());
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    const SimulationTime simulationTime = GenerateSimulationTime();
 
     // Act and assert
     ASSERT_NO_THROW(server.Pause(simulationTime));
@@ -144,10 +145,10 @@ TEST_F(TestCoSim, ContinueServerWithoutOptionalClient) {
 
     CoSimServer server;
     server.Load(config);
-    server.Start(GenerateI64());
-    server.Pause(GenerateI64());
+    server.Start(GenerateSimulationTime());
+    server.Pause(GenerateSimulationTime());
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
+    const SimulationTime simulationTime = GenerateSimulationTime();
 
     // Act and assert
     ASSERT_NO_THROW(server.Continue(simulationTime));
@@ -159,11 +160,10 @@ TEST_F(TestCoSim, TerminateServerWithoutOptionalClient) {
 
     CoSimServer server;
     server.Load(config);
-    server.Start(GenerateI64());
+    server.Start(GenerateSimulationTime());
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
-    const DsVeosCoSim_TerminateReason reason =
-        GenerateRandom(DsVeosCoSim_TerminateReason_Finished, DsVeosCoSim_TerminateReason_Error);
+    const SimulationTime simulationTime = GenerateSimulationTime();
+    const TerminateReason reason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
 
     // Act and assert
     ASSERT_NO_THROW(server.Terminate(simulationTime, reason));
@@ -175,23 +175,23 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
 
     CoSimServer server;
     server.Load(config);
-    server.Start(GenerateI64());
+    server.Start(GenerateSimulationTime());
 
-    const DsVeosCoSim_SimulationTime simulationTime = GenerateI64();
-    DsVeosCoSim_SimulationTime nextSimulationTime{};
+    const SimulationTime simulationTime = GenerateSimulationTime();
+    SimulationTime nextSimulationTime{};
 
     // Act and assert
     ASSERT_NO_THROW(server.Step(simulationTime, nextSimulationTime));
 
     // Assert
-    ASSERT_EQ(0, nextSimulationTime);
+    ASSERT_EQ(0s, nextSimulationTime);
 }
 
 TEST_P(TestCoSim, ConnectWithoutServer) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
 
-    ConnectConfig connectConfig = CreateConnectConfig(connectionKind, GenerateString("Server名前"));
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, GenerateString("Server名前"));
 
     CoSimClient client;
 
@@ -202,9 +202,9 @@ TEST_P(TestCoSim, ConnectWithoutServer) {
 #ifdef EXCEPTION_TESTS
 TEST_P(TestCoSim, ConnectWithoutServerNameAndPort) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
 
-    ConnectConfig connectConfig = CreateConnectConfig(connectionKind, "");
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, "");
 
     CoSimClient client;
 
@@ -215,18 +215,18 @@ TEST_P(TestCoSim, ConnectWithoutServerNameAndPort) {
 
 TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
 
     const CoSimServerConfig config = CreateServerConfig(true);
 
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);
+    BackgroundThread backgroundThread(server);  // NOLINT
 
-    uint16_t port = server.GetLocalPort();
+    const uint16_t port = server.GetLocalPort();
 
-    ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
     CoSimClient client;
 
     // Act and assert
@@ -235,18 +235,18 @@ TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
 
 TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
 
     const CoSimServerConfig config = CreateServerConfig();
 
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);
+    BackgroundThread backgroundThread(server);  // NOLINT
 
-    uint16_t port = server.GetLocalPort();
+    const uint16_t port = server.GetLocalPort();
 
-    ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
     CoSimClient client;
 
     // Act and assert
@@ -255,21 +255,23 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
 
 TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     // Arrange
-    ConnectionKind connectionKind = GetParam();
+    const ConnectionKind connectionKind = GetParam();
 
     Event stoppedEvent;
 
     CoSimServerConfig config = CreateServerConfig();
-    config.simulationStoppedCallback = [&](DsVeosCoSim_SimulationTime) { stoppedEvent.Set(); };
+    config.simulationStoppedCallback = [&](SimulationTime) {
+        stoppedEvent.Set();
+    };
 
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);
+    BackgroundThread backgroundThread(server);  // NOLINT
 
-    uint16_t port = server.GetLocalPort();
+    const uint16_t port = server.GetLocalPort();
 
-    ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
     CoSimClient client;
     ASSERT_TRUE(client.Connect(connectConfig));
 

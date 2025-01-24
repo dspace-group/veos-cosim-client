@@ -21,69 +21,70 @@
 
 namespace DsVeosCoSim {
 
-struct CanMessage {
-    DsVeosCoSim_SimulationTime timestamp{};
-    DsVeosCoSim_BusControllerId controllerId{};
+struct CanMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
     uint32_t controllerIndex{};
-    uint32_t id{};
-    DsVeosCoSim_CanMessageFlags flags{};
+    BusMessageId id{};
+    CanMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
 
     [[nodiscard]] bool SerializeTo(ChannelWriter& writer) const;
     [[nodiscard]] bool DeserializeFrom(ChannelReader& reader);
-    void WriteTo(DsVeosCoSim_CanMessage& message) const;
-    void ReadFrom(const DsVeosCoSim_CanMessage& message);
+    void WriteTo(CanMessage& message) const;
+    void ReadFrom(const CanMessage& message);
 
-    [[nodiscard]] operator DsVeosCoSim_CanMessage() const;  // NOLINT
+    [[nodiscard]] explicit operator CanMessage() const;
 
 private:
     void CheckMaxLength() const;
+    void CheckFlags() const;
 };
 
-struct EthMessage {
-    DsVeosCoSim_SimulationTime timestamp{};
-    DsVeosCoSim_BusControllerId controllerId{};
+struct EthMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
     uint32_t controllerIndex{};
-    DsVeosCoSim_EthMessageFlags flags{};
+    EthMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
 
     [[nodiscard]] bool SerializeTo(ChannelWriter& writer) const;
     [[nodiscard]] bool DeserializeFrom(ChannelReader& reader);
-    void WriteTo(DsVeosCoSim_EthMessage& message) const;
-    void ReadFrom(const DsVeosCoSim_EthMessage& message);
+    void WriteTo(EthMessage& message) const;
+    void ReadFrom(const EthMessage& message);
 
-    [[nodiscard]] operator DsVeosCoSim_EthMessage() const;  // NOLINT
+    [[nodiscard]] explicit operator EthMessage() const;  // NOLINT
 
 private:
     void CheckMaxLength() const;
 };
 
-struct LinMessage {
-    DsVeosCoSim_SimulationTime timestamp{};
-    DsVeosCoSim_BusControllerId controllerId{};
+struct LinMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
     uint32_t controllerIndex{};
-    uint32_t id{};
-    DsVeosCoSim_LinMessageFlags flags{};
+    BusMessageId id{};
+    LinMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
 
     [[nodiscard]] bool SerializeTo(ChannelWriter& writer) const;
     [[nodiscard]] bool DeserializeFrom(ChannelReader& reader);
-    void WriteTo(DsVeosCoSim_LinMessage& message) const;
-    void ReadFrom(const DsVeosCoSim_LinMessage& message);
+    void WriteTo(LinMessage& message) const;
+    void ReadFrom(const LinMessage& message);
 
-    [[nodiscard]] operator DsVeosCoSim_LinMessage() const;  // NOLINT
+    [[nodiscard]] explicit operator LinMessage() const;  // NOLINT
 
 private:
     void CheckMaxLength() const;
 };
 
-template <typename TMessageExtern, typename TControllerExtern>
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
 class BusProtocolBufferBase {
 protected:
-    using Callback = std::function<void(DsVeosCoSim_SimulationTime, const TControllerExtern&, const TMessageExtern&)>;
+    using Callback = std::function<void(SimulationTime, const TControllerExtern&, const TMessageExtern&)>;
 
     struct ControllerExtension {
         TControllerExtern info{};
@@ -105,7 +106,9 @@ public:
     BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
-    void Initialize(CoSimType coSimType, const std::string& name, const std::vector<TControllerExtern>& controllers) {
+    void Initialize(const CoSimType coSimType,
+                    const std::string& name,
+                    const std::vector<TControllerExtern>& controllers) {
         _coSimType = coSimType;
 
         size_t totalQueueItemsCountPerBuffer = 0;
@@ -113,7 +116,7 @@ public:
         for (const auto& controller : controllers) {
             const auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                throw CoSimException("Duplicated controller id " + std::to_string(controller.id) + ".");
+                throw CoSimException("Duplicated controller id " + ToString(controller.id) + ".");
             }
 
             ControllerExtension extension{};
@@ -164,7 +167,7 @@ public:
     }
 
     [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   DsVeosCoSim_SimulationTime simulationTime,
+                                   const SimulationTime simulationTime,
                                    const Callback& callback) {
         if (_coSimType == CoSimType::Client) {
             std::lock_guard lock(_mutex);
@@ -184,28 +187,28 @@ protected:
 
     [[nodiscard]] virtual bool SerializeInternal(ChannelWriter& writer) = 0;
     [[nodiscard]] virtual bool DeserializeInternal(ChannelReader& reader,
-                                                   DsVeosCoSim_SimulationTime simulationTime,
+                                                   SimulationTime simulationTime,
                                                    const Callback& callback) = 0;
 
-    [[nodiscard]] ControllerExtension& FindController(DsVeosCoSim_BusControllerId controllerId) {
+    [[nodiscard]] ControllerExtension& FindController(BusControllerId controllerId) {
         const auto search = _controllers.find(controllerId);
         if (search != _controllers.end()) {
             return search->second;
         }
 
-        throw CoSimException("Controller id " + std::to_string(controllerId) + " is unknown.");
+        throw CoSimException("Controller id " + ToString(controllerId) + " is unknown.");
     }
 
-    std::unordered_map<DsVeosCoSim_BusControllerId, ControllerExtension> _controllers;
+    std::unordered_map<BusControllerId, ControllerExtension> _controllers;
 
 private:
     CoSimType _coSimType{};
     std::mutex _mutex;
 };
 
-template <typename TMessageExtern, typename TMessage, typename TControllerExtern>
-class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
-    using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
+class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMessageExtern, TControllerExtern> {
+    using Base = BusProtocolBufferBase<TMessage, TMessageExtern, TControllerExtern>;
     using Extension = typename Base::ControllerExtension;
 
 public:
@@ -252,7 +255,7 @@ protected:
         TMessage message{};
         message.ReadFrom(messageExtern);
 
-        _messageBuffer.PushBack(message);
+        _messageBuffer.PushBack(std::move(message));
         ++_messageCountPerController[extension.controllerIndex];
         return true;
     }
@@ -287,7 +290,7 @@ protected:
     }
 
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           DsVeosCoSim_SimulationTime simulationTime,
+                                           SimulationTime simulationTime,
                                            const typename Base::Callback& callback) override {
         uint32_t totalCount{};
         CheckResultWithMessage(reader.Read(totalCount), "Could not read count of messages.");
@@ -299,7 +302,7 @@ protected:
             Extension& extension = Base::FindController(message.controllerId);
 
             if (callback) {
-                callback(simulationTime, extension.info, message);
+                callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
                 continue;
             }
 
@@ -313,7 +316,7 @@ protected:
             }
 
             ++_messageCountPerController[extension.controllerIndex];
-            _messageBuffer.PushBack(message);
+            _messageBuffer.PushBack(std::move(message));
         }
 
         return true;
@@ -327,9 +330,9 @@ private:
 
 #ifdef _WIN32
 
-template <typename TMessageExtern, typename TMessage, typename TControllerExtern>
-class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
-    using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
+class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMessageExtern, TControllerExtern> {
+    using Base = BusProtocolBufferBase<TMessage, TMessageExtern, TControllerExtern>;
     using Extension = typename Base::ControllerExtension;
 
 public:
@@ -343,14 +346,14 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal(const std::string& name, const size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
 
         const size_t sizeOfMessageCountPerController = Base::_controllers.size() * sizeof(std::atomic<uint32_t>);
         const size_t sizeOfRingBuffer =
-            sizeof(ShmRingBuffer<TMessage>) + totalQueueItemsCountPerBuffer * sizeof(TMessage);
+            sizeof(ShmRingBuffer<TMessage>) + (totalQueueItemsCountPerBuffer * sizeof(TMessage));
 
         size_t sizeOfSharedMemory = 0;
         sizeOfSharedMemory += sizeOfMessageCountPerController;
@@ -402,7 +405,7 @@ protected:
         TMessage message{};
         message.ReadFrom(messageExtern);
 
-        _messageBuffer->PushBack(message);
+        _messageBuffer->PushBack(std::move(message));
         messageCount.fetch_add(1);
         return true;
     }
@@ -428,7 +431,7 @@ protected:
     }
 
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           DsVeosCoSim_SimulationTime simulationTime,
+                                           SimulationTime simulationTime,
                                            const typename Base::Callback& callback) override {
         uint32_t receiveCount{};
         CheckResultWithMessage(reader.Read(receiveCount), "Could not read receive count.");
@@ -446,7 +449,7 @@ protected:
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;
 
-            callback(simulationTime, extension.info, message);
+            callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
         }
 
         return true;
@@ -463,29 +466,29 @@ private:
 #endif
 
 class BusBuffer {
-    using CanBufferBase = BusProtocolBufferBase<DsVeosCoSim_CanMessage, DsVeosCoSim_CanController>;
-    using EthBufferBase = BusProtocolBufferBase<DsVeosCoSim_EthMessage, DsVeosCoSim_EthController>;
-    using LinBufferBase = BusProtocolBufferBase<DsVeosCoSim_LinMessage, DsVeosCoSim_LinController>;
+    using CanBufferBase = BusProtocolBufferBase<CanMessageContainer, CanMessage, CanController>;
+    using EthBufferBase = BusProtocolBufferBase<EthMessageContainer, EthMessage, EthController>;
+    using LinBufferBase = BusProtocolBufferBase<LinMessageContainer, LinMessage, LinController>;
 
 public:
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
               const std::string& name,
-              const std::vector<DsVeosCoSim_CanController>& canControllers,
-              const std::vector<DsVeosCoSim_EthController>& ethControllers,
-              const std::vector<DsVeosCoSim_LinController>& linControllers);
+              const std::vector<CanController>& canControllers,
+              const std::vector<EthController>& ethControllers,
+              const std::vector<LinController>& linControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
               const std::string& name,
-              const std::vector<DsVeosCoSim_CanController>& canControllers);
+              const std::vector<CanController>& canControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
               const std::string& name,
-              const std::vector<DsVeosCoSim_EthController>& ethControllers);
+              const std::vector<EthController>& ethControllers);
     BusBuffer(CoSimType coSimType,
               ConnectionKind connectionKind,
               const std::string& name,
-              const std::vector<DsVeosCoSim_LinController>& linControllers);
+              const std::vector<LinController>& linControllers);
     ~BusBuffer() noexcept = default;
 
     BusBuffer(const BusBuffer&) = delete;
@@ -496,17 +499,17 @@ public:
 
     void ClearData() const;
 
-    [[nodiscard]] bool Transmit(const DsVeosCoSim_CanMessage& message) const;
-    [[nodiscard]] bool Transmit(const DsVeosCoSim_EthMessage& message) const;
-    [[nodiscard]] bool Transmit(const DsVeosCoSim_LinMessage& message) const;
+    [[nodiscard]] bool Transmit(const CanMessage& message) const;
+    [[nodiscard]] bool Transmit(const EthMessage& message) const;
+    [[nodiscard]] bool Transmit(const LinMessage& message) const;
 
-    [[nodiscard]] bool Receive(DsVeosCoSim_CanMessage& message) const;
-    [[nodiscard]] bool Receive(DsVeosCoSim_EthMessage& message) const;
-    [[nodiscard]] bool Receive(DsVeosCoSim_LinMessage& message) const;
+    [[nodiscard]] bool Receive(CanMessage& message) const;
+    [[nodiscard]] bool Receive(EthMessage& message) const;
+    [[nodiscard]] bool Receive(LinMessage& message) const;
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) const;
     [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   DsVeosCoSim_SimulationTime simulationTime,
+                                   SimulationTime simulationTime,
                                    const Callbacks& callbacks) const;
 
 private:

@@ -11,7 +11,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
+[[nodiscard]] bool WriteHeader(ChannelWriter& writer, const FrameKind frameKind) {
     CheckResultWithMessage(writer.Write(frameKind), "Could not write frame header.");
     return true;
 }
@@ -24,14 +24,14 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteString(ChannelWriter& writer, std::string_view string) {
+[[nodiscard]] bool WriteString(ChannelWriter& writer, const std::string_view string) {
     const auto size = static_cast<uint32_t>(string.size());
     CheckResultWithMessage(writer.Write(size), "Could not write string size.");
     CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
     return true;
 }
 
-[[nodiscard]] bool ReadIoSignalInfo(ChannelReader& reader, IoSignal& signal) {
+[[nodiscard]] bool ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
     CheckResultWithMessage(reader.Read(signal.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(signal.length), "Could not read length.");
     CheckResultWithMessage(reader.Read(signal.dataType), "Could not read data type.");
@@ -40,7 +40,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteIoSignalInfo(ChannelWriter& writer, const IoSignal& signal) {
+[[nodiscard]] bool WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
     CheckResultWithMessage(writer.Write(signal.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(signal.length), "Could not write length.");
     CheckResultWithMessage(writer.Write(signal.dataType), "Could not write data type.");
@@ -49,7 +49,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignal>& signals) {
+[[nodiscard]] bool ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
     uint32_t signalsCount = 0;
     CheckResultWithMessage(reader.Read(signalsCount), "Could not read signals count.");
     signals.resize(signalsCount);
@@ -61,8 +61,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignal>& signals) {
-    auto size = static_cast<uint32_t>(signals.size());
+[[nodiscard]] bool WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
+    const auto size = static_cast<uint32_t>(signals.size());
     CheckResultWithMessage(writer.Write(size), "Could not write signals count.");
     for (const auto& signal : signals) {
         CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
@@ -71,7 +71,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, CanController& controller) {
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -83,7 +83,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const CanController& controller) {
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -95,7 +95,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<CanController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -107,8 +107,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<CanController>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers) {
+    const auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -117,7 +117,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, EthController& controller) {
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -128,7 +128,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const EthController& controller) {
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -139,7 +139,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<EthController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -151,8 +151,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<EthController>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers) {
+    const auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -161,7 +161,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, LinController& controller) {
+[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -172,7 +172,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const LinController& controller) {
+[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -183,7 +183,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<LinController>& controllers) {
+[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -195,8 +195,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<LinController>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
+[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers) {
+    const auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -283,7 +283,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command) {
+[[nodiscard]] bool SendPingOk(ChannelWriter& writer, const Command command) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendPingOk(Command: " + ToString(command) + ")");
 #endif
@@ -314,8 +314,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendConnect(ChannelWriter& writer,
-                               uint32_t protocolVersion,
-                               Mode clientMode,
+                               const uint32_t protocolVersion,
+                               const Mode clientMode,
                                const std::string& serverName,
                                const std::string& clientName) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
@@ -362,15 +362,15 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
-                                 uint32_t protocolVersion,
-                                 Mode clientMode,
-                                 DsVeosCoSim_SimulationTime stepSize,
-                                 SimulationState simulationState,
-                                 const std::vector<IoSignal>& incomingSignals,
-                                 const std::vector<IoSignal>& outgoingSignals,
-                                 const std::vector<CanController>& canControllers,
-                                 const std::vector<EthController>& ethControllers,
-                                 const std::vector<LinController>& linControllers) {
+                                 const uint32_t protocolVersion,
+                                 const Mode clientMode,
+                                 const SimulationTime stepSize,
+                                 const SimulationState simulationState,
+                                 const std::vector<IoSignalContainer>& incomingSignals,
+                                 const std::vector<IoSignalContainer>& outgoingSignals,
+                                 const std::vector<CanControllerContainer>& canControllers,
+                                 const std::vector<EthControllerContainer>& ethControllers,
+                                 const std::vector<LinControllerContainer>& linControllers) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace(
         "SendConnectOk(ProtocolVersion: " + std::to_string(protocolVersion) + ", ClientMode: " + ToString(clientMode) +
@@ -402,13 +402,13 @@ namespace Protocol {
 [[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
                                  uint32_t& protocolVersion,
                                  Mode& clientMode,
-                                 DsVeosCoSim_SimulationTime& stepSize,
+                                 SimulationTime& stepSize,
                                  SimulationState& simulationState,
-                                 std::vector<IoSignal>& incomingSignals,
-                                 std::vector<IoSignal>& outgoingSignals,
-                                 std::vector<CanController>& canControllers,
-                                 std::vector<EthController>& ethControllers,
-                                 std::vector<LinController>& linControllers) {
+                                 std::vector<IoSignalContainer>& incomingSignals,
+                                 std::vector<IoSignalContainer>& outgoingSignals,
+                                 std::vector<CanControllerContainer>& canControllers,
+                                 std::vector<EthControllerContainer>& ethControllers,
+                                 std::vector<LinControllerContainer>& linControllers) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadConnectOk()");
 #endif
@@ -435,7 +435,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendStart(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendStart(ChannelWriter& writer, const SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendStart(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
@@ -451,7 +451,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool ReadStart(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadStart()");
 #endif
@@ -465,7 +465,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendStop(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendStop(ChannelWriter& writer, const SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendStop(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
@@ -481,7 +481,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool ReadStop(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadStop()");
 #endif
@@ -496,8 +496,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendTerminate(ChannelWriter& writer,
-                                 DsVeosCoSim_SimulationTime simulationTime,
-                                 DsVeosCoSim_TerminateReason reason) {
+                                 const SimulationTime simulationTime,
+                                 const TerminateReason reason) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendTerminate(SimulationTime: " + SimulationTimeToString(simulationTime) +
                           " s, Reason: " + ToString(reason) + ")");
@@ -515,9 +515,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool ReadTerminate(ChannelReader& reader,
-                                 DsVeosCoSim_SimulationTime& simulationTime,
-                                 DsVeosCoSim_TerminateReason& reason) {
+[[nodiscard]] bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadTerminate()");
 #endif
@@ -533,7 +531,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendPause(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendPause(ChannelWriter& writer, const SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendPause(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
@@ -549,7 +547,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool ReadPause(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadPause()");
 #endif
@@ -563,7 +561,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendContinue(ChannelWriter& writer, DsVeosCoSim_SimulationTime simulationTime) {
+[[nodiscard]] bool SendContinue(ChannelWriter& writer, const SimulationTime simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendContinue(SimulationTime: " + SimulationTimeToString(simulationTime) + " s)");
 #endif
@@ -579,7 +577,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool ReadContinue(ChannelReader& reader, DsVeosCoSim_SimulationTime& simulationTime) {
+[[nodiscard]] bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("ReadContinue()");
 #endif
@@ -594,7 +592,7 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendStep(ChannelWriter& writer,
-                            DsVeosCoSim_SimulationTime simulationTime,
+                            const SimulationTime simulationTime,
                             const IoBuffer& ioBuffer,
                             const BusBuffer& busBuffer) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
@@ -615,7 +613,7 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool ReadStep(ChannelReader& reader,
-                            DsVeosCoSim_SimulationTime& simulationTime,
+                            SimulationTime& simulationTime,
                             const IoBuffer& ioBuffer,
                             const BusBuffer& busBuffer,
                             const Callbacks& callbacks) {
@@ -640,8 +638,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendStepOk(ChannelWriter& writer,
-                              DsVeosCoSim_SimulationTime nextSimulationTime,
-                              Command command,
+                              const SimulationTime nextSimulationTime,
+                              const Command command,
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
@@ -664,7 +662,7 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool ReadStepOk(ChannelReader& reader,
-                              DsVeosCoSim_SimulationTime& nextSimulationTime,
+                              SimulationTime& nextSimulationTime,
                               Command& command,
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer,
@@ -693,7 +691,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, const uint16_t port) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendSetPort(ServerName: \"" + serverName + "\", Port: " + std::to_string(port) + ")");
 #endif
@@ -785,7 +783,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, const uint16_t port) {
 #ifdef DSVEOSCOSIM_ENABLE_TRACING
     LogProtocolBeginTrace("SendGetPortOk(Port: " + std::to_string(port) + ")");
 #endif

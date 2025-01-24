@@ -38,6 +38,6 @@ void UdpServerRun() {
 
 }  // namespace
 
-void StartUdpServer() {
+void StartUdpServer() {  // NOLINT
     std::thread(UdpServerRun).detach();
 }

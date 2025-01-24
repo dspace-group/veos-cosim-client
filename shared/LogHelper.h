@@ -8,7 +8,6 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/DsVeosCoSim.h"
 
 void InitializeOutput();
 
@@ -32,7 +31,7 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {
     DsVeosCoSim::LogTrace(fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
-void OnLogCallback(DsVeosCoSim_Severity severity, std::string_view message);
+void OnLogCallback(DsVeosCoSim::Severity severity, std::string_view message);
 
 void ClearLastMessage();
 [[nodiscard]] std::string GetLastMessage();

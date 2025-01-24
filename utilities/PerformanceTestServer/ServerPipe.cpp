@@ -36,6 +36,6 @@ void PipeServerRun() {
 
 }  // namespace
 
-void StartPipeServer() {
+void StartPipeServer() {  // NOLINT
     std::thread(PipeServerRun).detach();
 }

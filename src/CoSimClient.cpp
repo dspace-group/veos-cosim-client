@@ -7,7 +7,6 @@
 
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
-#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 #include "SocketChannel.h"
@@ -63,114 +62,19 @@ void CoSimClient::Disconnect() {
     }
 }
 
-[[nodiscard]] DsVeosCoSim_ConnectionState CoSimClient::GetConnectionState() const {
+[[nodiscard]] ConnectionState CoSimClient::GetConnectionState() const {
     if (_isConnected) {
-        return DsVeosCoSim_ConnectionState_Connected;
+        return ConnectionState::Connected;
     }
 
-    return DsVeosCoSim_ConnectionState_Disconnected;
-}
-
-void CoSimClient::SetCallbacks(const Callbacks& callbacks) {
-    _callbacks = callbacks;
-
-    if (_callbacks.callbacks.canMessageReceivedCallback) {
-        _callbacks.canMessageReceivedCallback = [this](DsVeosCoSim_SimulationTime simulationTime,
-                                                       const DsVeosCoSim_CanController& canController,
-                                                       const DsVeosCoSim_CanMessage& message) {
-            _callbacks.callbacks.canMessageReceivedCallback(simulationTime,
-                                                            &canController,
-                                                            &message,
-                                                            _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.ethMessageReceivedCallback) {
-        _callbacks.ethMessageReceivedCallback = [this](DsVeosCoSim_SimulationTime simulationTime,
-                                                       const DsVeosCoSim_EthController& ethController,
-                                                       const DsVeosCoSim_EthMessage& message) {
-            _callbacks.callbacks.ethMessageReceivedCallback(simulationTime,
-                                                            &ethController,
-                                                            &message,
-                                                            _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.linMessageReceivedCallback) {
-        _callbacks.linMessageReceivedCallback = [this](DsVeosCoSim_SimulationTime simulationTime,
-                                                       const DsVeosCoSim_LinController& linController,
-                                                       const DsVeosCoSim_LinMessage& message) {
-            _callbacks.callbacks.linMessageReceivedCallback(simulationTime,
-                                                            &linController,
-                                                            &message,
-                                                            _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.incomingSignalChangedCallback) {
-        _callbacks.incomingSignalChangedCallback = [this](DsVeosCoSim_SimulationTime simulationTime,
-                                                          const DsVeosCoSim_IoSignal& ioSignal,
-                                                          uint32_t length,
-                                                          const void* value) {
-            _callbacks.callbacks.incomingSignalChangedCallback(simulationTime,
-                                                               &ioSignal,
-                                                               length,
-                                                               value,
-                                                               _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationStartedCallback) {
-        _callbacks.simulationStartedCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationStartedCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationStoppedCallback) {
-        _callbacks.simulationStoppedCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationStoppedCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationPausedCallback) {
-        _callbacks.simulationPausedCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationPausedCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationContinuedCallback) {
-        _callbacks.simulationContinuedCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationContinuedCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationTerminatedCallback) {
-        _callbacks.simulationTerminatedCallback = [this](DsVeosCoSim_SimulationTime simulationTime,
-                                                         DsVeosCoSim_TerminateReason reason) {
-            _callbacks.callbacks.simulationTerminatedCallback(simulationTime,
-                                                              static_cast<DsVeosCoSim_TerminateReason>(reason),
-                                                              _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationBeginStepCallback) {
-        _callbacks.simulationBeginStepCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationBeginStepCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
-
-    if (_callbacks.callbacks.simulationEndStepCallback) {
-        _callbacks.simulationEndStepCallback = [this](DsVeosCoSim_SimulationTime simulationTime) {
-            _callbacks.callbacks.simulationEndStepCallback(simulationTime, _callbacks.callbacks.userData);
-        };
-    }
+    return ConnectionState::Disconnected;
 }
 
 [[nodiscard]] bool CoSimClient::RunCallbackBasedCoSimulation(const Callbacks& callbacks) {
     EnsureIsConnected();
     EnsureIsInResponderModeBlocking();
 
-    SetCallbacks(callbacks);
+    _callbacks = callbacks;
 
     if (!RunCallbackBasedCoSimulationInternal()) {
         CloseConnection();
@@ -184,12 +88,10 @@ void CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
     EnsureIsConnected();
     EnsureIsInResponderModeNonBlocking();
 
-    SetCallbacks(callbacks);
+    _callbacks = callbacks;
 }
 
-[[nodiscard]] bool CoSimClient::PollCommand(DsVeosCoSim_SimulationTime& simulationTime,
-                                            Command& command,
-                                            bool returnOnPing) {
+[[nodiscard]] bool CoSimClient::PollCommand(SimulationTime& simulationTime, Command& command, const bool returnOnPing) {
     EnsureIsConnected();
     EnsureIsInResponderModeNonBlocking();
 
@@ -221,7 +123,7 @@ void CoSimClient::StartPollingBasedCoSimulation(const Callbacks& callbacks) {
     return true;
 }
 
-void CoSimClient::SetNextSimulationTime(DsVeosCoSim_SimulationTime simulationTime) {
+void CoSimClient::SetNextSimulationTime(const SimulationTime simulationTime) {
     EnsureIsConnected();
 
     _nextSimulationTime = simulationTime;
@@ -239,19 +141,19 @@ void CoSimClient::Stop() {
     _nextCommand.exchange(Command::Stop);
 }
 
-void CoSimClient::Terminate(DsVeosCoSim_TerminateReason terminateReason) {
+void CoSimClient::Terminate(const TerminateReason terminateReason) {
     EnsureIsConnected();
 
     switch (terminateReason) {
-        case DsVeosCoSim_TerminateReason_Finished:
+        case TerminateReason::Finished:
             _nextCommand.exchange(Command::TerminateFinished);
             break;
-        case DsVeosCoSim_TerminateReason_Error:
+        case TerminateReason::Error:
             _nextCommand.exchange(Command::Terminate);
             break;
-        default:
-            throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
     }
+
+    throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
 }
 
 void CoSimClient::Pause() {
@@ -266,22 +168,20 @@ void CoSimClient::Continue() {
     _nextCommand.exchange(Command::Continue);
 }
 
-[[nodiscard]] DsVeosCoSim_SimulationTime CoSimClient::GetStepSize() const {
+[[nodiscard]] SimulationTime CoSimClient::GetStepSize() const {
     EnsureIsConnected();
 
     return _stepSize;
 }
 
-void CoSimClient::GetIncomingSignals(uint32_t* incomingSignalsCount,
-                                     const DsVeosCoSim_IoSignal** incomingSignals) const {
+void CoSimClient::GetIncomingSignals(uint32_t* incomingSignalsCount, const IoSignal** incomingSignals) const {
     EnsureIsConnected();
 
     *incomingSignalsCount = static_cast<uint32_t>(_incomingSignalsExtern.size());
     *incomingSignals = _incomingSignalsExtern.data();
 }
 
-void CoSimClient::GetOutgoingSignals(uint32_t* outgoingSignalsCount,
-                                     const DsVeosCoSim_IoSignal** outgoingSignals) const {
+void CoSimClient::GetOutgoingSignals(uint32_t* outgoingSignalsCount, const IoSignal** outgoingSignals) const {
     EnsureIsConnected();
 
     *outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignalsExtern.size());
@@ -291,48 +191,48 @@ void CoSimClient::GetOutgoingSignals(uint32_t* outgoingSignalsCount,
 [[nodiscard]] std::vector<IoSignal> CoSimClient::GetIncomingSignals() const {
     EnsureIsConnected();
 
-    return _incomingSignals;
+    return _incomingSignalsExtern;
 }
 
 [[nodiscard]] std::vector<IoSignal> CoSimClient::GetOutgoingSignals() const {
     EnsureIsConnected();
 
-    return _outgoingSignals;
+    return _outgoingSignalsExtern;
 }
 
-void CoSimClient::Write(DsVeosCoSim_IoSignalId outgoingSignalId, uint32_t length, const void* value) const {
+void CoSimClient::Write(const IoSignalId outgoingSignalId, const uint32_t length, const void* value) const {
     EnsureIsConnected();
 
     _ioBuffer->Write(outgoingSignalId, length, value);
 }
 
-void CoSimClient::Read(DsVeosCoSim_IoSignalId incomingSignalId, uint32_t& length, void* value) const {
+void CoSimClient::Read(const IoSignalId incomingSignalId, uint32_t& length, void* value) const {
     EnsureIsConnected();
 
     _ioBuffer->Read(incomingSignalId, length, value);
 }
 
-void CoSimClient::Read(DsVeosCoSim_IoSignalId incomingSignalId, uint32_t& length, const void** value) const {
+void CoSimClient::Read(const IoSignalId incomingSignalId, uint32_t& length, const void** value) const {
     EnsureIsConnected();
 
     _ioBuffer->Read(incomingSignalId, length, value);
 }
 
-void CoSimClient::GetCanControllers(uint32_t* controllersCount, const DsVeosCoSim_CanController** controllers) const {
+void CoSimClient::GetCanControllers(uint32_t* controllersCount, const CanController** controllers) const {
     EnsureIsConnected();
 
     *controllersCount = static_cast<uint32_t>(_canControllersExtern.size());
     *controllers = _canControllersExtern.data();
 }
 
-void CoSimClient::GetEthControllers(uint32_t* controllersCount, const DsVeosCoSim_EthController** controllers) const {
+void CoSimClient::GetEthControllers(uint32_t* controllersCount, const EthController** controllers) const {
     EnsureIsConnected();
 
     *controllersCount = static_cast<uint32_t>(_ethControllersExtern.size());
     *controllers = _ethControllersExtern.data();
 }
 
-void CoSimClient::GetLinControllers(uint32_t* controllersCount, const DsVeosCoSim_LinController** controllers) const {
+void CoSimClient::GetLinControllers(uint32_t* controllersCount, const LinController** controllers) const {
     EnsureIsConnected();
 
     *controllersCount = static_cast<uint32_t>(_linControllersExtern.size());
@@ -342,52 +242,52 @@ void CoSimClient::GetLinControllers(uint32_t* controllersCount, const DsVeosCoSi
 [[nodiscard]] std::vector<CanController> CoSimClient::GetCanControllers() const {
     EnsureIsConnected();
 
-    return _canControllers;
+    return _canControllersExtern;
 }
 
 [[nodiscard]] std::vector<EthController> CoSimClient::GetEthControllers() const {
     EnsureIsConnected();
 
-    return _ethControllers;
+    return _ethControllersExtern;
 }
 
 [[nodiscard]] std::vector<LinController> CoSimClient::GetLinControllers() const {
     EnsureIsConnected();
 
-    return _linControllers;
+    return _linControllersExtern;
 }
 
-[[nodiscard]] bool CoSimClient::Transmit(const DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool CoSimClient::Transmit(const CanMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Transmit(message);
 }
 
-[[nodiscard]] bool CoSimClient::Transmit(const DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool CoSimClient::Transmit(const EthMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Transmit(message);
 }
 
-[[nodiscard]] bool CoSimClient::Transmit(const DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool CoSimClient::Transmit(const LinMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Transmit(message);
 }
 
-[[nodiscard]] bool CoSimClient::Receive(DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool CoSimClient::Receive(CanMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Receive(message);
 }
 
-[[nodiscard]] bool CoSimClient::Receive(DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool CoSimClient::Receive(EthMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Receive(message);
 }
 
-[[nodiscard]] bool CoSimClient::Receive(DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool CoSimClient::Receive(LinMessage& message) const {
     EnsureIsConnected();
 
     return _busBuffer->Receive(message);
@@ -455,7 +355,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
                 std::to_string(_remotePort) + "...");
     }
 
-    std::optional<SocketChannel> channel =
+    std::optional<SocketChannel> channel =  // NOLINT
         TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to dSPACE VEOS CoSim server.");
 
@@ -622,9 +522,9 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     return true;
 }
 
-[[nodiscard]] bool CoSimClient::PollCommandInternal(DsVeosCoSim_SimulationTime& simulationTime,
+[[nodiscard]] bool CoSimClient::PollCommandInternal(SimulationTime& simulationTime,
                                                     Command& command,
-                                                    bool returnOnPing) {
+                                                    const bool returnOnPing) {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 
@@ -747,7 +647,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
 }
 
 [[nodiscard]] bool CoSimClient::OnTerminate() {
-    DsVeosCoSim_TerminateReason reason{};
+    TerminateReason reason{};
     CheckResultWithMessage(Protocol::ReadTerminate(_channel->GetReader(), _currentSimulationTime, reason),
                            "Could not read terminate frame.");
 

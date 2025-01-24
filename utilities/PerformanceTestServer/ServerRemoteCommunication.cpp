@@ -17,12 +17,15 @@ void RemoteCommunicationServerRun() {
     try {
         LogTrace("Remote communication server is listening ...");
 
-        TcpChannelServer server(CommunicationPort, true);
+        const TcpChannelServer server(CommunicationPort, true);
 
         std::array<char, BufferSize> buffer{};
 
         while (true) {
             std::optional<SocketChannel> acceptedChannel = server.TryAccept(Infinite);
+            if (!acceptedChannel) {
+                break;
+            }
 
             while (true) {
                 if (!acceptedChannel->GetReader().Read(buffer.data(), BufferSize)) {
@@ -45,6 +48,6 @@ void RemoteCommunicationServerRun() {
 
 }  // namespace
 
-void StartRemoteCommunicationServer() {
+void StartRemoteCommunicationServer() {  // NOLINT
     std::thread(RemoteCommunicationServerRun).detach();
 }

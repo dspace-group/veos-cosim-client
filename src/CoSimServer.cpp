@@ -2,6 +2,7 @@
 
 #include "CoSimServer.h"
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
@@ -12,6 +13,8 @@
 #include "Protocol.h"
 #include "Socket.h"
 #include "SocketChannel.h"
+
+using namespace std::chrono;
 
 namespace DsVeosCoSim {
 
@@ -62,7 +65,7 @@ void CoSimServer::Unload() {
     }
 }
 
-void CoSimServer::Start(DsVeosCoSim_SimulationTime simulationTime) {
+void CoSimServer::Start(const SimulationTime simulationTime) {
     if (!_channel) {
         if (_isClientOptional) {
             return;
@@ -72,7 +75,7 @@ void CoSimServer::Start(DsVeosCoSim_SimulationTime simulationTime) {
                 "' ...");
 
         while (!AcceptChannel()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(1ms);
         }
 
         if (!OnHandleConnect()) {
@@ -86,7 +89,7 @@ void CoSimServer::Start(DsVeosCoSim_SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Stop(DsVeosCoSim_SimulationTime simulationTime) {
+void CoSimServer::Stop(const SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -96,7 +99,7 @@ void CoSimServer::Stop(DsVeosCoSim_SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Terminate(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason) {
+void CoSimServer::Terminate(const SimulationTime simulationTime, const TerminateReason reason) {
     if (!_channel) {
         return;
     }
@@ -106,7 +109,7 @@ void CoSimServer::Terminate(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoS
     }
 }
 
-void CoSimServer::Pause(DsVeosCoSim_SimulationTime simulationTime) {
+void CoSimServer::Pause(const SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -116,7 +119,7 @@ void CoSimServer::Pause(DsVeosCoSim_SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Continue(DsVeosCoSim_SimulationTime simulationTime) {
+void CoSimServer::Continue(const SimulationTime simulationTime) {
     if (!_channel) {
         return;
     }
@@ -126,7 +129,7 @@ void CoSimServer::Continue(DsVeosCoSim_SimulationTime simulationTime) {
     }
 }
 
-void CoSimServer::Step(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_SimulationTime& nextSimulationTime) {
+void CoSimServer::Step(const SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
     if (!_channel) {
         return;
     }
@@ -140,7 +143,7 @@ void CoSimServer::Step(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_Si
     HandlePendingCommand(command);
 }
 
-void CoSimServer::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const void* value) const {
+void CoSimServer::Write(const IoSignalId signalId, const uint32_t length, const void* value) const {
     if (!_channel) {
         return;
     }
@@ -148,7 +151,7 @@ void CoSimServer::Write(DsVeosCoSim_IoSignalId signalId, uint32_t length, const 
     _ioBuffer->Write(signalId, length, value);
 }
 
-void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const void** value) const {
+void CoSimServer::Read(const IoSignalId signalId, uint32_t& length, const void** value) const {
     if (!_channel) {
         return;
     }
@@ -156,7 +159,7 @@ void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const 
     _ioBuffer->Read(signalId, length, value);
 }
 
-[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_CanMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const CanMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -164,7 +167,7 @@ void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const 
     return _busBuffer->Transmit(message);
 }
 
-[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_EthMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const EthMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -172,7 +175,7 @@ void CoSimServer::Read(DsVeosCoSim_IoSignalId signalId, uint32_t& length, const 
     return _busBuffer->Transmit(message);
 }
 
-[[nodiscard]] bool CoSimServer::Transmit(const DsVeosCoSim_LinMessage& message) const {
+[[nodiscard]] bool CoSimServer::Transmit(const LinMessage& message) const {
     if (!_channel) {
         return true;
     }
@@ -209,41 +212,41 @@ void CoSimServer::BackgroundService() {
     return 0;
 }
 
-[[nodiscard]] bool CoSimServer::StartInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::StartInternal(const SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-[[nodiscard]] bool CoSimServer::StopInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::StopInternal(const SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-[[nodiscard]] bool CoSimServer::TerminateInternal(DsVeosCoSim_SimulationTime simulationTime,
-                                                  DsVeosCoSim_TerminateReason reason) const {
+[[nodiscard]] bool CoSimServer::TerminateInternal(const SimulationTime simulationTime,
+                                                  const TerminateReason reason) const {
     CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                            "Could not send terminate frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-[[nodiscard]] bool CoSimServer::PauseInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::PauseInternal(const SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-[[nodiscard]] bool CoSimServer::ContinueInternal(DsVeosCoSim_SimulationTime simulationTime) const {
+[[nodiscard]] bool CoSimServer::ContinueInternal(const SimulationTime simulationTime) const {
     CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                            "Could not send continue frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return true;
 }
 
-[[nodiscard]] bool CoSimServer::StepInternal(DsVeosCoSim_SimulationTime simulationTime,
-                                             DsVeosCoSim_SimulationTime& nextSimulationTime,
+[[nodiscard]] bool CoSimServer::StepInternal(const SimulationTime simulationTime,
+                                             SimulationTime& nextSimulationTime,
                                              Command& command) const {
     CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
                            "Could not send step frame.");
@@ -257,7 +260,7 @@ void CoSimServer::CloseConnection() {
     _channel.reset();
 
     if (!_isClientOptional && _callbacks.simulationStoppedCallback) {
-        _callbacks.simulationStoppedCallback(0);
+        _callbacks.simulationStoppedCallback(0ns);
     }
 
     StartAccepting();
@@ -293,7 +296,7 @@ void CoSimServer::StartAccepting() {
             }
         }
 
-        std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
+        const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
         LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" +
                 std::to_string(port) + ".");
     }
@@ -375,17 +378,17 @@ void CoSimServer::StopAccepting() {
                                                    _linControllers),
                            "Could not send connect ok frame.");
 
-    std::vector<DsVeosCoSim_IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
-    std::vector<DsVeosCoSim_IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
+    std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
+    std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
     _ioBuffer = std::make_unique<IoBuffer>(CoSimType::Server,
                                            _connectionKind,
                                            _serverName,
                                            incomingSignalsExtern,
                                            outgoingSignalsExtern);
 
-    std::vector<DsVeosCoSim_CanController> canControllersExtern = Convert(_canControllers);
-    std::vector<DsVeosCoSim_EthController> ethControllersExtern = Convert(_ethControllers);
-    std::vector<DsVeosCoSim_LinController> linControllersExtern = Convert(_linControllers);
+    std::vector<CanController> canControllersExtern = Convert(_canControllers);
+    std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
+    std::vector<LinController> linControllersExtern = Convert(_linControllers);
     _busBuffer = std::make_unique<BusBuffer>(CoSimType::Server,
                                              _connectionKind,
                                              _serverName,
@@ -396,7 +399,7 @@ void CoSimServer::StopAccepting() {
     StopAccepting();
 
     if (_connectionKind == ConnectionKind::Remote) {
-        SocketAddress socketAddress = reinterpret_cast<SocketChannel*>(_channel.get())->GetRemoteAddress();
+        const SocketAddress socketAddress = reinterpret_cast<SocketChannel*>(_channel.get())->GetRemoteAddress();
         if (clientName.empty()) {
             LogInfo("dSPACE VEOS CoSim client at " + socketAddress.ipAddress + ":" +
                     std::to_string(socketAddress.port) + " connected.");
@@ -464,7 +467,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] bool CoSimServer::WaitForStepOkFrame(DsVeosCoSim_SimulationTime& simulationTime, Command& command) const {
+[[nodiscard]] bool CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -489,7 +492,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-void CoSimServer::HandlePendingCommand(Command command) const {
+void CoSimServer::HandlePendingCommand(const Command command) const {
     switch (command) {
         case Command::Start:
             _callbacks.simulationStartedCallback({});
@@ -498,7 +501,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
             _callbacks.simulationStoppedCallback({});
             break;
         case Command::Terminate:
-            _callbacks.simulationTerminatedCallback({}, DsVeosCoSim_TerminateReason_Error);
+            _callbacks.simulationTerminatedCallback({}, TerminateReason::Error);
             break;
         case Command::Pause:
             _callbacks.simulationPausedCallback({});
@@ -507,7 +510,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
             _callbacks.simulationContinuedCallback({});
             break;
         case Command::TerminateFinished:
-            _callbacks.simulationTerminatedCallback({}, DsVeosCoSim_TerminateReason_Finished);
+            _callbacks.simulationTerminatedCallback({}, TerminateReason::Finished);
             break;
         case Command::None:
         case Command::Step:
