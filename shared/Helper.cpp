@@ -17,8 +17,8 @@
 #else
 #include <termios.h>
 #include <unistd.h>
-#include <cstdlib>
 
+#include <cstdlib>
 #endif
 
 using namespace DsVeosCoSim;

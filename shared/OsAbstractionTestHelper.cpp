@@ -107,24 +107,24 @@ void UdpSocket::Listen() const {
 [[nodiscard]] bool UdpSocket::SendTo(const void* source, const uint32_t size, const InternetAddress& address) const {
     const auto* const sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    const int32_t length = CAST(sendto(_socket,
-                                       sourcePointer,
-                                       static_cast<int32_t>(size),
-                                       0,
-                                       reinterpret_cast<const sockaddr*>(&address),
-                                       addressLength));
+    const auto length = CAST(sendto(_socket,
+                                    sourcePointer,
+                                    static_cast<int32_t>(size),
+                                    0,
+                                    reinterpret_cast<const sockaddr*>(&address),
+                                    addressLength));
     return length == static_cast<int32_t>(size);
 }
 
 [[nodiscard]] bool UdpSocket::ReceiveFrom(void* destination, const uint32_t size, InternetAddress& address) const {
     auto* const destinationPointer = static_cast<char*>(destination);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    const int32_t length = CAST(recvfrom(_socket,
-                                         destinationPointer,
-                                         static_cast<int32_t>(size),
-                                         0,
-                                         reinterpret_cast<sockaddr*>(&address),
-                                         &addressLength));
+    const auto length = CAST(recvfrom(_socket,
+                                      destinationPointer,
+                                      static_cast<int32_t>(size),
+                                      0,
+                                      reinterpret_cast<sockaddr*>(&address),
+                                      &addressLength));
     return length == static_cast<int32_t>(size);
 }
 

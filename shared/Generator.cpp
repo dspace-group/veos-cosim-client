@@ -76,7 +76,7 @@ void FillWithRandom(uint8_t* data, const size_t length) {
 }
 
 [[nodiscard]] SimulationTime GenerateSimulationTime() {
-    return SimulationTime(abs(GenerateI64()));
+    return SimulationTime(GenerateU64());
 }
 
 [[nodiscard]] IoSignalContainer CreateSignal() {

@@ -8,6 +8,7 @@
 #else
 #include <termios.h>
 #include <unistd.h>
+
 #include <cstdlib>
 #endif
 
@@ -164,8 +165,8 @@ void LogLinMessage(const SimulationTime simulationTime, const LinController& con
     return GenerateU32(0, INT32_MAX);
 }
 
-[[nodiscard]] int64_t GenerateI64() {
-    return (static_cast<int64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<int64_t>(GenerateU32());
+[[nodiscard]] uint64_t GenerateU64() {
+    return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
 }
 
 [[nodiscard]] BusMessageId GenerateBusMessageId(const uint32_t min, const uint32_t max) {
@@ -173,7 +174,7 @@ void LogLinMessage(const SimulationTime simulationTime, const LinController& con
 }
 
 [[nodiscard]] SimulationTime GenerateSimulationTime() {
-    return SimulationTime(abs(GenerateI64()));
+    return SimulationTime(GenerateU64());
 }
 
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(const size_t length) {

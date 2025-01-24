@@ -36,7 +36,7 @@ protected:
     }
 };
 
-void Transfer(const ConnectionKind connectionKind,
+void Transfer(const ConnectionKind connectionKind,  // NOLINT
               const BusBuffer& senderBusBuffer,
               const BusBuffer& receiverBusBuffer) {
     std::unique_ptr<Channel> senderChannel{};
