@@ -6,7 +6,7 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 namespace DsVeosCoSim {
 

@@ -6,6 +6,10 @@
 
 namespace DsVeosCoSim {
 
+[[nodiscard]] bool IsProtocolTracingEnabled();
+[[nodiscard]] bool IsProtocolHeaderTracingEnabled();
+[[nodiscard]] bool IsProtocolPingTracingEnabled();
+
 [[nodiscard]] bool IsPortMapperServerVerbose();
 [[nodiscard]] bool IsPortMapperClientVerbose();
 

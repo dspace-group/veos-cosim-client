@@ -2,6 +2,8 @@
 
 #include "BusBuffer.h"
 
+#include "CoSimTypes.h"
+
 #include <string>
 
 namespace DsVeosCoSim {
@@ -61,10 +63,17 @@ void CanMessageContainer::ReadFrom(const CanMessage& message) {
     (void)memcpy(data.data(), message.data, message.length);
 }
 
-CanMessageContainer::operator CanMessage() const {
+[[nodiscard]] CanMessageContainer::operator CanMessage() const {
     CanMessage message{};
     WriteTo(message);
     return message;
+}
+
+[[nodiscard]] inline std::string CanMessageContainer::ToString() const {
+    return "CAN Message { Timestamp: " + SimulationTimeToString(timestamp) +
+           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Id: " + DsVeosCoSim::ToString(id) +
+           ", Length: " + std::to_string(length) + ", Data: " + DataToString(data.data(), length, '-') +
+           ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
 }
 
 void CanMessageContainer::CheckMaxLength() const {
@@ -122,10 +131,16 @@ void EthMessageContainer::ReadFrom(const EthMessage& message) {
     (void)memcpy(data.data(), message.data, message.length);
 }
 
-EthMessageContainer::operator EthMessage() const {
+[[nodiscard]] EthMessageContainer::operator EthMessage() const {
     EthMessage message{};
     WriteTo(message);
     return message;
+}
+
+[[nodiscard]] inline std::string EthMessageContainer::ToString() const {
+    return "ETH Message { Timestamp: " + SimulationTimeToString(timestamp) +
+           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Length: " + std::to_string(length) +
+           ", Data: " + DataToString(data.data(), length, '-') + ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
 }
 
 void EthMessageContainer::CheckMaxLength() const {
@@ -174,10 +189,17 @@ void LinMessageContainer::ReadFrom(const LinMessage& message) {
     (void)memcpy(data.data(), message.data, message.length);
 }
 
-LinMessageContainer::operator LinMessage() const {
+[[nodiscard]] LinMessageContainer::operator LinMessage() const {
     LinMessage message{};
     WriteTo(message);
     return message;
+}
+
+[[nodiscard]] inline std::string LinMessageContainer::ToString() const {
+    return "LIN Message { Timestamp: " + SimulationTimeToString(timestamp) +
+           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Id: " + DsVeosCoSim::ToString(id) +
+           ", Length: " + std::to_string(length) + ", Data: " + DataToString(data.data(), length, '-') +
+           ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
 }
 
 void LinMessageContainer::CheckMaxLength() const {

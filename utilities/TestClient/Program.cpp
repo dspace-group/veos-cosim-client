@@ -298,33 +298,33 @@ void SwitchSendingLinMessages() {
     return DsVeosCoSim_Result_Ok;
 }
 
-void LogIoData(const DsVeosCoSim_SimulationTime simulationTime,
+void LogIoData([[maybe_unused]] const DsVeosCoSim_SimulationTime simulationTime,
                const DsVeosCoSim_IoSignal* ioSignal,
                const uint32_t length,
                const void* value,
                [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::fuchsia), "{}\n", DsVeosCoSim_IoDataToString(simulationTime, *ioSignal, length, value));
+    print(fg(fmt::color::fuchsia), "{}\n", DsVeosCoSim_IoDataToString(*ioSignal, length, value));
 }
 
-void LogCanMessage(const DsVeosCoSim_SimulationTime simulationTime,
-                   const DsVeosCoSim_CanController* controller,
+void LogCanMessage([[maybe_unused]] const DsVeosCoSim_SimulationTime simulationTime,
+    [[maybe_unused]] const DsVeosCoSim_CanController* controller,
                    const DsVeosCoSim_CanMessage* message,
                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::dodger_blue), "{}\n", DsVeosCoSim_CanMessageToString(simulationTime, *controller, *message));
+    print(fg(fmt::color::dodger_blue), "{}\n", DsVeosCoSim_CanMessageToString(*message));
 }
 
-void LogEthMessage(const DsVeosCoSim_SimulationTime simulationTime,
-                   const DsVeosCoSim_EthController* controller,
+void LogEthMessage([[maybe_unused]] const DsVeosCoSim_SimulationTime simulationTime,
+    [[maybe_unused]] const DsVeosCoSim_EthController* controller,
                    const DsVeosCoSim_EthMessage* message,
                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::cyan), "{}\n", DsVeosCoSim_EthMessageToString(simulationTime, *controller, *message));
+    print(fg(fmt::color::cyan), "{}\n", DsVeosCoSim_EthMessageToString(*message));
 }
 
-void LogLinMessage(const DsVeosCoSim_SimulationTime simulationTime,
-                   const DsVeosCoSim_LinController* controller,
+void LogLinMessage([[maybe_unused]] const DsVeosCoSim_SimulationTime simulationTime,
+    [[maybe_unused]] const DsVeosCoSim_LinController* controller,
                    const DsVeosCoSim_LinMessage* message,
                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_LinMessageToString(simulationTime, *controller, *message));
+    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_LinMessageToString(*message));
 }
 
 void OnSimulationPostStepCallback(const DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {

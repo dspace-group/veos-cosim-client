@@ -6,7 +6,6 @@ project(DsVeosCoSim VERSION 1.0)
 
 option(BUILD_SHARED_LIBS "Compile dSPACE VEOS CoSim as a shared library" OFF)
 option(DSVEOSCOSIM_BUILD_TESTS "Create tests for dSPACE VEOS CoSim" OFF)
-option(DSVEOSCOSIM_BUILD_BENCHMARKS "Create benchmarks for dSPACE VEOS CoSim" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -18,7 +17,7 @@ endif()
 
 add_subdirectory(src)
 
-if(DSVEOSCOSIM_BUILD_TESTS OR DSVEOSCOSIM_BUILD_BENCHMARKS)
+if(DSVEOSCOSIM_BUILD_TESTS)
 add_subdirectory(shared)
 add_subdirectory(third_party)
 endif()
@@ -29,10 +28,6 @@ if(DSVEOSCOSIM_BUILD_TESTS)
   add_subdirectory(utilities/TestServer)
   add_subdirectory(utilities/PerformanceTestClient)
   add_subdirectory(utilities/PerformanceTestServer)
-endif()
-
-if(DSVEOSCOSIM_BUILD_BENCHMARKS)
-  add_subdirectory(benchmark)
 endif()
 
 install(EXPORT DsVeosCoSimTargets

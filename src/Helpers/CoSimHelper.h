@@ -18,6 +18,7 @@ void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
 void LogProtocolBeginTrace(const std::string& message);
 void LogProtocolEndTrace(const std::string& message);
+void LogProtocolDataTrace(const std::string& message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \
@@ -38,7 +39,7 @@ void LogProtocolEndTrace(const std::string& message);
 
 class CoSimException final : public std::runtime_error {
 public:
-    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {
+    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {  // NOLINT
     }
 
     CoSimException(const std::string& message, const int32_t errorCode)

@@ -35,6 +35,21 @@ namespace {
 
 }  // namespace
 
+[[nodiscard]] bool IsProtocolTracingEnabled() {
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
+    return verbose;
+}
+
+[[nodiscard]] bool IsProtocolHeaderTracingEnabled() {
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
+    return verbose;
+}
+
+[[nodiscard]] bool IsProtocolPingTracingEnabled() {
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
+    return verbose;
+}
+
 [[nodiscard]] bool IsPortMapperServerVerbose() {
     static bool verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
     return verbose;

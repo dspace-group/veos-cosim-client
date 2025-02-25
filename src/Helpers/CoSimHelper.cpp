@@ -19,29 +19,25 @@ void SetLogCallback(LogCallback logCallback) {
 }
 
 void LogError(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
-    if (logCallback) {
-        logCallback(Severity::Error, message.data());
+    if (const auto logCallback = LogCallbackHandler) {
+        logCallback(Severity::Error, message);
     }
 }
 
 void LogWarning(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (const auto logCallback = LogCallbackHandler) {
         logCallback(Severity::Warning, message);
     }
 }
 
 void LogInfo(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (const auto logCallback = LogCallbackHandler) {
         logCallback(Severity::Info, message);
     }
 }
 
 void LogTrace(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (const auto logCallback = LogCallbackHandler) {
         logCallback(Severity::Trace, message);
     }
 }
@@ -52,6 +48,10 @@ void LogProtocolBeginTrace(const std::string& message) {
 
 void LogProtocolEndTrace(const std::string& message) {
     LogTrace("PROT END   " + message);
+}
+
+void LogProtocolDataTrace(const std::string& message) {
+    LogTrace("PROT DATA  " + message);
 }
 
 [[nodiscard]] std::string GetSystemErrorMessage(const int32_t errorCode) {

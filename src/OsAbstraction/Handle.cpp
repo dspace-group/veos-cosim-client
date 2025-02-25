@@ -39,8 +39,7 @@ void Handle::Wait() const {
 }
 
 [[nodiscard]] bool Handle::Wait(const uint32_t milliseconds) const {
-    const DWORD result = WaitForSingleObject(_handle, milliseconds);
-    switch (result) {
+    switch (const DWORD result = WaitForSingleObject(_handle, milliseconds)) {
         case WAIT_OBJECT_0:
             return true;
         case WAIT_ABANDONED:
@@ -54,8 +53,7 @@ void Handle::Wait() const {
 }
 
 [[nodiscard]] bool SignalAndWait(const Handle& toSignal, const Handle& toWait, const uint32_t milliseconds) {
-    const DWORD result = SignalObjectAndWait(toSignal, toWait, milliseconds, FALSE);
-    switch (result) {
+    switch (const DWORD result = SignalObjectAndWait(toSignal, toWait, milliseconds, FALSE)) {
         case WAIT_OBJECT_0:
             return true;
         case WAIT_ABANDONED:

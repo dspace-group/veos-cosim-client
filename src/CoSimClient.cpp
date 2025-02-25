@@ -147,10 +147,10 @@ void CoSimClient::Terminate(const TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             _nextCommand.exchange(Command::TerminateFinished);
-            break;
+            return;
         case TerminateReason::Error:
             _nextCommand.exchange(Command::Terminate);
-            break;
+            return;
     }
 
     throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
@@ -435,7 +435,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT
         case FrameKind::ConnectOk:
             CheckResultWithMessage(OnConnectOk(), "Could not handle connect ok.");
             return true;
@@ -452,7 +452,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT
             case FrameKind::Step: {
                 CheckResultWithMessage(OnStep(), "Could not handle step.");
                 if (!_isConnected) {
@@ -528,7 +528,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 
-    while (true) {
+    while (true) {  // NOLINT
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
         switch (frameKind) {
@@ -583,6 +583,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
         case Command::Start:
         case Command::Stop:
         case Command::Terminate:
+        case Command::TerminateFinished:
         case Command::Pause:
         case Command::Continue:
             CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
@@ -600,7 +601,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
                                    "Could not send ping ok frame.");
             break;
         }
-        default:
+        case Command::None:
             break;
     }
 
@@ -693,7 +694,7 @@ void CoSimClient::EnsureIsInResponderModeBlocking() {
             break;
         case ResponderMode::NonBlocking:
             throw CoSimException("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
-        default:
+        case ResponderMode::Blocking:
             // Nothing to do
             break;
     }
@@ -706,7 +707,7 @@ void CoSimClient::EnsureIsInResponderModeNonBlocking() {
             break;
         case ResponderMode::Blocking:
             throw CoSimException("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
-        default:
+        case ResponderMode::NonBlocking:
             // Nothing to do
             break;
     }

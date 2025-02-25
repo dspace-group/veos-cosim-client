@@ -1159,19 +1159,12 @@ extern DSVEOSCOSIM_API std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataTyp
                                                              uint32_t length,
                                                              const void* value);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator = 0);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                              const DsVeosCoSim_IoSignal& ioSignal,
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal& ioSignal,
                                                               uint32_t length,
                                                               const void* value);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                                  const DsVeosCoSim_CanController& controller,
-                                                                  const DsVeosCoSim_CanMessage& message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                                  const DsVeosCoSim_EthController& controller,
-                                                                  const DsVeosCoSim_EthMessage& message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(DsVeosCoSim_SimulationTime simulationTime,
-                                                                  const DsVeosCoSim_LinController& controller,
-                                                                  const DsVeosCoSim_LinMessage& message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage& message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage& message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage& message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerTypeToString(
     DsVeosCoSim_LinControllerType linControllerType);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
