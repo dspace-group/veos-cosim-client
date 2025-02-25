@@ -331,8 +331,7 @@ void CoSimServer::StopAccepting() {
 
 #ifdef _WIN32
     if (_localChannelServer) {
-        std::optional<LocalChannel> channel = _localChannelServer->TryAccept();
-        if (channel) {
+        if (std::optional<LocalChannel> channel = _localChannelServer->TryAccept()) {
             _channel = std::make_unique<LocalChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Local;
             return true;
@@ -340,8 +339,7 @@ void CoSimServer::StopAccepting() {
     }
 #else
     if (_udsChannelServer) {
-        std::optional<SocketChannel> channel = _udsChannelServer->TryAccept();
-        if (channel) {
+        if (std::optional<SocketChannel> channel = _udsChannelServer->TryAccept()) {
             _channel = std::make_unique<SocketChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Local;
             return true;
@@ -350,8 +348,7 @@ void CoSimServer::StopAccepting() {
 #endif
 
     if (_tcpChannelServer) {
-        std::optional<SocketChannel> channel = _tcpChannelServer->TryAccept();
-        if (channel) {
+        if (std::optional<SocketChannel> channel = _tcpChannelServer->TryAccept()) {
             _channel = std::make_unique<SocketChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Remote;
             return true;
@@ -399,13 +396,12 @@ void CoSimServer::StopAccepting() {
     StopAccepting();
 
     if (_connectionKind == ConnectionKind::Remote) {
-        const SocketAddress socketAddress = reinterpret_cast<SocketChannel*>(_channel.get())->GetRemoteAddress();
+        const auto [ipAddress, port] = reinterpret_cast<SocketChannel*>(_channel.get())->GetRemoteAddress();
         if (clientName.empty()) {
-            LogInfo("dSPACE VEOS CoSim client at " + socketAddress.ipAddress + ":" +
-                    std::to_string(socketAddress.port) + " connected.");
+            LogInfo("dSPACE VEOS CoSim client at " + ipAddress + ":" + std::to_string(port) + " connected.");
         } else {
-            LogInfo("dSPACE VEOS CoSim client '" + clientName + "' at " + socketAddress.ipAddress + ":" +
-                    std::to_string(socketAddress.port) + " connected.");
+            LogInfo("dSPACE VEOS CoSim client '" + clientName + "' at " + ipAddress + ":" + std::to_string(port) +
+                    " connected.");
         }
     } else {
         if (clientName.empty()) {
@@ -422,7 +418,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {
@@ -440,7 +436,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT
         case FrameKind::PingOk:
             CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                    "Could not read ping ok frame.");
@@ -454,7 +450,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT
         case FrameKind::Connect: {
             Mode mode{};
             std::string serverName;
@@ -471,7 +467,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT
         case FrameKind::StepOk:
             CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                         simulationTime,
@@ -515,7 +511,6 @@ void CoSimServer::HandlePendingCommand(const Command command) const {
         case Command::None:
         case Command::Step:
         case Command::Ping:
-        default:
             break;
     }
 }

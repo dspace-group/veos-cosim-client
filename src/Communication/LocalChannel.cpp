@@ -176,8 +176,7 @@ LocalChannelWriter::LocalChannelWriter(const std::string& name, const bool isSer
         (void)memcpy(&_data[_maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
         bufferPointer += sizeUntilBufferEnd;
 
-        const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
-        if (restSize > 0) {
+        if (const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd; restSize > 0) {
             (void)memcpy(&_data[0], bufferPointer, restSize);
             bufferPointer += restSize;
         }
@@ -242,8 +241,7 @@ LocalChannelReader::LocalChannelReader(const std::string& name, const bool isSer
         (void)memcpy(bufferPointer, &_data[_maskedReadIndex], sizeUntilBufferEnd);
         bufferPointer += sizeUntilBufferEnd;
 
-        const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
-        if (restSize > 0) {
+        if (const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd; restSize > 0) {
             (void)memcpy(bufferPointer, &_data[0], restSize);
             bufferPointer += restSize;
         }
@@ -322,8 +320,7 @@ LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
 }
 
 [[nodiscard]] std::optional<LocalChannel> LocalChannelServer::TryAccept() {
-    const int32_t currentCounter = _counter->load();
-    if (currentCounter > _lastCounter) {
+    if (const int32_t currentCounter = _counter->load(); currentCounter > _lastCounter) {
         const std::string specificName = _name + "." + std::to_string(_lastCounter);
         _lastCounter++;
         return LocalChannel(specificName, true);

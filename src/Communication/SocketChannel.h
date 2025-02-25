@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 #include <vector>
 
 #include "Channel.h"

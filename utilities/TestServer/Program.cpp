@@ -129,16 +129,22 @@ void SwitchSendingLinMessages() {
     PrintStatus(SendLinMessages, "LIN messages");
 }
 
-void LogCanMessage(const SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
-    print(fg(fmt::color::dodger_blue), "{}\n", CanMessageToString(simulationTime, controller, message));
+void LogCanMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const CanController& controller,
+                   const CanMessage& message) {
+    print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
 }
 
-void LogEthMessage(const SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
-    print(fg(fmt::color::cyan), "{}\n", EthMessageToString(simulationTime, controller, message));
+void LogEthMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const EthController& controller,
+                   const EthMessage& message) {
+    print(fg(fmt::color::cyan), "{}\n", ToString(message));
 }
 
-void LogLinMessage(const SimulationTime simulationTime, const LinController& controller, const LinMessage& message) {
-    print(fg(fmt::color::lime), "{}\n", LinMessageToString(simulationTime, controller, message));
+void LogLinMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const LinController& controller,
+                   const LinMessage& message) {
+    print(fg(fmt::color::lime), "{}\n", ToString(message));
 }
 
 [[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {

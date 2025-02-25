@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 
 namespace DsVeosCoSim {
 
 void StartupNetwork();
 
-enum class AddressFamily {
+enum class AddressFamily {  // NOLINT
     Uds = 1,
     Ipv4 = 2,
     Ipv6 = 23

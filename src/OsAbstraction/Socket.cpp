@@ -34,10 +34,6 @@
 #include <cerrno>
 #endif
 
-#ifdef _WIN32
-namespace fs = std::filesystem;
-#endif
-
 namespace DsVeosCoSim {
 
 namespace {
@@ -62,8 +58,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 [[nodiscard]] std::string GetUdsPath(const std::string& name) {
 #ifdef _WIN32
-    const fs::path tempDir = fs::temp_directory_path();
-    const fs::path fileDir = tempDir / ("dSPACE.VEOS.CoSim." + name);
+    const std::filesystem::path tempDir = std::filesystem::temp_directory_path();
+    const std::filesystem::path fileDir = tempDir / ("dSPACE.VEOS.CoSim." + name);
     return fileDir.string();
 #else
     return "dSPACE.VEOS.CoSim." + name;
@@ -106,7 +102,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     addrinfo* addressInfo{};
 
-    const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
+    const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);  // NOLINT
     if (errorCode != 0) {
         throw CoSimException("Could not get address information. ", errorCode);
     }
@@ -120,8 +116,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     if (ipv4Address.sin_addr.s_addr != 0) {
         std::string ipAddress(INET_ADDRSTRLEN, '\0');
-        const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
-        if (!result) {
+        if (const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
+            !result) {
             throw CoSimException("Could not get address information.", GetLastNetworkError());
         }
 
@@ -138,8 +134,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     socketAddress.port = ntohs(ipv6Address.sin6_port);
 
     std::string ipAddress(INET6_ADDRSTRLEN, '\0');
-    const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
-    if (!result) {
+    if (const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN); !result) {
         throw CoSimException("Could not get address information.", GetLastNetworkError());
     }
 
@@ -234,8 +229,7 @@ void SwitchToBlockingMode(const socket_t& socket) {
         throw CoSimException("Invalid connect result.");
     }
 
-    const int32_t errorCode = GetLastNetworkError();
-    if (errorCode != ErrorCodeWouldBlock) {
+    if (const int32_t errorCode = GetLastNetworkError(); errorCode != ErrorCodeWouldBlock) {
         throw CoSimException("Could not connect.", errorCode);
     }
 
@@ -268,8 +262,7 @@ void StartupNetwork() {
     if (!networkStarted) {
         WSADATA wsaData;
 
-        const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if (errorCode != 0) {
+        if (const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData); errorCode != 0) {
             throw CoSimException("Could not initialize Windows sockets.", errorCode);
         }
 
@@ -449,7 +442,8 @@ void Socket::EnableIpv6Only() const {  // NOLINT
     while (currentAddressInfo) {
         int32_t addressFamily = currentAddressInfo->ai_family;
 
-        const socket_t socket = ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
+        const socket_t socket =
+            ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (socket == InvalidSocket) {
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
@@ -640,8 +634,8 @@ void Socket::Listen() const {
         throw CoSimException("Could not get local socket address.", GetLastNetworkError());
     }
 
-    const SocketAddress socketAddress = ConvertFromInternetAddress(address);
-    return socketAddress.port;
+    const auto [ipAddress, port] = ConvertFromInternetAddress(address);
+    return port;
 }
 
 [[nodiscard]] uint16_t Socket::GetLocalPortForIpv6() const {
@@ -653,8 +647,8 @@ void Socket::Listen() const {
         throw CoSimException("Could not get local socket address.", GetLastNetworkError());
     }
 
-    const SocketAddress socketAddress = ConvertFromInternetAddress(address);
-    return socketAddress.port;
+    const auto [ipAddress, port] = ConvertFromInternetAddress(address);
+    return port;
 }
 
 [[nodiscard]] SocketAddress Socket::GetRemoteAddress() const {

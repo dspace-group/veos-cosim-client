@@ -6,7 +6,7 @@
 #include <chrono>
 #include <cstring>
 #include <string>
-#include <string_view>
+#include <string_view>  // IWYU pragma: keep
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -255,16 +255,18 @@ TcpChannelServer::TcpChannelServer(const uint16_t port, const bool enableRemoteA
 
 [[nodiscard]] std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     do {
-        std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
-        if (socket) {
-            socket->EnableNoDelay();
-            return SocketChannel(std::move(*socket));
+        if (_listenSocketIpv4.IsValid()) {
+            if (std::optional<Socket> socket = _listenSocketIpv4.TryAccept()) {  // NOLINT
+                socket->EnableNoDelay();
+                return SocketChannel(std::move(*socket));
+            }
         }
 
-        socket = _listenSocketIpv6.TryAccept();
-        if (socket) {
-            socket->EnableNoDelay();
-            return SocketChannel(std::move(*socket));
+        if (_listenSocketIpv6.IsValid()) {
+            if (std::optional<Socket> socket = _listenSocketIpv6.TryAccept()) {  // NOLINT
+                socket->EnableNoDelay();
+                return SocketChannel(std::move(*socket));
+            }
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

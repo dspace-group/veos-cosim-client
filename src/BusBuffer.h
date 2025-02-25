@@ -10,6 +10,7 @@
 #include "Channel.h"
 #include "CoSimHelper.h"
 #include "CoSimTypes.h"
+#include "Environment.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -37,6 +38,8 @@ struct CanMessageContainer {
 
     [[nodiscard]] explicit operator CanMessage() const;
 
+    [[nodiscard]] std::string ToString() const;
+
 private:
     void CheckMaxLength() const;
     void CheckFlags() const;
@@ -55,7 +58,9 @@ struct EthMessageContainer {
     void WriteTo(EthMessage& message) const;
     void ReadFrom(const EthMessage& message);
 
-    [[nodiscard]] explicit operator EthMessage() const;  // NOLINT
+    [[nodiscard]] explicit operator EthMessage() const;
+
+    [[nodiscard]] std::string ToString() const;
 
 private:
     void CheckMaxLength() const;
@@ -75,7 +80,9 @@ struct LinMessageContainer {
     void WriteTo(LinMessage& message) const;
     void ReadFrom(const LinMessage& message);
 
-    [[nodiscard]] explicit operator LinMessage() const;  // NOLINT
+    [[nodiscard]] explicit operator LinMessage() const;
+
+    [[nodiscard]] std::string ToString() const;
 
 private:
     void CheckMaxLength() const;
@@ -279,6 +286,11 @@ protected:
 
         for (uint32_t i = 0; i < count; i++) {
             TMessage& message = _messageBuffer.PopFront();
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(message.ToString());
+            }
+
             CheckResultWithMessage(message.SerializeTo(writer), "Could not serialize message.");
         }
 
@@ -298,6 +310,10 @@ protected:
         for (uint32_t i = 0; i < totalCount; i++) {
             TMessage message{};
             CheckResultWithMessage(message.DeserializeFrom(reader), "Could not deserialize message.");
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(message.ToString());
+            }
 
             Extension& extension = Base::FindController(message.controllerId);
 
@@ -443,6 +459,10 @@ protected:
 
         while (_totalReceiveCount > 0) {
             TMessage& message = _messageBuffer->PopFront();
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(message.ToString());
+            }
 
             Extension& extension = Base::FindController(message.controllerId);
             std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension.controllerIndex];
