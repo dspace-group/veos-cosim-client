@@ -29,8 +29,8 @@ public:
     [[nodiscard]] static SharedMemory OpenExisting(const std::string& name, size_t size);
     [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(const std::string& name, size_t size);
 
-    [[nodiscard]] void* data() const noexcept;   // NOLINT
-    [[nodiscard]] size_t size() const noexcept;  // NOLINT
+    [[nodiscard]] void* data() const noexcept;   // NOLINT(readability-identifier-naming)
+    [[nodiscard]] size_t size() const noexcept;  // NOLINT(readability-identifier-naming)
 
 private:
     size_t _size{};

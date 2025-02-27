@@ -32,10 +32,11 @@ void InitializeOutput() {
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
-    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);  // NOLINT
+    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     DWORD dwMode = 0;
-    if (GetConsoleMode(console, &dwMode) != 0) {
+    const BOOL result = GetConsoleMode(console, &dwMode);
+    if (result != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         (void)SetConsoleMode(console, dwMode);
     }
@@ -150,13 +151,13 @@ void LogLinMessage([[maybe_unused]] const SimulationTime simulationTime,
 [[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
     static bool first = true;
     if (first) {
-        srand(42);  // NOLINT
+        srand(42);
         first = false;
     }
 
     const int32_t diff = max + 1 - min;
 
-    return min + (rand() % diff);  // NOLINT
+    return min + (rand() % diff);
 }
 
 [[nodiscard]] uint32_t GenerateU32(const uint32_t min, const uint32_t max) {

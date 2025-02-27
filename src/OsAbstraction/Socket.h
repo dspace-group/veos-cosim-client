@@ -11,7 +11,7 @@ namespace DsVeosCoSim {
 
 void StartupNetwork();
 
-enum class AddressFamily {  // NOLINT
+enum class AddressFamily {
     Uds = 1,
     Ipv4 = 2,
     Ipv6 = 23
@@ -31,7 +31,7 @@ enum class AddressFamily {  // NOLINT
 }
 
 #ifdef _WIN32
-using socket_t = uintptr_t;  // NOLINT
+using socket_t = uintptr_t;
 constexpr socket_t InvalidSocket = UINTPTR_MAX;
 #else
 using socket_t = int32_t;

@@ -18,9 +18,9 @@ void CheckSizeKind(const SizeKind sizeKind, const std::string& name) {
         case SizeKind::Fixed:
         case SizeKind::Variable:
             return;
-        default:  // NOLINT
-            throw CoSimException("Unknown size kind '" + ToString(sizeKind) + "' for IO signal '" + name + "'.");
     }
+
+    throw CoSimException("Unknown size kind '" + ToString(sizeKind) + "' for IO signal '" + name + "'.");
 }
 
 }  // namespace
@@ -40,7 +40,8 @@ IoPartBufferBase::IoPartBufferBase(const CoSimType coSimType, const std::vector<
             throw CoSimException("Invalid data type for IO signal '" + std::string(signal.name) + "'.");
         }
 
-        if (_metaDataLookup.find(signal.id) != _metaDataLookup.end()) {  // NOLINT
+        const auto search = _metaDataLookup.find(signal.id);
+        if (search != _metaDataLookup.end()) {
             throw CoSimException("Duplicated IO signal id " + ToString(signal.id) + ".");
         }
 
@@ -117,7 +118,8 @@ void IoPartBufferBase::Read(const IoSignalId signalId, uint32_t& length, const v
 }
 
 IoPartBufferBase::MetaData& IoPartBufferBase::FindMetaData(const IoSignalId signalId) {
-    if (const auto search = _metaDataLookup.find(signalId); search != _metaDataLookup.end()) {
+    const auto search = _metaDataLookup.find(signalId);
+    if (search != _metaDataLookup.end()) {
         return search->second;
     }
 
@@ -129,7 +131,7 @@ RemoteIoPartBuffer::RemoteIoPartBuffer(const CoSimType coSimType,
                                        const std::vector<IoSignal>& signals)
     : IoPartBufferBase(coSimType, signals) {
     _dataVector.resize(_metaDataLookup.size());
-    for (auto& [signalId, metaData] : _metaDataLookup) {  // NOLINT
+    for (auto& [signalId, metaData] : _metaDataLookup) {
         Data data{};
         data.buffer.resize(metaData.totalDataSize);
         if (metaData.info.sizeKind == SizeKind::Fixed) {
@@ -143,14 +145,14 @@ RemoteIoPartBuffer::RemoteIoPartBuffer(const CoSimType coSimType,
 void RemoteIoPartBuffer::ClearDataInternal() {
     _changedSignalsQueue.Clear();
 
-    for (auto& [signalId, metaData] : _metaDataLookup) {  // NOLINT
+    for (auto& [signalId, metaData] : _metaDataLookup) {
         auto& [currentLength, isChanged, buffer] = _dataVector[metaData.signalIndex];
         isChanged = false;
         if (metaData.info.sizeKind == SizeKind::Variable) {
             currentLength = 0;
         }
 
-        std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));  // NOLINT
+        std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));
     }
 }
 
@@ -181,7 +183,8 @@ void RemoteIoPartBuffer::WriteInternal(const IoSignalId signalId, const uint32_t
 
     const size_t totalSize = metaData.dataTypeSize * length;
 
-    if (memcmp(buffer.data(), value, totalSize) == 0) {
+    const int32_t compareResult = memcmp(buffer.data(), value, totalSize);
+    if (compareResult == 0) {
         return;
     }
 
@@ -302,7 +305,7 @@ LocalIoPartBuffer::LocalIoPartBuffer(const CoSimType coSimType,
     _dataVector.resize(_metaDataLookup.size());
 
     size_t totalSize{};
-    for (auto& [signalId, metaData] : _metaDataLookup) {  // NOLINT
+    for (auto& [signalId, metaData] : _metaDataLookup) {
         Data data{};
         data.offsetOfDataBufferInShm = totalSize;
         totalSize += sizeof(uint32_t) + metaData.totalDataSize;  // Current length + data buffer
@@ -317,7 +320,7 @@ LocalIoPartBuffer::LocalIoPartBuffer(const CoSimType coSimType,
         _sharedMemory = SharedMemory::CreateOrOpen(name, totalSize);
     }
 
-    for (auto& [signalId, metaData] : _metaDataLookup) {  // NOLINT
+    for (auto& [signalId, metaData] : _metaDataLookup) {
         const Data& data = _dataVector[metaData.signalIndex];
         DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
         DataBuffer* backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
@@ -331,7 +334,7 @@ LocalIoPartBuffer::LocalIoPartBuffer(const CoSimType coSimType,
 void LocalIoPartBuffer::ClearDataInternal() {
     _changedSignalsQueue.Clear();
 
-    for (auto& [signalId, metaData] : _metaDataLookup) {  // NOLINT
+    for (auto& [signalId, metaData] : _metaDataLookup) {
         Data& data = _dataVector[metaData.signalIndex];
         data.isChanged = false;
 

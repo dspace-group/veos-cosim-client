@@ -51,7 +51,7 @@ LocalChannelBase::LocalChannelBase(const std::string& name, const bool isServer)
 
     constexpr uint32_t totalSize = BufferSize + sizeof(Header);
 
-    std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(dataName, totalSize);  // NOLINT
+    std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(dataName, totalSize);
     if (sharedMemory) {
         _sharedMemory = std::move(*sharedMemory);
         _newDataEvent = NamedEvent::OpenExisting(newDataName);
@@ -176,7 +176,8 @@ LocalChannelWriter::LocalChannelWriter(const std::string& name, const bool isSer
         (void)memcpy(&_data[_maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
         bufferPointer += sizeUntilBufferEnd;
 
-        if (const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd; restSize > 0) {
+        const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
+        if (restSize > 0) {
             (void)memcpy(&_data[0], bufferPointer, restSize);
             bufferPointer += restSize;
         }
@@ -241,7 +242,8 @@ LocalChannelReader::LocalChannelReader(const std::string& name, const bool isSer
         (void)memcpy(bufferPointer, &_data[_maskedReadIndex], sizeUntilBufferEnd);
         bufferPointer += sizeUntilBufferEnd;
 
-        if (const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd; restSize > 0) {
+        const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
+        if (restSize > 0) {
             (void)memcpy(bufferPointer, &_data[0], restSize);
             bufferPointer += restSize;
         }
@@ -315,12 +317,14 @@ LocalChannelServer::LocalChannelServer(const std::string& name) : _name(name) {
     std::lock_guard lock(mutex);
 
     _sharedMemory = SharedMemory::CreateOrOpen(_name, ServerSharedMemorySize);
-    _counter = static_cast<std::atomic<int32_t>*>(_sharedMemory.data());  // NOLINT
+    _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+        _sharedMemory.data());
     _counter->store(0);
 }
 
 [[nodiscard]] std::optional<LocalChannel> LocalChannelServer::TryAccept() {
-    if (const int32_t currentCounter = _counter->load(); currentCounter > _lastCounter) {
+    const int32_t currentCounter = _counter->load();
+    if (currentCounter > _lastCounter) {
         const std::string specificName = _name + "." + std::to_string(_lastCounter);
         _lastCounter++;
         return LocalChannel(specificName, true);

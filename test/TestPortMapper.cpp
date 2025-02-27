@@ -32,7 +32,7 @@ TEST_F(TestPortMapper, StartOfServer) {
 
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);  // NOLINT
+    const PortMapperServer portMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -51,7 +51,7 @@ TEST_F(TestPortMapper, SetAndGet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetWithoutSet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);  // NOLINT
+    const PortMapperServer portMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -70,7 +70,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetAfterUnset) {
     // Arrange
-    const PortMapperServer portMapperServer(false);  // NOLINT
+    const PortMapperServer portMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -93,7 +93,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
 
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);  // NOLINT
+    const PortMapperServer portMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 

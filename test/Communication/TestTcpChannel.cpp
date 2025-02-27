@@ -213,7 +213,7 @@ TEST_P(TestTcpChannel, WriteToChannel) {
     const uint16_t port = server.GetLocalPort();
 
     SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const SocketChannel acceptedChannel = Accept(server);  // NOLINT
+    const SocketChannel acceptedChannel = Accept(server);
 
     const uint32_t sendValue = GenerateU32();
 

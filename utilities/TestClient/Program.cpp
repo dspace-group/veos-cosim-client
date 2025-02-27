@@ -29,10 +29,11 @@ void InitializeOutput() {
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
-    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);  // NOLINT
+    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     DWORD dwMode = 0;
-    if (GetConsoleMode(console, &dwMode) != 0) {
+    const BOOL result = GetConsoleMode(console, &dwMode);
+    if (result != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         (void)SetConsoleMode(console, dwMode);
     }
@@ -164,13 +165,13 @@ void SwitchSendingLinMessages() {
 [[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
     static bool first = true;
     if (first) {
-        srand(21);  // NOLINT
+        srand(21);
         first = false;
     }
 
     const int32_t diff = max + 1 - min;
 
-    return min + (rand() % diff);  // NOLINT
+    return min + (rand() % diff);
 }
 
 [[nodiscard]] uint32_t GenerateU32(const uint32_t min, const uint32_t max) {
@@ -467,12 +468,12 @@ void OnSimulationContinuedCallback(const DsVeosCoSim_SimulationTime simulationTi
     LogInfo("Running callback-based co-simulation ...");
     const DsVeosCoSim_Result result = DsVeosCoSim_RunCallbackBasedCoSimulation(Handle, callbacks);
     if ((result == DsVeosCoSim_Result_Disconnected) || (result == DsVeosCoSim_Result_Ok)) {
-        exit(0);  // NOLINT
+        exit(0);
     }
 
     LogError("DsVeosCoSim_RunCallbackBasedCoSimulation finished with the following error code: " +
              DsVeosCoSim_ResultToString(result) + ".");
-    exit(1);  // NOLINT
+    exit(1);
 }
 
 [[nodiscard]] DsVeosCoSim_Result HostClient(const std::string_view host, const std::string_view name) {

@@ -222,7 +222,7 @@ TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);  // NOLINT
+    BackgroundThread backgroundThread(server);
 
     const uint16_t port = server.GetLocalPort();
 
@@ -242,7 +242,7 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);  // NOLINT
+    BackgroundThread backgroundThread(server);
 
     const uint16_t port = server.GetLocalPort();
 
@@ -267,7 +267,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     CoSimServer server;
     server.Load(config);
 
-    BackgroundThread backgroundThread(server);  // NOLINT
+    BackgroundThread backgroundThread(server);
 
     const uint16_t port = server.GetLocalPort();
 

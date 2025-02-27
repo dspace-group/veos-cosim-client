@@ -55,15 +55,15 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
     return NamedMutex(handle);
 }
 
-void NamedMutex::lock() const {  // NOLINT
+void NamedMutex::lock() const {
     (void)lock(Infinite);
 }
 
-[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {  // NOLINT
+[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 
-void NamedMutex::unlock() const {  // NOLINT
+void NamedMutex::unlock() const {
     (void)ReleaseMutex(_handle);
 }
 

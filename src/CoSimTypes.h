@@ -57,7 +57,8 @@ using SimulationTime = std::chrono::nanoseconds;
     const int64_t nanoseconds = simulationTime.count();
     std::string representation = std::to_string(nanoseconds);
 
-    if (const size_t length = representation.size(); length < 10) {
+    const size_t length = representation.size();
+    if (length < 10) {
         const size_t countOfMissingZerosInFront = 10 - length;
         representation.insert(representation.begin(), countOfMissingZerosInFront, '0');
     }
@@ -193,7 +194,7 @@ enum class Severity : uint32_t {
     return "<Invalid Severity>";
 }
 
-enum class TerminateReason : uint32_t {  // NOLINT
+enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
@@ -387,7 +388,7 @@ enum class Mode {
     oss << std::hex << std::setfill('0');
     for (uint32_t i = 0; i < dataLength; i++) {
         oss << std::setw(2) << static_cast<int32_t>(data[i]);
-        if ((i < dataLength - 1) && (separator != 0)) {
+        if ((i < (dataLength - 1)) && (separator != 0)) {
             oss << separator;
         }
     }

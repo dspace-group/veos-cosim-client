@@ -39,14 +39,14 @@ namespace DsVeosCoSim {
 namespace {
 
 #ifdef _WIN32
-using socklen_t = int32_t;  // NOLINT
+using socklen_t = int32_t;
 constexpr int32_t ErrorCodeInterrupted = WSAEINTR;
 constexpr int32_t ErrorCodeWouldBlock = WSAEWOULDBLOCK;
 constexpr int32_t ErrorCodeNotSupported = WSAEAFNOSUPPORT;
 constexpr int32_t ErrorCodeConnectionAborted = WSAECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = WSAECONNRESET;
-#define poll WSAPoll    // NOLINT
-#define unlink _unlink  // NOLINT
+#define poll WSAPoll
+#define unlink _unlink
 #else
 constexpr int32_t ErrorCodeInterrupted = EINTR;
 constexpr int32_t ErrorCodeWouldBlock = EINPROGRESS;
@@ -102,7 +102,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     addrinfo* addressInfo{};
 
-    const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);  // NOLINT
+    const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
         throw CoSimException("Could not get address information. ", errorCode);
     }
@@ -116,8 +116,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     if (ipv4Address.sin_addr.s_addr != 0) {
         std::string ipAddress(INET_ADDRSTRLEN, '\0');
-        if (const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
-            !result) {
+        const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
+        if (!result) {
             throw CoSimException("Could not get address information.", GetLastNetworkError());
         }
 
@@ -134,7 +134,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     socketAddress.port = ntohs(ipv6Address.sin6_port);
 
     std::string ipAddress(INET6_ADDRSTRLEN, '\0');
-    if (const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN); !result) {
+    const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
+    if (!result) {
         throw CoSimException("Could not get address information.", GetLastNetworkError());
     }
 
@@ -167,19 +168,21 @@ void CloseSocket(socket_t socket) {
         fdArray.fd = socket;
         fdArray.events = events;
 
-        const int32_t result = poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
-        if (result < 0) {
+        const int32_t pollResult = poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
+        if (pollResult < 0) {
             throw CoSimException("Could not poll on socket.", GetLastNetworkError());
         }
 
-        if (result == 0) {
+        if (pollResult == 0) {
             return {};
         }
 
         // Make sure it really succeeded
         int32_t error = 0;
         socklen_t len = sizeof(error);
-        if (getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len) != 0) {
+        const int32_t getSocketOptionResult =
+            getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len);
+        if (getSocketOptionResult != 0) {
             const int32_t errorCode = GetLastNetworkError();
             if (errorCode == ErrorCodeInterrupted) {
                 millisecondsUntilDeadline = deadline - GetCurrentTimeInMilliseconds();
@@ -196,11 +199,13 @@ void CloseSocket(socket_t socket) {
 void SwitchToNonBlockingMode(const socket_t& socket) {
 #ifdef _WIN32
     u_long mode = 1;
-    if (ioctlsocket(socket, FIONBIO, &mode) < 0) {
+    const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
+    if (result != 0) {
         throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
     }
 #else
-    if (fcntl(socket, F_SETFL, O_NONBLOCK) < 0) {
+    const int32_t result = fcntl(socket, F_SETFL, O_NONBLOCK);
+    if (result < 0) {
         throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
     }
 #endif
@@ -209,11 +214,13 @@ void SwitchToNonBlockingMode(const socket_t& socket) {
 void SwitchToBlockingMode(const socket_t& socket) {
 #ifdef _WIN32
     u_long mode = 0;
-    if (ioctlsocket(socket, FIONBIO, &mode) < 0) {
+    const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
+    if (result != 0) {
         throw CoSimException("Could not switch to blocking mode.", GetLastNetworkError());
     }
 #else
-    if (fcntl(socket, F_SETFL, 0) < 0) {
+    const int32_t result = fcntl(socket, F_SETFL, 0);
+    if (result < 0) {
         throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
     }
 #endif
@@ -225,11 +232,13 @@ void SwitchToBlockingMode(const socket_t& socket) {
                                       const uint32_t timeoutInMilliseconds) {
     SwitchToNonBlockingMode(socket);
 
-    if (connect(socket, socketAddress, sizeOfSocketAddress) >= 0) {
+    const int32_t connectResult = connect(socket, socketAddress, sizeOfSocketAddress);
+    if (connectResult >= 0) {
         throw CoSimException("Invalid connect result.");
     }
 
-    if (const int32_t errorCode = GetLastNetworkError(); errorCode != ErrorCodeWouldBlock) {
+    const int32_t errorCode = GetLastNetworkError();
+    if (errorCode != ErrorCodeWouldBlock) {
         throw CoSimException("Could not connect.", errorCode);
     }
 
@@ -242,11 +251,11 @@ void SwitchToBlockingMode(const socket_t& socket) {
     timeout.tv_usec = static_cast<long>(timeoutInMilliseconds % 1000) * 1000;
 
 #ifdef _WIN32
-    const int32_t result = select(0, nullptr, &set, nullptr, &timeout);
+    const int32_t selectResult = select(0, nullptr, &set, nullptr, &timeout);
 #else
-    const int32_t result = select(socket + 1, nullptr, &set, nullptr, &timeout);
+    const int32_t selectResult = select(socket + 1, nullptr, &set, nullptr, &timeout);
 #endif
-    if ((result > 0) && FD_ISSET(socket, &set)) {
+    if ((selectResult > 0) && FD_ISSET(socket, &set)) {
         SwitchToBlockingMode(socket);
         return true;
     }
@@ -262,7 +271,8 @@ void StartupNetwork() {
     if (!networkStarted) {
         WSADATA wsaData;
 
-        if (const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData); errorCode != 0) {
+        const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (errorCode != 0) {
             throw CoSimException("Could not initialize Windows sockets.", errorCode);
         }
 
@@ -307,9 +317,9 @@ Socket::~Socket() noexcept {
 Socket::Socket(Socket&& other) noexcept {
     Close();
 
-    _socket = other._socket;                // NOLINT
-    _addressFamily = other._addressFamily;  // NOLINT
-    _path = other._path;                    // NOLINT
+    _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
@@ -413,15 +423,16 @@ void Socket::Close() {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {  // NOLINT
+void Socket::EnableIpv6Only() const {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
-    if (setsockopt(_socket,
-                   IPPROTO_IPV6,
-                   IPV6_V6ONLY,
-                   reinterpret_cast<char*>(&flags),
-                   static_cast<socklen_t>(sizeof(flags))) < 0) {
+    const int32_t result = setsockopt(_socket,
+                                      IPPROTO_IPV6,
+                                      IPV6_V6ONLY,
+                                      reinterpret_cast<char*>(&flags),
+                                      static_cast<socklen_t>(sizeof(flags)));
+    if (result != 0) {
         throw CoSimException("Could not enable IPv6 only.", GetLastNetworkError());
     }
 #endif
@@ -521,7 +532,8 @@ void Socket::BindForIpv4(const uint16_t port, const bool enableRemoteAccess) con
     address.sin_port = htons(port);
     address.sin_addr.s_addr = enableRemoteAccess ? INADDR_ANY : htonl(INADDR_LOOPBACK);
 
-    if (bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
+    const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+    if (result != 0) {
         throw CoSimException("Could not bind socket.", GetLastNetworkError());
     }
 }
@@ -532,7 +544,8 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
     address.sin6_port = htons(port);
     address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;
 
-    if (bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
+    const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+    if (result != 0) {
         throw CoSimException("Could not bind socket.", GetLastNetworkError());
     }
 }
@@ -561,7 +574,8 @@ void Socket::Bind(const std::string& name) {
     address.sun_path[0] = '\0';
 #endif
 
-    if (bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) < 0) {
+    const int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    if (result != 0) {
         throw CoSimException("Could not bind socket.", GetLastNetworkError());
     }
 }
@@ -574,7 +588,9 @@ void Socket::EnableReuseAddress() const {
     }
 
     int32_t flags = 1;
-    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags)) < 0) {
+    const int32_t result =
+        setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
+    if (result != 0) {
         throw CoSimException("Could not enable socket option reuse address.", GetLastNetworkError());
     }
 }
@@ -583,7 +599,9 @@ void Socket::EnableNoDelay() const {
     EnsureIsValid();
 
     int32_t flags = 1;
-    if (setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags)) < 0) {
+    const int32_t result =
+        setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
+    if (result != 0) {
         throw CoSimException("Could not enable TCP option no delay.", GetLastNetworkError());
     }
 }
@@ -591,7 +609,8 @@ void Socket::EnableNoDelay() const {
 void Socket::Listen() const {
     EnsureIsValid();
 
-    if (listen(_socket, SOMAXCONN) < 0) {
+    const int32_t result = listen(_socket, SOMAXCONN);
+    if (result != 0) {
         throw CoSimException("Could not listen.", GetLastNetworkError());
     }
 }
@@ -630,7 +649,8 @@ void Socket::Listen() const {
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
 
-    if (getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+    const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    if (result != 0) {
         throw CoSimException("Could not get local socket address.", GetLastNetworkError());
     }
 
@@ -643,7 +663,8 @@ void Socket::Listen() const {
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
 
-    if (getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+    const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    if (result != 0) {
         throw CoSimException("Could not get local socket address.", GetLastNetworkError());
     }
 
@@ -670,7 +691,8 @@ void Socket::Listen() const {
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin_family = AF_INET;
 
-    if (getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+    const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    if (result != 0) {
         throw CoSimException("Could not get remote socket address.", GetLastNetworkError());
     }
 
@@ -682,7 +704,8 @@ void Socket::Listen() const {
     auto addressLength = static_cast<socklen_t>(sizeof(address));
     address.sin6_family = AF_INET6;
 
-    if (getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength) != 0) {
+    const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    if (result != 0) {
         throw CoSimException("Could not get remote socket address.", GetLastNetworkError());
     }
 

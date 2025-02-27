@@ -11,8 +11,11 @@
 #include "CoSimTypes.h"
 #include "PortMapper.h"
 #include "Protocol.h"
-#include "Socket.h"
 #include "SocketChannel.h"
+
+#ifndef _WIN32
+#include "Socket.h"
+#endif
 
 using namespace std::chrono;
 
@@ -331,7 +334,8 @@ void CoSimServer::StopAccepting() {
 
 #ifdef _WIN32
     if (_localChannelServer) {
-        if (std::optional<LocalChannel> channel = _localChannelServer->TryAccept()) {
+        std::optional<LocalChannel> channel = _localChannelServer->TryAccept();
+        if (channel) {
             _channel = std::make_unique<LocalChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Local;
             return true;
@@ -339,7 +343,8 @@ void CoSimServer::StopAccepting() {
     }
 #else
     if (_udsChannelServer) {
-        if (std::optional<SocketChannel> channel = _udsChannelServer->TryAccept()) {
+        std::optional<SocketChannel> channel = _udsChannelServer->TryAccept();
+        if (channel) {
             _channel = std::make_unique<SocketChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Local;
             return true;
@@ -348,7 +353,8 @@ void CoSimServer::StopAccepting() {
 #endif
 
     if (_tcpChannelServer) {
-        if (std::optional<SocketChannel> channel = _tcpChannelServer->TryAccept()) {
+        std::optional<SocketChannel> channel = _tcpChannelServer->TryAccept();
+        if (channel) {
             _channel = std::make_unique<SocketChannel>(std::move(*channel));
             _connectionKind = ConnectionKind::Remote;
             return true;
@@ -418,7 +424,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT
+    switch (frameKind) {
         case FrameKind::Ok:
             return true;
         case FrameKind::Error: {
@@ -436,7 +442,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT
+    switch (frameKind) {
         case FrameKind::PingOk:
             CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                    "Could not read ping ok frame.");
@@ -450,7 +456,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT
+    switch (frameKind) {
         case FrameKind::Connect: {
             Mode mode{};
             std::string serverName;
@@ -467,7 +473,7 @@ void CoSimServer::StopAccepting() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT
+    switch (frameKind) {
         case FrameKind::StepOk:
             CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                         simulationTime,

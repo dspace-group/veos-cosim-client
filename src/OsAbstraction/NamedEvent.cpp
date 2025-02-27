@@ -60,7 +60,8 @@ NamedEvent::operator Handle&() noexcept {
 }
 
 void NamedEvent::Set() const {
-    if (SetEvent(_handle) == FALSE) {
+    const BOOL result = SetEvent(_handle);
+    if (result == FALSE) {
         throw CoSimException("Could not set event '" + _name + "'.", GetLastWindowsError());
     }
 }

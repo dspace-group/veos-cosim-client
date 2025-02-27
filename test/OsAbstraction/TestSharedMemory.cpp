@@ -64,7 +64,7 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
 TEST_F(TestSharedMemory, CouldOpenExisting) {
     // Arrange
     const std::string name = GenerateName();
-    const SharedMemory sharedMemory1 = SharedMemory::CreateOrOpen(name, 100);  // NOLINT
+    const SharedMemory sharedMemory1 = SharedMemory::CreateOrOpen(name, 100);
 
     // Act and assert
     ASSERT_NO_THROW((void)SharedMemory::OpenExisting(name, 100));

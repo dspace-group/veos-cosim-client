@@ -30,10 +30,11 @@ void InitializeOutput() {
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
-    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);  // NOLINT
+    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     DWORD dwMode = 0;
-    if (GetConsoleMode(console, &dwMode) != 0) {
+    const BOOL result = GetConsoleMode(console, &dwMode);
+    if (result != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         (void)SetConsoleMode(console, dwMode);
     }
