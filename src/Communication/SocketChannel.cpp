@@ -148,7 +148,7 @@ SocketChannelReader& SocketChannelReader::operator=(SocketChannelReader&& other)
         sizeToRead -= receivedSize;
         _writeIndex += receivedSize;
 
-        if (readHeader && _writeIndex >= HeaderSize) {
+        if (readHeader && (_writeIndex >= HeaderSize)) {
             readHeader = false;
             (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
@@ -218,7 +218,7 @@ void SocketChannel::Disconnect() {
                                                                   const uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
-    std::optional<Socket> connectedSocket =  // NOLINT
+    std::optional<Socket> connectedSocket =
         Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds);
     if (connectedSocket) {
         connectedSocket->EnableNoDelay();
@@ -256,14 +256,16 @@ TcpChannelServer::TcpChannelServer(const uint16_t port, const bool enableRemoteA
 [[nodiscard]] std::optional<SocketChannel> TcpChannelServer::TryAccept(uint32_t timeoutInMilliseconds) const {
     do {
         if (_listenSocketIpv4.IsValid()) {
-            if (std::optional<Socket> socket = _listenSocketIpv4.TryAccept()) {  // NOLINT
+            std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
+            if (socket) {
                 socket->EnableNoDelay();
                 return SocketChannel(std::move(*socket));
             }
         }
 
         if (_listenSocketIpv6.IsValid()) {
-            if (std::optional<Socket> socket = _listenSocketIpv6.TryAccept()) {  // NOLINT
+            std::optional<Socket> socket = _listenSocketIpv6.TryAccept();
+            if (socket) {
                 socket->EnableNoDelay();
                 return SocketChannel(std::move(*socket));
             }
@@ -299,7 +301,7 @@ UdsChannelServer::UdsChannelServer(const std::string& name) {
 }
 
 [[nodiscard]] std::optional<SocketChannel> UdsChannelServer::TryAccept(const uint32_t timeoutInMilliseconds) const {
-    std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);  // NOLINT
+    std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
     if (socket) {
         return SocketChannel(std::move(*socket));
     }

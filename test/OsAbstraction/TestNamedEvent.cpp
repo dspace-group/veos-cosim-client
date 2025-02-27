@@ -33,7 +33,7 @@ TEST_F(TestNamedEvent, CreateAndDestroyNamedEvent) {
     const std::string name = GenerateName();
 
     // Act
-    ASSERT_NO_THROW(const NamedEvent event = NamedEvent::CreateOrOpen(name));  // NOLINT
+    ASSERT_NO_THROW(const NamedEvent event = NamedEvent::CreateOrOpen(name));
 
     // Assert
 }

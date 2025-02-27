@@ -355,7 +355,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
                 std::to_string(_remotePort) + "...");
     }
 
-    std::optional<SocketChannel> channel =  // NOLINT
+    std::optional<SocketChannel> channel =
         TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to dSPACE VEOS CoSim server.");
 
@@ -435,7 +435,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT
+    switch (frameKind) {
         case FrameKind::ConnectOk:
             CheckResultWithMessage(OnConnectOk(), "Could not handle connect ok.");
             return true;
@@ -452,7 +452,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {  // NOLINT
+        switch (frameKind) {
             case FrameKind::Step: {
                 CheckResultWithMessage(OnStep(), "Could not handle step.");
                 if (!_isConnected) {
@@ -528,7 +528,7 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 
-    while (true) {  // NOLINT
+    while (true) {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
         switch (frameKind) {

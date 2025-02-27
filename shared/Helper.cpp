@@ -61,7 +61,7 @@ namespace {
 }
 
 [[nodiscard]] Socket ConnectSocket(const std::string_view ipAddress, const uint16_t remotePort) {
-    std::optional<Socket> connectedSocket = Socket::TryConnect(ipAddress, remotePort, 0, DefaultTimeout);  // NOLINT
+    std::optional<Socket> connectedSocket = Socket::TryConnect(ipAddress, remotePort, 0, DefaultTimeout);
     if (connectedSocket) {
         return std::move(*connectedSocket);
     }
@@ -79,7 +79,7 @@ namespace {
 }
 
 [[nodiscard]] Socket Accept(const Socket& serverSocket) {
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);  // NOLINT
+    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
     if (acceptedSocket) {
         return std::move(*acceptedSocket);
     }
@@ -88,7 +88,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel ConnectToTcpChannel(const std::string_view ipAddress, const uint16_t remotePort) {
-    std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);  // NOLINT
+    std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);
     if (channel) {
         return std::move(*channel);
     }
@@ -97,7 +97,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel Accept(const TcpChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);  // NOLINT
+    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }
@@ -106,7 +106,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel ConnectToUdsChannel(const std::string& name) {
-    std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);  // NOLINT
+    std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
     if (channel) {
         return std::move(*channel);
     }
@@ -115,7 +115,7 @@ namespace {
 }
 
 [[nodiscard]] SocketChannel Accept(const UdsChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);  // NOLINT
+    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }
@@ -126,7 +126,7 @@ namespace {
 #ifdef _WIN32
 
 [[nodiscard]] LocalChannel ConnectToLocalChannel(const std::string& name) {
-    std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);  // NOLINT
+    std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
     if (channel) {
         return std::move(*channel);
     }
@@ -135,7 +135,7 @@ namespace {
 }
 
 [[nodiscard]] LocalChannel Accept(LocalChannelServer& server) {
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();  // NOLINT
+    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
     if (acceptedChannel) {
         return std::move(*acceptedChannel);
     }

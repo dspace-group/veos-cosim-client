@@ -78,27 +78,27 @@ enum {
 /**
  * \brief Represents a handle to be used for communicating with a dSPACE VEOS CoSim server.
  */
-typedef void* DsVeosCoSim_Handle;  // NOLINT
+typedef void* DsVeosCoSim_Handle;
 
 /**
  * \brief Represents an IO signal id.
  */
-typedef uint32_t DsVeosCoSim_IoSignalId;  // NOLINT
+typedef uint32_t DsVeosCoSim_IoSignalId;
 
 /**
  * \brief Represents a bus controller id.
  */
-typedef uint32_t DsVeosCoSim_BusControllerId;  // NOLINT
+typedef uint32_t DsVeosCoSim_BusControllerId;
 
 /**
  * \brief Represents the simulation time in nanoseconds.
  */
-typedef int64_t DsVeosCoSim_SimulationTime;  // NOLINT
+typedef int64_t DsVeosCoSim_SimulationTime;
 
 /**
  * \brief Represents a result of a function.
  */
-typedef enum DsVeosCoSim_Result {  // NOLINT
+typedef enum DsVeosCoSim_Result {
     /**
      * \brief Will be returned if the API function was successful.
      */
@@ -129,13 +129,13 @@ typedef enum DsVeosCoSim_Result {  // NOLINT
      */
     DsVeosCoSim_Result_Disconnected,
 
-    DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_Result;
 
 /**
  * \brief Represents a command for the non-blocking API.
  */
-typedef enum DsVeosCoSim_Command {  // NOLINT
+typedef enum DsVeosCoSim_Command {
     /**
      * \brief No command.
      */
@@ -171,13 +171,13 @@ typedef enum DsVeosCoSim_Command {  // NOLINT
      */
     DsVeosCoSim_Command_Continue,
 
-    DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_Command;
 
 /**
  * \brief Represents the severity of a log message.
  */
-typedef enum DsVeosCoSim_Severity {  // NOLINT
+typedef enum DsVeosCoSim_Severity {
     /**
      * \brief Error message.
      */
@@ -198,13 +198,13 @@ typedef enum DsVeosCoSim_Severity {  // NOLINT
      */
     DsVeosCoSim_Severity_Trace,
 
-    DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_Severity;
 
 /**
  * \brief Represents the reason of a simulation termination.
  */
-typedef enum DsVeosCoSim_TerminateReason {  // NOLINT
+typedef enum DsVeosCoSim_TerminateReason {
     /**
      * \brief Simulation finished successfully.
      */
@@ -215,13 +215,13 @@ typedef enum DsVeosCoSim_TerminateReason {  // NOLINT
      */
     DsVeosCoSim_TerminateReason_Error,
 
-    DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_TerminateReason;
 
 /**
  * \brief Represents the connection state.
  */
-typedef enum DsVeosCoSim_ConnectionState {  // NOLINT
+typedef enum DsVeosCoSim_ConnectionState {
     /**
      * \brief Disconnected.
      */
@@ -232,13 +232,13 @@ typedef enum DsVeosCoSim_ConnectionState {  // NOLINT
      */
     DsVeosCoSim_ConnectionState_Connected,
 
-    DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_ConnectionState;
 
 /**
  * \brief Represents the data type of IO signal.
  */
-typedef enum DsVeosCoSim_DataType {  // NOLINT
+typedef enum DsVeosCoSim_DataType {
     /**
      * \brief Boolean. Underlying data type is uint8. 0 is equal to false, != 0 is equal to true.
      */
@@ -294,13 +294,13 @@ typedef enum DsVeosCoSim_DataType {  // NOLINT
      */
     DsVeosCoSim_DataType_Float64,
 
-    DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_DataType;
 
 /**
  * \brief Represents the size kind of IO signal.
  */
-typedef enum DsVeosCoSim_SizeKind {  // NOLINT
+typedef enum DsVeosCoSim_SizeKind {
     /**
      * \brief The IO signal size is fixed.
      */
@@ -311,13 +311,13 @@ typedef enum DsVeosCoSim_SizeKind {  // NOLINT
      */
     DsVeosCoSim_SizeKind_Variable,
 
-    DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_SizeKind;
 
 /**
  * \brief Represents an IO signal.
  */
-typedef struct DsVeosCoSim_IoSignal {  // NOLINT
+typedef struct DsVeosCoSim_IoSignal {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the IO signal.
      */
@@ -348,7 +348,7 @@ typedef struct DsVeosCoSim_IoSignal {  // NOLINT
 /**
  * \brief Represents a CAN controller.
  */
-typedef struct DsVeosCoSim_CanController {  // NOLINT
+typedef struct DsVeosCoSim_CanController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the CAN controller.
      */
@@ -388,7 +388,7 @@ typedef struct DsVeosCoSim_CanController {  // NOLINT
 /**
  * \brief Underlying data type of the flags of a CAN message.
  */
-typedef uint32_t DsVeosCoSim_CanMessageFlags;  // NOLINT
+typedef uint32_t DsVeosCoSim_CanMessageFlags;
 
 /**
  * \brief Represents the flags of a CAN message.
@@ -434,7 +434,7 @@ enum {
 /**
  * \brief Represents a CAN message.
  */
-typedef struct DsVeosCoSim_CanMessage {  // NOLINT
+typedef struct DsVeosCoSim_CanMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the CAN message was received.
      *        For received messages only.
@@ -470,7 +470,7 @@ typedef struct DsVeosCoSim_CanMessage {  // NOLINT
 /**
  * \brief Represents an ethernet controller.
  */
-typedef struct DsVeosCoSim_EthController {  // NOLINT
+typedef struct DsVeosCoSim_EthController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the ethernet controller.
      */
@@ -510,7 +510,7 @@ typedef struct DsVeosCoSim_EthController {  // NOLINT
 /**
  * \brief Underlying data type of the flags of an ethernet message.
  */
-typedef uint32_t DsVeosCoSim_EthMessageFlags;  // NOLINT
+typedef uint32_t DsVeosCoSim_EthMessageFlags;
 
 /**
  * \brief Represents the flags of an ethernet message.
@@ -538,7 +538,7 @@ enum {
 /**
  * \brief Represents an ethernet message.
  */
-typedef struct DsVeosCoSim_EthMessage {  // NOLINT
+typedef struct DsVeosCoSim_EthMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the ethernet message was received.
      *        For received messages only.
@@ -574,7 +574,7 @@ typedef struct DsVeosCoSim_EthMessage {  // NOLINT
 /**
  * \brief Represents the type of the LIN controller.
  */
-typedef enum DsVeosCoSim_LinControllerType {  // NOLINT
+typedef enum DsVeosCoSim_LinControllerType {
     /**
      * \brief LIN controller is a responder.
      */
@@ -585,13 +585,13 @@ typedef enum DsVeosCoSim_LinControllerType {  // NOLINT
      */
     DsVeosCoSim_LinControllerType_Commander,
 
-    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX  // NOLINT
+    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_LinControllerType;
 
 /**
  * \brief Represents an LIN controller.
  */
-typedef struct DsVeosCoSim_LinController {  // NOLINT
+typedef struct DsVeosCoSim_LinController {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Unique id of the LIN controller.
      */
@@ -631,7 +631,7 @@ typedef struct DsVeosCoSim_LinController {  // NOLINT
 /**
  * \brief Underlying data type of the flags of a LIN message.
  */
-typedef uint32_t DsVeosCoSim_LinMessageFlags;  // NOLINT
+typedef uint32_t DsVeosCoSim_LinMessageFlags;
 
 /**
  * \brief Represents the flags of a LIN message.
@@ -713,7 +713,7 @@ enum {
 /**
  * \brief Represents a LIN message.
  */
-typedef struct DsVeosCoSim_LinMessage {  // NOLINT
+typedef struct DsVeosCoSim_LinMessage {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The simulation time when the LIN message was received.
      *        For received messages only.
@@ -751,14 +751,14 @@ typedef struct DsVeosCoSim_LinMessage {  // NOLINT
  * \param severity      The severity of the message.
  * \param logMessage    The log message.
  */
-typedef void (*DsVeosCoSim_LogCallback)(DsVeosCoSim_Severity severity, const char* logMessage);  // NOLINT
+typedef void (*DsVeosCoSim_LogCallback)(DsVeosCoSim_Severity severity, const char* logMessage);
 
 /**
  * \brief Represents a simulation state changed or step callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simulationTime, void* userData);  // NOLINT
+typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simulationTime, void* userData);
 
 /**
  * \brief Represents a simulation terminated callback function pointer.
@@ -766,7 +766,7 @@ typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simula
  * \param reason            The termination reason.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationTime simulationTime,  // NOLINT
+typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                          DsVeosCoSim_TerminateReason reason,
                                                          void* userData);
 
@@ -778,7 +778,7 @@ typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationT
  * \param value             The changed data.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_SimulationTime simulationTime,  // NOLINT
+typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                           const DsVeosCoSim_IoSignal* incomingSignal,
                                                           uint32_t length,
                                                           const void* value,
@@ -791,7 +791,7 @@ typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_Simulation
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,  // NOLINT
+typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_CanController* canController,
                                                        const DsVeosCoSim_CanMessage* message,
                                                        void* userData);
@@ -803,7 +803,7 @@ typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,  // NOLINT
+typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_EthController* ethController,
                                                        const DsVeosCoSim_EthMessage* message,
                                                        void* userData);
@@ -815,7 +815,7 @@ typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,  // NOLINT
+typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_LinController* linController,
                                                        const DsVeosCoSim_LinMessage* message,
                                                        void* userData);
@@ -823,7 +823,7 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
 /**
  * \brief Represents the callbacks that will be fired during the co-simulation.
  */
-typedef struct DsVeosCoSim_Callbacks {  // NOLINT
+typedef struct DsVeosCoSim_Callbacks {  // NOLINT(readability-identifier-naming)
     /**
      * \brief Will be called when the simulation started in dSPACE VEOS.
      */
@@ -894,7 +894,7 @@ typedef struct DsVeosCoSim_Callbacks {  // NOLINT
 /**
  * \brief Represents the data that will be used for establishing the connection.
  */
-typedef struct DsVeosCoSim_ConnectConfig {  // NOLINT
+typedef struct DsVeosCoSim_ConnectConfig {  // NOLINT(readability-identifier-naming)
     /**
      * \brief The IP address of the dSPACE VEOS CoSim server. "127.0.0.1" if not specified.
      */

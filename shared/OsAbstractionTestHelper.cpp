@@ -26,7 +26,7 @@
 #endif
 
 #ifdef _WIN32
-using socklen_t = int32_t;  // NOLINT
+using socklen_t = int32_t;
 #define CAST(expression) (expression)
 #else
 #define CAST(expression) static_cast<int32_t>(expression)
@@ -36,7 +36,8 @@ namespace {
 
 void Socket_InitializeAddress(sockaddr_in& address, const std::string_view ipAddress, const uint16_t port) {
     in_addr ipAddressInt{};
-    if (inet_pton(AF_INET, ipAddress.data(), &ipAddressInt) <= 0) {
+    const int32_t result = inet_pton(AF_INET, ipAddress.data(), &ipAddressInt);
+    if (result <= 0) {
         throw std::runtime_error("Could not convert IP address string to integer.");
     }
 
@@ -70,7 +71,8 @@ UdpSocket::~UdpSocket() {
 void UdpSocket::Bind(const std::string_view ipAddress, const uint16_t port) const {
     sockaddr_in address{};
     Socket_InitializeAddress(address, ipAddress, port);
-    if (bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) < 0) {
+    const int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    if (result < 0) {
         throw std::runtime_error("Could not bind.");
     }
 }
@@ -78,7 +80,8 @@ void UdpSocket::Bind(const std::string_view ipAddress, const uint16_t port) cons
 void UdpSocket::Connect(const std::string_view ipAddress, const uint16_t port) const {
     sockaddr_in address{};
     Socket_InitializeAddress(address, ipAddress, port);
-    if (connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) < 0) {
+    const int32_t result = connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    if (result < 0) {
         throw std::runtime_error("Could not connect.");
     }
 }
@@ -86,7 +89,9 @@ void UdpSocket::Connect(const std::string_view ipAddress, const uint16_t port) c
 void UdpSocket::SetNoDelay(const bool value) const {
     const int32_t flags = value ? 1 : 0;
     constexpr auto flagsLength = static_cast<socklen_t>(sizeof flags);
-    if (setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&flags), flagsLength) < 0) {
+    const int32_t result =
+        setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&flags), flagsLength);
+    if (result < 0) {
         throw std::runtime_error("Could not set no delay.");
     }
 }
@@ -94,13 +99,16 @@ void UdpSocket::SetNoDelay(const bool value) const {
 void UdpSocket::SetReuseAddress(const bool value) const {
     const int32_t flags = value ? 1 : 0;
     constexpr auto flagsLength = static_cast<socklen_t>(sizeof(flags));
-    if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&flags), flagsLength) < 0) {
+    const int32_t result =
+        setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&flags), flagsLength);
+    if (result < 0) {
         throw std::runtime_error("Could not set reuse address.");
     }
 }
 
 void UdpSocket::Listen() const {
-    if (listen(_socket, SOMAXCONN) < 0) {
+    const int32_t result = listen(_socket, SOMAXCONN);
+    if (result < 0) {
         throw std::runtime_error("Could not listen.");
     }
 }
@@ -197,11 +205,13 @@ void Pipe::Connect() {
             break;
         }
 
-        if (GetLastError() != ERROR_PIPE_BUSY) {
+        const DWORD lastError = GetLastError();
+        if (lastError != ERROR_PIPE_BUSY) {
             throw std::runtime_error("Could not create pipe.");
         }
 
-        if (WaitNamedPipeA(_name.c_str(), 10) == 0) {
+        const BOOL result = WaitNamedPipeA(_name.c_str(), 10);
+        if (result == 0) {
             throw std::runtime_error("Could not create pipe.");
         }
     }

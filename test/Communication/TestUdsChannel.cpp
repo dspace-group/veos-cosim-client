@@ -38,7 +38,7 @@ TEST_F(TestUdsChannel, ConnectWithoutStart) {
     const std::string name = GenerateName();
 
     {
-        UdsChannelServer server(name);  // NOLINT
+        UdsChannelServer server(name);
     }
 
     // Act
@@ -52,7 +52,7 @@ TEST_F(TestUdsChannel, Connect) {
     // Arrange
     const std::string name = GenerateName();
 
-    UdsChannelServer server(name);  // NOLINT
+    UdsChannelServer server(name);
 
     // Act
     const std::optional<SocketChannel> connectedChannel = TryConnectToUdsChannel(name);
@@ -114,7 +114,7 @@ TEST_F(TestUdsChannel, WriteToChannel) {
     const UdsChannelServer server(name);
 
     SocketChannel connectedChannel = ConnectToUdsChannel(name);
-    const SocketChannel acceptedChannel = Accept(server);  // NOLINT
+    const SocketChannel acceptedChannel = Accept(server);
 
     const uint32_t sendValue = GenerateU32();
 

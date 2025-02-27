@@ -40,7 +40,7 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     const std::string name = GenerateName();
 
     {
-        const LocalChannelServer server(name);  // NOLINT
+        const LocalChannelServer server(name);
     }
 
     // Act
@@ -54,7 +54,7 @@ TEST_F(TestLocalChannel, Connect) {
     // Arrange
     const std::string name = GenerateName();
 
-    const LocalChannelServer server(name);  // NOLINT
+    const LocalChannelServer server(name);
 
     // Act
     const std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
@@ -116,7 +116,7 @@ TEST_F(TestLocalChannel, WriteToChannel) {
     LocalChannelServer server(name);
 
     LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    const LocalChannel acceptedChannel = Accept(server);  // NOLINT
+    const LocalChannel acceptedChannel = Accept(server);
 
     const uint32_t sendValue = GenerateU32();
 

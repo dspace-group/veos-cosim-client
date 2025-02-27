@@ -30,9 +30,9 @@ public:
     [[nodiscard]] static std::optional<NamedMutex> TryOpenExisting(const std::string& name);
 
     // Small case, so this mutex can directly be used in std::lock_guard
-    void lock() const;                                     // NOLINT
-    [[nodiscard]] bool lock(uint32_t milliseconds) const;  // NOLINT
-    void unlock() const;                                   // NOLINT
+    void lock() const;                                     // NOLINT(readability-identifier-naming)
+    [[nodiscard]] bool lock(uint32_t milliseconds) const;  // NOLINT(readability-identifier-naming)
+    void unlock() const;                                   // NOLINT(readability-identifier-naming)
 
 private:
     Handle _handle;

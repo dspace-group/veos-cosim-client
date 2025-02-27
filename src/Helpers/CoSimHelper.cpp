@@ -19,25 +19,29 @@ void SetLogCallback(LogCallback logCallback) {
 }
 
 void LogError(const std::string_view message) {
-    if (const auto logCallback = LogCallbackHandler) {
+    const auto logCallback = LogCallbackHandler;
+    if (logCallback) {
         logCallback(Severity::Error, message);
     }
 }
 
 void LogWarning(const std::string_view message) {
-    if (const auto logCallback = LogCallbackHandler) {
+    const auto logCallback = LogCallbackHandler;
+    if (logCallback) {
         logCallback(Severity::Warning, message);
     }
 }
 
 void LogInfo(const std::string_view message) {
-    if (const auto logCallback = LogCallbackHandler) {
+    const auto logCallback = LogCallbackHandler;
+    if (logCallback) {
         logCallback(Severity::Info, message);
     }
 }
 
 void LogTrace(const std::string_view message) {
-    if (const auto logCallback = LogCallbackHandler) {
+    const auto logCallback = LogCallbackHandler;
+    if (logCallback) {
         logCallback(Severity::Trace, message);
     }
 }

@@ -248,7 +248,7 @@ using Parameters = Types<Param<CanControllerContainer,
 class NameGenerator {
 public:
     template <typename T>
-    static std::string GetName([[maybe_unused]] int32_t index) {  // NOLINT
+    static std::string GetName([[maybe_unused]] int32_t index) {
         using TController = typename T::Controller;
         const CoSimType coSimType = T::GetCoSimType();
         const ConnectionKind connectionKind = T::GetConnectionKind();

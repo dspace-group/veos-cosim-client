@@ -35,13 +35,13 @@ namespace {
 [[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
     static bool first = true;
     if (first) {
-        srand(42);  // NOLINT
+        srand(42);
         first = false;
     }
 
     const int32_t diff = max + 1 - min;
 
-    return min + (rand() % diff);  // NOLINT
+    return min + (rand() % diff);
 }
 
 void FillWithRandom(uint8_t* data, const size_t length) {

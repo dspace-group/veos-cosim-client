@@ -147,7 +147,7 @@ DsVeosCoSim_Handle DsVeosCoSim_Create() {
     return client.release();
 }
 
-void DsVeosCoSim_Destroy(const DsVeosCoSim_Handle handle) {  // NOLINT
+void DsVeosCoSim_Destroy(const DsVeosCoSim_Handle handle) {
     if (!handle) {
         return;
     }
@@ -157,7 +157,7 @@ void DsVeosCoSim_Destroy(const DsVeosCoSim_Handle handle) {  // NOLINT
     delete client;
 }
 
-DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -191,7 +191,7 @@ DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_Co
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_Disconnect(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_Disconnect(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -207,7 +207,7 @@ DsVeosCoSim_Result DsVeosCoSim_Disconnect(const DsVeosCoSim_Handle handle) {  //
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(const DsVeosCoSim_Handle handle,
                                                   DsVeosCoSim_ConnectionState* connectionState) {
     CheckNotNull(handle);
     CheckNotNull(connectionState);
@@ -225,8 +225,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(const DsVeosCoSim_Handle handle,    // NOLINT
-                                                            DsVeosCoSim_Callbacks callbacks) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(const DsVeosCoSim_Handle handle,
+                                                            DsVeosCoSim_Callbacks callbacks) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -247,8 +247,8 @@ DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(const DsVeosCoSim_Ha
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(const DsVeosCoSim_Handle handle,    // NOLINT
-                                                             DsVeosCoSim_Callbacks callbacks) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(const DsVeosCoSim_Handle handle,
+                                                             DsVeosCoSim_Callbacks callbacks) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -267,7 +267,7 @@ DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(const DsVeosCoSim_H
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_PollCommand(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_PollCommand(const DsVeosCoSim_Handle handle,
                                            DsVeosCoSim_SimulationTime* simulationTime,
                                            DsVeosCoSim_Command* command) {
     CheckNotNull(handle);
@@ -291,7 +291,7 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(const DsVeosCoSim_Handle handle,  // 
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_FinishCommand(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_FinishCommand(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -309,7 +309,7 @@ DsVeosCoSim_Result DsVeosCoSim_FinishCommand(const DsVeosCoSim_Handle handle) { 
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(const DsVeosCoSim_Handle handle,
                                                      const DsVeosCoSim_SimulationTime simulationTime) {
     CheckNotNull(handle);
 
@@ -326,8 +326,7 @@ DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(const DsVeosCoSim_Handle ha
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetStepSize(const DsVeosCoSim_Handle handle,  // NOLINT
-                                           DsVeosCoSim_SimulationTime* stepSize) {
+DsVeosCoSim_Result DsVeosCoSim_GetStepSize(const DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* stepSize) {
     CheckNotNull(handle);
     CheckNotNull(stepSize);
 
@@ -344,7 +343,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetStepSize(const DsVeosCoSim_Handle handle,  // 
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(const DsVeosCoSim_Handle handle,
                                                   uint32_t* incomingSignalsCount,
                                                   const DsVeosCoSim_IoSignal** incomingSignals) {
     CheckNotNull(handle);
@@ -364,7 +363,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(const DsVeosCoSim_Handle handle,
                                                   const DsVeosCoSim_IoSignalId incomingSignalId,
                                                   uint32_t* length,
                                                   void* value) {
@@ -385,7 +384,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(const DsVeosCoSim_Handle handle,
                                                   uint32_t* outgoingSignalsCount,
                                                   const DsVeosCoSim_IoSignal** outgoingSignals) {
     CheckNotNull(handle);
@@ -405,7 +404,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(const DsVeosCoSim_Handle handle,
                                                    const DsVeosCoSim_IoSignalId outgoingSignalId,
                                                    const uint32_t length,
                                                    const void* value) {
@@ -427,7 +426,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(const DsVeosCoSim_Handle hand
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(const DsVeosCoSim_Handle handle,
                                                  uint32_t* canControllersCount,
                                                  const DsVeosCoSim_CanController** canControllers) {
     CheckNotNull(handle);
@@ -447,8 +446,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(const DsVeosCoSim_Handle handle,  // NOLINT
-                                                 DsVeosCoSim_CanMessage* message) {
+DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(const DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
 
@@ -467,7 +465,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(const DsVeosCoSim_Handle handle,
                                                   const DsVeosCoSim_CanMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
@@ -487,7 +485,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(const DsVeosCoSim_Handle handle,
                                                  uint32_t* ethControllersCount,
                                                  const DsVeosCoSim_EthController** ethControllers) {
     CheckNotNull(handle);
@@ -507,8 +505,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(const DsVeosCoSim_Handle handle,  // NOLINT
-                                                 DsVeosCoSim_EthMessage* message) {
+DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(const DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
 
@@ -527,7 +524,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(const DsVeosCoSim_Handle handle,
                                                   const DsVeosCoSim_EthMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
@@ -547,7 +544,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(const DsVeosCoSim_Handle handle,
                                                  uint32_t* linControllersCount,
                                                  const DsVeosCoSim_LinController** linControllers) {
     CheckNotNull(handle);
@@ -567,8 +564,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(const DsVeosCoSim_Handle handle,  // NOLINT
-                                                 DsVeosCoSim_LinMessage* message) {
+DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(const DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
 
@@ -587,7 +583,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(const DsVeosCoSim_Handle handle
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(const DsVeosCoSim_Handle handle,
                                                   const DsVeosCoSim_LinMessage* message) {
     CheckNotNull(handle);
     CheckNotNull(message);
@@ -607,7 +603,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_StartSimulation(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_StartSimulation(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -623,7 +619,7 @@ DsVeosCoSim_Result DsVeosCoSim_StartSimulation(const DsVeosCoSim_Handle handle) 
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_StopSimulation(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_StopSimulation(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -639,7 +635,7 @@ DsVeosCoSim_Result DsVeosCoSim_StopSimulation(const DsVeosCoSim_Handle handle) {
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -655,7 +651,7 @@ DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(const DsVeosCoSim_Handle handle) 
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(const DsVeosCoSim_Handle handle) {  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(const DsVeosCoSim_Handle handle) {
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -671,7 +667,7 @@ DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(const DsVeosCoSim_Handle handl
     }
 }
 
-DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(const DsVeosCoSim_Handle handle,  // NOLINT
+DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(const DsVeosCoSim_Handle handle,
                                                    const DsVeosCoSim_TerminateReason terminateReason) {
     CheckNotNull(handle);
 
@@ -744,9 +740,7 @@ std::string DsVeosCoSim_DataToString(const uint8_t* data, const size_t dataLengt
     return DataToString(data, dataLength, separator);
 }
 
-std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal& ioSignal,
-                                       const uint32_t length,
-                                       const void* value) {
+std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal& ioSignal, const uint32_t length, const void* value) {
     return IoDataToString(reinterpret_cast<const IoSignal&>(ioSignal), length, value);
 }
 
