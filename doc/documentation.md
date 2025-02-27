@@ -485,7 +485,7 @@ The CoSim server waits for a client to connect.
 
 ### Part 2: To set up a CoSim test client
 
-1. Download the latest ```veos-cosim-client-<version>.zip``` archive from [veos-cosim-client](https://github.com/dspacegroup/veos-cosim-client).
+1. Download the latest ```veos-cosim-client-<version>.zip``` archive from [veos-cosim-client](https://github.com/dspace-group/veos-cosim-client/releases).
 
 2. Create the ```ThirdParty/veos-cosim-client``` subdirectory in the DsVeosCoSimDemo directory and extract the ZIP archive to this subfolder.
 
