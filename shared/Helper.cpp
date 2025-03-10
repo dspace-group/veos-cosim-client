@@ -32,6 +32,24 @@ namespace {
 
 }  // namespace
 
+[[nodiscard]] int32_t GetChar() {
+    #ifdef _WIN32
+        return _getch();
+    #else
+        termios oldt{};
+        tcgetattr(STDIN_FILENO, &oldt);
+    
+        termios newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+    
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    
+        int32_t character = getchar();
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+        return character;
+    #endif
+    }
+
 [[nodiscard]] bool StartUp() {
     InitializeOutput();
 

@@ -19,7 +19,13 @@ constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
         }                                                \
     } while (0)
 
+#ifndef CTRL
+#define CTRL(c) ((c) & 037)
+#endif
+
 constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
+
+[[nodiscard]] int32_t GetChar();
 
 [[nodiscard]] bool StartUp();
 

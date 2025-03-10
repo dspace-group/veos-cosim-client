@@ -10,8 +10,15 @@ target_sources(
   Program.cpp
 )
 
+target_include_directories(
+  TestClient
+  PRIVATE
+  ../../src
+)
+
 target_link_libraries(
   TestClient
   DsVeosCoSim
   fmt::fmt
+  shared
 )

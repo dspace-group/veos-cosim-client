@@ -61,6 +61,31 @@ void OnLogCallback(const Severity severity, std::string_view message) {
     }
 }
 
+void LogCanMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const CanController& controller,
+                   const CanMessage& message) {
+    print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
+}
+
+void LogEthMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const EthController& controller,
+                   const EthMessage& message) {
+    print(fg(fmt::color::cyan), "{}\n", ToString(message));
+}
+
+void LogLinMessage([[maybe_unused]] const SimulationTime simulationTime,
+                   [[maybe_unused]] const LinController& controller,
+                   const LinMessage& message) {
+    print(fg(fmt::color::lime), "{}\n", ToString(message));
+}
+
+void LogIoData([[maybe_unused]] const SimulationTime simulationTime,
+               const IoSignal& ioSignal,
+               const uint32_t length,
+               const void* value) {
+    print(fg(fmt::color::fuchsia), "{}\n", IoDataToString(ioSignal, length, value));
+}
+
 void ClearLastMessage() {
     LastMessage = "";
 }

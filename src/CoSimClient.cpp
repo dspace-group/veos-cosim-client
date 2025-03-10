@@ -204,13 +204,13 @@ public:
         *outgoingSignals = _outgoingSignalsExtern.data();
     }
 
-    [[nodiscard]] std::vector<IoSignal> GetIncomingSignals() const override {
+    [[nodiscard]] const std::vector<IoSignal>& GetIncomingSignals() const override {
         EnsureIsConnected();
 
         return _incomingSignalsExtern;
     }
 
-    [[nodiscard]] std::vector<IoSignal> GetOutgoingSignals() const override {
+    [[nodiscard]] const std::vector<IoSignal>& GetOutgoingSignals() const override {
         EnsureIsConnected();
 
         return _outgoingSignalsExtern;
@@ -255,19 +255,19 @@ public:
         *controllers = _linControllersExtern.data();
     }
 
-    [[nodiscard]] std::vector<CanController> GetCanControllers() const override {
+    [[nodiscard]] const std::vector<CanController>& GetCanControllers() const override {
         EnsureIsConnected();
 
         return _canControllersExtern;
     }
 
-    [[nodiscard]] std::vector<EthController> GetEthControllers() const override {
+    [[nodiscard]] const std::vector<EthController>& GetEthControllers() const override {
         EnsureIsConnected();
 
         return _ethControllersExtern;
     }
 
-    [[nodiscard]] std::vector<LinController> GetLinControllers() const override {
+    [[nodiscard]] const std::vector<LinController>& GetLinControllers() const override {
         EnsureIsConnected();
 
         return _linControllersExtern;

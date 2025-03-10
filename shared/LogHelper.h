@@ -33,5 +33,22 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {
     OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
+void LogCanMessage(DsVeosCoSim::SimulationTime simulationTime,
+                   const DsVeosCoSim::CanController& controller,
+                   const DsVeosCoSim::CanMessage& message);
+
+void LogEthMessage(DsVeosCoSim::SimulationTime simulationTime,
+                   const DsVeosCoSim::EthController& controller,
+                   const DsVeosCoSim::EthMessage& message);
+
+void LogLinMessage(DsVeosCoSim::SimulationTime simulationTime,
+                   const DsVeosCoSim::LinController& controller,
+                   const DsVeosCoSim::LinMessage& message);
+
+void LogIoData(DsVeosCoSim::SimulationTime simulationTime,
+               const DsVeosCoSim::IoSignal& ioSignal,
+               uint32_t length,
+               const void* value);
+
 void ClearLastMessage();
 [[nodiscard]] std::string GetLastMessage();

@@ -37,8 +37,8 @@ public:
     virtual void GetIncomingSignals(uint32_t* incomingSignalsCount, const IoSignal** incomingSignals) const = 0;
     virtual void GetOutgoingSignals(uint32_t* outgoingSignalsCount, const IoSignal** outgoingSignals) const = 0;
 
-    [[nodiscard]] virtual std::vector<IoSignal> GetIncomingSignals() const = 0;
-    [[nodiscard]] virtual std::vector<IoSignal> GetOutgoingSignals() const = 0;
+    [[nodiscard]] virtual const std::vector<IoSignal>& GetIncomingSignals() const = 0;
+    [[nodiscard]] virtual const std::vector<IoSignal>& GetOutgoingSignals() const = 0;
 
     virtual void Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const = 0;
 
@@ -49,9 +49,9 @@ public:
     virtual void GetEthControllers(uint32_t* controllersCount, const EthController** controllers) const = 0;
     virtual void GetLinControllers(uint32_t* controllersCount, const LinController** controllers) const = 0;
 
-    [[nodiscard]] virtual std::vector<CanController> GetCanControllers() const = 0;
-    [[nodiscard]] virtual std::vector<EthController> GetEthControllers() const = 0;
-    [[nodiscard]] virtual std::vector<LinController> GetLinControllers() const = 0;
+    [[nodiscard]] virtual const std::vector<CanController>& GetCanControllers() const = 0;
+    [[nodiscard]] virtual const std::vector<EthController>& GetEthControllers() const = 0;
+    [[nodiscard]] virtual const std::vector<LinController>& GetLinControllers() const = 0;
 
     [[nodiscard]] virtual bool Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual bool Transmit(const EthMessage& message) const = 0;
