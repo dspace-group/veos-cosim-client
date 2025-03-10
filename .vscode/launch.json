@@ -16,17 +16,6 @@
             "console": "externalTerminal"
         },
         {
-            "name": "(Windows) Launch Benchmark",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/tmpwin/Debug/x64/benchmark/DsVeosCoSimBenchmark.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "console": "externalTerminal"
-        },
-        {
             "name": "(Windows) Launch Performance Test Client",
             "type": "cppvsdbg",
             "request": "launch",
@@ -82,30 +71,6 @@
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/bin/gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "(Linux) Launch Benchmark",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/tmplin/Debug/benchmark/DsVeosCoSimBenchmark",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

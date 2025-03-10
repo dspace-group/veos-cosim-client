@@ -15,7 +15,7 @@ namespace {
 
 void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
-        CoSimClient coSimClient;
+        std::unique_ptr<CoSimClient> coSimClient = CreateClient();
         ConnectConfig connectConfig{};
         connectConfig.clientName = "PerformanceTestClient";
         connectConfig.serverName = CoSimServerName;
@@ -24,20 +24,20 @@ void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t
             connectConfig.remotePort = CoSimPort;
         }
 
-        MUST_BE_TRUE(coSimClient.Connect(connectConfig));
+        MUST_BE_TRUE(coSimClient->Connect(connectConfig));
 
         connectedEvent.Set();
 
         Callbacks callbacks{};
         callbacks.simulationEndStepCallback = [&](SimulationTime) {
             if (isStopped) {
-                coSimClient.Disconnect();
+                coSimClient->Disconnect();
             }
 
             counter++;
         };
 
-        MUST_BE_TRUE(coSimClient.RunCallbackBasedCoSimulation(callbacks));
+        MUST_BE_TRUE(coSimClient->RunCallbackBasedCoSimulation(callbacks));
     } catch (const std::exception& e) {
         LogError("Exception in CoSim callback client thread: {}", e.what());
         connectedEvent.Set();

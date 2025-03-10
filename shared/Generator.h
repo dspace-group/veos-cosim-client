@@ -6,7 +6,6 @@
 #include <string>
 #include <string_view>
 
-#include "BusBuffer.h"
 #include "CoSimTypes.h"
 
 [[nodiscard]] int32_t Random(int32_t min, int32_t max);

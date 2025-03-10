@@ -1,17 +1,16 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <memory>
 #include <string>
 
+#include "BusBuffer.h"
+#include "Channel.h"
 #include "CoSimTypes.h"
 #include "Generator.h"
 #include "Helper.h"
+#include "IoBuffer.h"
 #include "Protocol.h"
-#include "SocketChannel.h"
 #include "TestHelper.h"
-
-#ifdef _WIN32
-#include "LocalChannel.h"
-#endif
 
 using namespace DsVeosCoSim;
 
@@ -24,24 +23,24 @@ protected:
 
     void CustomSetUp(const ConnectionKind connectionKind) {
         if (connectionKind == ConnectionKind::Remote) {
-            TcpChannelServer server(0, true);
-            const uint16_t port = server.GetLocalPort();
+            std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+            const uint16_t port = server->GetLocalPort();
 
-            _senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
-            _receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+            _senderChannel = ConnectToTcpChannel("127.0.0.1", port);
+            _receiverChannel = Accept(*server);
         } else {
 #ifdef _WIN32
             const std::string name = GenerateString("LocalChannel名前");
-            LocalChannelServer server(name);
+            std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-            _senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
-            _receiverChannel = std::make_unique<LocalChannel>(Accept(server));
+            _senderChannel = ConnectToLocalChannel(name);
+            _receiverChannel = Accept(*server);
 #else
             const std::string name = GenerateString("UdsChannel名前");
-            UdsChannelServer server(name);
+            std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-            _senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
-            _receiverChannel = std::make_unique<SocketChannel>(Accept(server));
+            _senderChannel = ConnectToUdsChannel(name);
+            _receiverChannel = Accept(*server);
 #endif
         }
     }
@@ -306,22 +305,29 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
     const SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     const std::string ioBufferName = GenerateString("IoBuffer名前");
-    const IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    const IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    const std::unique_ptr<IoBuffer> clientIoBuffer =
+        CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
+    const std::unique_ptr<IoBuffer> serverIoBuffer =
+        CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
     const std::string busBufferName = GenerateString("BusBuffer名前");
-    const BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    const BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
+    const std::unique_ptr<BusBuffer> clientBusBuffer =
+        CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
+    const std::unique_ptr<BusBuffer> serverBusBuffer =
+        CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
-    ASSERT_TRUE(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, clientIoBuffer, clientBusBuffer));
+    ASSERT_TRUE(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, *clientIoBuffer, *clientBusBuffer));
 
     // Assert
     AssertFrame(FrameKind::Step);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(
-        Protocol::ReadStep(_receiverChannel->GetReader(), receiveSimulationTime, serverIoBuffer, serverBusBuffer, {}));
+    ASSERT_TRUE(Protocol::ReadStep(_receiverChannel->GetReader(),
+                                   receiveSimulationTime,
+                                   *serverIoBuffer,
+                                   *serverBusBuffer,
+                                   {}));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
@@ -335,19 +341,23 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     const auto sendCommand = static_cast<Command>(GenerateU32());
 
     const std::string ioBufferName = GenerateString("IoBuffer名前");
-    const IoBuffer clientIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    const IoBuffer serverIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    const std::unique_ptr<IoBuffer> clientIoBuffer =
+        CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
+    const std::unique_ptr<IoBuffer> serverIoBuffer =
+        CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
     const std::string busBufferName = GenerateString("BusBuffer名前");
-    const BusBuffer clientBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    const BusBuffer serverBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
+    const std::unique_ptr<BusBuffer> clientBusBuffer =
+        CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
+    const std::unique_ptr<BusBuffer> serverBusBuffer =
+        CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
     ASSERT_TRUE(Protocol::SendStepOk(_senderChannel->GetWriter(),
                                      sendSimulationTime,
                                      sendCommand,
-                                     clientIoBuffer,
-                                     clientBusBuffer));
+                                     *clientIoBuffer,
+                                     *clientBusBuffer));
 
     // Assert
     AssertFrame(FrameKind::StepOk);
@@ -357,8 +367,8 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     ASSERT_TRUE(Protocol::ReadStepOk(_receiverChannel->GetReader(),
                                      receiveSimulationTime,
                                      receiveCommand,
-                                     serverIoBuffer,
-                                     serverBusBuffer,
+                                     *serverIoBuffer,
+                                     *serverBusBuffer,
                                      {}));
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }

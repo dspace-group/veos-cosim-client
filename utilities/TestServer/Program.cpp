@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <fmt/color.h>
+#include <mutex>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -65,6 +66,13 @@ void InitializeOutput() {
 #define CTRL(c) ((c) & 037)
 #endif
 
+#define CheckResult(result) \
+    do {                    \
+        if (!(result)) {    \
+            return false;   \
+        }                   \
+    } while (0)
+
 void OnLogCallback(const Severity severity, std::string_view message) {
     switch (severity) {
         case Severity::Error:
@@ -82,6 +90,26 @@ void OnLogCallback(const Severity severity, std::string_view message) {
     }
 }
 
+template <typename... T>
+void LogError(fmt::format_string<T...> format, T&&... args) {
+    OnLogCallback(DsVeosCoSim::Severity::Error, fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogWarning(fmt::format_string<T...> format, T&&... args) {
+    OnLogCallback(DsVeosCoSim::Severity::Warning, fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogInfo(fmt::format_string<T...> format, T&&... args) {
+    OnLogCallback(DsVeosCoSim::Severity::Info, fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogTrace(fmt::format_string<T...> format, T&&... args) {
+    OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
 bool SendIoData;
 bool SendCanMessages;
 bool SendEthMessages;
@@ -96,7 +124,7 @@ std::unique_ptr<CoSimServer> Server;
 CoSimServerConfig Config;
 SimulationState State;
 
-Event StopBackgroundThreadFlag;
+bool StopBackgroundThreadFlag;
 std::thread BackgroundThread;
 std::thread::id SimulationThreadId;
 
@@ -285,8 +313,10 @@ void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
 }
 
 void StartBackgroundThread() {
+    StopBackgroundThreadFlag = false;
     BackgroundThread = std::thread([] {
-        while (!StopBackgroundThreadFlag.Wait(1)) {
+        while (!StopBackgroundThreadFlag) {
+            std::this_thread::sleep_for(1ms);
             try {
                 std::lock_guard lock(Mutex);
                 Server->BackgroundService();
@@ -302,7 +332,7 @@ void StopBackgroundThread() {
         return;
     }
 
-    StopBackgroundThreadFlag.Set();
+    StopBackgroundThreadFlag = true;
     if (std::this_thread::get_id() == BackgroundThread.get_id()) {
         BackgroundThread.detach();
     } else {
@@ -606,7 +636,7 @@ void LoadSimulation(const bool isClientOptional, const std::string_view name) {
 
     {
         std::lock_guard lock(Mutex);
-        Server = std::make_unique<CoSimServer>();
+        Server = CreateServer();
         Server->Load(Config);
     }
 

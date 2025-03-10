@@ -2,18 +2,23 @@
 
 #include "Socket.h"
 
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 
 #include "CoSimHelper.h"
+#include "CoSimTypes.h"
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
-#include <WinSock2.h>
-#include <Windows.h>
+#include <Windows.h>  // NOLINT
 #include <afunix.h>
-
-#include <filesystem>
+#include <stdio.h>  // NOLINT
+#include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -39,21 +44,24 @@ namespace DsVeosCoSim {
 namespace {
 
 #ifdef _WIN32
-using socklen_t = int32_t;
+using SocketLength = int32_t;
 constexpr int32_t ErrorCodeInterrupted = WSAEINTR;
 constexpr int32_t ErrorCodeWouldBlock = WSAEWOULDBLOCK;
 constexpr int32_t ErrorCodeNotSupported = WSAEAFNOSUPPORT;
 constexpr int32_t ErrorCodeConnectionAborted = WSAECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = WSAECONNRESET;
-#define poll WSAPoll
-#define unlink _unlink
+#define Poll WSAPoll
+#define Unlink _unlink
 #else
+using SocketLength = socklen_t;
 constexpr int32_t ErrorCodeInterrupted = EINTR;
 constexpr int32_t ErrorCodeWouldBlock = EINPROGRESS;
 constexpr int32_t ErrorCodeBrokenPipe = EPIPE;
 constexpr int32_t ErrorCodeNotSupported = EAFNOSUPPORT;
 constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
+#define Poll poll
+#define Unlink unlink
 #endif
 
 [[nodiscard]] std::string GetUdsPath(const std::string& name) {
@@ -68,10 +76,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 [[nodiscard]] int64_t GetCurrentTimeInMilliseconds() {
 #ifdef _WIN32
-    FILETIME fileTime{};
-    GetSystemTimeAsFileTime(&fileTime);
+    FILETIME fileTime{};                 // NOLINT
+    GetSystemTimeAsFileTime(&fileTime);  // NOLINT
 
-    ULARGE_INTEGER largeInteger{};
+    ULARGE_INTEGER largeInteger{};  // NOLINT
     largeInteger.LowPart = fileTime.dwLowDateTime;
     largeInteger.HighPart = fileTime.dwHighDateTime;
 
@@ -104,7 +112,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
-        throw CoSimException("Could not get address information. ", errorCode);
+        throw CoSimException("Could not get address information. " + GetSystemErrorMessage(errorCode));
     }
 
     return addressInfo;
@@ -114,37 +122,33 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     SocketAddress socketAddress;
     socketAddress.port = ntohs(ipv4Address.sin_port);
 
-    if (ipv4Address.sin_addr.s_addr != 0) {
-        std::string ipAddress(INET_ADDRSTRLEN, '\0');
-        const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr.s_addr, ipAddress.data(), INET_ADDRSTRLEN);
-        if (!result) {
-            throw CoSimException("Could not get address information.", GetLastNetworkError());
-        }
-
-        socketAddress.ipAddress = ipAddress;
-    } else {
-        socketAddress.ipAddress = "127.0.0.1";
+    std::array<char, INET_ADDRSTRLEN> ipAddress{};
+    const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr, ipAddress.data(), INET_ADDRSTRLEN);
+    if (!result) {
+        throw CoSimException("Could not get address information. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
+
+    socketAddress.ipAddress = result;
 
     return socketAddress;
 }
 
-[[nodiscard]] SocketAddress ConvertFromInternetAddress(const sockaddr_in6& ipv6Address) {
+[[nodiscard]] SocketAddress ConvertFromInternetAddress(const sockaddr_in6& ipv6Address) {  // NOLINT
     SocketAddress socketAddress;
     socketAddress.port = ntohs(ipv6Address.sin6_port);
 
-    std::string ipAddress(INET6_ADDRSTRLEN, '\0');
+    std::array<char, INET6_ADDRSTRLEN> ipAddress{};
     const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
     if (!result) {
-        throw CoSimException("Could not get address information.", GetLastNetworkError());
+        throw CoSimException("Could not get address information. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
-    socketAddress.ipAddress = ipAddress;
+    socketAddress.ipAddress = result;
 
     return socketAddress;
 }
 
-void CloseSocket(socket_t socket) {
+void CloseSocket(SocketHandle socket) {
     if (socket == InvalidSocket) {
         return;
     }
@@ -156,7 +160,7 @@ void CloseSocket(socket_t socket) {
 #endif
 }
 
-[[nodiscard]] bool Poll(const socket_t socket, const int16_t events, const uint32_t timeoutInMilliseconds) {
+[[nodiscard]] bool PollInternal(const SocketHandle socket, const int16_t events, const uint32_t timeoutInMilliseconds) {
     const int64_t deadline = GetCurrentTimeInMilliseconds() + timeoutInMilliseconds;
     int64_t millisecondsUntilDeadline = timeoutInMilliseconds;
     while (true) {
@@ -168,9 +172,9 @@ void CloseSocket(socket_t socket) {
         fdArray.fd = socket;
         fdArray.events = events;
 
-        const int32_t pollResult = poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
+        const int32_t pollResult = Poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
         if (pollResult < 0) {
-            throw CoSimException("Could not poll on socket.", GetLastNetworkError());
+            throw CoSimException("Could not poll on socket. " + GetSystemErrorMessage(GetLastNetworkError()));
         }
 
         if (pollResult == 0) {
@@ -179,7 +183,7 @@ void CloseSocket(socket_t socket) {
 
         // Make sure it really succeeded
         int32_t error = 0;
-        socklen_t len = sizeof(error);
+        auto len = static_cast<SocketLength>(sizeof(error));
         const int32_t getSocketOptionResult =
             getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len);
         if (getSocketOptionResult != 0) {
@@ -189,46 +193,46 @@ void CloseSocket(socket_t socket) {
                 continue;
             }
 
-            throw CoSimException("Could not poll on socket.", errorCode);
+            throw CoSimException("Could not poll on socket. " + GetSystemErrorMessage(errorCode));
         }
 
         return true;
     }
 }
 
-void SwitchToNonBlockingMode(const socket_t& socket) {
+void SwitchToNonBlockingMode(const SocketHandle& socket) {
 #ifdef _WIN32
     u_long mode = 1;
     const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
-        throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
+        throw CoSimException("Could not switch to non-blocking mode. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 #else
     const int32_t result = fcntl(socket, F_SETFL, O_NONBLOCK);
     if (result < 0) {
-        throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
+        throw CoSimException("Could not switch to non-blocking mode. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 #endif
 }
 
-void SwitchToBlockingMode(const socket_t& socket) {
+void SwitchToBlockingMode(const SocketHandle& socket) {
 #ifdef _WIN32
     u_long mode = 0;
     const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
-        throw CoSimException("Could not switch to blocking mode.", GetLastNetworkError());
+        throw CoSimException("Could not switch to blocking mode. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 #else
     const int32_t result = fcntl(socket, F_SETFL, 0);
     if (result < 0) {
-        throw CoSimException("Could not switch to non-blocking mode.", GetLastNetworkError());
+        throw CoSimException("Could not switch to non-blocking mode. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 #endif
 }
 
-[[nodiscard]] bool ConnectWithTimeout(socket_t& socket,
+[[nodiscard]] bool ConnectWithTimeout(SocketHandle& socket,
                                       const sockaddr* socketAddress,
-                                      const socklen_t sizeOfSocketAddress,
+                                      const SocketLength sizeOfSocketAddress,
                                       const uint32_t timeoutInMilliseconds) {
     SwitchToNonBlockingMode(socket);
 
@@ -239,7 +243,7 @@ void SwitchToBlockingMode(const socket_t& socket) {
 
     const int32_t errorCode = GetLastNetworkError();
     if (errorCode != ErrorCodeWouldBlock) {
-        throw CoSimException("Could not connect.", errorCode);
+        throw CoSimException("Could not connect. " + GetSystemErrorMessage(errorCode));
     }
 
     fd_set set{};
@@ -273,7 +277,7 @@ void StartupNetwork() {
 
         const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
         if (errorCode != 0) {
-            throw CoSimException("Could not initialize Windows sockets.", errorCode);
+            throw CoSimException("Could not initialize Windows sockets. " + GetSystemErrorMessage(errorCode));
         }
 
         networkStarted = true;
@@ -302,11 +306,11 @@ Socket::Socket(const AddressFamily addressFamily) : _addressFamily(addressFamily
     _socket = socket(domain, SOCK_STREAM, protocol);
 
     if (_socket == InvalidSocket) {
-        throw CoSimException("Could not create socket.", GetLastNetworkError());
+        throw CoSimException("Could not create socket. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
-Socket::Socket(const socket_t socket, const AddressFamily addressFamily)
+Socket::Socket(const SocketHandle socket, const AddressFamily addressFamily)
     : _socket(socket), _addressFamily(addressFamily) {
 }
 
@@ -317,9 +321,9 @@ Socket::~Socket() noexcept {
 Socket::Socket(Socket&& other) noexcept {
     Close();
 
-    _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _socket = other._socket;                // NOLINT
+    _addressFamily = other._addressFamily;  // NOLINT
+    _path = other._path;                    // NOLINT
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
@@ -345,7 +349,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const socket_t socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        const SocketHandle socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -361,7 +365,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const socket_t socket = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        const SocketHandle socket = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -377,7 +381,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const socket_t socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        const SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -401,7 +405,7 @@ void Socket::Shutdown() const {
 }
 
 void Socket::Close() {
-    const socket_t socket = _socket;
+    const SocketHandle socket = _socket;
     if (socket == InvalidSocket) {
         return;
     }
@@ -412,7 +416,7 @@ void Socket::Close() {
     _addressFamily = {};
 
     if (!_path.empty()) {
-        (void)unlink(_path.c_str());
+        (void)Unlink(_path.c_str());
         _path = {};
     }
 
@@ -423,7 +427,7 @@ void Socket::Close() {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {
+void Socket::EnableIpv6Only() const {  // NOLINT
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
@@ -431,9 +435,9 @@ void Socket::EnableIpv6Only() const {
                                       IPPROTO_IPV6,
                                       IPV6_V6ONLY,
                                       reinterpret_cast<char*>(&flags),
-                                      static_cast<socklen_t>(sizeof(flags)));
+                                      static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        throw CoSimException("Could not enable IPv6 only.", GetLastNetworkError());
+        throw CoSimException("Could not enable IPv6 only. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 #endif
 }
@@ -453,7 +457,7 @@ void Socket::EnableIpv6Only() const {
     while (currentAddressInfo) {
         int32_t addressFamily = currentAddressInfo->ai_family;
 
-        const socket_t socket =
+        const SocketHandle socket =
             ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (socket == InvalidSocket) {
             currentAddressInfo = currentAddressInfo->ai_next;
@@ -474,7 +478,7 @@ void Socket::EnableIpv6Only() const {
 
         if (!ConnectWithTimeout(connectedSocket._socket,
                                 currentAddressInfo->ai_addr,
-                                static_cast<socklen_t>(currentAddressInfo->ai_addrlen),
+                                static_cast<SocketLength>(currentAddressInfo->ai_addrlen),
                                 timeoutInMilliseconds)) {
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
@@ -534,7 +538,7 @@ void Socket::BindForIpv4(const uint16_t port, const bool enableRemoteAccess) con
 
     const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
-        throw CoSimException("Could not bind socket.", GetLastNetworkError());
+        throw CoSimException("Could not bind socket. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
@@ -542,11 +546,11 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
     sockaddr_in6 address{};
     address.sin6_family = AF_INET6;
     address.sin6_port = htons(port);
-    address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;
+    address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;  // NOLINT
 
     const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
-        throw CoSimException("Could not bind socket.", GetLastNetworkError());
+        throw CoSimException("Could not bind socket. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
@@ -563,7 +567,7 @@ void Socket::Bind(const std::string& name) {
 
     _path = GetUdsPath(name);
 #ifdef _WIN32
-    (void)unlink(_path.c_str());
+    (void)Unlink(_path.c_str());
 #endif
 
     sockaddr_un address{};
@@ -576,7 +580,7 @@ void Socket::Bind(const std::string& name) {
 
     const int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
     if (result != 0) {
-        throw CoSimException("Could not bind socket.", GetLastNetworkError());
+        throw CoSimException("Could not bind socket. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
@@ -591,7 +595,8 @@ void Socket::EnableReuseAddress() const {
     const int32_t result =
         setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
-        throw CoSimException("Could not enable socket option reuse address.", GetLastNetworkError());
+        throw CoSimException("Could not enable socket option reuse address. " +
+                             GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
@@ -602,7 +607,7 @@ void Socket::EnableNoDelay() const {
     const int32_t result =
         setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
-        throw CoSimException("Could not enable TCP option no delay.", GetLastNetworkError());
+        throw CoSimException("Could not enable TCP option no delay. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
@@ -611,20 +616,20 @@ void Socket::Listen() const {
 
     const int32_t result = listen(_socket, SOMAXCONN);
     if (result != 0) {
-        throw CoSimException("Could not listen.", GetLastNetworkError());
+        throw CoSimException("Could not listen. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 }
 
 [[nodiscard]] std::optional<Socket> Socket::TryAccept(const uint32_t timeoutInMilliseconds) const {
     EnsureIsValid();
 
-    if (!Poll(_socket, POLLRDNORM, timeoutInMilliseconds)) {
+    if (!PollInternal(_socket, POLLRDNORM, timeoutInMilliseconds)) {
         return {};
     }
 
-    const socket_t socket = accept(_socket, nullptr, nullptr);
+    const SocketHandle socket = accept(_socket, nullptr, nullptr);
     if (socket == InvalidSocket) {
-        throw CoSimException("Could not accept.", GetLastNetworkError());
+        throw CoSimException("Could not accept. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
     return Socket(socket, _addressFamily);
@@ -646,12 +651,12 @@ void Socket::Listen() const {
 
 [[nodiscard]] uint16_t Socket::GetLocalPortForIpv4() const {
     sockaddr_in address{};
-    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin_family = AF_INET;
 
     const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        throw CoSimException("Could not get local socket address.", GetLastNetworkError());
+        throw CoSimException("Could not get local socket address. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
     const auto [ipAddress, port] = ConvertFromInternetAddress(address);
@@ -660,12 +665,12 @@ void Socket::Listen() const {
 
 [[nodiscard]] uint16_t Socket::GetLocalPortForIpv6() const {
     sockaddr_in6 address{};
-    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin6_family = AF_INET6;
 
     const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        throw CoSimException("Could not get local socket address.", GetLastNetworkError());
+        throw CoSimException("Could not get local socket address. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
     const auto [ipAddress, port] = ConvertFromInternetAddress(address);
@@ -683,17 +688,17 @@ void Socket::Listen() const {
         return GetRemoteAddressForIpv6();
     }
 
-    return {"127.0.0.1", 0};
+    return {"127.0.0.1", 0};  // NOLINT
 }
 
 [[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv4() const {
     sockaddr_in address{};
-    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin_family = AF_INET;
 
     const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        throw CoSimException("Could not get remote socket address.", GetLastNetworkError());
+        throw CoSimException("Could not get remote socket address. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
     return ConvertFromInternetAddress(address);
@@ -701,12 +706,12 @@ void Socket::Listen() const {
 
 [[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv6() const {
     sockaddr_in6 address{};
-    auto addressLength = static_cast<socklen_t>(sizeof(address));
+    auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin6_family = AF_INET6;
 
     const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        throw CoSimException("Could not get remote socket address.", GetLastNetworkError());
+        throw CoSimException("Could not get remote socket address. " + GetSystemErrorMessage(GetLastNetworkError()));
     }
 
     if (address.sin6_family == AF_INET) {

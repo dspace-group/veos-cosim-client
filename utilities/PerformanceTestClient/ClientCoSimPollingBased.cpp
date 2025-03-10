@@ -16,7 +16,7 @@ namespace {
 
 void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
-        CoSimClient coSimClient;
+        std::unique_ptr<CoSimClient> coSimClient = CreateClient();
         ConnectConfig connectConfig{};
         connectConfig.clientName = "PerformanceTestClient";
         connectConfig.serverName = CoSimServerName;
@@ -25,16 +25,16 @@ void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t
             connectConfig.remotePort = CoSimPort;
         }
 
-        MUST_BE_TRUE(coSimClient.Connect(connectConfig));
+        MUST_BE_TRUE(coSimClient->Connect(connectConfig));
 
         connectedEvent.Set();
 
-        coSimClient.StartPollingBasedCoSimulation({});
+        coSimClient->StartPollingBasedCoSimulation({});
 
         while (!isStopped) {
             SimulationTime simulationTime{};
             Command command{};
-            MUST_BE_TRUE(coSimClient.PollCommand(simulationTime, command, false));
+            MUST_BE_TRUE(coSimClient->PollCommand(simulationTime, command, false));
 
             switch (command) {
                 case Command::Step:
@@ -50,10 +50,10 @@ void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t
                     throw std::runtime_error("Invalid command.");
             }
 
-            MUST_BE_TRUE(coSimClient.FinishCommand());
+            MUST_BE_TRUE(coSimClient->FinishCommand());
         }
 
-        coSimClient.Disconnect();
+        coSimClient->Disconnect();
     } catch (const std::exception& e) {
         LogError("Exception in CoSim polling client thread: {}", e.what());
         connectedEvent.Set();

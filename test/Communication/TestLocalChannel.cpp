@@ -7,13 +7,12 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <optional>
+#include <memory>
 #include <string>
 #include <thread>
 
 #include "Generator.h"
 #include "Helper.h"
-#include "LocalChannel.h"
 
 using namespace DsVeosCoSim;
 
@@ -32,7 +31,7 @@ TEST_F(TestLocalChannel, StartServer) {
     const std::string name = GenerateName();
 
     // Act and assert
-    ASSERT_NO_THROW((void)LocalChannelServer(name));
+    ASSERT_NO_THROW((void)CreateLocalChannelServer(name));
 }
 
 TEST_F(TestLocalChannel, ConnectWithoutStart) {
@@ -40,11 +39,11 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     const std::string name = GenerateName();
 
     {
-        const LocalChannelServer server(name);
+        const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
     }
 
     // Act
-    const std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
 
     // Assert
     ASSERT_FALSE(connectedChannel);
@@ -54,10 +53,10 @@ TEST_F(TestLocalChannel, Connect) {
     // Arrange
     const std::string name = GenerateName();
 
-    const LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
     // Act
-    const std::optional<LocalChannel> connectedChannel = TryConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
 
     // Assert
     ASSERT_TRUE(connectedChannel);
@@ -67,10 +66,10 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
     // Act
-    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
 
     // Assert
     ASSERT_FALSE(acceptedChannel);
@@ -80,12 +79,12 @@ TEST_F(TestLocalChannel, Accept) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
     (void)ConnectToLocalChannel(name);
 
     // Act
-    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -95,15 +94,15 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
-    connectedChannel.Disconnect();
+    connectedChannel->Disconnect();
 
     // Act
-    const std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -113,36 +112,36 @@ TEST_F(TestLocalChannel, WriteToChannel) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    const LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue = GenerateU32();
 
     // Act and assert
-    ASSERT_TRUE(connectedChannel.GetWriter().Write(sendValue));
-    ASSERT_TRUE(connectedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(connectedChannel->GetWriter().Write(sendValue));
+    ASSERT_TRUE(connectedChannel->GetWriter().EndWrite());
 }
 
 TEST_F(TestLocalChannel, ReadFromChannel) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue = GenerateU32();
 
-    EXPECT_TRUE(connectedChannel.GetWriter().Write(sendValue));
-    EXPECT_TRUE(connectedChannel.GetWriter().EndWrite());
+    EXPECT_TRUE(connectedChannel->GetWriter().Write(sendValue));
+    EXPECT_TRUE(connectedChannel->GetWriter().EndWrite());
 
     uint32_t receiveValue{};
 
     // Act
-    ASSERT_TRUE(acceptedChannel.GetReader().Read(receiveValue));
+    ASSERT_TRUE(acceptedChannel->GetReader().Read(receiveValue));
 
     // Assert
     ASSERT_EQ(sendValue, receiveValue);
@@ -152,18 +151,18 @@ TEST_F(TestLocalChannel, PingPong) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
-        Channel* sendChannel = &connectedChannel;
-        Channel* receiveChannel = &acceptedChannel;
+        Channel* sendChannel = connectedChannel.get();
+        Channel* receiveChannel = acceptedChannel.get();
         if (i % 2 == 1) {
-            sendChannel = &acceptedChannel;
-            receiveChannel = &connectedChannel;
+            sendChannel = acceptedChannel.get();
+            receiveChannel = connectedChannel.get();
         }
 
         uint16_t sendValue = GenerateU16();
@@ -181,10 +180,10 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue1 = GenerateU32();
     const uint64_t sendValue2 = GenerateU64();
@@ -192,21 +191,21 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     uint32_t receiveValue2{};
 
     // Act
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendValue1));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendValue1));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendValue2));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendValue2));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
-    ASSERT_TRUE(connectedChannel.GetReader().Read(receiveValue1));
-    ASSERT_TRUE(connectedChannel.GetReader().Read(receiveValue2));
+    ASSERT_TRUE(connectedChannel->GetReader().Read(receiveValue1));
+    ASSERT_TRUE(connectedChannel->GetReader().Read(receiveValue2));
 
     // Assert
     ASSERT_EQ(sendValue1, receiveValue1);
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-void StreamClient(LocalChannel& channel) {
+void StreamClient(Channel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -219,24 +218,24 @@ TEST_F(TestLocalChannel, Stream) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
-    std::thread thread(StreamClient, std::ref(connectedChannel));
+    std::thread thread(StreamClient, std::ref(*connectedChannel));
 
     // Act and assert
     for (uint32_t i = 0; i < BigNumber; i++) {
-        ASSERT_TRUE(acceptedChannel.GetWriter().Write(i));
+        ASSERT_TRUE(acceptedChannel->GetWriter().Write(i));
     }
 
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
     thread.join();
 }
 
-void ReceiveBigElement(LocalChannel& channel) {
+void ReceiveBigElement(Channel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -249,12 +248,12 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     // Arrange
     const std::string name = GenerateName();
 
-    LocalChannelServer server(name);
+    const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-    LocalChannel connectedChannel = ConnectToLocalChannel(name);
-    LocalChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
-    std::thread thread(ReceiveBigElement, std::ref(connectedChannel));
+    std::thread thread(ReceiveBigElement, std::ref(*connectedChannel));
 
     const auto sendArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
@@ -262,8 +261,8 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     }
 
     // Act and assert
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendArray.get(), sendArray->size() * 4));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
     thread.join();
 }

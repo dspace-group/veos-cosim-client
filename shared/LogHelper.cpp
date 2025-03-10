@@ -6,7 +6,7 @@
 
 #include <string_view>  // IWYU pragma: keep
 
-#include "CoSimHelper.h"
+#include "CoSimClient.h"
 
 #ifdef _WIN32
 #include <Windows.h>

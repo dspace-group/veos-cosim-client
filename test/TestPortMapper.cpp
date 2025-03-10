@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 
 #include "Generator.h"
@@ -27,12 +28,12 @@ TEST_F(TestPortMapper, StartOfServer) {
     // Arrange
 
     // Act and assert
-    ASSERT_NO_THROW(PortMapperServer(false));
+    ASSERT_NO_THROW((void)CreatePortMapperServer(false));
 }
 
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);
+    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -51,7 +52,7 @@ TEST_F(TestPortMapper, SetAndGet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetWithoutSet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);
+    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -70,7 +71,7 @@ TEST_F(TestPortMapper, GetWithoutSet) {
 #ifdef EXCEPTION_TESTS
 TEST_F(TestPortMapper, GetAfterUnset) {
     // Arrange
-    const PortMapperServer portMapperServer(false);
+    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
@@ -93,7 +94,7 @@ TEST_F(TestPortMapper, GetAfterUnset) {
 
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
-    const PortMapperServer portMapperServer(false);
+    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
     const std::string serverName = GenerateString("Server名前");
 
