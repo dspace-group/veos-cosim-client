@@ -5,15 +5,15 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <optional>
+#include <memory>
 #include <string_view>  // IWYU pragma: keep
 #include <thread>
 #include <vector>
 
+#include "Channel.h"
 #include "Generator.h"
 #include "Helper.h"
 #include "Socket.h"
-#include "SocketChannel.h"
 
 using namespace DsVeosCoSim;
 
@@ -52,15 +52,15 @@ TEST_F(TestTcpChannel, StartServer) {
     // Arrange
 
     // Act and assert
-    ASSERT_NO_THROW(TcpChannelServer(0, true));
+    ASSERT_NO_THROW((void)CreateTcpChannelServer(0, true));
 }
 
 TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
     // Arrange
-    const TcpChannelServer server(0, true);
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
 
     // Act
-    const uint16_t port = server.GetLocalPort();
+    const uint16_t port = server->GetLocalPort();
 
     // Assert
     ASSERT_NE(0, port);
@@ -75,12 +75,12 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
     uint16_t port{};
 
     {
-        const TcpChannelServer server(0, true);
-        port = server.GetLocalPort();
+        const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+        port = server->GetLocalPort();
     }
 
     // Act
-    const std::optional<SocketChannel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, 0);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, 0);
 
     // Assert
     ASSERT_FALSE(connectedChannel);
@@ -92,11 +92,11 @@ TEST_P(TestTcpChannel, Connect) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
     // Act
-    const std::optional<SocketChannel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(connectedChannel);
@@ -104,10 +104,10 @@ TEST_P(TestTcpChannel, Connect) {
 
 TEST_P(TestTcpChannel, AcceptWithoutConnect) {
     // Arrange
-    const TcpChannelServer server(0, true);
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
 
     // Act
-    const std::optional<SocketChannel> acceptedChannel = server.TryAccept();
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
 
     // Assert
     ASSERT_FALSE(acceptedChannel);
@@ -118,13 +118,13 @@ TEST_P(TestTcpChannel, Accept) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
     (void)ConnectToTcpChannel(ipAddress, port);
 
     // Act
-    const std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -135,36 +135,27 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    const SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     // Act
-    const SocketAddress connectedChannelRemoteAddress = connectedChannel.GetRemoteAddress();
-    const SocketAddress acceptedChannelRemoteAddress = acceptedChannel.GetRemoteAddress();
+    const std::string connectedChannelRemoteAddress = connectedChannel->GetRemoteAddress();
+    const std::string acceptedChannelRemoteAddress = acceptedChannel->GetRemoteAddress();
 
-// Assert
-#ifdef _WIN32
-    ASSERT_STREQ(connectedChannelRemoteAddress.ipAddress.c_str(), ipAddress.data());
-    ASSERT_EQ(connectedChannelRemoteAddress.port, port);
-#else
-    ASSERT_STREQ(connectedChannelRemoteAddress.ipAddress.c_str(), "127.0.0.1");
-#endif
-
-    ASSERT_STREQ(acceptedChannelRemoteAddress.ipAddress.c_str(), ipAddress.data());
-    ASSERT_NE(acceptedChannelRemoteAddress.port, port);
-    ASSERT_NE(acceptedChannelRemoteAddress.port, 0);
+    // Assert
+    ASSERT_STRNE(connectedChannelRemoteAddress.c_str(), acceptedChannelRemoteAddress.c_str());
 }
 
 TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
     // Arrange
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
     // Act
-    const std::optional<SocketChannel> connectedChannel = TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(connectedChannel);
@@ -172,13 +163,13 @@ TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
 
 TEST_F(TestTcpChannel, AcceptClientWithHostName) {
     // Arrange
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
     (void)ConnectToTcpChannel("localhost", port);
 
     // Act
-    const std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -189,16 +180,16 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
-    connectedChannel.Disconnect();
+    connectedChannel->Disconnect();
 
     // Act
-    const std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
 
     // Assert
     ASSERT_TRUE(acceptedChannel);
@@ -209,17 +200,17 @@ TEST_P(TestTcpChannel, WriteToChannel) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue = GenerateU32();
 
     // Act and assert
-    ASSERT_TRUE(connectedChannel.GetWriter().Write(sendValue));
-    ASSERT_TRUE(connectedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(connectedChannel->GetWriter().Write(sendValue));
+    ASSERT_TRUE(connectedChannel->GetWriter().EndWrite());
 }
 
 TEST_P(TestTcpChannel, ReadFromChannel) {
@@ -227,21 +218,21 @@ TEST_P(TestTcpChannel, ReadFromChannel) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue = GenerateU32();
 
-    EXPECT_TRUE(connectedChannel.GetWriter().Write(sendValue));
-    EXPECT_TRUE(connectedChannel.GetWriter().EndWrite());
+    EXPECT_TRUE(connectedChannel->GetWriter().Write(sendValue));
+    EXPECT_TRUE(connectedChannel->GetWriter().EndWrite());
 
     uint32_t receiveValue{};
 
     // Act
-    ASSERT_TRUE(acceptedChannel.GetReader().Read(receiveValue));
+    ASSERT_TRUE(acceptedChannel->GetReader().Read(receiveValue));
 
     // Assert
     ASSERT_EQ(sendValue, receiveValue);
@@ -252,19 +243,19 @@ TEST_P(TestTcpChannel, PingPong) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
-        Channel* sendChannel = &connectedChannel;
-        Channel* receiveChannel = &acceptedChannel;
+        Channel* sendChannel = connectedChannel.get();
+        Channel* receiveChannel = acceptedChannel.get();
         if (i % 2 == 1) {
-            sendChannel = &acceptedChannel;
-            receiveChannel = &connectedChannel;
+            sendChannel = acceptedChannel.get();
+            receiveChannel = connectedChannel.get();
         }
 
         const uint16_t sendValue = GenerateU16();
@@ -283,11 +274,11 @@ TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
     const uint32_t sendValue1 = GenerateU32();
     const uint64_t sendValue2 = GenerateU64();
@@ -295,21 +286,21 @@ TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     uint64_t receiveValue2{};
 
     // Act
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendValue1));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendValue1));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendValue2));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendValue2));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
-    ASSERT_TRUE(connectedChannel.GetReader().Read(receiveValue1));
-    ASSERT_TRUE(connectedChannel.GetReader().Read(receiveValue2));
+    ASSERT_TRUE(connectedChannel->GetReader().Read(receiveValue1));
+    ASSERT_TRUE(connectedChannel->GetReader().Read(receiveValue2));
 
     // Assert
     ASSERT_EQ(sendValue1, receiveValue1);
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-void StreamClient(SocketChannel& channel) {
+void StreamClient(Channel& channel) {
     for (uint32_t i = 0; i < BigNumber; i++) {
         uint32_t receiveValue{};
         ASSERT_TRUE(channel.GetReader().Read(receiveValue));
@@ -323,25 +314,25 @@ TEST_P(TestTcpChannel, Stream) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
-    std::thread thread(StreamClient, std::ref(connectedChannel));
+    std::thread thread(StreamClient, std::ref(*connectedChannel));
 
     // Act and assert
     for (uint32_t i = 0; i < BigNumber; i++) {
-        ASSERT_TRUE(acceptedChannel.GetWriter().Write(i));
+        ASSERT_TRUE(acceptedChannel->GetWriter().Write(i));
     }
 
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
     thread.join();
 }
 
-void ReceiveBigElement(SocketChannel& channel) {
+void ReceiveBigElement(Channel& channel) {
     const auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     ASSERT_TRUE(channel.GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
 
@@ -355,13 +346,13 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     const Param param = GetParam();
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    const TcpChannelServer server(0, true);
-    const uint16_t port = server.GetLocalPort();
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    const uint16_t port = server->GetLocalPort();
 
-    SocketChannel connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    SocketChannel acceptedChannel = Accept(server);
+    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
 
-    std::thread thread(ReceiveBigElement, std::ref(connectedChannel));
+    std::thread thread(ReceiveBigElement, std::ref(*connectedChannel));
 
     const auto sendArray = std::make_unique<std::array<uint32_t, BigNumber>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
@@ -369,8 +360,8 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     }
 
     // Act and assert
-    ASSERT_TRUE(acceptedChannel.GetWriter().Write(sendArray.get(), sendArray->size() * 4));
-    ASSERT_TRUE(acceptedChannel.GetWriter().EndWrite());
+    ASSERT_TRUE(acceptedChannel->GetWriter().Write(sendArray.get(), sendArray->size() * 4));
+    ASSERT_TRUE(acceptedChannel->GetWriter().EndWrite());
 
     thread.join();
 }

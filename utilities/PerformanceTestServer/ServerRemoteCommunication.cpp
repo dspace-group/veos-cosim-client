@@ -3,11 +3,11 @@
 #include <array>
 #include <thread>
 
+#include "Channel.h"
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
 #include "PerformanceTestHelper.h"
-#include "SocketChannel.h"
 
 using namespace DsVeosCoSim;
 
@@ -17,12 +17,12 @@ void RemoteCommunicationServerRun() {
     try {
         LogTrace("Remote communication server is listening ...");
 
-        const TcpChannelServer server(CommunicationPort, true);
+        const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(CommunicationPort, true);
 
         std::array<char, BufferSize> buffer{};
 
         while (true) {
-            std::optional<SocketChannel> acceptedChannel = server.TryAccept(Infinite);
+            std::unique_ptr<Channel> acceptedChannel = server->TryAccept(Infinite);
             if (!acceptedChannel) {
                 break;
             }

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 
@@ -36,15 +35,5 @@ void LogProtocolDataTrace(const std::string& message);
     } while (0)
 
 [[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode);
-
-class CoSimException final : public std::runtime_error {
-public:
-    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {
-    }
-
-    CoSimException(const std::string& message, const int32_t errorCode)
-        : std::runtime_error(message + " " + GetSystemErrorMessage(errorCode)) {
-    }
-};
 
 }  // namespace DsVeosCoSim

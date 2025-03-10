@@ -2,12 +2,19 @@
 
 #include "PortMapper.h"
 
+#include <cstdint>
+#include <exception>
+#include <memory>
 #include <string>
+#include <thread>
+#include <unordered_map>
 
+#include "Channel.h"
 #include "CoSimHelper.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
+#include "Event.h"
 #include "Protocol.h"
-#include "SocketChannel.h"
 
 namespace DsVeosCoSim {
 
@@ -15,124 +22,147 @@ namespace {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-}  // namespace
-
-PortMapperServer::PortMapperServer(const bool enableRemoteAccess) : _server(GetPortMapperPort(), enableRemoteAccess) {
-    _thread = std::thread([this] {
-        RunPortMapperServer();
-    });
-}
-
-PortMapperServer::~PortMapperServer() noexcept {
-    _stopEvent.Set();
-
-    if (_thread.joinable()) {
-        _thread.join();
+class PortMapperServerImpl final : public PortMapperServer {
+public:
+    explicit PortMapperServerImpl(const bool enableRemoteAccess)
+        : _server(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess)) {
+        _thread = std::thread([this] {
+            RunPortMapperServer();
+        });
     }
-}
 
-void PortMapperServer::RunPortMapperServer() {
-    while (!_stopEvent.Wait(10)) {
-        try {
-            std::optional<SocketChannel> channel = _server.TryAccept();
-            if (channel) {
-                if (!HandleClient(*channel)) {
-                    LogTrace("Port mapper client disconnected unexpectedly.");
-                }
-            }
-        } catch (const std::exception& e) {
-            LogError("The following exception occurred in port mapper thread: " + std::string(e.what()));
+    ~PortMapperServerImpl() noexcept override {
+        _stopEvent.Set();
+
+        if (_thread.joinable()) {
+            _thread.join();
         }
     }
-}
 
-[[nodiscard]] bool PortMapperServer::HandleClient(Channel& channel) {
-    FrameKind frameKind{};
-    CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
+    PortMapperServerImpl(const PortMapperServerImpl&) = delete;
+    PortMapperServerImpl& operator=(const PortMapperServerImpl&) = delete;
 
-    switch (frameKind) {
-        case FrameKind::GetPort:
-            CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
-            return true;
-        case FrameKind::SetPort:
-            CheckResultWithMessage(HandleSetPort(channel), "Could not handle set port request.");
-            return true;
-        case FrameKind::UnsetPort:
-            CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
-            return true;
-        default:
-            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
-    }
-}
+    PortMapperServerImpl(PortMapperServerImpl&&) = delete;
+    PortMapperServerImpl& operator=(PortMapperServerImpl&&) = delete;
 
-[[nodiscard]] bool PortMapperServer::HandleGetPort(Channel& channel) {
-    std::string name;
-    CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
-
-    if (IsPortMapperServerVerbose()) {
-        LogTrace("Get '" + name + "'");
+private:
+    void RunPortMapperServer() {
+        while (!_stopEvent.Wait(10)) {
+            try {
+                std::unique_ptr<Channel> channel = _server->TryAccept();
+                if (channel) {
+                    if (!HandleClient(*channel)) {
+                        LogTrace("Port mapper client disconnected unexpectedly.");
+                    }
+                }
+            } catch (const std::exception& e) {
+                LogError("The following exception occurred in port mapper thread: " + std::string(e.what()));
+            }
+        }
     }
 
-    const auto search = _ports.find(name);
-    if (search == _ports.end()) {
-        CheckResultWithMessage(Protocol::SendError(channel.GetWriter(),
-                                                   "Could not find port for dSPACE VEOS CoSim server '" + name + "'."),
-                               "Could not send error frame.");
+    [[nodiscard]] bool HandleClient(Channel& channel) {
+        FrameKind frameKind{};
+        CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
+
+        switch (frameKind) {
+            case FrameKind::GetPort:
+                CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
+                return true;
+            case FrameKind::SetPort:
+                CheckResultWithMessage(HandleSetPort(channel), "Could not handle set port request.");
+                return true;
+            case FrameKind::UnsetPort:
+                CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
+                return true;
+            default:
+                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+        }
+    }
+
+    [[nodiscard]] bool HandleGetPort(Channel& channel) {
+        std::string name;
+        CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
+
+        if (IsPortMapperServerVerbose()) {
+            LogTrace("Get '" + name + "'");
+        }
+
+        const auto search = _ports.find(name);
+        if (search == _ports.end()) {
+            CheckResultWithMessage(
+                Protocol::SendError(channel.GetWriter(),
+                                    "Could not find port for dSPACE VEOS CoSim server '" + name + "'."),
+                "Could not send error frame.");
+            return true;
+        }
+
+        CheckResultWithMessage(Protocol::SendGetPortOk(channel.GetWriter(), search->second),
+                               "Could not send get port ok frame.");
         return true;
     }
 
-    CheckResultWithMessage(Protocol::SendGetPortOk(channel.GetWriter(), search->second),
-                           "Could not send get port ok frame.");
-    return true;
-}
+    [[nodiscard]] bool HandleSetPort(Channel& channel) {
+        std::string name;
+        uint16_t port = 0;
+        CheckResultWithMessage(Protocol::ReadSetPort(channel.GetReader(), name, port),
+                               "Could not read set port frame.");
 
-[[nodiscard]] bool PortMapperServer::HandleSetPort(Channel& channel) {
-    std::string name;
-    uint16_t port = 0;
-    CheckResultWithMessage(Protocol::ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
+        if (IsPortMapperServerVerbose()) {
+            LogTrace("Set '" + name + "':" + std::to_string(port));
+        }
 
-    if (IsPortMapperServerVerbose()) {
-        LogTrace("Set '" + name + "':" + std::to_string(port));
+        _ports[name] = port;
+
+        if (IsPortMapperServerVerbose()) {
+            DumpEntries();
+        }
+
+        CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
+        return true;
     }
 
-    _ports[name] = port;
+    [[nodiscard]] bool HandleUnsetPort(Channel& channel) {
+        std::string name;
+        CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
-    if (IsPortMapperServerVerbose()) {
-        DumpEntries();
+        if (IsPortMapperServerVerbose()) {
+            LogTrace("Unset '" + name + "'");
+        }
+
+        _ports.erase(name);
+
+        if (IsPortMapperServerVerbose()) {
+            DumpEntries();
+        }
+
+        CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
+        return true;
     }
 
-    CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
-    return true;
-}
+    void DumpEntries() {
+        if (_ports.empty()) {
+            LogTrace("No PortMapper Ports.");
+        } else {
+            LogTrace("PortMapper Ports:");
 
-[[nodiscard]] bool PortMapperServer::HandleUnsetPort(Channel& channel) {
-    std::string name;
-    CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
-
-    if (IsPortMapperServerVerbose()) {
-        LogTrace("Unset '" + name + "'");
-    }
-
-    _ports.erase(name);
-
-    if (IsPortMapperServerVerbose()) {
-        DumpEntries();
-    }
-
-    CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
-    return true;
-}
-
-void PortMapperServer::DumpEntries() {
-    if (_ports.empty()) {
-        LogTrace("No PortMapper Ports.");
-    } else {
-        LogTrace("PortMapper Ports:");
-
-        for (auto& [name, port] : _ports) {
-            LogTrace("  '" + name + "': {}" + std::to_string(port));
+            for (auto& [name, port] : _ports) {
+                LogTrace("  '" + name + "': {}" + std::to_string(port));
+            }
         }
     }
+
+    std::unordered_map<std::string, uint16_t> _ports;
+
+    std::unique_ptr<ChannelServer> _server;
+    std::thread _thread;
+    Event _stopEvent;
+};
+
+}  // namespace
+
+[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(const bool enableRemoteAccess) {
+    return std::make_unique<PortMapperServerImpl>(enableRemoteAccess);
 }
 
 [[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
@@ -140,7 +170,7 @@ void PortMapperServer::DumpEntries() {
         LogTrace("PortMapper_GetPort(ipAddress: '" + ipAddress + "', serverName: '" + serverName + "')");
     }
 
-    std::optional<SocketChannel> channel =
+    const std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 
@@ -167,7 +197,7 @@ void PortMapperServer::DumpEntries() {
 }
 
 [[nodiscard]] bool PortMapper_SetPort(const std::string& name, const uint16_t port) {
-    std::optional<SocketChannel> channel =
+    const std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 
@@ -191,7 +221,7 @@ void PortMapperServer::DumpEntries() {
 }
 
 [[nodiscard]] bool PortMapper_UnsetPort(const std::string& name) {
-    std::optional<SocketChannel> channel =
+    const std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 

@@ -2,7 +2,9 @@
 
 #include "DsVeosCoSim/DsVeosCoSim.h"
 
-#include <map>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -24,7 +26,6 @@ namespace {
     } while (0)
 
 DsVeosCoSim_LogCallback LogCallbackHandler;
-std::map<DsVeosCoSim_Handle, DsVeosCoSim_Callbacks> CallbacksMap;
 
 void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& callbacks) {
     const DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback = callbacks.canMessageReceivedCallback;
@@ -143,7 +144,7 @@ void DsVeosCoSim_SetLogCallback(const DsVeosCoSim_LogCallback logCallback) {
 }
 
 DsVeosCoSim_Handle DsVeosCoSim_Create() {
-    auto client = std::make_unique<CoSimClient>();
+    auto client = CreateClient();
     return client.release();
 }
 
@@ -157,7 +158,8 @@ void DsVeosCoSim_Destroy(const DsVeosCoSim_Handle handle) {
     delete client;
 }
 
-DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig) {
+DsVeosCoSim_Result DsVeosCoSim_Connect(const DsVeosCoSim_Handle handle,
+                                       const DsVeosCoSim_ConnectConfig connectConfig) {  // NOLINT
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -226,7 +228,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(const DsVeosCoSim_Handle handl
 }
 
 DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(const DsVeosCoSim_Handle handle,
-                                                            DsVeosCoSim_Callbacks callbacks) {
+                                                            const DsVeosCoSim_Callbacks callbacks) {  // NOLINT
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);
@@ -248,7 +250,7 @@ DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(const DsVeosCoSim_Ha
 }
 
 DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(const DsVeosCoSim_Handle handle,
-                                                             DsVeosCoSim_Callbacks callbacks) {
+                                                             const DsVeosCoSim_Callbacks callbacks) {  // NOLINT
     CheckNotNull(handle);
 
     auto* const client = static_cast<CoSimClient*>(handle);

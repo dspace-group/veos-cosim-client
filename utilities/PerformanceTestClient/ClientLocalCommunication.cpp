@@ -10,12 +10,6 @@
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 
-#ifdef _WIN32
-#include "LocalChannel.h"
-#else
-#include "SocketChannel.h"
-#endif
-
 using namespace DsVeosCoSim;
 
 namespace {
@@ -26,9 +20,9 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
                                  const bool& isStopped) {
     try {
 #ifdef _WIN32
-        std::optional channel = *TryConnectToLocalChannel(LocalName);
+        std::unique_ptr<Channel> channel = ConnectToLocalChannel(LocalName);
 #else
-        std::optional<SocketChannel> channel = *TryConnectToUdsChannel(LocalName);
+        std::unique_ptr<Channel> channel = ConnectToUdsChannel(LocalName);
 #endif
 
         std::array<char, BufferSize> buffer{};

@@ -28,6 +28,7 @@ target_sources(
   BusBuffer.cpp
   CoSimClient.cpp
   CoSimServer.cpp
+  CoSimTypes.cpp
   DsVeosCoSim.cpp
   IoBuffer.cpp
   PortMapper.cpp

@@ -8,7 +8,6 @@
 #include "LogHelper.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
-#include "SocketChannel.h"
 
 using namespace DsVeosCoSim;
 
@@ -19,7 +18,7 @@ void RemoteCommunicationClientRun(const std::string_view host,
                                   uint64_t& counter,
                                   const bool& isStopped) {
     try {
-        std::optional channel = *TryConnectToTcpChannel(host, CommunicationPort, 0, Infinite);
+        std::unique_ptr<Channel> channel = ConnectToTcpChannel(host, CommunicationPort);
 
         std::array<char, BufferSize> buffer{};
 

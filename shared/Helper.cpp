@@ -9,7 +9,6 @@
 #include "CoSimHelper.h"
 #include "LogHelper.h"
 #include "Socket.h"
-#include "SocketChannel.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -87,63 +86,45 @@ namespace {
     throw std::runtime_error("Could not accept within timeout.");
 }
 
-[[nodiscard]] SocketChannel ConnectToTcpChannel(const std::string_view ipAddress, const uint16_t remotePort) {
-    std::optional<SocketChannel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);
+[[nodiscard]] std::unique_ptr<Channel> ConnectToTcpChannel(const std::string_view ipAddress, const uint16_t remotePort) {
+    std::unique_ptr<Channel> channel = TryConnectToTcpChannel(ipAddress, remotePort, 0, DefaultTimeout);
     if (channel) {
-        return std::move(*channel);
+        return channel;
     }
 
     throw std::runtime_error("Could not connect within timeout.");
 }
 
-[[nodiscard]] SocketChannel Accept(const TcpChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
-    if (acceptedChannel) {
-        return std::move(*acceptedChannel);
-    }
-
-    throw std::runtime_error("Could not accept within timeout.");
-}
-
-[[nodiscard]] SocketChannel ConnectToUdsChannel(const std::string& name) {
-    std::optional<SocketChannel> channel = TryConnectToUdsChannel(name);
+[[nodiscard]] std::unique_ptr<Channel> ConnectToUdsChannel(const std::string& name) {
+    std::unique_ptr<Channel> channel = TryConnectToUdsChannel(name);
     if (channel) {
-        return std::move(*channel);
+        return channel;
     }
 
     throw std::runtime_error("Could not connect.");
-}
-
-[[nodiscard]] SocketChannel Accept(const UdsChannelServer& server) {
-    std::optional<SocketChannel> acceptedChannel = server.TryAccept(DefaultTimeout);
-    if (acceptedChannel) {
-        return std::move(*acceptedChannel);
-    }
-
-    throw std::runtime_error("Could not accept within timeout.");
 }
 
 #ifdef _WIN32
 
-[[nodiscard]] LocalChannel ConnectToLocalChannel(const std::string& name) {
-    std::optional<LocalChannel> channel = TryConnectToLocalChannel(name);
+[[nodiscard]] std::unique_ptr<Channel> ConnectToLocalChannel(const std::string& name) {
+    std::unique_ptr<Channel> channel = TryConnectToLocalChannel(name);
     if (channel) {
-        return std::move(*channel);
+        return channel;
     }
 
     throw std::runtime_error("Could not connect.");
 }
 
-[[nodiscard]] LocalChannel Accept(LocalChannelServer& server) {
-    std::optional<LocalChannel> acceptedChannel = server.TryAccept();
+#endif
+
+[[nodiscard]] std::unique_ptr<Channel> Accept(ChannelServer& server) {
+    std::unique_ptr<Channel> acceptedChannel = server.TryAccept(DefaultTimeout);
     if (acceptedChannel) {
-        return std::move(*acceptedChannel);
+        return acceptedChannel;
     }
 
-    throw std::runtime_error("Could not accept.");
+    throw std::runtime_error("Could not accept within timeout.");
 }
-
-#endif
 
 [[nodiscard]] std::string_view GetLoopBackAddress(const AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
