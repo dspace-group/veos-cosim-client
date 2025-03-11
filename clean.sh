@@ -3,7 +3,7 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
 scriptFile=$(readlink -f "$0")
-currentDir=$(dirname "$scriptFile")/.
+currentDir=$(dirname "$scriptFile")
 
 echo Cleaning ...
 

@@ -3,40 +3,17 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
-#include <thread>
-#include <unordered_map>
-
-#include "Event.h"
-#include "SocketChannel.h"
 
 namespace DsVeosCoSim {
 
-class PortMapperServer {
+class PortMapperServer {  // NOLINT
 public:
-    explicit PortMapperServer(bool enableRemoteAccess);
-    ~PortMapperServer() noexcept;
-
-    PortMapperServer(const PortMapperServer&) = delete;
-    PortMapperServer& operator=(const PortMapperServer&) = delete;
-
-    PortMapperServer(PortMapperServer&&) = delete;
-    PortMapperServer& operator=(PortMapperServer&&) = delete;
-
-private:
-    void RunPortMapperServer();
-    [[nodiscard]] bool HandleClient(Channel& channel);
-    [[nodiscard]] bool HandleGetPort(Channel& channel);
-    [[nodiscard]] bool HandleSetPort(Channel& channel);
-    [[nodiscard]] bool HandleUnsetPort(Channel& channel);
-    void DumpEntries();
-
-    std::unordered_map<std::string, uint16_t> _ports;
-
-    TcpChannelServer _server;
-    std::thread _thread;
-    Event _stopEvent;
+    virtual ~PortMapperServer() noexcept = default;
 };
+
+[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(bool enableRemoteAccess);
 
 [[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port);
 [[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port);

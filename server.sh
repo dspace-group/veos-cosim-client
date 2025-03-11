@@ -10,13 +10,15 @@ config=$1
 [ "${config,,}" == "debug" ] && config=Debug
 [ "${config,,}" == "release" ] && config=Release
 
-echo Building $config ...
+echo Running test server for $config ...
 
-mkdir -p "$currentDir/tmplin/$config" || exit 1
-cd "$currentDir/tmplin/$config"
+filePath=$currentDir/tmplin/$config/utilities/TestServer/TestServer
+if [ -z "$filePath" ]; then
+    echo Could not find file "$filePath".
+    exit 1
+fi
 
-cmake ../.. -GNinja -DCMAKE_BUILD_TYPE=$config -DDSVEOSCOSIM_BUILD_TESTS=ON || exit 1
-cmake --build . || exit 1
+$filePath || exit 1
 
-echo Building $config finished successfully.
+echo Running test server for $config finished successfully.
 exit 0

@@ -4,12 +4,16 @@
 
 #include "NamedEvent.h"
 
-#include <Windows.h>
+#include <Windows.h>  // NOLINT
 
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include "CoSimHelper.h"
+#include "CoSimTypes.h"
+#include "Handle.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -27,9 +31,9 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 
 [[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
     const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
+    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not create event '" + name + "'.", GetLastWindowsError());
+        throw CoSimException("Could not create event '" + name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
     }
 
     return {handle, name};
@@ -37,9 +41,9 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 
 [[nodiscard]] NamedEvent NamedEvent::OpenExisting(const std::string& name) {
     const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
+    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not open event '" + name + "'.", GetLastWindowsError());
+        throw CoSimException("Could not open event '" + name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
     }
 
     return {handle, name};
@@ -60,9 +64,9 @@ NamedEvent::operator Handle&() noexcept {
 }
 
 void NamedEvent::Set() const {
-    const BOOL result = SetEvent(_handle);
+    const BOOL result = SetEvent(_handle);  // NOLINT
     if (result == FALSE) {
-        throw CoSimException("Could not set event '" + _name + "'.", GetLastWindowsError());
+        throw CoSimException("Could not set event '" + _name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
     }
 }
 

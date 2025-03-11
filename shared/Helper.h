@@ -7,12 +7,8 @@
 #include <string>
 #include <string_view>
 
-#include "Communication/SocketChannel.h"
-#include "OsAbstraction/Socket.h"
-
-#ifdef _WIN32
-#include "Communication/LocalChannel.h"
-#endif
+#include "Channel.h"
+#include "Socket.h"
 
 constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
 
@@ -23,7 +19,13 @@ constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
         }                                                \
     } while (0)
 
+#ifndef CTRL
+#define CTRL(c) ((c) & 037)
+#endif
+
 constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
+
+[[nodiscard]] int32_t GetChar();
 
 [[nodiscard]] bool StartUp();
 
@@ -31,18 +33,17 @@ constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
 [[nodiscard]] DsVeosCoSim::Socket ConnectSocket(const std::string& name);
 [[nodiscard]] DsVeosCoSim::Socket Accept(const DsVeosCoSim::Socket& serverSocket);
 
-[[nodiscard]] DsVeosCoSim::SocketChannel ConnectToTcpChannel(std::string_view ipAddress, uint16_t remotePort);
-[[nodiscard]] DsVeosCoSim::SocketChannel Accept(const DsVeosCoSim::TcpChannelServer& server);
-
-[[nodiscard]] DsVeosCoSim::SocketChannel ConnectToUdsChannel(const std::string& name);
-[[nodiscard]] DsVeosCoSim::SocketChannel Accept(const DsVeosCoSim::UdsChannelServer& server);
+[[nodiscard]] std::unique_ptr<DsVeosCoSim::Channel> ConnectToTcpChannel(std::string_view ipAddress,
+                                                                        uint16_t remotePort);
+[[nodiscard]] std::unique_ptr<DsVeosCoSim::Channel> ConnectToUdsChannel(const std::string& name);
 
 #ifdef _WIN32
 
-[[nodiscard]] DsVeosCoSim::LocalChannel ConnectToLocalChannel(const std::string& name);
-[[nodiscard]] DsVeosCoSim::LocalChannel Accept(DsVeosCoSim::LocalChannelServer& server);
+[[nodiscard]] std::unique_ptr<DsVeosCoSim::Channel> ConnectToLocalChannel(const std::string& name);
 
 #endif
+
+[[nodiscard]] std::unique_ptr<DsVeosCoSim::Channel> Accept(DsVeosCoSim::ChannelServer& server);
 
 [[nodiscard]] std::string_view GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily);
 

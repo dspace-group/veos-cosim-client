@@ -2,9 +2,13 @@
 
 #include "CoSimHelper.h"
 
+#include <cstdint>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 #include <system_error>
+#include <utility>
+
+#include "CoSimTypes.h"
 
 namespace DsVeosCoSim {
 

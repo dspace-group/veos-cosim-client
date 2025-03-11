@@ -4,15 +4,10 @@
 #include <chrono>
 #include <thread>
 
+#include "Channel.h"
 #include "CoSimHelper.h"
 #include "LogHelper.h"
 #include "PerformanceTestHelper.h"
-
-#ifdef _WIN32
-#include "LocalChannel.h"
-#else
-#include "SocketChannel.h"
-#endif
 
 using namespace DsVeosCoSim;
 
@@ -23,21 +18,18 @@ void LocalCommunicationServerRun() {
         LogTrace("Local communication server is listening ...");
 
 #ifdef _WIN32
-        LocalChannelServer server(LocalName);
+        std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(LocalName);
 #else
-        UdsChannelServer server(LocalName);
+        std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(LocalName);
 #endif
 
         std::array<char, BufferSize> buffer{};
 
         while (true) {
-#ifdef _WIN32
-            std::optional<LocalChannel> acceptedChannel;
-#else
-            std::optional<SocketChannel> acceptedChannel;
-#endif
+            std::unique_ptr<Channel> acceptedChannel;
+
             while (true) {
-                acceptedChannel = server.TryAccept();
+                acceptedChannel = server->TryAccept();
                 if (acceptedChannel) {
                     break;
                 }

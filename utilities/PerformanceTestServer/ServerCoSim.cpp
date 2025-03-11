@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <memory>
 #include <thread>
 
 #include "CoSimHelper.h"
@@ -28,18 +29,17 @@ void CoSimServerRun() {
             stopSimulation = true;
         };
 
-        CoSimServer server;
-        server.Load(config);
+        std::unique_ptr<CoSimServer> server = CreateServer();
+        server->Load(config);
 
         while (true) {
             SimulationTime simulationTime{};
-            server.Start(simulationTime);
+            server->Start(simulationTime);
 
             stopSimulation = false;
 
             while (!stopSimulation) {
-                SimulationTime nextSimulationTime{};
-                server.Step(simulationTime, nextSimulationTime);
+                (void)server->Step(simulationTime);
 
                 ++simulationTime;
             }

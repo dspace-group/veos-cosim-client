@@ -2,11 +2,17 @@
 
 #include "Protocol.h"
 
+#include <cstdint>
 #include <string>
 #include <string_view>
+#include <vector>
 
+#include "BusBuffer.h"
+#include "Channel.h"
 #include "CoSimHelper.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
+#include "IoBuffer.h"
 
 namespace DsVeosCoSim {
 

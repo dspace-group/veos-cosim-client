@@ -6,13 +6,13 @@ scriptFile=$(readlink -f "$0")
 currentDir=$(dirname "$scriptFile")
 
 config=$1
-[ -z "$config" ] && config=Debug
+[ -z "$config" ] && config=Release
 [ "${config,,}" == "debug" ] && config=Debug
 [ "${config,,}" == "release" ] && config=Release
 
-echo Running tests for $config ...
+echo Running performance test client for $config ...
 
-filePath=$currentDir/tmplin/$config/test/DsVeosCoSimTest
+filePath=$currentDir/tmplin/$config/utilities/PerformanceTestClient/PerformanceTestClient
 if [ -z "$filePath" ]; then
     echo Could not find file "$filePath".
     exit 1
@@ -20,5 +20,5 @@ fi
 
 $filePath || exit 1
 
-echo Running tests for $config finished successfully.
+echo Running performance test client for $config finished successfully.
 exit 0

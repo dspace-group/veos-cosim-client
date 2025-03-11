@@ -31,11 +31,11 @@ enum class AddressFamily {
 }
 
 #ifdef _WIN32
-using socket_t = uintptr_t;
-constexpr socket_t InvalidSocket = UINTPTR_MAX;
+using SocketHandle = uintptr_t;
+constexpr SocketHandle InvalidSocket = UINTPTR_MAX;
 #else
-using socket_t = int32_t;
-constexpr socket_t InvalidSocket = -1;
+using SocketHandle = int32_t;
+constexpr SocketHandle InvalidSocket = -1;
 #endif
 
 struct SocketAddress {
@@ -49,7 +49,7 @@ public:
     explicit Socket(AddressFamily addressFamily);
 
 private:
-    Socket(socket_t socket, AddressFamily addressFamily);
+    Socket(SocketHandle socket, AddressFamily addressFamily);
 
 public:
     ~Socket() noexcept;
@@ -99,7 +99,7 @@ private:
 
     void EnsureIsValid() const;
 
-    socket_t _socket = InvalidSocket;
+    SocketHandle _socket = InvalidSocket;
     AddressFamily _addressFamily{};
     std::string _path;
 };

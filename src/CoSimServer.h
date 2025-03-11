@@ -2,20 +2,16 @@
 
 #pragma once
 
+#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "BusBuffer.h"
 #include "CoSimTypes.h"
-#include "IoBuffer.h"
-#include "PortMapper.h"
-#include "SocketChannel.h"
-
-#ifdef _WIN32
-#include "LocalChannel.h"
-#endif
 
 namespace DsVeosCoSim {
+
+void SetLogCallback(LogCallback logCallback);
 
 struct CoSimServerConfig {
     uint16_t port{};
@@ -41,90 +37,33 @@ struct CoSimServerConfig {
     std::vector<LinControllerContainer> linControllers;
 };
 
-class CoSimServer final {
+class CoSimServer {  // NOLINT
 public:
-    CoSimServer() = default;
-    ~CoSimServer() noexcept;
+    virtual ~CoSimServer() noexcept = default;
 
-    CoSimServer(const CoSimServer&) = delete;
-    CoSimServer& operator=(const CoSimServer&) = delete;
+    virtual void Load(const CoSimServerConfig& config) = 0;
+    virtual void Unload() = 0;
 
-    CoSimServer(CoSimServer&&) = delete;
-    CoSimServer& operator=(CoSimServer&&) = delete;
+    virtual void Start(SimulationTime simulationTime) = 0;
+    virtual void Stop(SimulationTime simulationTime) = 0;
+    virtual void Terminate(SimulationTime simulationTime, TerminateReason reason) = 0;
+    virtual void Pause(SimulationTime simulationTime) = 0;
+    virtual void Continue(SimulationTime simulationTime) = 0;
+    virtual SimulationTime Step(SimulationTime simulationTime) = 0;
 
-    void Load(const CoSimServerConfig& config);
-    void Unload();
+    virtual void Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
 
-    void Start(SimulationTime simulationTime);
-    void Stop(SimulationTime simulationTime);
-    void Terminate(SimulationTime simulationTime, TerminateReason reason);
-    void Pause(SimulationTime simulationTime);
-    void Continue(SimulationTime simulationTime);
-    void Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime);
+    virtual void Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
 
-    void Write(IoSignalId signalId, uint32_t length, const void* value) const;
+    [[nodiscard]] virtual bool Transmit(const CanMessage& message) const = 0;
+    [[nodiscard]] virtual bool Transmit(const EthMessage& message) const = 0;
+    [[nodiscard]] virtual bool Transmit(const LinMessage& message) const = 0;
 
-    void Read(IoSignalId signalId, uint32_t& length, const void** value) const;
+    virtual void BackgroundService() = 0;
 
-    [[nodiscard]] bool Transmit(const CanMessage& message) const;
-    [[nodiscard]] bool Transmit(const EthMessage& message) const;
-    [[nodiscard]] bool Transmit(const LinMessage& message) const;
-
-    void BackgroundService();
-
-    [[nodiscard]] uint16_t GetLocalPort() const;
-
-private:
-    [[nodiscard]] bool StartInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool StopInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const;
-    [[nodiscard]] bool PauseInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool ContinueInternal(SimulationTime simulationTime) const;
-    [[nodiscard]] bool StepInternal(SimulationTime simulationTime,
-                                    SimulationTime& nextSimulationTime,
-                                    Command& command) const;
-
-    void CloseConnection();
-    [[nodiscard]] bool Ping(Command& command) const;
-    void StartAccepting();
-    void StopAccepting();
-    [[nodiscard]] bool AcceptChannel();
-    [[nodiscard]] bool OnHandleConnect();
-
-    [[nodiscard]] bool WaitForOkFrame() const;
-    [[nodiscard]] bool WaitForPingOkFrame(Command& command) const;
-    [[nodiscard]] bool WaitForConnectFrame(uint32_t& version, std::string& clientName) const;
-    [[nodiscard]] bool WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const;
-
-    void HandlePendingCommand(Command command) const;
-
-    std::unique_ptr<Channel> _channel;
-
-    uint16_t _localPort{};
-    bool _enableRemoteAccess{};
-
-    std::unique_ptr<PortMapperServer> _portMapperServer;
-    std::unique_ptr<TcpChannelServer> _tcpChannelServer;
-#ifdef _WIN32
-    std::unique_ptr<LocalChannelServer> _localChannelServer;
-#else
-    std::unique_ptr<UdsChannelServer> _udsChannelServer;
-#endif
-
-    ConnectionKind _connectionKind = ConnectionKind::Remote;
-    std::string _serverName;
-    Callbacks _callbacks{};
-    bool _isClientOptional{};
-    SimulationTime _stepSize{};
-    bool _registerAtPortMapper{};
-
-    std::vector<IoSignalContainer> _incomingSignals;
-    std::vector<IoSignalContainer> _outgoingSignals;
-    std::vector<CanControllerContainer> _canControllers;
-    std::vector<EthControllerContainer> _ethControllers;
-    std::vector<LinControllerContainer> _linControllers;
-    std::unique_ptr<IoBuffer> _ioBuffer;
-    std::unique_ptr<BusBuffer> _busBuffer;
+    [[nodiscard]] virtual uint16_t GetLocalPort() const = 0;
 };
+
+std::unique_ptr<CoSimServer> CreateServer();
 
 }  // namespace DsVeosCoSim

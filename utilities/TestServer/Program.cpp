@@ -1,16 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <fmt/color.h>
+#include <mutex>
 
-#ifdef _WIN32
-#include <Windows.h>
-#include <conio.h>
-#else
-#include <termios.h>
-#include <unistd.h>
-
-#include <cstdlib>
-#endif
+#include "Generator.h"
+#include "Helper.h"
+#include "LogHelper.h"
 
 #include <cstring>
 #include <memory>
@@ -27,60 +21,123 @@ using namespace std::chrono_literals;
 
 namespace {
 
-void InitializeOutput() {
-#if _WIN32
-    (void)SetConsoleOutputCP(CP_UTF8);
-    (void)setvbuf(stdout, nullptr, _IONBF, 0);
-
-    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    DWORD dwMode = 0;
-    const BOOL result = GetConsoleMode(console, &dwMode);
-    if (result != 0) {
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        (void)SetConsoleMode(console, dwMode);
+class ServerWrapper final {  // NOLINT
+public:
+    ServerWrapper() : _server(CreateServer()) {
     }
-#endif
-}
 
-[[nodiscard]] int32_t GetChar() {
-#ifdef _WIN32
-    return _getch();
-#else
-    termios oldt{};
-    tcgetattr(STDIN_FILENO, &oldt);
-
-    termios newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-    int32_t character = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return character;
-#endif
-}
-
-#ifndef CTRL
-#define CTRL(c) ((c) & 037)
-#endif
-
-void OnLogCallback(const Severity severity, std::string_view message) {
-    switch (severity) {
-        case Severity::Error:
-            print(fg(fmt::color::red), "{}\n", message);
-            break;
-        case Severity::Warning:
-            print(fg(fmt::color::yellow), "{}\n", message);
-            break;
-        case Severity::Info:
-            print(fg(fmt::color::white), "{}\n", message);
-            break;
-        case Severity::Trace:
-            print(fg(fmt::color::light_gray), "{}\n", message);
-            break;
+    ~ServerWrapper() {
+        StopBackgroundThread();
     }
-}
+
+    void Load(const CoSimServerConfig& config) {
+        _config = config;
+        std::lock_guard lock(_mutex);
+        _server->Load(config);
+    }
+
+    [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        return _server->Step(simulationTime);
+    }
+
+    void Start(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        _server->Start(simulationTime);
+    }
+
+    void Stop(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        _server->Stop(simulationTime);
+    }
+
+    void Pause(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        _server->Pause(simulationTime);
+    }
+
+    void Continue(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        _server->Continue(simulationTime);
+    }
+
+    void Terminate(const SimulationTime simulationTime) {
+        std::lock_guard lock(_mutex);
+        _server->Terminate(simulationTime, TerminateReason::Error);
+    }
+
+    void Write(const IoSignalId signalId, const uint32_t length, const std::vector<uint8_t>& value) {
+        std::lock_guard lock(_mutex);
+        _server->Write(signalId, length, value.data());
+    }
+
+    void Transmit(const CanMessage& message) {
+        std::lock_guard lock(_mutex);
+        (void)_server->Transmit(message);
+    }
+
+    void Transmit(const EthMessage& message) {
+        std::lock_guard lock(_mutex);
+        (void)_server->Transmit(message);
+    }
+
+    void Transmit(const LinMessage& message) {
+        std::lock_guard lock(_mutex);
+        (void)_server->Transmit(message);
+    }
+
+    void StartBackgroundThread() {
+        _stopBackgroundThreadFlag = false;
+        _backgroundThread = std::thread([&] {
+            while (!_stopBackgroundThreadFlag) {
+                std::this_thread::sleep_for(1ms);
+                try {
+                    std::lock_guard lock(_mutex);
+                    _server->BackgroundService();
+                } catch (const std::exception& e) {
+                    LogError(e.what());
+                }
+            }
+        });
+    }
+
+    void StopBackgroundThread() {
+        if (!_backgroundThread.joinable()) {
+            return;
+        }
+
+        _stopBackgroundThreadFlag = true;
+        if (std::this_thread::get_id() == _backgroundThread.get_id()) {
+            _backgroundThread.detach();
+        } else {
+            _backgroundThread.join();
+        }
+    }
+
+    [[nodiscard]] const std::vector<IoSignalContainer>& GetIncomingSignals() const {
+        return _config.incomingSignals;
+    }
+
+    [[nodiscard]] const std::vector<CanControllerContainer>& GetCanControllers() const {
+        return _config.canControllers;
+    }
+
+    [[nodiscard]] const std::vector<EthControllerContainer>& GetEthControllers() const {
+        return _config.ethControllers;
+    }
+
+    [[nodiscard]] const std::vector<LinControllerContainer>& GetLinControllers() const {
+        return _config.linControllers;
+    }
+
+private:
+    std::unique_ptr<CoSimServer> _server;
+    std::mutex _mutex;
+    CoSimServerConfig _config;
+
+    bool _stopBackgroundThreadFlag{};
+    std::thread _backgroundThread;
+};
 
 bool SendIoData;
 bool SendCanMessages;
@@ -89,18 +146,12 @@ bool SendLinMessages;
 
 bool StopSimulationThreadFlag;
 std::thread SimulationThread;
+std::thread::id SimulationThreadId;
 
 SimulationTime CurrentTime;
 
-std::unique_ptr<CoSimServer> Server;
-CoSimServerConfig Config;
+std::unique_ptr<ServerWrapper> Server;
 SimulationState State;
-
-Event StopBackgroundThreadFlag;
-std::thread BackgroundThread;
-std::thread::id SimulationThreadId;
-
-std::mutex Mutex;
 
 void PrintStatus(const bool value, const std::string& what) {
     if (value) {
@@ -130,198 +181,78 @@ void SwitchSendingLinMessages() {
     PrintStatus(SendLinMessages, "LIN messages");
 }
 
-void LogCanMessage([[maybe_unused]] const SimulationTime simulationTime,
-                   [[maybe_unused]] const CanController& controller,
-                   const CanMessage& message) {
-    print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
-}
-
-void LogEthMessage([[maybe_unused]] const SimulationTime simulationTime,
-                   [[maybe_unused]] const EthController& controller,
-                   const EthMessage& message) {
-    print(fg(fmt::color::cyan), "{}\n", ToString(message));
-}
-
-void LogLinMessage([[maybe_unused]] const SimulationTime simulationTime,
-                   [[maybe_unused]] const LinController& controller,
-                   const LinMessage& message) {
-    print(fg(fmt::color::lime), "{}\n", ToString(message));
-}
-
-[[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
-    static bool first = true;
-    if (first) {
-        srand(42);
-        first = false;
-    }
-
-    const int32_t diff = max + 1 - min;
-
-    return min + (rand() % diff);
-}
-
-[[nodiscard]] uint32_t GenerateU32(const uint32_t min, const uint32_t max) {
-    return static_cast<uint32_t>(Random(static_cast<int32_t>(min), static_cast<int32_t>(max)));
-}
-
-[[nodiscard]] uint8_t GenerateU8() {
-    return static_cast<uint8_t>(Random(0U, UINT8_MAX));
-}
-
-[[nodiscard]] uint32_t GenerateU32() {
-    return GenerateU32(0, INT32_MAX);
-}
-
-[[nodiscard]] uint64_t GenerateU64() {
-    return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
-}
-
-[[nodiscard]] BusMessageId GenerateBusMessageId(const uint32_t min, const uint32_t max) {
-    return static_cast<BusMessageId>(GenerateU32(min, max));
-}
-
-[[nodiscard]] SimulationTime GenerateSimulationTime() {
-    return SimulationTime(GenerateU64());
-}
-
-[[nodiscard]] std::vector<uint8_t> GenerateBytes(const size_t length) {
-    std::vector<uint8_t> data;
-    data.resize(length);
-    for (size_t i = 0; i < length; i++) {
-        data[i] = GenerateU8();
-    }
-
-    return data;
-}
-
 void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     const size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     const std::vector<uint8_t> data = GenerateBytes(length);
 
-    std::lock_guard lock(Mutex);
-    Server->Write(ioSignal.id, static_cast<uint32_t>(length), data.data());
+    Server->Write(ioSignal.id, ioSignal.length, data);
 }
 
-[[nodiscard]] bool TransmitCanMessage(const CanControllerContainer& controller) {
-    const uint32_t length = GenerateU32(1U, 8U);
-    const std::vector<uint8_t> data = GenerateBytes(length);
+void TransmitCanMessage(const CanControllerContainer& controller) {
+    CanMessageContainer message{};
+    FillWithRandom(message, controller.id);
 
-    CanMessage message{};
-    message.controllerId = controller.id;
-    message.id = GenerateBusMessageId(0U, 127U);
-    message.timestamp = GenerateSimulationTime();
-    message.length = length;
-    message.data = data.data();
-
-    std::lock_guard lock(Mutex);
-    return Server->Transmit(message);
+    Server->Transmit(static_cast<CanMessage>(message));
 }
 
-[[nodiscard]] bool TransmitEthMessage(const EthControllerContainer& controller) {
-    const uint32_t length = GenerateU32(15U, 28U);
-    const std::vector<uint8_t> data = GenerateBytes(length);
+void TransmitEthMessage(const EthControllerContainer& controller) {
+    EthMessageContainer message{};
+    FillWithRandom(message, controller.id);
 
-    EthMessage message{};
-    message.controllerId = controller.id;
-    message.timestamp = GenerateSimulationTime();
-    message.length = length;
-    message.data = data.data();
-
-    std::lock_guard lock(Mutex);
-    return Server->Transmit(message);
+    Server->Transmit(static_cast<EthMessage>(message));
 }
 
-[[nodiscard]] bool TransmitLinMessage(const LinControllerContainer& controller) {
-    const uint32_t length = GenerateU32(1U, LinMessageMaxLength);
-    const std::vector<uint8_t> data = GenerateBytes(length);
+void TransmitLinMessage(const LinControllerContainer& controller) {
+    LinMessageContainer message{};
+    FillWithRandom(message, controller.id);
 
-    LinMessage message{};
-    message.controllerId = controller.id;
-    message.id = GenerateBusMessageId(0, 63);
-    message.timestamp = GenerateSimulationTime();
-    message.length = length;
-    message.data = data.data();
-
-    std::lock_guard lock(Mutex);
-    return Server->Transmit(message);
+    Server->Transmit(static_cast<LinMessage>(message));
 }
 
-[[nodiscard]] bool SendSomeData(const SimulationTime simulationTime) {
+void SendSomeData(const SimulationTime simulationTime) {
     static SimulationTime lastHalfSecond = -1s;
     static int64_t counter = 0;
     const SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
-        return true;
+        return;
     }
 
     lastHalfSecond = currentHalfSecond;
     counter++;
 
     if (SendIoData && ((counter % 4) == 0)) {
-        for (const IoSignalContainer& signal : Config.incomingSignals) {
+        for (const IoSignalContainer& signal : Server->GetIncomingSignals()) {
             WriteOutGoingSignal(signal);
         }
     }
 
     if (SendCanMessages && ((counter % 4) == 1)) {
-        for (const CanControllerContainer& controller : Config.canControllers) {
-            CheckResult(TransmitCanMessage(controller));
+        for (const CanControllerContainer& controller : Server->GetCanControllers()) {
+            TransmitCanMessage(controller);
         }
     }
 
     if (SendEthMessages && ((counter % 4) == 2)) {
-        for (const EthControllerContainer& controller : Config.ethControllers) {
-            CheckResult(TransmitEthMessage(controller));
+        for (const EthControllerContainer& controller : Server->GetEthControllers()) {
+            TransmitEthMessage(controller);
         }
     }
 
     if (SendLinMessages && ((counter % 4) == 3)) {
-        for (const LinControllerContainer& controller : Config.linControllers) {
-            CheckResult(TransmitLinMessage(controller));
+        for (const LinControllerContainer& controller : Server->GetLinControllers()) {
+            TransmitLinMessage(controller);
         }
-    }
-
-    return true;
-}
-
-void StartBackgroundThread() {
-    BackgroundThread = std::thread([] {
-        while (!StopBackgroundThreadFlag.Wait(1)) {
-            try {
-                std::lock_guard lock(Mutex);
-                Server->BackgroundService();
-            } catch (const std::exception& e) {
-                LogError(e.what());
-            }
-        }
-    });
-}
-
-void StopBackgroundThread() {
-    if (!BackgroundThread.joinable()) {
-        return;
-    }
-
-    StopBackgroundThreadFlag.Set();
-    if (std::this_thread::get_id() == BackgroundThread.get_id()) {
-        BackgroundThread.detach();
-    } else {
-        BackgroundThread.join();
     }
 }
 
 void DoSimulation() {
-    StopBackgroundThread();
+    Server->StopBackgroundThread();
 
     SimulationThreadId = std::this_thread::get_id();
     while (!StopSimulationThreadFlag) {
-        if (!SendSomeData(CurrentTime)) {
-            break;
-        }
+        SendSomeData(CurrentTime);
 
-        SimulationTime nextSimulationTime{};
-        std::lock_guard lock(Mutex);
-        Server->Step(CurrentTime, nextSimulationTime);
+        SimulationTime nextSimulationTime = Server->Step(CurrentTime);
 
         if (nextSimulationTime > CurrentTime) {
             CurrentTime = nextSimulationTime;
@@ -330,7 +261,7 @@ void DoSimulation() {
         }
     }
 
-    StartBackgroundThread();
+    Server->StartBackgroundThread();
 }
 
 void StopSimulationThread() {
@@ -370,10 +301,7 @@ void StartSimulation() {
     CurrentTime = 0ns;
     LogInfo("Starting ...");
 
-    {
-        std::lock_guard lock(Mutex);
-        Server->Start(CurrentTime);
-    }
+    Server->Start(CurrentTime);
 
     StartSimulationThread();
     State = SimulationState::Running;
@@ -394,10 +322,8 @@ void StopSimulation() {
     LogInfo("Stopping ...");
 
     StopSimulationThread();
-    {
-        std::lock_guard lock(Mutex);
-        Server->Stop(CurrentTime);
-    }
+
+    Server->Stop(CurrentTime);
 
     State = SimulationState::Stopped;
 
@@ -418,10 +344,7 @@ void PauseSimulation() {
 
     StopSimulationThread();
 
-    {
-        std::lock_guard lock(Mutex);
-        Server->Pause(CurrentTime);
-    }
+    Server->Pause(CurrentTime);
 
     State = SimulationState::Paused;
 
@@ -440,10 +363,7 @@ void ContinueSimulation() {
 
     LogInfo("Continuing ...");
 
-    {
-        std::lock_guard lock(Mutex);
-        Server->Continue(CurrentTime);
-    }
+    Server->Continue(CurrentTime);
 
     StartSimulationThread();
     State = SimulationState::Running;
@@ -465,10 +385,7 @@ void TerminateSimulation() {
 
     StopSimulationThread();
 
-    {
-        std::lock_guard lock(Mutex);
-        Server->Terminate(CurrentTime, TerminateReason::Error);
-    }
+    Server->Terminate(CurrentTime);
 
     State = SimulationState::Terminated;
 
@@ -501,82 +418,6 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
     std::thread(TerminateSimulation).detach();
 }
 
-[[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers() {
-    std::vector<CanControllerContainer> controllers;
-
-    CanControllerContainer controller{};
-    controller.id = static_cast<BusControllerId>(1);
-    controller.queueSize = 512;
-    controller.bitsPerSecond = 1000;
-    controller.flexibleDataRateBitsPerSecond = 1000;
-    controller.name = "CanController1";
-    controller.channelName = "CanChannel1";
-    controller.clusterName = "CanCluster1";
-    controllers.push_back(controller);
-
-    return controllers;
-}
-
-[[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers() {
-    std::vector<EthControllerContainer> controllers;
-
-    EthControllerContainer controller{};
-    controller.id = static_cast<BusControllerId>(1);
-    controller.queueSize = 512;
-    controller.bitsPerSecond = 1000;
-    controller.macAddress = {0, 1, 2, 3, 4, 5};
-    controller.name = "EthController1";
-    controller.channelName = "EthChannel1";
-    controller.clusterName = "EthCluster1";
-    controllers.push_back(controller);
-
-    return controllers;
-}
-
-[[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers() {
-    std::vector<LinControllerContainer> controllers;
-
-    LinControllerContainer controller{};
-    controller.id = static_cast<BusControllerId>(1);
-    controller.queueSize = 512;
-    controller.bitsPerSecond = 1000;
-    controller.type = LinControllerType::Responder;
-    controller.name = "LinController1";
-    controller.channelName = "LinChannel1";
-    controller.clusterName = "LinCluster1";
-    controllers.push_back(controller);
-
-    return controllers;
-}
-
-[[nodiscard]] std::vector<IoSignalContainer> CreateIncomingSignals() {
-    std::vector<IoSignalContainer> signals;
-
-    IoSignalContainer signal{};
-    signal.id = static_cast<IoSignalId>(1);
-    signal.length = 4;
-    signal.dataType = DataType::UInt8;
-    signal.sizeKind = SizeKind::Variable;
-    signal.name = "IncomingIoSignal1";
-    signals.push_back(signal);
-
-    return signals;
-}
-
-[[nodiscard]] std::vector<IoSignalContainer> CreateOutgoingSignals() {
-    std::vector<IoSignalContainer> signals;
-
-    IoSignalContainer signal{};
-    signal.id = static_cast<IoSignalId>(1);
-    signal.length = 4;
-    signal.dataType = DataType::UInt8;
-    signal.sizeKind = SizeKind::Variable;
-    signal.name = "OutgoingIoSignal1";
-    signals.push_back(signal);
-
-    return signals;
-}
-
 void LoadSimulation(const bool isClientOptional, const std::string_view name) {
     LogInfo("Loading ...");
 
@@ -585,34 +426,32 @@ void LoadSimulation(const bool isClientOptional, const std::string_view name) {
         return;
     }
 
-    Config.serverName = name;
-    Config.logCallback = OnLogCallback;
-    Config.isClientOptional = isClientOptional;
-    Config.stepSize = 1ms;
-    Config.startPortMapper = true;
-    Config.simulationStartedCallback = OnSimulationStartedCallback;
-    Config.simulationStoppedCallback = OnSimulationStoppedCallback;
-    Config.simulationPausedCallback = OnSimulationPausedCallback;
-    Config.simulationContinuedCallback = OnSimulationContinuedCallback;
-    Config.simulationTerminatedCallback = OnSimulationTerminatedCallback;
-    Config.canMessageReceivedCallback = LogCanMessage;
-    Config.ethMessageReceivedCallback = LogEthMessage;
-    Config.linMessageReceivedCallback = LogLinMessage;
-    Config.canControllers = CreateCanControllers();
-    Config.ethControllers = CreateEthControllers();
-    Config.linControllers = CreateLinControllers();
-    Config.incomingSignals = CreateIncomingSignals();
-    Config.outgoingSignals = CreateOutgoingSignals();
+    CoSimServerConfig config{};
+    config.serverName = name;
+    config.logCallback = OnLogCallback;
+    config.isClientOptional = isClientOptional;
+    config.stepSize = 1ms;
+    config.startPortMapper = true;
+    config.simulationStartedCallback = OnSimulationStartedCallback;
+    config.simulationStoppedCallback = OnSimulationStoppedCallback;
+    config.simulationPausedCallback = OnSimulationPausedCallback;
+    config.simulationContinuedCallback = OnSimulationContinuedCallback;
+    config.simulationTerminatedCallback = OnSimulationTerminatedCallback;
+    config.canMessageReceivedCallback = LogCanMessage;
+    config.ethMessageReceivedCallback = LogEthMessage;
+    config.linMessageReceivedCallback = LogLinMessage;
+    config.canControllers = CreateCanControllers(2);
+    config.ethControllers = CreateEthControllers(2);
+    config.linControllers = CreateLinControllers(2);
+    config.incomingSignals = CreateSignals(2);
+    config.outgoingSignals = CreateSignals(2);
 
-    {
-        std::lock_guard lock(Mutex);
-        Server = std::make_unique<CoSimServer>();
-        Server->Load(Config);
-    }
+    Server = std::make_unique<ServerWrapper>();
+    Server->Load(config);
 
     State = SimulationState::Stopped;
 
-    StartBackgroundThread();
+    Server->StartBackgroundThread();
 
     LogInfo("Loaded.");
 }
@@ -621,12 +460,7 @@ void UnloadSimulation() {
     LogInfo("Unloading ...");
 
     StopSimulationThread();
-    StopBackgroundThread();
-
-    {
-        std::lock_guard lock(Mutex);
-        Server.reset();
-    }
+    Server.reset();
 
     State = SimulationState::Unloaded;
 

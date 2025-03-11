@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(DsVeosCoSim VERSION 1.0)
+project(DsVeosCoSim VERSION 1.1)
 
 option(BUILD_SHARED_LIBS "Compile dSPACE VEOS CoSim as a shared library" OFF)
 option(DSVEOSCOSIM_BUILD_TESTS "Create tests for dSPACE VEOS CoSim" OFF)

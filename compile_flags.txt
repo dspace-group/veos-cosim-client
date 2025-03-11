@@ -8,7 +8,6 @@
 -Wall
 -Wextra
 -pedantic
--Ibenchmark/Helpers
 -Iinclude
 -Ishared
 -Isrc
@@ -17,8 +16,6 @@
 -Isrc/OsAbstraction
 -Itest
 -Itest/Helpers
--isystem
-third_party/benchmark/include
 -isystem
 third_party/fmt/include
 -isystem

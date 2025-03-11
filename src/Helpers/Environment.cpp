@@ -2,6 +2,7 @@
 
 #include "Environment.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <string>
 
@@ -10,9 +11,9 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool GetBoolValue(const std::string& name) {
-    const char* stringValue = std::getenv(name.c_str());
+    const char* stringValue = std::getenv(name.c_str());  // NOLINT
     if (stringValue) {
-        const int32_t intValue = std::atoi(stringValue);
+        const int32_t intValue = std::atoi(stringValue);  // NOLINT
         return intValue != 0;
     }
 
@@ -22,9 +23,9 @@ namespace {
 [[nodiscard]] uint16_t GetPortMapperPortInitial() {
     constexpr uint16_t defaultPort = 27027;
 
-    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");
+    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT
     if (portString) {
-        const int32_t port = std::atoi(portString);
+        const int32_t port = std::atoi(portString);  // NOLINT
         if ((port > 0) && (port <= UINT16_MAX)) {
             return static_cast<uint16_t>(port);
         }

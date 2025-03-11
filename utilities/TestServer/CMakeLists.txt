@@ -12,15 +12,13 @@ target_sources(
 
 target_include_directories(
   TestServer
-  PUBLIC
+  PRIVATE
   ../../src
-  ../../src/Communication
-  ../../src/Helpers
-  ../../src/OsAbstraction
 )
 
 target_link_libraries(
   TestServer
   DsVeosCoSim
   fmt::fmt
+  shared
 )

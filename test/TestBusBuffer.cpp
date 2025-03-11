@@ -17,10 +17,6 @@
 #include "LogHelper.h"
 #include "TestHelper.h"
 
-#ifdef _WIN32
-#include "LocalChannel.h"
-#endif
-
 using testing::Types;
 
 using namespace DsVeosCoSim;
@@ -28,128 +24,168 @@ using namespace testing;
 
 namespace {
 
+[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
+                                                         ConnectionKind connectionKind,
+                                                         const std::string& name,
+                                                         const std::vector<CanController>& canControllers) {
+    return CreateBusBuffer(coSimType, connectionKind, name, canControllers, {}, {});
+}
+
+[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
+                                                         ConnectionKind connectionKind,
+                                                         const std::string& name,
+                                                         const std::vector<EthController>& ethControllers) {
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, ethControllers, {});
+}
+
+[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
+                                                         ConnectionKind connectionKind,
+                                                         const std::string& name,
+                                                         const std::vector<LinController>& linControllers) {
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, linControllers);
+}
+
 template <typename Types>
 class TestBusBuffer : public Test {
+    using TController = typename Types::Controller;
+    using TControllerExtern = typename Types::ControllerExtern;
+    using TMessage = typename Types::Message;
+    using TMessageExtern = typename Types::MessageExtern;
+
 protected:
+    static std::unique_ptr<Channel> _remoteSenderChannel;
+    static std::unique_ptr<Channel> _remoteReceiverChannel;
+
+    static std::unique_ptr<Channel> _localSenderChannel;
+    static std::unique_ptr<Channel> _localReceiverChannel;
+
+    static void SetUpTestSuite() {
+        std::unique_ptr<ChannelServer> remoteServer = CreateTcpChannelServer(0, true);
+        const uint16_t port = remoteServer->GetLocalPort();
+
+        _remoteSenderChannel = ConnectToTcpChannel("127.0.0.1", port);
+        _remoteReceiverChannel = Accept(*remoteServer);
+
+#ifdef _WIN32
+        const std::string name = GenerateString("LocalChannel名前");
+        std::unique_ptr<ChannelServer> localServer = CreateLocalChannelServer(name);
+
+        _localSenderChannel = ConnectToLocalChannel(name);
+        _localReceiverChannel = Accept(*localServer);
+#else
+        const std::string name = GenerateString("UdsChannel名前");
+        std::unique_ptr<ChannelServer> localServer = CreateUdsChannelServer(name);
+
+        _localSenderChannel = ConnectToUdsChannel(name);
+        _localReceiverChannel = Accept(*localServer);
+#endif
+    }
+
+    static void TearDownTestSuite() {
+        _remoteSenderChannel->Disconnect();
+        _remoteReceiverChannel->Disconnect();
+        _localSenderChannel->Disconnect();
+        _localReceiverChannel->Disconnect();
+
+        _remoteSenderChannel.reset();
+        _remoteReceiverChannel.reset();
+        _localSenderChannel.reset();
+        _localReceiverChannel.reset();
+    }
+
     void SetUp() override {
         ClearLastMessage();
     }
+
+    void Transfer(const ConnectionKind connectionKind,  // NOLINT
+                  const BusBuffer& senderBusBuffer,
+                  const BusBuffer& receiverBusBuffer) {
+        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()
+                                                                         : _localReceiverChannel->GetReader();
+        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter()
+                                                                         : _localSenderChannel->GetWriter();
+        std::thread thread([&] {
+            ASSERT_TRUE(receiverBusBuffer.Deserialize(reader, {}, {}));
+        });
+
+        ASSERT_TRUE(senderBusBuffer.Serialize(writer));
+        ASSERT_TRUE(writer.EndWrite());
+
+        thread.join();
+    }
+
+    void Transfer(const ConnectionKind connectionKind,
+                  BusBuffer& senderBusBuffer,
+                  BusBuffer& receiverBusBuffer,
+                  std::deque<std::tuple<TControllerExtern, TMessage>> expectedCallbacks) {
+        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()
+                                                                         : _localReceiverChannel->GetReader();
+        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter()
+                                                                         : _localSenderChannel->GetWriter();
+
+        const SimulationTime simulationTime = GenerateSimulationTime();
+
+        Callbacks callbacks{};
+        if constexpr (std::is_same_v<TControllerExtern, CanController>) {
+            callbacks.canMessageReceivedCallback =
+                [&](const SimulationTime simTime, const CanController& controller, const CanMessage& message) {
+                    ASSERT_EQ(simTime, simulationTime);
+                    ASSERT_FALSE(expectedCallbacks.empty());
+                    const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(static_cast<CanMessage>(expectedMessage), message);
+                    expectedCallbacks.pop_front();
+                };
+        }
+
+        if constexpr (std::is_same_v<TControllerExtern, EthController>) {
+            callbacks.ethMessageReceivedCallback =
+                [&](const SimulationTime simTime, const EthController& controller, const EthMessage& message) {
+                    ASSERT_EQ(simTime, simulationTime);
+                    ASSERT_FALSE(expectedCallbacks.empty());
+                    const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(static_cast<EthMessage>(expectedMessage), message);
+                    expectedCallbacks.pop_front();
+                };
+        }
+
+        if constexpr (std::is_same_v<TControllerExtern, LinController>) {
+            callbacks.linMessageReceivedCallback =
+                [&](const SimulationTime simTime, const LinController& controller, const LinMessage& message) {
+                    ASSERT_EQ(simTime, simulationTime);
+                    ASSERT_FALSE(expectedCallbacks.empty());
+                    const auto [expectedController, expectedMessage] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(static_cast<LinMessage>(expectedMessage), message);
+                    expectedCallbacks.pop_front();
+                };
+        }
+
+        std::thread thread([&] {
+            ASSERT_TRUE(receiverBusBuffer.Deserialize(reader, simulationTime, callbacks));
+        });
+
+        ASSERT_TRUE(senderBusBuffer.Serialize(writer));
+        ASSERT_TRUE(writer.EndWrite());
+
+        thread.join();
+
+        ASSERT_TRUE(expectedCallbacks.empty());
+    }
 };
 
-void Transfer(const ConnectionKind connectionKind,  // NOLINT
-              const BusBuffer& senderBusBuffer,
-              const BusBuffer& receiverBusBuffer) {
-    std::unique_ptr<Channel> senderChannel{};
-    std::unique_ptr<Channel> receiverChannel{};
-    if (connectionKind == ConnectionKind::Remote) {
-        TcpChannelServer server(0, true);
-        const uint16_t port = server.GetLocalPort();
+template <typename Types>
+std::unique_ptr<Channel> TestBusBuffer<Types>::_remoteSenderChannel;
 
-        senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
-        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
-    } else {
-        std::string name = GenerateString("Local名前");
-#ifdef _WIN32
-        LocalChannelServer server(name);
+template <typename Types>
+std::unique_ptr<Channel> TestBusBuffer<Types>::_remoteReceiverChannel;
 
-        senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
-        receiverChannel = std::make_unique<LocalChannel>(Accept(server));
-#else
-        UdsChannelServer server(name);
+template <typename Types>
+std::unique_ptr<Channel> TestBusBuffer<Types>::_localSenderChannel;
 
-        senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
-        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
-#endif
-    }
-
-    std::thread thread([&] {
-        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), {}, {}));
-    });
-
-    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
-    ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
-
-    thread.join();
-}
-
-template <typename TControllerExtern, typename TMessage>
-void Transfer(const ConnectionKind connectionKind,
-              BusBuffer& senderBusBuffer,
-              BusBuffer& receiverBusBuffer,
-              std::deque<std::tuple<TControllerExtern, TMessage>> expectedCallbacks) {
-    std::unique_ptr<Channel> senderChannel{};
-    std::unique_ptr<Channel> receiverChannel{};
-    if (connectionKind == ConnectionKind::Remote) {
-        TcpChannelServer server(0, true);
-        const uint16_t port = server.GetLocalPort();
-
-        senderChannel = std::make_unique<SocketChannel>(ConnectToTcpChannel("127.0.0.1", port));
-        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
-    } else {
-        std::string name = GenerateString("Local名前");
-#ifdef _WIN32
-        LocalChannelServer server(name);
-
-        senderChannel = std::make_unique<LocalChannel>(ConnectToLocalChannel(name));
-        receiverChannel = std::make_unique<LocalChannel>(Accept(server));
-#else
-        UdsChannelServer server(name);
-
-        senderChannel = std::make_unique<SocketChannel>(ConnectToUdsChannel(name));
-        receiverChannel = std::make_unique<SocketChannel>(Accept(server));
-#endif
-    }
-
-    const SimulationTime simulationTime = GenerateSimulationTime();
-
-    Callbacks callbacks{};
-    if constexpr (std::is_same_v<TControllerExtern, CanController>) {
-        callbacks.canMessageReceivedCallback =
-            [&](const SimulationTime simTime, const CanController& controller, const CanMessage& message) {
-                ASSERT_EQ(simTime, simulationTime);
-                ASSERT_FALSE(expectedCallbacks.empty());
-                const auto [expectedController, expectedMessage] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(static_cast<CanMessage>(expectedMessage), message);
-                expectedCallbacks.pop_front();
-            };
-    }
-
-    if constexpr (std::is_same_v<TControllerExtern, EthController>) {
-        callbacks.ethMessageReceivedCallback =
-            [&](const SimulationTime simTime, const EthController& controller, const EthMessage& message) {
-                ASSERT_EQ(simTime, simulationTime);
-                ASSERT_FALSE(expectedCallbacks.empty());
-                const auto [expectedController, expectedMessage] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(static_cast<EthMessage>(expectedMessage), message);
-                expectedCallbacks.pop_front();
-            };
-    }
-
-    if constexpr (std::is_same_v<TControllerExtern, LinController>) {
-        callbacks.linMessageReceivedCallback =
-            [&](const SimulationTime simTime, const LinController& controller, const LinMessage& message) {
-                ASSERT_EQ(simTime, simulationTime);
-                ASSERT_FALSE(expectedCallbacks.empty());
-                const auto [expectedController, expectedMessage] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(static_cast<LinMessage>(expectedMessage), message);
-                expectedCallbacks.pop_front();
-            };
-    }
-
-    std::thread thread([&] {
-        ASSERT_TRUE(receiverBusBuffer.Deserialize(receiverChannel->GetReader(), simulationTime, callbacks));
-    });
-
-    ASSERT_TRUE(senderBusBuffer.Serialize(senderChannel->GetWriter()));
-    ASSERT_TRUE(senderChannel->GetWriter().EndWrite());
-
-    thread.join();
-
-    ASSERT_TRUE(expectedCallbacks.empty());
-}
+template <typename Types>
+std::unique_ptr<Channel> TestBusBuffer<Types>::_localReceiverChannel;
 
 template <typename TController,
           typename TControllerExtern,
@@ -285,7 +321,8 @@ TYPED_TEST(TestBusBuffer, InitializeOneController) {
     FillWithRandom(controller);
 
     // Act and assert
-    ASSERT_NO_THROW(BusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)}));
+    ASSERT_NO_THROW(
+        (void)CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)}));
 }
 
 #ifdef EXCEPTION_TESTS
@@ -305,10 +342,11 @@ TYPED_TEST(TestBusBuffer, InitializeControllersWithDuplicatedIds) {
     // Act and assert
     ASSERT_THAT(
         [&]() {
-            BusBuffer(coSimType,
-                      connectionKind,
-                      name,
-                      {static_cast<TControllerExtern>(controller), static_cast<TControllerExtern>(controller)});
+            (void)CreateBusBuffer(
+                coSimType,
+                connectionKind,
+                name,
+                {static_cast<TControllerExtern>(controller), static_cast<TControllerExtern>(controller)});
         },
         ThrowsMessage<CoSimException>(
             fmt::format("Duplicated controller id {}.", static_cast<uint32_t>(controller.id))));
@@ -331,11 +369,11 @@ TYPED_TEST(TestBusBuffer, InitializeMultipleControllers) {
     FillWithRandom(controller2);
 
     // Act and assert
-    ASSERT_NO_THROW(
-        BusBuffer(coSimType,
-                  connectionKind,
-                  name,
-                  {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)}));
+    ASSERT_NO_THROW((void)CreateBusBuffer(
+        coSimType,
+        connectionKind,
+        name,
+        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)}));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessage) {
@@ -353,13 +391,14 @@ TYPED_TEST(TestBusBuffer, TransmitMessage) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer busBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> busBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
 
     // Act
-    const bool result = busBuffer.Transmit(static_cast<TMessageExtern>(sendMessage));
+    const bool result = busBuffer->Transmit(static_cast<TMessageExtern>(sendMessage));
 
     // Assert
     ASSERT_TRUE(result);
@@ -380,20 +419,21 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFull) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer busBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> busBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
 
     // Fill queue
     for (uint32_t i = 0; i < controller.queueSize; i++) {
         TMessage sendMessage{};
         FillWithRandom(sendMessage, controller.id);
-        ASSERT_TRUE(busBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+        ASSERT_TRUE(busBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
     TMessage rejectedMessage{};
     FillWithRandom(rejectedMessage, controller.id);
 
     // Act
-    const bool result = busBuffer.Transmit(static_cast<TMessageExtern>(rejectedMessage));
+    const bool result = busBuffer->Transmit(static_cast<TMessageExtern>(rejectedMessage));
 
     // Assert
     ASSERT_FALSE(result);
@@ -417,7 +457,8 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
     TController controller2{};
     FillWithRandom(controller2);
 
-    BusBuffer busBuffer(coSimType,
+    std::unique_ptr<BusBuffer> busBuffer =
+        CreateBusBuffer(coSimType,
                         connectionKind,
                         name,
                         {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
@@ -426,14 +467,14 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
         TMessage sendMessage{};
         FillWithRandom(sendMessage, controller1.id);
-        ASSERT_TRUE(busBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+        ASSERT_TRUE(busBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
     TMessage rejectedMessage{};
     FillWithRandom(rejectedMessage, controller1.id);
 
     // Act
-    const bool result = busBuffer.Transmit(static_cast<TMessageExtern>(rejectedMessage));
+    const bool result = busBuffer->Transmit(static_cast<TMessageExtern>(rejectedMessage));
 
     // Assert
     ASSERT_FALSE(result);
@@ -457,7 +498,8 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFullForOtherController) {
     TController controller2{};
     FillWithRandom(controller2);
 
-    BusBuffer busBuffer(coSimType,
+    std::unique_ptr<BusBuffer> busBuffer =
+        CreateBusBuffer(coSimType,
                         connectionKind,
                         name,
                         {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
@@ -466,14 +508,14 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFullForOtherController) {
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
         TMessage sendMessage{};
         FillWithRandom(sendMessage, controller1.id);
-        ASSERT_TRUE(busBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+        ASSERT_TRUE(busBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
     TMessage acceptedMessage{};
     FillWithRandom(acceptedMessage, controller2.id);
 
     // Act
-    const bool result = busBuffer.Transmit(static_cast<TMessageExtern>(acceptedMessage));
+    const bool result = busBuffer->Transmit(static_cast<TMessageExtern>(acceptedMessage));
 
     // Assert
     ASSERT_TRUE(result);
@@ -493,18 +535,19 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBuffer) {
     TController controller{};
     FillWithRandom(controller);
 
-    const BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    const std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
     // Act
-    const bool result = receiverBusBuffer.Receive(receivedMessage);
+    const bool result = receiverBusBuffer->Receive(receivedMessage);
 
     // Assert
     ASSERT_FALSE(result);
@@ -524,16 +567,17 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBufferByEvent) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
     std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     // Act and assert
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
@@ -551,22 +595,23 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
-    ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+    ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
 
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
     // Act
-    const bool result = receiverBusBuffer.Receive(receivedMessage);
+    const bool result = receiverBusBuffer->Receive(receivedMessage);
 
     // Assert
     ASSERT_TRUE(result);
@@ -588,21 +633,22 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageByEvent) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
     std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
-    ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+    ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     expectedEvents.push_back({static_cast<TControllerExtern>(controller), sendMessage});
 
     // Act and assert
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
@@ -622,16 +668,16 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
     TController controller2{};
     FillWithRandom(controller2);
 
-    BusBuffer senderBusBuffer(
-        coSimType,
-        connectionKind,
-        name,
-        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
-    BusBuffer receiverBusBuffer(
-        GetCounterPart(coSimType),
-        connectionKind,
-        GetCounterPart(name, connectionKind),
-        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType,
+                        connectionKind,
+                        name,
+                        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer =
+        CreateBusBuffer(GetCounterPart(coSimType),
+                        connectionKind,
+                        GetCounterPart(name, connectionKind),
+                        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
 
     std::deque<TMessage> sendMessages;
 
@@ -640,20 +686,20 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
         TMessage sendMessage{};
         FillWithRandom(sendMessage, controllerId);
         sendMessages.push_back(sendMessage);
-        ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+        ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
     // Act and Assert
     for (uint32_t i = 0; i < controller1.queueSize + controller2.queueSize; i++) {
-        ASSERT_TRUE(receiverBusBuffer.Receive(receivedMessage));
+        ASSERT_TRUE(receiverBusBuffer->Receive(receivedMessage));
         AssertEq(static_cast<TMessageExtern>(sendMessages[i]), receivedMessage);
     }
 
-    ASSERT_FALSE(receiverBusBuffer.Receive(receivedMessage));
+    ASSERT_FALSE(receiverBusBuffer->Receive(receivedMessage));
 }
 
 TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
@@ -673,16 +719,16 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
     TController controller2{};
     FillWithRandom(controller2);
 
-    BusBuffer senderBusBuffer(
-        coSimType,
-        connectionKind,
-        name,
-        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
-    BusBuffer receiverBusBuffer(
-        GetCounterPart(coSimType),
-        connectionKind,
-        GetCounterPart(name, connectionKind),
-        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType,
+                        connectionKind,
+                        name,
+                        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer =
+        CreateBusBuffer(GetCounterPart(coSimType),
+                        connectionKind,
+                        GetCounterPart(name, connectionKind),
+                        {static_cast<TControllerExtern>(controller1), static_cast<TControllerExtern>(controller2)});
 
     std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
@@ -691,11 +737,11 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
         TMessage sendMessage{};
         FillWithRandom(sendMessage, controller->id);
         expectedEvents.push_back({static_cast<TControllerExtern>(*controller), sendMessage});
-        ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+        ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
     }
 
     // Act and assert
-    Transfer(connectionKind, senderBusBuffer, receiverBusBuffer, expectedEvents);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer, expectedEvents);
 }
 
 TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
@@ -714,27 +760,26 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    const BusBuffer fakeSenderBusBuffer(coSimType,
-                                        connectionKind,
-                                        fakeName,
-                                        {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    const std::unique_ptr<BusBuffer> fakeSenderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, fakeName, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
-    ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+    ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
 
     // Should not transfer anything
-    Transfer(connectionKind, fakeSenderBusBuffer, receiverBusBuffer);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *fakeSenderBusBuffer, *receiverBusBuffer);
 
     TMessageExtern receivedMessage{};
 
     // Act
-    const bool result = receiverBusBuffer.Receive(receivedMessage);
+    const bool result = receiverBusBuffer->Receive(receivedMessage);
 
     // Assert
     ASSERT_FALSE(result);
@@ -756,21 +801,23 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
     TController controller{};
     FillWithRandom(controller);
 
-    BusBuffer senderBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
-    BusBuffer fakeSenderBusBuffer(coSimType, connectionKind, fakeName, {static_cast<TControllerExtern>(controller)});
-    BusBuffer receiverBusBuffer(GetCounterPart(coSimType),
-                                connectionKind,
-                                GetCounterPart(name, connectionKind),
-                                {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> senderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, name, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> fakeSenderBusBuffer =
+        CreateBusBuffer(coSimType, connectionKind, fakeName, {static_cast<TControllerExtern>(controller)});
+    std::unique_ptr<BusBuffer> receiverBusBuffer = CreateBusBuffer(GetCounterPart(coSimType),
+                                                                   connectionKind,
+                                                                   GetCounterPart(name, connectionKind),
+                                                                   {static_cast<TControllerExtern>(controller)});
 
     std::deque<std::tuple<TControllerExtern, TMessage>> expectedEvents;
 
     TMessage sendMessage{};
     FillWithRandom(sendMessage, controller.id);
-    ASSERT_TRUE(senderBusBuffer.Transmit(static_cast<TMessageExtern>(sendMessage)));
+    ASSERT_TRUE(senderBusBuffer->Transmit(static_cast<TMessageExtern>(sendMessage)));
 
     // Act and assert
-    Transfer(connectionKind, fakeSenderBusBuffer, receiverBusBuffer, expectedEvents);  // Should not transfer anything
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *fakeSenderBusBuffer, *receiverBusBuffer, expectedEvents);  // Should not transfer anything
 }
 
 }  // namespace

@@ -2,13 +2,590 @@
 
 #include "BusBuffer.h"
 
-#include "CoSimTypes.h"
-
+#include <cstdint>
+#include <cstring>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
 #include <string>
+#include <vector>
+
+#include "Channel.h"
+#include "CoSimHelper.h"
+#include "CoSimTypes.h"
+#include "Environment.h"
+#include "RingBuffer.h"
+
+#ifdef _WIN32
+#include <atomic>
+
+#include "SharedMemory.h"
+#endif
 
 namespace DsVeosCoSim {
 
 namespace {
+
+[[nodiscard]] bool SerializeTo(const CanMessageContainer& message, ChannelWriter& writer) {
+    CheckResultWithMessage(writer.Write(message.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(message.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(message.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(message.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(message.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(message.data.data(), message.length), "Could not write data.");
+    return true;
+}
+
+[[nodiscard]] bool DeserializeFrom(CanMessageContainer& message, ChannelReader& reader) {
+    CheckResultWithMessage(reader.Read(message.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(message.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(message.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(message.length), "Could not read length");
+    message.CheckMaxLength();
+    CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
+    return true;
+}
+
+void WriteTo(const CanMessageContainer& container, CanMessage& message) {
+    message.timestamp = container.timestamp;
+    message.controllerId = container.controllerId;
+    message.id = container.id;
+    message.flags = container.flags;
+    message.length = container.length;
+    message.data = container.data.data();
+}
+
+[[nodiscard]] bool SerializeTo(const EthMessageContainer& message, ChannelWriter& writer) {
+    CheckResultWithMessage(writer.Write(message.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(message.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(message.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(message.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(message.data.data(), message.length), "Could not write data.");
+    return true;
+}
+
+[[nodiscard]] bool DeserializeFrom(EthMessageContainer& message, ChannelReader& reader) {
+    CheckResultWithMessage(reader.Read(message.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(message.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(message.length), "Could not read length.");
+    message.CheckMaxLength();
+    CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
+    return true;
+}
+
+void WriteTo(const EthMessageContainer& container, EthMessage& message) {
+    message.timestamp = container.timestamp;
+    message.controllerId = container.controllerId;
+    message.flags = container.flags;
+    message.length = container.length;
+    message.data = container.data.data();
+}
+
+[[nodiscard]] bool SerializeTo(const LinMessageContainer& message, ChannelWriter& writer) {
+    CheckResultWithMessage(writer.Write(message.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(message.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(message.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(message.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(message.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(message.data.data(), message.length), "Could not write data.");
+    return true;
+}
+
+[[nodiscard]] bool DeserializeFrom(LinMessageContainer& message, ChannelReader& reader) {
+    CheckResultWithMessage(reader.Read(message.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(message.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(message.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(message.length), "Could not read length.");
+    message.CheckMaxLength();
+    CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
+    return true;
+}
+
+void WriteTo(const LinMessageContainer& container, LinMessage& message) {
+    message.timestamp = container.timestamp;
+    message.controllerId = container.controllerId;
+    message.id = container.id;
+    message.flags = container.flags;
+    message.length = container.length;
+    message.data = container.data.data();
+}
+
+template <typename TMessageExtern, typename TControllerExtern>
+class BusProtocolBufferBase {
+protected:
+    using Callback = std::function<void(SimulationTime, const TControllerExtern&, const TMessageExtern&)>;
+
+    struct ControllerExtension {
+        TControllerExtern info{};
+        bool warningSent{};
+        size_t controllerIndex{};
+
+        void ClearData() {
+            warningSent = false;
+        }
+    };
+
+public:
+    BusProtocolBufferBase() = default;
+    virtual ~BusProtocolBufferBase() noexcept = default;
+
+    BusProtocolBufferBase(const BusProtocolBufferBase&) = delete;
+    BusProtocolBufferBase& operator=(const BusProtocolBufferBase&) = delete;
+
+    BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
+    BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
+
+    void Initialize(const CoSimType coSimType,
+                    const std::string& name,
+                    const std::vector<TControllerExtern>& controllers) {
+        _coSimType = coSimType;
+
+        size_t totalQueueItemsCountPerBuffer = 0;
+        size_t nextControllerIndex = 0;
+        for (const auto& controller : controllers) {
+            const auto search = _controllers.find(controller.id);
+            if (search != _controllers.end()) {
+                throw CoSimException("Duplicated controller id " + ToString(controller.id) + ".");
+            }
+
+            ControllerExtension extension{};
+            extension.info = controller;
+            extension.controllerIndex = nextControllerIndex++;
+            _controllers[controller.id] = extension;
+            totalQueueItemsCountPerBuffer += controller.queueSize;
+        }
+
+        InitializeInternal(name, totalQueueItemsCountPerBuffer);
+    }
+
+    void ClearData() {
+        if (_coSimType == CoSimType::Client) {
+            std::lock_guard lock(_mutex);
+            ClearDataInternal();
+            return;
+        }
+
+        ClearDataInternal();
+    }
+
+    [[nodiscard]] bool Transmit(const TMessageExtern& messageExtern) {
+        if (_coSimType == CoSimType::Client) {
+            std::lock_guard lock(_mutex);
+            return TransmitInternal(messageExtern);
+        }
+
+        return TransmitInternal(messageExtern);
+    }
+
+    [[nodiscard]] bool Receive(TMessageExtern& messageExtern) {
+        if (_coSimType == CoSimType::Client) {
+            std::lock_guard lock(_mutex);
+            return ReceiveInternal(messageExtern);
+        }
+
+        return ReceiveInternal(messageExtern);
+    }
+
+    [[nodiscard]] bool Serialize(ChannelWriter& writer) {
+        if (_coSimType == CoSimType::Client) {
+            std::lock_guard lock(_mutex);
+            return SerializeInternal(writer);
+        }
+
+        return SerializeInternal(writer);
+    }
+
+    [[nodiscard]] bool Deserialize(ChannelReader& reader,
+                                   const SimulationTime simulationTime,
+                                   const Callback& callback) {
+        if (_coSimType == CoSimType::Client) {
+            std::lock_guard lock(_mutex);
+            return DeserializeInternal(reader, simulationTime, callback);
+        }
+
+        return DeserializeInternal(reader, simulationTime, callback);
+    }
+
+protected:
+    virtual void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) = 0;
+
+    virtual void ClearDataInternal() = 0;
+
+    [[nodiscard]] virtual bool TransmitInternal(const TMessageExtern& messageExtern) = 0;
+    [[nodiscard]] virtual bool ReceiveInternal(TMessageExtern& messageExtern) = 0;
+
+    [[nodiscard]] virtual bool SerializeInternal(ChannelWriter& writer) = 0;
+    [[nodiscard]] virtual bool DeserializeInternal(ChannelReader& reader,
+                                                   SimulationTime simulationTime,
+                                                   const Callback& callback) = 0;
+
+    [[nodiscard]] ControllerExtension& FindController(BusControllerId controllerId) {
+        const auto search = _controllers.find(controllerId);
+        if (search != _controllers.end()) {
+            return search->second;
+        }
+
+        throw CoSimException("Controller id " + ToString(controllerId) + " is unknown.");
+    }
+
+    std::unordered_map<BusControllerId, ControllerExtension> _controllers;
+
+private:
+    CoSimType _coSimType{};
+    std::mutex _mutex;
+};
+
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
+class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
+    using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
+    using Extension = typename Base::ControllerExtension;
+
+public:
+    RemoteBusProtocolBuffer() = default;
+    ~RemoteBusProtocolBuffer() noexcept override = default;
+
+    RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
+    RemoteBusProtocolBuffer& operator=(const RemoteBusProtocolBuffer&) = delete;
+
+    RemoteBusProtocolBuffer(RemoteBusProtocolBuffer&&) = delete;
+    RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
+
+protected:
+    void InitializeInternal([[maybe_unused]] const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+        _messageCountPerController.resize(this->_controllers.size());
+        _messageBuffer = RingBuffer<TMessage>(totalQueueItemsCountPerBuffer);
+    }
+
+    void ClearDataInternal() override {
+        for (auto& [controllerId, dataPerController] : Base::_controllers) {
+            dataPerController.ClearData();
+        }
+
+        for (auto& messageCount : _messageCountPerController) {
+            messageCount = 0;
+        }
+
+        _messageBuffer.Clear();
+    }
+
+    [[nodiscard]] bool TransmitInternal(const TMessageExtern& messageExtern) override {
+        Extension& extension = Base::FindController(messageExtern.controllerId);
+
+        if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
+            if (!extension.warningSent) {
+                LogWarning("Queue for controller '" + std::string(extension.info.name) +
+                           "' is full. Messages are dropped.");
+                extension.warningSent = true;
+            }
+
+            return false;
+        }
+
+        auto message = static_cast<TMessage>(messageExtern);
+
+        _messageBuffer.PushBack(std::move(message));
+        ++_messageCountPerController[extension.controllerIndex];
+        return true;
+    }
+
+    [[nodiscard]] bool ReceiveInternal(TMessageExtern& messageExtern) override {
+        if (_messageBuffer.IsEmpty()) {
+            return false;
+        }
+
+        TMessage& message = _messageBuffer.PopFront();
+        WriteTo(message, messageExtern);
+
+        Extension& extension = Base::FindController(message.controllerId);
+        --_messageCountPerController[extension.controllerIndex];
+        return true;
+    }
+
+    [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override {
+        const auto count = static_cast<uint32_t>(_messageBuffer.Size());
+        CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
+
+        for (uint32_t i = 0; i < count; i++) {
+            TMessage& message = _messageBuffer.PopFront();
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(ToString(message));
+            }
+
+            CheckResultWithMessage(SerializeTo(message, writer), "Could not serialize message.");
+        }
+
+        for (auto& [id, extension] : Base::_controllers) {
+            _messageCountPerController[extension.controllerIndex] = 0;
+        }
+
+        return true;
+    }
+
+    [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
+                                           SimulationTime simulationTime,
+                                           const typename Base::Callback& callback) override {
+        uint32_t totalCount{};
+        CheckResultWithMessage(reader.Read(totalCount), "Could not read count of messages.");
+
+        for (uint32_t i = 0; i < totalCount; i++) {
+            TMessage message{};
+            CheckResultWithMessage(DeserializeFrom(message, reader), "Could not deserialize message.");
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(ToString(message));
+            }
+
+            Extension& extension = Base::FindController(message.controllerId);
+
+            if (callback) {
+                callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
+                continue;
+            }
+
+            if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
+                if (!extension.warningSent) {
+                    LogWarning("Receive buffer for controller '" + std::string(extension.info.name) + "' is full.");
+                    extension.warningSent = true;
+                }
+
+                continue;
+            }
+
+            ++_messageCountPerController[extension.controllerIndex];
+            _messageBuffer.PushBack(std::move(message));
+        }
+
+        return true;
+    }
+
+private:
+    std::vector<uint32_t> _messageCountPerController;
+
+    RingBuffer<TMessage> _messageBuffer;
+};
+
+#ifdef _WIN32
+
+template <typename T>
+class ShmRingBuffer final {
+public:
+    ShmRingBuffer() = default;
+    ~ShmRingBuffer() noexcept = default;
+
+    ShmRingBuffer(const ShmRingBuffer&) = delete;
+    ShmRingBuffer& operator=(const ShmRingBuffer&) = delete;
+
+    ShmRingBuffer(ShmRingBuffer&& other) = delete;
+    ShmRingBuffer& operator=(ShmRingBuffer&& other) = delete;
+
+    void Initialize(const uint32_t capacity) {
+        _capacity = capacity;
+    }
+
+    void Clear() {
+        _readIndex = 0;
+        _writeIndex = 0;
+        _size = 0;
+    }
+
+    [[nodiscard]] uint32_t Size() const {
+        return _size;
+    }
+
+    [[nodiscard]] bool IsEmpty() const {
+        return _size == 0;
+    }
+
+    [[nodiscard]] bool IsFull() const {
+        return _size == _capacity;
+    }
+
+    void PushBack(T&& element) {
+        if (IsFull()) {
+            throw std::runtime_error("SHM ring buffer is full.");
+        }
+
+        const uint32_t currentWriteIndex = _writeIndex;
+        _items[currentWriteIndex] = std::move(element);
+
+        ++_writeIndex;
+        if (_writeIndex == _capacity) {
+            _writeIndex = 0;
+        }
+
+        ++_size;
+    }
+
+    [[nodiscard]] T& PopFront() {
+        if (IsEmpty()) {
+            throw std::runtime_error("SHM ring buffer is empty.");
+        }
+
+        --_size;
+
+        T& item = _items[_readIndex];
+
+        ++_readIndex;
+        if (_readIndex == _capacity) {
+            _readIndex = 0;
+        }
+
+        return item;
+    }
+
+private:
+    uint32_t _capacity{};           // Read by reader and writer
+    std::atomic<uint32_t> _size{};  // Read and written by reader and writer
+    uint32_t _readIndex{};          // Read and written by reader
+    uint32_t _writeIndex{};         // Read and written by writerF
+
+    // Zero sized array would be correct here, since the items are inside a shared memory. But that leads to
+    // warnings, so we add set the size to 1
+    T _items[1]{};
+};
+
+template <typename TMessage, typename TMessageExtern, typename TControllerExtern>
+class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern, TControllerExtern> {
+    using Base = BusProtocolBufferBase<TMessageExtern, TControllerExtern>;
+    using Extension = typename Base::ControllerExtension;
+
+public:
+    LocalBusProtocolBuffer() = default;
+    ~LocalBusProtocolBuffer() noexcept override = default;
+
+    LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
+    LocalBusProtocolBuffer& operator=(const LocalBusProtocolBuffer&) = delete;
+
+    LocalBusProtocolBuffer(LocalBusProtocolBuffer&&) = delete;
+    LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
+
+protected:
+    void InitializeInternal(const std::string& name, const size_t totalQueueItemsCountPerBuffer) override {
+        // The memory layout looks like this:
+        // [ list of message count per controller ]
+        // [ message buffer ]
+
+        const size_t sizeOfMessageCountPerController = Base::_controllers.size() * sizeof(std::atomic<uint32_t>);
+        const size_t sizeOfRingBuffer =
+            sizeof(ShmRingBuffer<TMessage>) + (totalQueueItemsCountPerBuffer * sizeof(TMessage));
+
+        size_t sizeOfSharedMemory = 0;
+        sizeOfSharedMemory += sizeOfMessageCountPerController;
+        sizeOfSharedMemory += sizeOfRingBuffer;
+
+        _sharedMemory = SharedMemory::CreateOrOpen(name, sizeOfSharedMemory);
+
+        auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory.data());
+        auto* pointerToMessageBuffer = pointerToMessageCountPerController + sizeOfMessageCountPerController;
+
+        _messageCountPerController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
+        _messageBuffer = reinterpret_cast<ShmRingBuffer<TMessage>*>(pointerToMessageBuffer);
+
+        _messageBuffer->Initialize(static_cast<uint32_t>(totalQueueItemsCountPerBuffer));
+
+        ClearDataInternal();
+    }
+
+    void ClearDataInternal() override {
+        for (auto& [controllerId, dataPerController] : Base::_controllers) {
+            dataPerController.ClearData();
+        }
+
+        _totalReceiveCount = 0;
+
+        for (size_t i = 0; i < Base::_controllers.size(); i++) {
+            _messageCountPerController[i].store(0);
+        }
+
+        if (_messageBuffer) {
+            _messageBuffer->Clear();
+        }
+    }
+
+    [[nodiscard]] bool TransmitInternal(const TMessageExtern& messageExtern) override {
+        Extension& extension = Base::FindController(messageExtern.controllerId);
+        std::atomic<uint32_t>& messageCount = _messageCountPerController[extension.controllerIndex];
+
+        if (messageCount.load() == extension.info.queueSize) {
+            if (!extension.warningSent) {
+                LogWarning("Queue for controller '" + std::string(extension.info.name) +
+                           "' is full. Messages are dropped.");
+                extension.warningSent = true;
+            }
+
+            return false;
+        }
+
+        auto message = static_cast<TMessage>(messageExtern);
+
+        _messageBuffer->PushBack(std::move(message));
+        messageCount.fetch_add(1);
+        return true;
+    }
+
+    [[nodiscard]] bool ReceiveInternal(TMessageExtern& messageExtern) override {
+        if (_totalReceiveCount == 0) {
+            return false;
+        }
+
+        TMessage& message = _messageBuffer->PopFront();
+        WriteTo(message, messageExtern);
+
+        Extension& extension = Base::FindController(messageExtern.controllerId);
+        std::atomic<uint32_t>& receiveCount = _messageCountPerController[extension.controllerIndex];
+        receiveCount.fetch_sub(1);
+        _totalReceiveCount--;
+        return true;
+    }
+
+    [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override {
+        CheckResultWithMessage(writer.Write<uint32_t>(_messageBuffer->Size()), "Could not write transmit count.");
+        return true;
+    }
+
+    [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
+                                           SimulationTime simulationTime,
+                                           const typename Base::Callback& callback) override {
+        uint32_t receiveCount{};
+        CheckResultWithMessage(reader.Read(receiveCount), "Could not read receive count.");
+        _totalReceiveCount += receiveCount;
+
+        if (!callback) {
+            return true;
+        }
+
+        while (_totalReceiveCount > 0) {
+            TMessage& message = _messageBuffer->PopFront();
+
+            if (IsProtocolTracingEnabled()) {
+                LogProtocolDataTrace(ToString(message));
+            }
+
+            Extension& extension = Base::FindController(message.controllerId);
+            std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension.controllerIndex];
+            receiveCountPerController.fetch_sub(1);
+            _totalReceiveCount--;
+
+            callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
+        }
+
+        return true;
+    }
+
+private:
+    uint32_t _totalReceiveCount{};
+    std::atomic<uint32_t>* _messageCountPerController{};
+    ShmRingBuffer<TMessage>* _messageBuffer{};
+
+    SharedMemory _sharedMemory;
+};
+
+#endif
 
 #ifdef _WIN32
 using LocalCanBuffer = LocalBusProtocolBuffer<CanMessageContainer, CanMessage, CanController>;
@@ -20,305 +597,139 @@ using RemoteCanBuffer = RemoteBusProtocolBuffer<CanMessageContainer, CanMessage,
 using RemoteEthBuffer = RemoteBusProtocolBuffer<EthMessageContainer, EthMessage, EthController>;
 using RemoteLinBuffer = RemoteBusProtocolBuffer<LinMessageContainer, LinMessage, LinController>;
 
+class BusBufferImpl final : public BusBuffer {
+    using CanBufferBase = BusProtocolBufferBase<CanMessage, CanController>;
+    using EthBufferBase = BusProtocolBufferBase<EthMessage, EthController>;
+    using LinBufferBase = BusProtocolBufferBase<LinMessage, LinController>;
+
+public:
+    BusBufferImpl(const CoSimType coSimType,
+                  [[maybe_unused]] const ConnectionKind connectionKind,
+                  const std::string& name,
+                  const std::vector<CanController>& canControllers,
+                  const std::vector<EthController>& ethControllers,
+                  const std::vector<LinController>& linControllers) {
+#ifdef _WIN32
+        if (connectionKind == ConnectionKind::Local) {
+            _canTransmitBuffer = std::make_unique<LocalCanBuffer>();
+            _ethTransmitBuffer = std::make_unique<LocalEthBuffer>();
+            _linTransmitBuffer = std::make_unique<LocalLinBuffer>();
+
+            _canReceiveBuffer = std::make_unique<LocalCanBuffer>();
+            _ethReceiveBuffer = std::make_unique<LocalEthBuffer>();
+            _linReceiveBuffer = std::make_unique<LocalLinBuffer>();
+        } else {
+#endif
+            _canTransmitBuffer = std::make_unique<RemoteCanBuffer>();
+            _ethTransmitBuffer = std::make_unique<RemoteEthBuffer>();
+            _linTransmitBuffer = std::make_unique<RemoteLinBuffer>();
+
+            _canReceiveBuffer = std::make_unique<RemoteCanBuffer>();
+            _ethReceiveBuffer = std::make_unique<RemoteEthBuffer>();
+            _linReceiveBuffer = std::make_unique<RemoteLinBuffer>();
+#ifdef _WIN32
+        }
+#endif
+
+        const std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+        const std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+
+        _canTransmitBuffer->Initialize(coSimType, name + ".Can." + suffixForTransmit, canControllers);
+        _ethTransmitBuffer->Initialize(coSimType, name + ".Eth." + suffixForTransmit, ethControllers);
+        _linTransmitBuffer->Initialize(coSimType, name + ".Lin." + suffixForTransmit, linControllers);
+        _canReceiveBuffer->Initialize(coSimType, name + ".Can." + suffixForReceive, canControllers);
+        _ethReceiveBuffer->Initialize(coSimType, name + ".Eth." + suffixForReceive, ethControllers);
+        _linReceiveBuffer->Initialize(coSimType, name + ".Lin." + suffixForReceive, linControllers);
+    }
+
+    ~BusBufferImpl() noexcept override = default;
+
+    BusBufferImpl(const BusBufferImpl&) = delete;
+    BusBufferImpl& operator=(const BusBufferImpl&) = delete;
+
+    BusBufferImpl(BusBufferImpl&&) = delete;
+    BusBufferImpl& operator=(BusBufferImpl&&) = delete;
+
+    void ClearData() const override {
+        _canTransmitBuffer->ClearData();
+        _ethTransmitBuffer->ClearData();
+        _linTransmitBuffer->ClearData();
+
+        _canReceiveBuffer->ClearData();
+        _ethReceiveBuffer->ClearData();
+        _linReceiveBuffer->ClearData();
+    }
+
+    [[nodiscard]] bool Transmit(const CanMessage& message) const override {
+        return _canTransmitBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] bool Transmit(const EthMessage& message) const override {
+        return _ethTransmitBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] bool Transmit(const LinMessage& message) const override {
+        return _linTransmitBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] bool Receive(CanMessage& message) const override {
+        return _canReceiveBuffer->Receive(message);
+    }
+
+    [[nodiscard]] bool Receive(EthMessage& message) const override {
+        return _ethReceiveBuffer->Receive(message);
+    }
+
+    [[nodiscard]] bool Receive(LinMessage& message) const override {
+        return _linReceiveBuffer->Receive(message);
+    }
+
+    [[nodiscard]] bool Serialize(ChannelWriter& writer) const override {
+        CheckResultWithMessage(_canTransmitBuffer->Serialize(writer), "Could not transmit CAN messages.");
+        CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit ETH messages.");
+        CheckResultWithMessage(_linTransmitBuffer->Serialize(writer), "Could not transmit LIN messages.");
+        return true;
+    }
+
+    [[nodiscard]] bool Deserialize(ChannelReader& reader,
+                                   const SimulationTime simulationTime,
+                                   const Callbacks& callbacks) const override {
+        CheckResultWithMessage(
+            _canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback),
+            "Could not receive CAN messages.");
+        CheckResultWithMessage(
+            _ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback),
+            "Could not receive ETH messages.");
+        CheckResultWithMessage(
+            _linReceiveBuffer->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback),
+            "Could not receive LIN messages.");
+        return true;
+    }
+
+private:
+    std::unique_ptr<CanBufferBase> _canTransmitBuffer;
+    std::unique_ptr<EthBufferBase> _ethTransmitBuffer;
+    std::unique_ptr<LinBufferBase> _linTransmitBuffer;
+
+    std::unique_ptr<CanBufferBase> _canReceiveBuffer;
+    std::unique_ptr<EthBufferBase> _ethReceiveBuffer;
+    std::unique_ptr<LinBufferBase> _linReceiveBuffer;
+};
+
 }  // namespace
 
-[[nodiscard]] bool CanMessageContainer::SerializeTo(ChannelWriter& writer) const {
-    CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(data.data(), length), "Could not write data.");
-    return true;
-}
-
-[[nodiscard]] bool CanMessageContainer::DeserializeFrom(ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(length), "Could not read length");
-    CheckMaxLength();
-    CheckResultWithMessage(reader.Read(data.data(), length), "Could not read data.");
-    return true;
-}
-
-void CanMessageContainer::WriteTo(CanMessage& message) const {
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-}
-
-void CanMessageContainer::ReadFrom(const CanMessage& message) {
-    timestamp = message.timestamp;
-    controllerId = message.controllerId;
-    id = message.id;
-    flags = message.flags;
-    length = message.length;
-    CheckMaxLength();
-    CheckFlags();
-    (void)memcpy(data.data(), message.data, message.length);
-}
-
-[[nodiscard]] CanMessageContainer::operator CanMessage() const {
-    CanMessage message{};
-    WriteTo(message);
-    return message;
-}
-
-[[nodiscard]] inline std::string CanMessageContainer::ToString() const {
-    return "CAN Message { Timestamp: " + SimulationTimeToString(timestamp) +
-           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Id: " + DsVeosCoSim::ToString(id) +
-           ", Length: " + std::to_string(length) + ", Data: " + DataToString(data.data(), length, '-') +
-           ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
-}
-
-void CanMessageContainer::CheckMaxLength() const {
-    if (length > CanMessageMaxLength) {
-        throw CoSimException("CAN message data exceeds maximum length.");
-    }
-}
-
-void CanMessageContainer::CheckFlags() const {
-    if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (length > 8) {
-            throw CoSimException("CAN message flags invalid. A DLC > 8 requires the flexible data rate format flag.");
-        }
-
-        if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-            throw CoSimException(
-                "CAN message flags invalid. A bit rate switch flag requires the flexible data rate format flag.");
-        }
-    }
-}
-
-[[nodiscard]] bool EthMessageContainer::SerializeTo(ChannelWriter& writer) const {
-    CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(data.data(), length), "Could not write data.");
-    return true;
-}
-
-[[nodiscard]] bool EthMessageContainer::DeserializeFrom(ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(length), "Could not read length.");
-    CheckMaxLength();
-    CheckResultWithMessage(reader.Read(data.data(), length), "Could not read data.");
-    return true;
-}
-
-void EthMessageContainer::WriteTo(EthMessage& message) const {
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-}
-
-void EthMessageContainer::ReadFrom(const EthMessage& message) {
-    timestamp = message.timestamp;
-    controllerId = message.controllerId;
-    flags = message.flags;
-    length = message.length;
-    CheckMaxLength();
-    (void)memcpy(data.data(), message.data, message.length);
-}
-
-[[nodiscard]] EthMessageContainer::operator EthMessage() const {
-    EthMessage message{};
-    WriteTo(message);
-    return message;
-}
-
-[[nodiscard]] inline std::string EthMessageContainer::ToString() const {
-    return "ETH Message { Timestamp: " + SimulationTimeToString(timestamp) +
-           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Length: " + std::to_string(length) +
-           ", Data: " + DataToString(data.data(), length, '-') + ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
-}
-
-void EthMessageContainer::CheckMaxLength() const {
-    if (length > EthMessageMaxLength) {
-        throw CoSimException("Ethernet message data exceeds maximum length.");
-    }
-}
-
-[[nodiscard]] bool LinMessageContainer::SerializeTo(ChannelWriter& writer) const {
-    CheckResultWithMessage(writer.Write(timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(data.data(), length), "Could not write data.");
-    return true;
-}
-
-[[nodiscard]] bool LinMessageContainer::DeserializeFrom(ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(length), "Could not read length.");
-    CheckMaxLength();
-    CheckResultWithMessage(reader.Read(data.data(), length), "Could not read data.");
-    return true;
-}
-
-void LinMessageContainer::WriteTo(LinMessage& message) const {
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-}
-
-void LinMessageContainer::ReadFrom(const LinMessage& message) {
-    timestamp = message.timestamp;
-    controllerId = message.controllerId;
-    id = message.id;
-    flags = message.flags;
-    length = message.length;
-    CheckMaxLength();
-    (void)memcpy(data.data(), message.data, message.length);
-}
-
-[[nodiscard]] LinMessageContainer::operator LinMessage() const {
-    LinMessage message{};
-    WriteTo(message);
-    return message;
-}
-
-[[nodiscard]] inline std::string LinMessageContainer::ToString() const {
-    return "LIN Message { Timestamp: " + SimulationTimeToString(timestamp) +
-           ", ControllerId: " + DsVeosCoSim::ToString(controllerId) + ", Id: " + DsVeosCoSim::ToString(id) +
-           ", Length: " + std::to_string(length) + ", Data: " + DataToString(data.data(), length, '-') +
-           ", Flags: " + DsVeosCoSim::ToString(flags) + " }";
-}
-
-void LinMessageContainer::CheckMaxLength() const {
-    if (length > LinMessageMaxLength) {
-        throw CoSimException("LIN message data exceeds maximum length.");
-    }
-}
-
-BusBuffer::BusBuffer(const CoSimType coSimType,
-                     [[maybe_unused]] const ConnectionKind connectionKind,
-                     const std::string& name,
-                     const std::vector<CanController>& canControllers,
-                     const std::vector<EthController>& ethControllers,
-                     const std::vector<LinController>& linControllers) {
-#ifdef _WIN32
-    if (connectionKind == ConnectionKind::Local) {
-        _canTransmitBuffer = std::make_unique<LocalCanBuffer>();
-        _ethTransmitBuffer = std::make_unique<LocalEthBuffer>();
-        _linTransmitBuffer = std::make_unique<LocalLinBuffer>();
-
-        _canReceiveBuffer = std::make_unique<LocalCanBuffer>();
-        _ethReceiveBuffer = std::make_unique<LocalEthBuffer>();
-        _linReceiveBuffer = std::make_unique<LocalLinBuffer>();
-    } else {
-#endif
-        _canTransmitBuffer = std::make_unique<RemoteCanBuffer>();
-        _ethTransmitBuffer = std::make_unique<RemoteEthBuffer>();
-        _linTransmitBuffer = std::make_unique<RemoteLinBuffer>();
-
-        _canReceiveBuffer = std::make_unique<RemoteCanBuffer>();
-        _ethReceiveBuffer = std::make_unique<RemoteEthBuffer>();
-        _linReceiveBuffer = std::make_unique<RemoteLinBuffer>();
-#ifdef _WIN32
-    }
-#endif
-
-    const std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-    const std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
-
-    _canTransmitBuffer->Initialize(coSimType, name + ".Can." + suffixForTransmit, canControllers);
-    _ethTransmitBuffer->Initialize(coSimType, name + ".Eth." + suffixForTransmit, ethControllers);
-    _linTransmitBuffer->Initialize(coSimType, name + ".Lin." + suffixForTransmit, linControllers);
-    _canReceiveBuffer->Initialize(coSimType, name + ".Can." + suffixForReceive, canControllers);
-    _ethReceiveBuffer->Initialize(coSimType, name + ".Eth." + suffixForReceive, ethControllers);
-    _linReceiveBuffer->Initialize(coSimType, name + ".Lin." + suffixForReceive, linControllers);
-}
-
-BusBuffer::BusBuffer(const CoSimType coSimType,
-                     const ConnectionKind connectionKind,
-                     const std::string& name,
-                     const std::vector<CanController>& canControllers)
-    : BusBuffer(coSimType, connectionKind, name, canControllers, {}, {}) {
-}
-
-BusBuffer::BusBuffer(const CoSimType coSimType,
-                     const ConnectionKind connectionKind,
-                     const std::string& name,
-                     const std::vector<EthController>& ethControllers)
-    : BusBuffer(coSimType, connectionKind, name, {}, ethControllers, {}) {
-}
-
-BusBuffer::BusBuffer(const CoSimType coSimType,
-                     const ConnectionKind connectionKind,
-                     const std::string& name,
-                     const std::vector<LinController>& linControllers)
-    : BusBuffer(coSimType, connectionKind, name, {}, {}, linControllers) {
-}
-
-void BusBuffer::ClearData() const {
-    _canTransmitBuffer->ClearData();
-    _ethTransmitBuffer->ClearData();
-    _linTransmitBuffer->ClearData();
-
-    _canReceiveBuffer->ClearData();
-    _ethReceiveBuffer->ClearData();
-    _linReceiveBuffer->ClearData();
-}
-
-[[nodiscard]] bool BusBuffer::Transmit(const CanMessage& message) const {
-    return _canTransmitBuffer->Transmit(message);
-}
-
-[[nodiscard]] bool BusBuffer::Transmit(const EthMessage& message) const {
-    return _ethTransmitBuffer->Transmit(message);
-}
-
-[[nodiscard]] bool BusBuffer::Transmit(const LinMessage& message) const {
-    return _linTransmitBuffer->Transmit(message);
-}
-
-[[nodiscard]] bool BusBuffer::Receive(CanMessage& message) const {
-    return _canReceiveBuffer->Receive(message);
-}
-
-[[nodiscard]] bool BusBuffer::Receive(EthMessage& message) const {
-    return _ethReceiveBuffer->Receive(message);
-}
-
-[[nodiscard]] bool BusBuffer::Receive(LinMessage& message) const {
-    return _linReceiveBuffer->Receive(message);
-}
-
-[[nodiscard]] bool BusBuffer::Serialize(ChannelWriter& writer) const {
-    CheckResultWithMessage(_canTransmitBuffer->Serialize(writer), "Could not transmit CAN messages.");
-    CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit ETH messages.");
-    CheckResultWithMessage(_linTransmitBuffer->Serialize(writer), "Could not transmit LIN messages.");
-    return true;
-}
-
-[[nodiscard]] bool BusBuffer::Deserialize(ChannelReader& reader,
-                                          const SimulationTime simulationTime,
-                                          const Callbacks& callbacks) const {
-    CheckResultWithMessage(_canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback),
-                           "Could not receive CAN messages.");
-    CheckResultWithMessage(_ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback),
-                           "Could not receive ETH messages.");
-    CheckResultWithMessage(_linReceiveBuffer->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback),
-                           "Could not receive LIN messages.");
-    return true;
+[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,
+                                                         ConnectionKind connectionKind,
+                                                         const std::string& name,
+                                                         const std::vector<CanController>& canControllers,
+                                                         const std::vector<EthController>& ethControllers,
+                                                         const std::vector<LinController>& linControllers) {
+    return std::make_unique<BusBufferImpl>(coSimType,
+                                           connectionKind,
+                                           name,
+                                           canControllers,
+                                           ethControllers,
+                                           linControllers);
 }
 
 }  // namespace DsVeosCoSim
