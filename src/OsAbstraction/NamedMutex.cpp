@@ -69,7 +69,7 @@ void NamedMutex::lock() const {  // NOLINT
 }
 
 void NamedMutex::unlock() const {  // NOLINT
-    (void)ReleaseMutex(_handle);  // NOLINT
+    (void)ReleaseMutex(_handle);   // NOLINT
 }
 
 }  // namespace DsVeosCoSim
