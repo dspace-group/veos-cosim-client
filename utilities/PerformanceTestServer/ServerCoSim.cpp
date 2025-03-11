@@ -39,8 +39,7 @@ void CoSimServerRun() {
             stopSimulation = false;
 
             while (!stopSimulation) {
-                SimulationTime nextSimulationTime{};
-                server->Step(simulationTime, nextSimulationTime);
+                (void)server->Step(simulationTime);
 
                 ++simulationTime;
             }

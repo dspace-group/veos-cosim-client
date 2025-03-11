@@ -183,7 +183,7 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
     SimulationTime nextSimulationTime{};
 
     // Act and assert
-    ASSERT_NO_THROW(server->Step(simulationTime, nextSimulationTime));
+    ASSERT_NO_THROW(nextSimulationTime = server->Step(simulationTime));
 
     // Assert
     ASSERT_EQ(0s, nextSimulationTime);

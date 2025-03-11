@@ -49,7 +49,7 @@ public:
     virtual void Terminate(SimulationTime simulationTime, TerminateReason reason) = 0;
     virtual void Pause(SimulationTime simulationTime) = 0;
     virtual void Continue(SimulationTime simulationTime) = 0;
-    virtual void Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) = 0;
+    virtual SimulationTime Step(SimulationTime simulationTime) = 0;
 
     virtual void Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
 

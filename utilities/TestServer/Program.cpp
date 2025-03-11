@@ -38,9 +38,7 @@ public:
 
     [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
-        SimulationTime nextSimulationTime{};
-        _server->Step(simulationTime, nextSimulationTime);
-        return nextSimulationTime;
+        return _server->Step(simulationTime);
     }
 
     void Start(const SimulationTime simulationTime) {

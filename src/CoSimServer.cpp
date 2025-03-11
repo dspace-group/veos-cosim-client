@@ -144,18 +144,20 @@ public:
         }
     }
 
-    void Step(const SimulationTime simulationTime, SimulationTime& nextSimulationTime) override {
+    SimulationTime Step(const SimulationTime simulationTime) override {
         if (!_channel) {
-            return;
+            return {};
         }
 
         Command command{};
+        SimulationTime nextSimulationTime{};
         if (!StepInternal(simulationTime, nextSimulationTime, command)) {
             CloseConnection();
-            return;
+            return {};
         }
 
         HandlePendingCommand(command);
+        return nextSimulationTime;
     }
 
     void Write(const IoSignalId signalId, const uint32_t length, const void* value) const override {
