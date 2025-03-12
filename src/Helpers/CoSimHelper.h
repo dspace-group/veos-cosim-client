@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
 

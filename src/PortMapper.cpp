@@ -11,7 +11,7 @@
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Event.h"
 #include "Protocol.h"

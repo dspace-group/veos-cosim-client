@@ -19,7 +19,7 @@ if /i "%platformToUse%"=="x86" set platformToUse=x86
 
 echo Running performance test server for %config% %platformToUse% ...
 
-set filePath=%currentDir%tmpwin\%config%\%platformToUse%\utilities\PerformanceTestServer\PerformanceTestServer.exe
+set filePath=%currentDir%tmpwin\%config%\%platformToUse%\tests\PerformanceTestServer\PerformanceTestServer.exe
 
 if not exist "%filePath%" (
     echo Could not find file "%filePath%".

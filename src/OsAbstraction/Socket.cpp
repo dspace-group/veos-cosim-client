@@ -11,7 +11,7 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 #ifdef _WIN32
 #include <WS2tcpip.h>

@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "CoSimClient.h"
+#include "DsVeosCoSim/CoSimClient.h"
 
 #include <atomic>
 #include <cstdint>
@@ -11,7 +11,7 @@
 #include "BusBuffer.h"
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
 #include "PortMapper.h"
 #include "Protocol.h"

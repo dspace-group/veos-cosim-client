@@ -57,28 +57,17 @@ target_compile_definitions(
 )
 
 if(WIN32)
-target_compile_definitions(
-  DsVeosCoSim
-  PRIVATE
-  _CRT_SECURE_NO_WARNINGS
-  WIN32_LEAN_AND_MEAN
-)
+  target_compile_definitions(
+    DsVeosCoSim
+    PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+  )
 endif()
 
 if(WIN32)
-target_link_libraries(
-  DsVeosCoSim
-  WS2_32
-)
+  target_link_libraries(
+    DsVeosCoSim
+    WS2_32
+  )
 endif()
-
-install(
-  TARGETS DsVeosCoSim
-  EXPORT DsVeosCoSimTargets
-  DESTINATION lib
-)
-
-install(
-  FILES ../include/DsVeosCoSim/DsVeosCoSim.h
-  DESTINATION include
-)

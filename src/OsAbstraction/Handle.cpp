@@ -10,7 +10,7 @@
 #include <string>
 
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {

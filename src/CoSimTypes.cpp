@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 #include <cstddef>
 #include <cstdint>

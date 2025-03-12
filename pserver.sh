@@ -12,7 +12,7 @@ config=$1
 
 echo Running performance test server for $config ...
 
-filePath=$currentDir/tmplin/$config/utilities/PerformanceTestServer/PerformanceTestServer
+filePath=$currentDir/tmplin/$config/tests/PerformanceTestServer/PerformanceTestServer
 if [ -z "$filePath" ]; then
     echo Could not find file "$filePath".
     exit 1

@@ -19,7 +19,7 @@ if /i "%platformToUse%"=="x86" set platformToUse=x86
 
 echo Running tests for %config% %platformToUse% ...
 
-set filePath=%currentDir%tmpwin\%config%\%platformToUse%\test\DsVeosCoSimTest.exe
+set filePath=%currentDir%tmpwin\%config%\%platformToUse%\tests\unit\DsVeosCoSimTest.exe
 
 if not exist "%filePath%" (
     echo Could not find file "%filePath%".

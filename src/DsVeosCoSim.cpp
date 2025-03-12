@@ -9,9 +9,9 @@
 #include <string>
 #include <string_view>
 
-#include "CoSimClient.h"
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimClient.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 using namespace DsVeosCoSim;
 
