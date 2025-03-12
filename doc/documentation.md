@@ -2278,7 +2278,7 @@ Refer to [DsVeosCoSim_Result Enumeration](#dsveoscosim_result-enumeration).
 
 Called when a new Ethernet message is received from the VEOS CoSim server.
 
-`VeosCoSim_EthMessageReceivedCallback` can be registered with the [DsVeosCoSim_SetCallbacks Function](#dsveoscosim_setcallbacks-function).
+`DsVeosCoSim_EthMessageReceivedCallback` can be registered with the [DsVeosCoSim_SetCallbacks Function](#dsveoscosim_setcallbacks-function).
 
 **Note:**
 If the `DsVeosCoSim_EthMessageReceivedCallback` is registered, you cannot collect Ethernet messages using the

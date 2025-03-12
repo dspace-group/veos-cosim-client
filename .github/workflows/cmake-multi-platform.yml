@@ -30,15 +30,15 @@ jobs:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-            test_executable: \test\Release\DsVeosCoSimTest.exe
+            test_executable: \tests\unit\Release\DsVeosCoSimTest.exe
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-            test_executable: /test/DsVeosCoSimTest
+            test_executable: /tests/unit/DsVeosCoSimTest
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            test_executable: /test/DsVeosCoSimTest
+            test_executable: /tests/unit/DsVeosCoSimTest
         exclude:
           - os: windows-latest
             c_compiler: gcc

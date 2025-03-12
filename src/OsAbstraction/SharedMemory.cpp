@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Handle.h"
 #include "OsUtilities.h"
 

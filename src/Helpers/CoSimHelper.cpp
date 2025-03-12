@@ -8,7 +8,7 @@
 #include <system_error>
 #include <utility>
 
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
 

@@ -2,6 +2,8 @@
 
 #pragma once
 
+// NOLINTBEGIN
+
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -317,7 +319,7 @@ typedef enum DsVeosCoSim_SizeKind {
 /**
  * \brief Represents an IO signal.
  */
-typedef struct DsVeosCoSim_IoSignal {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_IoSignal {
     /**
      * \brief Unique id of the IO signal.
      */
@@ -348,7 +350,7 @@ typedef struct DsVeosCoSim_IoSignal {  // NOLINT(readability-identifier-naming)
 /**
  * \brief Represents a CAN controller.
  */
-typedef struct DsVeosCoSim_CanController {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_CanController {
     /**
      * \brief Unique id of the CAN controller.
      */
@@ -434,7 +436,7 @@ enum {
 /**
  * \brief Represents a CAN message.
  */
-typedef struct DsVeosCoSim_CanMessage {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_CanMessage {
     /**
      * \brief The simulation time when the CAN message was received.
      *        For received messages only.
@@ -470,7 +472,7 @@ typedef struct DsVeosCoSim_CanMessage {  // NOLINT(readability-identifier-naming
 /**
  * \brief Represents an ethernet controller.
  */
-typedef struct DsVeosCoSim_EthController {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_EthController {
     /**
      * \brief Unique id of the ethernet controller.
      */
@@ -538,7 +540,7 @@ enum {
 /**
  * \brief Represents an ethernet message.
  */
-typedef struct DsVeosCoSim_EthMessage {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_EthMessage {
     /**
      * \brief The simulation time when the ethernet message was received.
      *        For received messages only.
@@ -591,7 +593,7 @@ typedef enum DsVeosCoSim_LinControllerType {
 /**
  * \brief Represents an LIN controller.
  */
-typedef struct DsVeosCoSim_LinController {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_LinController {
     /**
      * \brief Unique id of the LIN controller.
      */
@@ -713,7 +715,7 @@ enum {
 /**
  * \brief Represents a LIN message.
  */
-typedef struct DsVeosCoSim_LinMessage {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_LinMessage {
     /**
      * \brief The simulation time when the LIN message was received.
      *        For received messages only.
@@ -823,7 +825,7 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
 /**
  * \brief Represents the callbacks that will be fired during the co-simulation.
  */
-typedef struct DsVeosCoSim_Callbacks {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_Callbacks {
     /**
      * \brief Will be called when the simulation started in dSPACE VEOS.
      */
@@ -894,7 +896,7 @@ typedef struct DsVeosCoSim_Callbacks {  // NOLINT(readability-identifier-naming)
 /**
  * \brief Represents the data that will be used for establishing the connection.
  */
-typedef struct DsVeosCoSim_ConnectConfig {  // NOLINT(readability-identifier-naming)
+typedef struct DsVeosCoSim_ConnectConfig {
     /**
      * \brief The IP address of the dSPACE VEOS CoSim server. "127.0.0.1" if not specified.
      */
@@ -1142,6 +1144,9 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(DsVeosCoSim_H
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle,
                                                                     DsVeosCoSim_TerminateReason terminateReason);
 
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle,
+                                                                         DsVeosCoSim_SimulationTime* simulationTime);
+
 #ifdef __cplusplus
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
@@ -1173,3 +1178,5 @@ extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoS
 
 extern DSVEOSCOSIM_API size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType);
 #endif
+
+// NOLINTEND

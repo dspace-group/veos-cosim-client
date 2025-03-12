@@ -12,7 +12,7 @@ config=$1
 
 echo Running tests for $config ...
 
-filePath=$currentDir/tmplin/$config/test/DsVeosCoSimTest
+filePath=$currentDir/tmplin/$config/tests/unit/DsVeosCoSimTest
 if [ -z "$filePath" ]; then
     echo Could not find file "$filePath".
     exit 1

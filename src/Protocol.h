@@ -7,7 +7,7 @@
 
 #include "BusBuffer.h"
 #include "Channel.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
 
 namespace DsVeosCoSim {

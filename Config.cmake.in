@@ -1,5 +1,0 @@
-# Copyright dSPACE GmbH. All rights reserved.
-
-@PACKAGE_INIT@
-
-include("${CMAKE_CURRENT_LIST_DIR}/DsVeosCoSimTargets.cmake")

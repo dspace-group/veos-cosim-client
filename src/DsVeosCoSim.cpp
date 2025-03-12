@@ -9,9 +9,9 @@
 #include <string>
 #include <string_view>
 
-#include "CoSimClient.h"
 #include "CoSimHelper.h"
-#include "CoSimTypes.h"
+#include "DsVeosCoSim/CoSimClient.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 
 using namespace DsVeosCoSim;
 
@@ -677,6 +677,24 @@ DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(const DsVeosCoSim_Handle hand
 
     try {
         client->Terminate(static_cast<TerminateReason>(terminateReason));
+
+        return DsVeosCoSim_Result_Ok;
+    } catch (const std::exception& e) {
+        LogError(e.what());
+
+        return DsVeosCoSim_Result_Error;
+    }
+}
+
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(const DsVeosCoSim_Handle handle,
+                                                                         DsVeosCoSim_SimulationTime* simulationTime) {
+    CheckNotNull(handle);
+    CheckNotNull(simulationTime);
+
+    const auto* const client = static_cast<CoSimClient*>(handle);
+
+    try {
+        *simulationTime = client->GetCurrentSimulationTime().count();
 
         return DsVeosCoSim_Result_Ok;
     } catch (const std::exception& e) {
