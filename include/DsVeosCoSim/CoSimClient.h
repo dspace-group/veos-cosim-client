@@ -21,6 +21,7 @@ public:
     [[nodiscard]] virtual ConnectionState GetConnectionState() const = 0;
 
     [[nodiscard]] virtual SimulationTime GetStepSize() const = 0;
+    [[nodiscard]] virtual SimulationTime GetCurrentSimulationTime() const = 0;
 
     [[nodiscard]] virtual bool RunCallbackBasedCoSimulation(const Callbacks& callbacks) = 0;
     virtual void StartPollingBasedCoSimulation(const Callbacks& callbacks) = 0;

@@ -686,6 +686,24 @@ DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(const DsVeosCoSim_Handle hand
     }
 }
 
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(const DsVeosCoSim_Handle handle,
+                                                                         DsVeosCoSim_SimulationTime* simulationTime) {
+    CheckNotNull(handle);
+    CheckNotNull(simulationTime);
+
+    const auto* const client = static_cast<CoSimClient*>(handle);
+
+    try {
+        *simulationTime = client->GetCurrentSimulationTime().count();
+
+        return DsVeosCoSim_Result_Ok;
+    } catch (const std::exception& e) {
+        LogError(e.what());
+
+        return DsVeosCoSim_Result_Error;
+    }
+}
+
 std::string DsVeosCoSim_SimulationTimeToString(const DsVeosCoSim_SimulationTime simulationTime) {
     return SimulationTimeToString(SimulationTime(simulationTime));
 }

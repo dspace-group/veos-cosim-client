@@ -92,6 +92,12 @@ public:
         return _stepSize;
     }
 
+    [[nodiscard]] SimulationTime GetCurrentSimulationTime() const override {
+        EnsureIsConnected();
+
+        return _currentSimulationTime;
+    }
+
     [[nodiscard]] bool RunCallbackBasedCoSimulation(const Callbacks& callbacks) override {
         EnsureIsConnected();
         EnsureIsInResponderModeBlocking();
