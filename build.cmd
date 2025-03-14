@@ -7,47 +7,28 @@ setlocal enabledelayedexpansion
 set currentDir=%~dp0
 
 set config=%1
-set platformToUse=%2
 
 if "%config%"=="" set config=Debug
 if /i "%config%"=="debug" set config=Debug
 if /i "%config%"=="release" set config=Release
 
-if "%platformToUse%"=="" (
-    if "%platform%"=="" (
-        set platformToUse=x64
-        call :DevEnv || exit /b 1
-    ) else (
-        set platformToUse=%platform%
-    )
-) else (
-    if /i "%platformToUse%"=="x64" set platformToUse=x64
-    if /i "%platformToUse%"=="x86" set platformToUse=x86
-    if "%platform%" == "" (
-        call :DevEnv || exit /b 1
-    ) else (
-        if "%platform%" neq "%platformToUse%" (
-            echo Environment is already set up for %platform%
-            exit /b 1
-        )
-    )
+where /q cmake || (
+    echo Could not find cmake in path
+    exit /b 1
 )
 
-echo Building %config% %platformToUse% ...
+where /q ninja || (
+    echo Could not find ninja in path
+    exit /b 1
+)
 
-set buildDir=%currentDir%tmpwin\%config%\%platformToUse%
+echo Building %config% ...
+
+set buildDir=%currentDir%tmpwin\%config%
 if not exist "%buildDir%" mkdir "%buildDir%" || exit /b 1
 cd "%buildDir%"
-cmake ..\..\.. -GNinja -DCMAKE_BUILD_TYPE=%config% -DDSVEOSCOSIM_BUILD_TESTS=ON || exit /b 1
+cmake ..\.. -GNinja -DCMAKE_BUILD_TYPE=%config% -DDSVEOSCOSIM_BUILD_TESTS=ON || exit /b 1
 cmake --build . --config %config% || exit /b 1
 
-echo Building %config% %platformToUse% finished successfully.
-exit /b 0
-
-:DevEnv
-set fileName=vcvars32.bat
-if "%platformToUse%"=="x64" set fileName=vcvars64.bat
-
-call "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\%fileName%" || exit /b 1
-set DevEnvDir=C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\IDE\
+echo Building %config% finished successfully.
 exit /b 0

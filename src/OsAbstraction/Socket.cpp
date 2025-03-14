@@ -546,7 +546,10 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
     sockaddr_in6 address{};
     address.sin6_family = AF_INET6;
     address.sin6_port = htons(port);
-    address.sin6_addr = enableRemoteAccess ? in6addr_any : in6addr_loopback;  // NOLINT
+
+    // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same
+    // symbol
+    address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;  // NOLINT
 
     const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
