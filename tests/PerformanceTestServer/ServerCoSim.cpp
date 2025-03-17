@@ -22,7 +22,6 @@ void CoSimServerRun() {
         config.port = CoSimPort;
         config.enableRemoteAccess = true;
         config.serverName = CoSimServerName;
-        config.logCallback = OnLogCallback;
         config.startPortMapper = false;
         config.registerAtPortMapper = false;
         config.simulationStoppedCallback = [&stopSimulation](SimulationTime) {

@@ -11,8 +11,6 @@
 
 namespace DsVeosCoSim {
 
-void SetLogCallback(LogCallback logCallback);
-
 struct CoSimServerConfig {
     uint16_t port{};
     bool enableRemoteAccess{};
@@ -21,7 +19,6 @@ struct CoSimServerConfig {
     bool startPortMapper{};
     bool registerAtPortMapper = true;
     SimulationTime stepSize{};
-    LogCallback logCallback;
     SimulationCallback simulationStartedCallback;
     SimulationCallback simulationStoppedCallback;
     SimulationTerminatedCallback simulationTerminatedCallback;

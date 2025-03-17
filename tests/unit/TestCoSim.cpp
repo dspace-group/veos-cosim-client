@@ -60,7 +60,6 @@ auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
     config.startPortMapper = false;
     config.registerAtPortMapper = false;
     config.isClientOptional = isClientOptional;
-    config.logCallback = OnLogCallback;
     return config;
 }
 

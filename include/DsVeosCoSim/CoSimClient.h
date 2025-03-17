@@ -10,8 +10,6 @@
 
 namespace DsVeosCoSim {
 
-void SetLogCallback(LogCallback logCallback);
-
 class CoSimClient {  // NOLINT
 public:
     virtual ~CoSimClient() noexcept = default;

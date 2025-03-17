@@ -429,6 +429,8 @@ struct LinMessageContainer {
 
 using LogCallback = std::function<void(Severity, std::string_view)>;
 
+void SetLogCallback(LogCallback logCallback);
+
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
 using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason reason)>;
 using IncomingSignalChangedCallback =

@@ -5,11 +5,7 @@
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 
-#include "DsVeosCoSim/CoSimTypes.h"
-
 namespace DsVeosCoSim {
-
-void SetLogCallback(LogCallback logCallback);
 
 void LogError(std::string_view message);
 void LogWarning(std::string_view message);

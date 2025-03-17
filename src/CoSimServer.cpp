@@ -59,8 +59,6 @@ public:
         _callbacks.linMessageReceivedCallback = config.linMessageReceivedCallback;
         _callbacks.ethMessageReceivedCallback = config.ethMessageReceivedCallback;
 
-        SetLogCallback(config.logCallback);
-
         if (config.startPortMapper) {
             _portMapperServer = CreatePortMapperServer(_enableRemoteAccess);
         }

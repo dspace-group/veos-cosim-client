@@ -7,19 +7,14 @@ setlocal enabledelayedexpansion
 set currentDir=%~dp0
 
 set config=%1
-set platformToUse=%2
 
 if "%config%"=="" set config=Debug
 if /i "%config%"=="debug" set config=Debug
 if /i "%config%"=="release" set config=Release
 
-if "%platformToUse%"=="" set platformToUse=x64
-if /i "%platformToUse%"=="x64" set platformToUse=x64
-if /i "%platformToUse%"=="x86" set platformToUse=x86
+echo Running tests for %config% ...
 
-echo Running tests for %config% %platformToUse% ...
-
-set filePath=%currentDir%tmpwin\%config%\%platformToUse%\tests\unit\DsVeosCoSimTest.exe
+set filePath=%currentDir%tmpwin\%config%\tests\unit\DsVeosCoSimTest.exe
 
 if not exist "%filePath%" (
     echo Could not find file "%filePath%".
@@ -28,5 +23,5 @@ if not exist "%filePath%" (
 
 call "%filePath%" || exit /b 1
 
-echo Running tests for %config% %platformToUse% finished successfully.
+echo Running tests for %config% finished successfully.
 exit /b 0

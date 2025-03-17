@@ -428,7 +428,6 @@ void LoadSimulation(const bool isClientOptional, const std::string_view name) {
 
     CoSimServerConfig config{};
     config.serverName = name;
-    config.logCallback = OnLogCallback;
     config.isClientOptional = isClientOptional;
     config.stepSize = 1ms;
     config.startPortMapper = true;
