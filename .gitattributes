@@ -1,6 +1,6 @@
 *.clang-format text eol=lf
 *.clang-tidy text eol=lf
-*.cmd text eol=crlf
+*.cmd text eol=lf
 *.cpp text eol=lf
 *.editorconfig text eol=lf
 *.gitattributes text eol=lf
