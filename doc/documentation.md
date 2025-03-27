@@ -206,7 +206,7 @@ However, for some use cases, you might want to specify a static TCP port. To do 
 >
 > When you specify a static TCP port, you have to provide this to the related client. Refer to [Connecting to a CoSim server](#connecting-to-a-cosim-server).
 
-Each VeosCoSim server starts its own TCP server at the TCP port specified in the JSON file and registers this port with the port mapper.
+Each VEOS CoSim server starts its own TCP server at the TCP port specified in the JSON file and registers this port with the port mapper.
 
 The default TCP port of the port mapper is 27027. You can reconfigure it using the ```VEOS_COSIM_PORTMAPPER_PORT``` environment variable. You have to do this for the CoSim servers and the CoSim clients.
 
@@ -454,13 +454,13 @@ To prepare the CoSim demo by performing the following tasks:
      Alternatively, you can use the VEOS Model Console like this:
 
      ```console
-     <VEOS installation directory>/bin/veos.exe model import -n ./VeosCoSimOsa.osa -p ./Example.json
+     <VEOS installation directory>/bin/veos.exe model import -n ./DsVeosCoSim.osa -p ./Example.json
      ```
 
    - On Linux:
 
      ```console
-     /opt/dspace/veos2023b/bin/veos model import \-n ./VeosCoSimOsa.osa -p ./Example.json
+     /opt/dspace/veos2023b/bin/veos model import \-n ./DsVeosCoSim.osa -p ./Example.json
      ```
 
 5. Load the OSA to the simulator:
@@ -468,13 +468,13 @@ To prepare the CoSim demo by performing the following tasks:
    - On Windows, click Simulation - Load or use the VEOS Simulator Console in the command-line:
 
      ```console
-     <VEOS installation directory>/bin/veos.exe sim load ./VeosCoSimOsa.osa
+     <VEOS installation directory>/bin/veos.exe sim load ./DsVeosCoSim.osa
      ```
 
    - On Linux:
 
      ```console
-     /opt/dspace/veos2023b/bin/veos sim load ./VeosCoSimOsa.osa
+     /opt/dspace/veos2023b/bin/veos sim load ./DsVeosCoSim.osa
      ```
 
 ### Interim result
@@ -666,7 +666,7 @@ You must have made the preparations described in [How to Prepare the CoSim Demo]
 
 ### Running the co-simulation
 
-1. Load the VeosCoSim.osa you created in [How to Prepare the CoSim Demo](#how-to-prepare-the-cosim-demo) to the VEOS simulator.
+1. Load the DsVeosCoSim.osa you created in [How to Prepare the CoSim Demo](#how-to-prepare-the-cosim-demo) to the VEOS simulator.
 
 2. From the `DsVeosCoSimDemo/build` subdirectory, run the executable you built in How to set up the client via
 
@@ -1883,11 +1883,11 @@ typedef enum DsVeosCoSim_Command {
 
 Value | Description
 ---|---
-VeosCoSim_Command_None | No simulation command.
+DsVeosCoSim_Command_None | No simulation command.
 DsVeosCoSim_Command_Step | Advance the simulation by one step.
-VeosCoSim_Command_Start | Start the simulation.
-VeosCoSim_Command_Stop | Stop the simulation.
-VeosCoSim_Command_Terminate | Terminate the simulation.
+DsVeosCoSim_Command_Start | Start the simulation.
+DsVeosCoSim_Command_Stop | Stop the simulation.
+DsVeosCoSim_Command_Terminate | Terminate the simulation.
 DsVeosCoSim_Command_Pause | Pause the simulation.
 DsVeosCoSim_Command_Continue | Continue the simulation.
 
@@ -2200,7 +2200,7 @@ This function has no return values.
 
 #### Description
 
-Connects the dSPACE VEOS CoSim client to the dSPACE VEOS CoSim server.
+Connects the VEOS CoSim client to the VEOS CoSim server.
 
 #### Syntax
 
@@ -2216,7 +2216,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_Connect(
 Name | Description
 ---|---
 handle | The handle of the VEOS CoSim client. Refer to [DsVeosCoSim_Handle Type](#dsveoscosim_handle-type).
-connectConfig | The data used for connecting to the dSPACE VEOS CoSim sever. Refer to [DsVeosCoSim_ConnectConfig Structure](#dsveoscosim_connectconfig-structure).
+connectConfig | The data used for connecting to the VEOS CoSim sever. Refer to [DsVeosCoSim_ConnectConfig Structure](#dsveoscosim_connectconfig-structure).
 
 #### Return values
 
@@ -2574,7 +2574,7 @@ This function has no return values.
 
 #### Description
 
-Called each time the dSPACE VEOS CoSim client receives a log message.
+Called each time the VEOS CoSim client receives a log message.
 
 You can register the `DsVeosCoSim_LogCallback` function pointer using the [DsVeosCoSim_SetLogCallback Function](#dsveoscosim_setlogcallback-function).
 
