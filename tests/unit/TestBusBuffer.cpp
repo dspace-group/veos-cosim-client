@@ -406,7 +406,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFull) {
 
     // Assert
     ASSERT_FALSE(result);
-    AssertLastMessage(fmt::format("Queue for controller '{}' is full. Messages are dropped.", controller.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificController) {
@@ -447,7 +447,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
 
     // Assert
     ASSERT_FALSE(result);
-    AssertLastMessage(fmt::format("Queue for controller '{}' is full. Messages are dropped.", controller1.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller1.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFullForOtherController) {

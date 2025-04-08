@@ -7,10 +7,9 @@
 
 #include "CoSimHelper.h"
 #include "LogHelper.h"
-#include "NamedEvent.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
-#include "SharedMemory.h"
 
 using namespace DsVeosCoSim;
 
@@ -21,19 +20,19 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
                      uint64_t& counter,
                      const bool& isStopped) {
     try {
-        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        const std::unique_ptr<NamedEvent> beginEvent = CreateOrOpenNamedEvent(BeginEventName);
+        const std::unique_ptr<NamedEvent> endEvent = CreateOrOpenNamedEvent(EndEventName);
+        const std::unique_ptr<SharedMemory> sharedMemory = CreateOrOpenSharedMemory(ShmName, BufferSize);
 
         std::array<char, BufferSize> buffer{};
 
         connectedEvent.Set();
 
         while (!isStopped) {
-            (void)memcpy(sharedMemory.data(), buffer.data(), BufferSize);
-            beginEvent.Set();
-            endEvent.Wait();
-            (void)memcpy(buffer.data(), sharedMemory.data(), BufferSize);
+            (void)memcpy(sharedMemory->data(), buffer.data(), BufferSize);
+            beginEvent->Set();
+            endEvent->Wait();
+            (void)memcpy(buffer.data(), sharedMemory->data(), BufferSize);
             buffer[0]++;
 
             counter++;

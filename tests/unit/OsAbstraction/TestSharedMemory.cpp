@@ -4,10 +4,11 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 
 #include "Generator.h"
-#include "SharedMemory.h"
+#include "OsUtilities.h"
 
 using namespace DsVeosCoSim;
 
@@ -23,16 +24,19 @@ TEST_F(TestSharedMemory, CreateAndDestroy) {
     // Arrange
     const std::string name = GenerateName();
 
-    // Act and assert
-    ASSERT_NO_THROW((void)SharedMemory::CreateOrOpen(name, 100));
+    // Act
+    const std::unique_ptr<SharedMemory> sharedMemory = CreateOrOpenSharedMemory(name, 100);
+
+    // Assert
+    ASSERT_TRUE(sharedMemory);
 }
 
 TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
     // Arrange
     const std::string name = GenerateName();
-    const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(name, 100);
+    const std::unique_ptr<SharedMemory> sharedMemory = CreateOrOpenSharedMemory(name, 100);
 
-    auto* buffer = static_cast<uint8_t*>(sharedMemory.data());
+    auto* buffer = static_cast<uint8_t*>(sharedMemory->data());
     const uint32_t writeValue = GenerateU32();
 
     // Act
@@ -46,11 +50,11 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
 TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
     // Arrange
     const std::string name = GenerateName();
-    const SharedMemory sharedMemory1 = SharedMemory::CreateOrOpen(name, 100);
-    const SharedMemory sharedMemory2 = SharedMemory::CreateOrOpen(name, 100);
+    const std::unique_ptr<SharedMemory> sharedMemory1 = CreateOrOpenSharedMemory(name, 100);
+    const std::unique_ptr<SharedMemory> sharedMemory2 = CreateOrOpenSharedMemory(name, 100);
 
-    auto* buffer1 = static_cast<uint8_t*>(sharedMemory1.data());
-    auto* buffer2 = static_cast<uint8_t*>(sharedMemory2.data());
+    auto* buffer1 = static_cast<uint8_t*>(sharedMemory1->data());
+    auto* buffer2 = static_cast<uint8_t*>(sharedMemory2->data());
     const uint32_t writeValue = GenerateU32();
 
     // Act
@@ -64,18 +68,24 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
 TEST_F(TestSharedMemory, CouldOpenExisting) {
     // Arrange
     const std::string name = GenerateName();
-    const SharedMemory sharedMemory1 = SharedMemory::CreateOrOpen(name, 100);
+    const std::unique_ptr<SharedMemory> sharedMemory1 = CreateOrOpenSharedMemory(name, 100);
 
-    // Act and assert
-    ASSERT_NO_THROW((void)SharedMemory::OpenExisting(name, 100));
+    // Act
+    const std::unique_ptr<SharedMemory> sharedMemory2 = OpenExistingSharedMemory(name, 100);
+
+    // Assert
+    ASSERT_TRUE(sharedMemory2);
 }
 
 TEST_F(TestSharedMemory, CouldNotOpenNonExisting) {
     // Arrange
     const std::string name = GenerateName();
 
-    // Act and assert
-    ASSERT_FALSE(SharedMemory::TryOpenExisting(name, 100));
+    // Act
+    const std::unique_ptr<SharedMemory> sharedMemory2 = TryOpenExistingSharedMemory(name, 100);
+
+    // Assert
+    ASSERT_FALSE(sharedMemory2);
 }
 
 }  // namespace

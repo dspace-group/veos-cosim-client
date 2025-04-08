@@ -20,7 +20,7 @@
 #ifdef _WIN32
 #include <atomic>
 
-#include "SharedMemory.h"
+#include "OsUtilities.h"
 #endif
 
 namespace DsVeosCoSim {
@@ -489,9 +489,9 @@ protected:
         sizeOfSharedMemory += sizeOfMessageCountPerController;
         sizeOfSharedMemory += sizeOfRingBuffer;
 
-        _sharedMemory = SharedMemory::CreateOrOpen(name, sizeOfSharedMemory);
+        _sharedMemory = CreateOrOpenSharedMemory(name, sizeOfSharedMemory);
 
-        auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory.data());
+        auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory->data());
         auto* pointerToMessageBuffer = pointerToMessageCountPerController + sizeOfMessageCountPerController;
 
         _messageCountPerController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
@@ -524,7 +524,7 @@ protected:
 
         if (messageCount.load() == extension.info.queueSize) {
             if (!extension.warningSent) {
-                std::string message = "Queue for controller '";
+                std::string message = "Transmit buffer for controller '";
                 message.append(extension.info.name);
                 message.append("' is full. Messages are dropped.");
                 LogWarning(message);
@@ -595,7 +595,7 @@ private:
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessage>* _messageBuffer{};
 
-    SharedMemory _sharedMemory;
+    std::unique_ptr<SharedMemory> _sharedMemory;
 };
 
 #endif

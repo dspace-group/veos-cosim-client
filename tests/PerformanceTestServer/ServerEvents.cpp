@@ -5,9 +5,8 @@
 #include <thread>
 
 #include "LogHelper.h"
-#include "NamedEvent.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
-#include "SharedMemory.h"
 
 using namespace DsVeosCoSim;
 
@@ -19,16 +18,16 @@ void EventsServerRun() {
 
         std::array<char, BufferSize> buffer{};
 
-        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        const std::unique_ptr<NamedEvent> beginEvent = CreateOrOpenNamedEvent(BeginEventName);
+        const std::unique_ptr<NamedEvent> endEvent = CreateOrOpenNamedEvent(EndEventName);
+        const std::unique_ptr<SharedMemory> sharedMemory = CreateOrOpenSharedMemory(ShmName, BufferSize);
 
         while (true) {
-            beginEvent.Wait();
-            (void)memcpy(buffer.data(), sharedMemory.data(), BufferSize);
+            beginEvent->Wait();
+            (void)memcpy(buffer.data(), sharedMemory->data(), BufferSize);
             buffer[0]++;
-            (void)memcpy(sharedMemory.data(), buffer.data(), BufferSize);
-            endEvent.Set();
+            (void)memcpy(sharedMemory->data(), buffer.data(), BufferSize);
+            endEvent->Set();
         }
     } catch (const std::exception& e) {
         LogError("Exception in event server thread: {}", e.what());

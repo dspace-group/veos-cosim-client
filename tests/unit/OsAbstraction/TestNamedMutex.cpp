@@ -4,10 +4,11 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 
 #include "Generator.h"
-#include "NamedMutex.h"
+#include "OsUtilities.h"
 
 using namespace DsVeosCoSim;
 
@@ -18,12 +19,12 @@ namespace {
 }
 
 void DifferentThread(const std::string& name, int32_t& counter) {
-    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
     for (int32_t i = 0; i < 10000; i++) {
-        ASSERT_NO_THROW(mutex.lock());
+        ASSERT_NO_THROW(mutex->lock());
         counter++;
-        ASSERT_NO_THROW(mutex.unlock());
+        ASSERT_NO_THROW(mutex->unlock());
     }
 }
 
@@ -33,33 +34,36 @@ TEST_F(TestNamedMutex, CreateAndDestroy) {
     // Arrange
     const std::string name = GenerateName();
 
-    // Act and assert
-    ASSERT_NO_THROW((void)NamedMutex::CreateOrOpen(name));
+    // Act
+    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+
+    // Assert
+    ASSERT_TRUE(mutex);
 }
 
 TEST_F(TestNamedMutex, LockAndUnlockOnSameMutex) {
     // Arrange
     const std::string name = GenerateName();
-    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
     // Act and assert
-    ASSERT_NO_THROW(mutex.lock());
-    ASSERT_NO_THROW(mutex.unlock());
+    ASSERT_NO_THROW(mutex->lock());
+    ASSERT_NO_THROW(mutex->unlock());
 }
 
 TEST_F(TestNamedMutex, LockAndUnlockOnDifferentMutexes) {
     // Arrange
     const std::string name = GenerateName();
-    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
     int32_t counter{};
 
     auto thread = std::thread(DifferentThread, name, std::ref(counter));
 
     // Act
     for (int32_t i = 0; i < 10000; i++) {
-        ASSERT_NO_THROW(mutex.lock());
+        ASSERT_NO_THROW(mutex->lock());
         counter++;
-        ASSERT_NO_THROW(mutex.unlock());
+        ASSERT_NO_THROW(mutex->unlock());
     }
 
     thread.join();

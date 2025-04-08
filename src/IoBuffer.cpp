@@ -19,7 +19,7 @@
 #include "RingBuffer.h"
 
 #ifdef _WIN32
-#include "SharedMemory.h"
+#include "OsUtilities.h"
 #endif
 
 namespace DsVeosCoSim {
@@ -434,7 +434,7 @@ public:
         }
 
         if (totalSize > 0) {
-            _sharedMemory = SharedMemory::CreateOrOpen(name, totalSize);
+            _sharedMemory = CreateOrOpenSharedMemory(name, totalSize);
         }
 
         for (auto& [signalId, metaData] : _metaDataLookup) {
@@ -625,7 +625,7 @@ protected:
 
 private:
     [[nodiscard]] DataBuffer* GetDataBuffer(const size_t offset) const {
-        return reinterpret_cast<DataBuffer*>(static_cast<uint8_t*>(_sharedMemory.data()) + offset);
+        return reinterpret_cast<DataBuffer*>(static_cast<uint8_t*>(_sharedMemory->data()) + offset);
     }
 
     static void FlipBuffers(Data& data) {
@@ -633,7 +633,7 @@ private:
     }
 
     std::vector<Data> _dataVector;
-    SharedMemory _sharedMemory;
+    std::unique_ptr<SharedMemory> _sharedMemory;
 };
 
 #endif
