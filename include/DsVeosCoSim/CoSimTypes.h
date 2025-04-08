@@ -7,7 +7,6 @@
 #include <array>
 #include <chrono>
 #include <functional>
-#include <stdexcept>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 
@@ -50,12 +49,6 @@ constexpr uint32_t EthMessageMaxLength = 9018U;  // NOLINT
 constexpr uint32_t LinMessageMaxLength = 8U;     // NOLINT
 constexpr uint32_t EthAddressLength = 6U;
 
-class CoSimException final : public std::runtime_error {
-public:
-    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {
-    }
-};
-
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
 
 using SimulationTime = std::chrono::nanoseconds;
@@ -71,21 +64,21 @@ enum class Result : uint32_t {
     Disconnected
 };
 
-[[nodiscard]] std::string ToString(Result result);
+[[nodiscard]] std::string_view ToString(Result result);
 
 enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
-[[nodiscard]] std::string ToString(CoSimType coSimType);
+[[nodiscard]] std::string_view ToString(CoSimType coSimType);
 
 enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
 
-[[nodiscard]] std::string ToString(ConnectionKind connectionKind);
+[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind);
 
 enum class Command : uint32_t {
     None,
@@ -99,7 +92,7 @@ enum class Command : uint32_t {
     Ping
 };
 
-[[nodiscard]] std::string ToString(Command command);
+[[nodiscard]] std::string_view ToString(Command command);
 
 enum class Severity : uint32_t {
     Error,
@@ -108,21 +101,21 @@ enum class Severity : uint32_t {
     Trace
 };
 
-[[nodiscard]] std::string ToString(Severity severity);
+[[nodiscard]] std::string_view ToString(Severity severity);
 
 enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
 
-[[nodiscard]] std::string ToString(TerminateReason terminateReason);
+[[nodiscard]] std::string_view ToString(TerminateReason terminateReason);
 
 enum class ConnectionState : uint32_t {
     Disconnected,
     Connected
 };
 
-[[nodiscard]] std::string ToString(ConnectionState connectionState);
+[[nodiscard]] std::string_view ToString(ConnectionState connectionState);
 
 enum class DataType : uint32_t {
     Bool = 1,
@@ -140,14 +133,14 @@ enum class DataType : uint32_t {
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 
-[[nodiscard]] std::string ToString(DataType dataType);
+[[nodiscard]] std::string_view ToString(DataType dataType);
 
 enum class SizeKind : uint32_t {
     Fixed = 1,
     Variable
 };
 
-[[nodiscard]] std::string ToString(SizeKind sizeKind);
+[[nodiscard]] std::string_view ToString(SizeKind sizeKind);
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
 
@@ -159,12 +152,12 @@ enum class SimulationState {
     Terminated
 };
 
-[[nodiscard]] std::string ToString(SimulationState simulationState);
+[[nodiscard]] std::string_view ToString(SimulationState simulationState);
 
 enum class Mode {
 };
 
-[[nodiscard]] std::string ToString(Mode mode);
+[[nodiscard]] std::string_view ToString(Mode mode);
 
 [[nodiscard]] std::string DataToString(uint8_t* data, size_t dataLength, char separator = 0);
 
@@ -349,7 +342,7 @@ enum class LinControllerType : uint32_t {
     Commander
 };
 
-[[nodiscard]] std::string ToString(LinControllerType type);
+[[nodiscard]] std::string_view ToString(LinControllerType type);
 
 enum class LinMessageFlags : uint32_t {
     Loopback = 1,

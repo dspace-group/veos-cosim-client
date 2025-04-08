@@ -17,18 +17,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] inline std::string ToString(const AddressFamily addressFamily) {
-    switch (addressFamily) {
-        case AddressFamily::Ipv4:
-            return "Ipv4";
-        case AddressFamily::Ipv6:
-            return "Ipv6";
-        case AddressFamily::Uds:
-            return "Uds";
-    }
-
-    return "<Invalid AddressFamily>";
-}
+[[nodiscard]] std::string_view ToString(AddressFamily addressFamily);
 
 #ifdef _WIN32
 using SocketHandle = uintptr_t;

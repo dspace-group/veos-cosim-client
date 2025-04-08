@@ -7,6 +7,7 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -32,7 +33,12 @@ void CheckSizeKind(const SizeKind sizeKind, const std::string& name) {
             return;
     }
 
-    throw CoSimException("Unknown size kind '" + ToString(sizeKind) + "' for IO signal '" + name + "'.");
+    std::string message = "Unknown size kind '";
+    message.append(ToString(sizeKind));
+    message.append("' for IO signal '");
+    message.append(name);
+    message.append("'.");
+    throw std::runtime_error(message);
 }
 
 class IoPartBufferBase {
@@ -50,19 +56,28 @@ public:
         size_t nextSignalIndex = 0;
         for (const auto& signal : signals) {
             if (signal.length == 0) {
-                throw CoSimException("Invalid length 0 for IO signal '" + std::string(signal.name) + "'.");
+                std::string message = "Invalid length 0 for IO signal '";
+                message.append(signal.name);
+                message.append("'.");
+                throw std::runtime_error(message);
             }
 
             CheckSizeKind(signal.sizeKind, signal.name);
 
             const size_t dataTypeSize = GetDataTypeSize(signal.dataType);
             if (dataTypeSize == 0) {
-                throw CoSimException("Invalid data type for IO signal '" + std::string(signal.name) + "'.");
+                std::string message = "Invalid data type for IO signal '";
+                message.append(signal.name);
+                message.append("'.");
+                throw std::runtime_error(message);
             }
 
             const auto search = _metaDataLookup.find(signal.id);
             if (search != _metaDataLookup.end()) {
-                throw CoSimException("Duplicated IO signal id " + ToString(signal.id) + ".");
+                std::string message = "Duplicated IO signal id ";
+                message.append(ToString(signal.id));
+                message.append(".");
+                throw std::runtime_error(message);
             }
 
             const size_t totalDataSize = dataTypeSize * signal.length;
@@ -163,7 +178,10 @@ protected:
             return search->second;
         }
 
-        throw CoSimException("IO signal id " + ToString(signalId) + " is unknown.");
+        std::string message = "IO signal id '";
+        message.append(ToString(signalId));
+        message.append("' is unknown.");
+        throw std::runtime_error(message);
     }
 
     CoSimType _coSimType{};
@@ -226,8 +244,10 @@ protected:
 
         if (metaData.info.sizeKind == SizeKind::Variable) {
             if (length > metaData.info.length) {
-                throw CoSimException("Length of variable sized IO signal '" + std::string(metaData.info.name) +
-                                     "' exceeds max size.");
+                std::string message = "Length of variable sized IO signal '";
+                message.append(metaData.info.name);
+                message.append("' exceeds max size.");
+                throw std::runtime_error(message);
             }
 
             if (currentLength != length) {
@@ -240,9 +260,14 @@ protected:
             currentLength = length;
         } else {
             if (length != metaData.info.length) {
-                throw CoSimException("Length of fixed sized IO signal '" + std::string(metaData.info.name) +
-                                     "' must be " + std::to_string(metaData.info.length) + " but was " +
-                                     std::to_string(length) + ".");
+                std::string message = "Length of fixed sized IO signal '";
+                message.append(metaData.info.name);
+                message.append("' must be ");
+                message.append(std::to_string(metaData.info.length));
+                message.append(" but was ");
+                message.append(std::to_string(length));
+                message.append(".");
+                throw std::runtime_error(message);
             }
         }
 
@@ -301,9 +326,14 @@ protected:
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace("Signal { Id: " + std::to_string(static_cast<uint32_t>(metaData->info.id)) +
-                                     ", Length: " + std::to_string(currentLength) + ", Data: " +
-                                     ValueToString(metaData->info.dataType, currentLength, buffer.data()) + " }");
+                std::string message = "Signal { Id: ";
+                message.append(ToString(metaData->info.id));
+                message.append(", Length: ");
+                message.append(std::to_string(currentLength));
+                message.append(", Data: ");
+                message.append(ValueToString(metaData->info.dataType, currentLength, buffer.data()));
+                message.append(" }");
+                LogProtocolDataTrace(message);
             }
         }
 
@@ -327,8 +357,10 @@ protected:
                 uint32_t length = 0;
                 CheckResultWithMessage(reader.Read(length), "Could not read current signal length.");
                 if (length > metaData.info.length) {
-                    throw CoSimException("Length of variable sized IO signal '" + std::string(metaData.info.name) +
-                                         "' exceeds max size.");
+                    std::string message = "Length of variable sized IO signal '";
+                    message.append(metaData.info.name);
+                    message.append("' exceeds max size.");
+                    throw std::runtime_error(message);
                 }
 
                 data.currentLength = length;
@@ -338,10 +370,14 @@ protected:
             CheckResultWithMessage(reader.Read(data.buffer.data(), totalSize), "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(
-                    "Signal { Id: " + std::to_string(static_cast<uint32_t>(metaData.info.id)) +
-                    ", Length: " + std::to_string(data.currentLength) +
-                    ", Data: " + ValueToString(metaData.info.dataType, data.currentLength, data.buffer.data()) + " }");
+                std::string message = "Signal { Id: ";
+                message.append(ToString(metaData.info.id));
+                message.append(", Length: ");
+                message.append(std::to_string(data.currentLength));
+                message.append(", Data: ");
+                message.append(ValueToString(metaData.info.dataType, data.currentLength, data.buffer.data()));
+                message.append(" }");
+                LogProtocolDataTrace(message);
             }
 
             if (callbacks.incomingSignalChangedCallback) {
@@ -454,16 +490,23 @@ protected:
         bool currentLengthChanged{};
         if (metaData.info.sizeKind == SizeKind::Variable) {
             if (length > metaData.info.length) {
-                throw CoSimException("Length of variable sized IO signal '" + std::string(metaData.info.name) +
-                                     "' exceeds max size.");
+                std::string message = "Length of variable sized IO signal '";
+                message.append(metaData.info.name);
+                message.append("' exceeds max size.");
+                throw std::runtime_error(message);
             }
 
             currentLengthChanged = dataBuffer->currentLength != length;
         } else {
             if (length != metaData.info.length) {
-                throw CoSimException("Length of fixed sized IO signal '" + std::string(metaData.info.name) +
-                                     "' must be " + std::to_string(metaData.info.length) + " but was " +
-                                     std::to_string(length) + ".");
+                std::string message = "Length of fixed sized IO signal '";
+                message.append(metaData.info.name);
+                message.append("' must be ");
+                message.append(std::to_string(metaData.info.length));
+                message.append(" but was ");
+                message.append(std::to_string(length));
+                message.append(".");
+                throw std::runtime_error(message);
             }
         }
 
@@ -523,10 +566,14 @@ protected:
             if (IsProtocolTracingEnabled()) {
                 const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
-                LogProtocolDataTrace(
-                    "Signal { Id: " + std::to_string(static_cast<uint32_t>(metaData->info.id)) +
-                    ", Length: " + std::to_string(dataBuffer->currentLength) + ", Data: " +
-                    ValueToString(metaData->info.dataType, dataBuffer->currentLength, dataBuffer->data) + " }");
+                std::string message = "Signal { Id: ";
+                message.append(ToString(metaData->info.id));
+                message.append(", Length: ");
+                message.append(std::to_string(dataBuffer->currentLength));
+                message.append(", Data: ");
+                message.append(ValueToString(metaData->info.dataType, dataBuffer->currentLength, dataBuffer->data));
+                message.append(" }");
+                LogProtocolDataTrace(message);
             }
 
             CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
@@ -555,10 +602,14 @@ protected:
             const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(
-                    "Signal { Id: " + std::to_string(static_cast<uint32_t>(metaData.info.id)) +
-                    ", Length: " + std::to_string(dataBuffer->currentLength) + ", Data: " +
-                    ValueToString(metaData.info.dataType, dataBuffer->currentLength, dataBuffer->data) + " }");
+                std::string message = "Signal { Id: ";
+                message.append(ToString(metaData.info.id));
+                message.append(", Length: ");
+                message.append(std::to_string(dataBuffer->currentLength));
+                message.append(", Data: ");
+                message.append(ValueToString(metaData.info.dataType, dataBuffer->currentLength, dataBuffer->data));
+                message.append(" }");
+                LogProtocolDataTrace(message);
             }
 
             if (callbacks.incomingSignalChangedCallback) {
@@ -594,8 +645,10 @@ public:
                  const std::string& name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {
-        std::string outgoingName = name + ".Outgoing";
-        std::string incomingName = name + ".Incoming";
+        std::string outgoingName = name;
+        outgoingName.append(".Outgoing");
+        std::string incomingName = name;
+        incomingName.append(".Incoming");
         const std::vector<IoSignal>* writeSignals = &outgoingSignals;
         const std::vector<IoSignal>* readSignals = &incomingSignals;
         if (coSimType == CoSimType::Server) {

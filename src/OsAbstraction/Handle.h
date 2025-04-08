@@ -29,8 +29,6 @@ private:
     void* _handle{};
 };
 
-[[nodiscard]] bool SignalAndWait(const Handle& toSignal, const Handle& toWait, uint32_t milliseconds);
-
 }  // namespace DsVeosCoSim
 
 #endif

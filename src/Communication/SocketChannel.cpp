@@ -6,6 +6,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 #include <thread>
@@ -14,7 +15,6 @@
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/CoSimTypes.h"
 #include "Socket.h"
 
 namespace DsVeosCoSim {
@@ -157,7 +157,7 @@ private:
                 (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
 
                 if (_endFrameIndex > BufferSize) {
-                    throw CoSimException("Protocol error. The buffer size is too small.");
+                    throw std::runtime_error("Protocol error. The buffer size is too small.");
                 }
 
                 sizeToRead = _endFrameIndex - _writeIndex;
@@ -190,7 +190,9 @@ public:
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
         const SocketAddress socketAddress = _socket.GetRemoteAddress();
-        const std::string remoteAddress = socketAddress.ipAddress + ":" + std::to_string(socketAddress.port);
+        std::string remoteAddress = socketAddress.ipAddress;
+        remoteAddress.append(":");
+        remoteAddress.append(std::to_string(socketAddress.port));
         return remoteAddress;
     }
 

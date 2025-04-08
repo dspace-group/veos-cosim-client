@@ -10,9 +10,18 @@
 
 namespace DsVeosCoSim {
 
-class CoSimClient {  // NOLINT
+class CoSimClient {
+protected:
+    CoSimClient() = default;
+
 public:
     virtual ~CoSimClient() noexcept = default;
+
+    CoSimClient(const CoSimClient&) = delete;
+    CoSimClient& operator=(const CoSimClient&) = delete;
+
+    CoSimClient(CoSimClient&&) = delete;
+    CoSimClient& operator=(CoSimClient&&) = delete;
 
     [[nodiscard]] virtual bool Connect(const ConnectConfig& connectConfig) = 0;
     virtual void Disconnect() = 0;

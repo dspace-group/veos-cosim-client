@@ -34,9 +34,18 @@ struct CoSimServerConfig {
     std::vector<LinControllerContainer> linControllers;
 };
 
-class CoSimServer {  // NOLINT
+class CoSimServer {
+protected:
+    CoSimServer() = default;
+
 public:
     virtual ~CoSimServer() noexcept = default;
+
+    CoSimServer(const CoSimServer&) = delete;
+    CoSimServer& operator=(const CoSimServer&) = delete;
+
+    CoSimServer(CoSimServer&&) = delete;
+    CoSimServer& operator=(CoSimServer&&) = delete;
 
     virtual void Load(const CoSimServerConfig& config) = 0;
     virtual void Unload() = 0;
@@ -46,15 +55,15 @@ public:
     virtual void Terminate(SimulationTime simulationTime, TerminateReason reason) = 0;
     virtual void Pause(SimulationTime simulationTime) = 0;
     virtual void Continue(SimulationTime simulationTime) = 0;
-    virtual SimulationTime Step(SimulationTime simulationTime) = 0;
+    [[nodiscard]] virtual SimulationTime Step(SimulationTime simulationTime) = 0;
 
     virtual void Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
 
-    virtual void Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
+    [[nodiscard]] virtual bool Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
 
-    [[nodiscard]] virtual bool Transmit(const CanMessage& message) const = 0;
-    [[nodiscard]] virtual bool Transmit(const EthMessage& message) const = 0;
-    [[nodiscard]] virtual bool Transmit(const LinMessage& message) const = 0;
+    virtual void Transmit(const CanMessage& message) const = 0;
+    virtual void Transmit(const EthMessage& message) const = 0;
+    virtual void Transmit(const LinMessage& message) const = 0;
 
     virtual void BackgroundService() = 0;
 

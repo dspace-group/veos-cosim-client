@@ -7,10 +7,10 @@
 #include <Windows.h>  // NOLINT
 
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/CoSimTypes.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -49,26 +49,17 @@ void Handle::Wait() const {
         case WAIT_ABANDONED:
         case WAIT_TIMEOUT:
             return false;
-        case WAIT_FAILED:
-            throw CoSimException("Could not wait for handle. " + GetSystemErrorMessage(GetLastWindowsError()));
-        default:
-            throw CoSimException("Could not wait for handle. Invalid result: " + std::to_string(result) + ".");
-    }
-}
-
-[[nodiscard]] bool SignalAndWait(const Handle& toSignal, const Handle& toWait, const uint32_t milliseconds) {
-    switch (const DWORD result = SignalObjectAndWait(toSignal, toWait, milliseconds, FALSE)) {  // NOLINT
-        case WAIT_OBJECT_0:
-            return true;
-        case WAIT_ABANDONED:
-        case WAIT_TIMEOUT:
-            return false;
-        case WAIT_FAILED:
-            throw CoSimException("Could not signal and wait for handle. " +
-                                 GetSystemErrorMessage(GetLastWindowsError()));
-        default:
-            throw CoSimException("Could not signal and wait for handle. Invalid result: " + std::to_string(result) +
-                                 ".");
+        case WAIT_FAILED: {
+            std::string message = "Could not wait for handle. ";
+            message.append(GetSystemErrorMessage(GetLastWindowsError()));
+            throw std::runtime_error(message);
+        }
+        default: {
+            std::string message = "Could not wait for handle. Invalid result: ";
+            message.append(std::to_string(result));
+            message.append(".");
+            throw std::runtime_error(message);
+        }
     }
 }
 

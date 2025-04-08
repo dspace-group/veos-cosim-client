@@ -149,7 +149,10 @@ public:
         for (const auto& controller : controllers) {
             const auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                throw CoSimException("Duplicated controller id " + ToString(controller.id) + ".");
+                std::string message = "Duplicated controller id ";
+                message.append(ToString(controller.id));
+                message.append(".");
+                throw std::runtime_error(message);
             }
 
             ControllerExtension extension{};
@@ -229,7 +232,10 @@ protected:
             return search->second;
         }
 
-        throw CoSimException("Controller id " + ToString(controllerId) + " is unknown.");
+        std::string message = "Controller id ";
+        message.append(ToString(controllerId));
+        message.append(" is unknown.");
+        throw std::runtime_error(message);
     }
 
     std::unordered_map<BusControllerId, ControllerExtension> _controllers;
@@ -277,8 +283,10 @@ protected:
 
         if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
             if (!extension.warningSent) {
-                LogWarning("Queue for controller '" + std::string(extension.info.name) +
-                           "' is full. Messages are dropped.");
+                std::string message = "Transmit buffer for controller '";
+                message.append(extension.info.name);
+                message.append("' is full. Messages are dropped.");
+                LogWarning(message);
                 extension.warningSent = true;
             }
 
@@ -349,7 +357,10 @@ protected:
 
             if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
                 if (!extension.warningSent) {
-                    LogWarning("Receive buffer for controller '" + std::string(extension.info.name) + "' is full.");
+                    std::string message = "Receive buffer for controller '";
+                    message.append(extension.info.name);
+                    message.append("' is full. Messages are dropped.");
+                    LogWarning(message);
                     extension.warningSent = true;
                 }
 
@@ -513,8 +524,10 @@ protected:
 
         if (messageCount.load() == extension.info.queueSize) {
             if (!extension.warningSent) {
-                LogWarning("Queue for controller '" + std::string(extension.info.name) +
-                           "' is full. Messages are dropped.");
+                std::string message = "Queue for controller '";
+                message.append(extension.info.name);
+                message.append("' is full. Messages are dropped.");
+                LogWarning(message);
                 extension.warningSent = true;
             }
 
@@ -634,12 +647,32 @@ public:
         const std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
         const std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-        _canTransmitBuffer->Initialize(coSimType, name + ".Can." + suffixForTransmit, canControllers);
-        _ethTransmitBuffer->Initialize(coSimType, name + ".Eth." + suffixForTransmit, ethControllers);
-        _linTransmitBuffer->Initialize(coSimType, name + ".Lin." + suffixForTransmit, linControllers);
-        _canReceiveBuffer->Initialize(coSimType, name + ".Can." + suffixForReceive, canControllers);
-        _ethReceiveBuffer->Initialize(coSimType, name + ".Eth." + suffixForReceive, ethControllers);
-        _linReceiveBuffer->Initialize(coSimType, name + ".Lin." + suffixForReceive, linControllers);
+        std::string canTransmitBufferName = name;
+        canTransmitBufferName.append(".Can.");
+        canTransmitBufferName.append(suffixForTransmit);
+        std::string ethTransmitBufferName = name;
+        ethTransmitBufferName.append(".Eth.");
+        ethTransmitBufferName.append(suffixForTransmit);
+        std::string linTransmitBufferName = name;
+        linTransmitBufferName.append(".Lin.");
+        linTransmitBufferName.append(suffixForTransmit);
+
+        std::string canReceiveBufferName = name;
+        canReceiveBufferName.append(".Can.");
+        canReceiveBufferName.append(suffixForReceive);
+        std::string ethReceiveBufferName = name;
+        ethReceiveBufferName.append(".Eth.");
+        ethReceiveBufferName.append(suffixForReceive);
+        std::string linReceiveBufferName = name;
+        linReceiveBufferName.append(".Lin.");
+        linReceiveBufferName.append(suffixForReceive);
+
+        _canTransmitBuffer->Initialize(coSimType, canTransmitBufferName, canControllers);
+        _ethTransmitBuffer->Initialize(coSimType, ethTransmitBufferName, ethControllers);
+        _linTransmitBuffer->Initialize(coSimType, linTransmitBufferName, linControllers);
+        _canReceiveBuffer->Initialize(coSimType, canReceiveBufferName, canControllers);
+        _ethReceiveBuffer->Initialize(coSimType, ethReceiveBufferName, ethControllers);
+        _linReceiveBuffer->Initialize(coSimType, linReceiveBufferName, linControllers);
     }
 
     ~BusBufferImpl() noexcept override = default;

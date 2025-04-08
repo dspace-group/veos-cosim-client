@@ -8,9 +8,18 @@
 
 namespace DsVeosCoSim {
 
-class PortMapperServer {  // NOLINT
+class PortMapperServer {
+protected:
+    PortMapperServer() = default;
+
 public:
     virtual ~PortMapperServer() noexcept = default;
+
+    PortMapperServer(const PortMapperServer&) = delete;
+    PortMapperServer& operator=(const PortMapperServer&) = delete;
+
+    PortMapperServer(PortMapperServer&&) = delete;
+    PortMapperServer& operator=(PortMapperServer&&) = delete;
 };
 
 [[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(bool enableRemoteAccess);

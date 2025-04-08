@@ -14,7 +14,6 @@
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "Handle.h"
 #include "NamedEvent.h"
 #include "NamedMutex.h"
 #include "OsUtilities.h"
@@ -28,17 +27,19 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-std::string ServerToClientPostFix = "ServerToClient";
-std::string ClientToServerPostFix = "ClientToServer";
+std::string ServerToClientPostFix = ".ServerToClient";
+std::string ClientToServerPostFix = ".ClientToServer";
 
 [[nodiscard]] std::string GetWriterName(const std::string& name, const bool isServer) {
-    const std::string postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-    return name + "." + postfix;
+    std::string writerName = name;
+    writerName.append(isServer ? ServerToClientPostFix : ClientToServerPostFix);
+    return writerName;
 }
 
 [[nodiscard]] std::string GetReaderName(const std::string& name, const bool isServer) {
-    const std::string postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-    return name + "." + postfix;
+    std::string readerName = name;
+    readerName.append(isServer ? ClientToServerPostFix : ServerToClientPostFix);
+    return readerName;
 }
 
 [[nodiscard]] constexpr uint32_t MaskIndex(const uint32_t index) noexcept {
@@ -54,9 +55,12 @@ protected:
 
         bool initShm{};
 
-        const std::string dataName = name + ".Data";
-        const std::string newDataName = name + ".NewData";
-        const std::string newSpaceName = name + ".NewSpace";
+        std::string dataName = name;
+        dataName.append(".Data");
+        std::string newDataName = name;
+        newDataName.append(".NewData");
+        std::string newSpaceName = name;
+        newSpaceName.append(".NewSpace");
 
         constexpr uint32_t totalSize = BufferSize + sizeof(Header);
 
@@ -131,9 +135,15 @@ protected:
             return false;
         }
 
-        CheckResultWithMessage(IsProcessRunning(counterpartPid),
-                               "Process with id " + std::to_string(counterpartPid) + " exited.");
-        return true;
+        if (IsProcessRunning(counterpartPid)) {
+            return true;
+        }
+
+        std::string message = "Process with id ";
+        message.append(std::to_string(counterpartPid));
+        message.append(" is not running anymore.");
+        LogTrace(message);
+        return false;
     }
 
     struct Header {
@@ -213,7 +223,7 @@ public:
 
 private:
     [[nodiscard]] bool WaitForFreeSpace(uint32_t& currentSize) {
-        (void)SignalAndWait(_newDataEvent, _newSpaceEvent, 1);
+        _newDataEvent.Set();
         currentSize = _writeIndex - _header->readIndex.load();
         if (currentSize < BufferSize) {
             return true;
@@ -374,7 +384,9 @@ public:
     [[nodiscard]] std::unique_ptr<Channel> TryAccept() override {
         const int32_t currentCounter = _counter->load();
         if (currentCounter > _lastCounter) {
-            const std::string specificName = _name + "." + std::to_string(_lastCounter);
+            std::string specificName = _name;
+            specificName.append(".");
+            specificName.append(std::to_string(_lastCounter));
             _lastCounter++;
             return std::make_unique<LocalChannel>(specificName, true);
         }
@@ -408,7 +420,9 @@ private:
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
     const int32_t currentCounter = counter.fetch_add(1);
-    const std::string specificName = name + "." + std::to_string(currentCounter);
+    std::string specificName = name;
+    specificName.append(".");
+    specificName.append(std::to_string(currentCounter));
 
     return std::make_unique<LocalChannel>(specificName, false);
 }

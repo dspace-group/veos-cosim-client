@@ -39,46 +39,7 @@ enum class FrameKind {
     UnsetPort
 };
 
-[[nodiscard]] inline std::string ToString(const FrameKind& frameKind) {
-    switch (frameKind) {
-        case FrameKind::Ping:
-            return "Ping";
-        case FrameKind::PingOk:
-            return "PingOk";
-        case FrameKind::Ok:
-            return "Ok";
-        case FrameKind::Error:
-            return "Error";
-        case FrameKind::Start:
-            return "Start";
-        case FrameKind::Stop:
-            return "Stop";
-        case FrameKind::Terminate:
-            return "Terminate";
-        case FrameKind::Pause:
-            return "Pause";
-        case FrameKind::Continue:
-            return "Continue";
-        case FrameKind::Step:
-            return "Step";
-        case FrameKind::StepOk:
-            return "StepOk";
-        case FrameKind::Connect:
-            return "Connect";
-        case FrameKind::ConnectOk:
-            return "ConnectOk";
-        case FrameKind::GetPort:
-            return "GetPort";
-        case FrameKind::GetPortOk:
-            return "GetPortOk";
-        case FrameKind::SetPort:
-            return "SetPort";
-        case FrameKind::UnsetPort:
-            return "UnsetPort";
-    }
-
-    return "<Invalid FrameKind>";
-}
+[[nodiscard]] std::string_view ToString(const FrameKind& frameKind);
 
 namespace Protocol {
 

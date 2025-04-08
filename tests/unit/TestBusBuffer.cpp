@@ -288,18 +288,16 @@ public:
         const CoSimType coSimType = T::GetCoSimType();
         const ConnectionKind connectionKind = T::GetConnectionKind();
 
-        const std::string suffix = fmt::format("{}_{}", ToString(coSimType), ToString(connectionKind));
-
         if constexpr (std::is_same_v<TController, CanControllerContainer>) {
-            return "CAN_" + suffix;
+            return fmt::format("CAN_{}_{}", ToString(coSimType), ToString(connectionKind));
         }
 
         if constexpr (std::is_same_v<TController, EthControllerContainer>) {
-            return "ETH_" + suffix;
+            return fmt::format("ETH_{}_{}", ToString(coSimType), ToString(connectionKind));
         }
 
         if constexpr (std::is_same_v<TController, LinControllerContainer>) {
-            return "LIN_" + suffix;
+            return fmt::format("LIN_{}_{}", ToString(coSimType), ToString(connectionKind));
         }
     }
 };

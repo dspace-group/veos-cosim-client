@@ -11,9 +11,18 @@
 
 namespace DsVeosCoSim {
 
-class BusBuffer {  // NOLINT
+class BusBuffer {
+protected:
+    BusBuffer() = default;
+
 public:
     virtual ~BusBuffer() noexcept = default;
+
+    BusBuffer(const BusBuffer&) = delete;
+    BusBuffer& operator=(const BusBuffer&) = delete;
+
+    BusBuffer(BusBuffer&&) = delete;
+    BusBuffer& operator=(BusBuffer&&) = delete;
 
     virtual void ClearData() const = 0;
 

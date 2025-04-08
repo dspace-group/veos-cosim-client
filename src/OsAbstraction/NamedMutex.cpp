@@ -8,11 +8,11 @@
 
 #include <cstdint>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/CoSimTypes.h"
 #include "Handle.h"
 #include "OsUtilities.h"
 
@@ -21,7 +21,9 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] std::wstring GetFullNamedMutexName(const std::string& name) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + name);
+    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
+    utf8Name.append(name);
+    return Utf8ToWide(utf8Name);
 }
 
 }  // namespace
@@ -33,8 +35,11 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
     const std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not create or open mutex '" + name + "'. " +
-                             GetSystemErrorMessage(GetLastWindowsError()));
+        std::string message = "Could not create or open mutex '";
+        message.append(name);
+        message.append("'. ");
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
     }
 
     return NamedMutex(handle);
@@ -44,7 +49,11 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
     const std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not open mutex '" + name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
+        std::string message = "Could not open mutex '";
+        message.append(name);
+        message.append("'. ");
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
     }
 
     return NamedMutex(handle);

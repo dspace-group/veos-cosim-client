@@ -8,11 +8,11 @@
 
 #include <cstdint>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/CoSimTypes.h"
 #include "Handle.h"
 #include "OsUtilities.h"
 
@@ -21,7 +21,9 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] std::wstring GetFullNamedEventName(const std::string& name) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Event." + name);
+    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
+    utf8Name.append(name);
+    return Utf8ToWide(utf8Name);
 }
 
 }  // namespace
@@ -33,7 +35,11 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
     const std::wstring fullName = GetFullNamedEventName(name);
     void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not create event '" + name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
+        std::string message = "Could not create or open event '";
+        message.append(name);
+        message.append("'. ");
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
     }
 
     return {handle, name};
@@ -43,7 +49,11 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
     const std::wstring fullName = GetFullNamedEventName(name);
     void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
     if (!handle) {
-        throw CoSimException("Could not open event '" + name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
+        std::string message = "Could not open event '";
+        message.append(name);
+        message.append("'. ");
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
     }
 
     return {handle, name};
@@ -66,7 +76,11 @@ NamedEvent::operator Handle&() noexcept {
 void NamedEvent::Set() const {
     const BOOL result = SetEvent(_handle);  // NOLINT
     if (result == FALSE) {
-        throw CoSimException("Could not set event '" + _name + "'. " + GetSystemErrorMessage(GetLastWindowsError()));
+        std::string message = "Could not set event '";
+        message.append(_name);
+        message.append("'. ");
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
     }
 }
 

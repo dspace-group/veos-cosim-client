@@ -3,15 +3,14 @@
 #include "PortMapper.h"
 
 #include <cstdint>
-#include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <unordered_map>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Event.h"
 #include "Protocol.h"
@@ -56,7 +55,9 @@ private:
                     }
                 }
             } catch (const std::exception& e) {
-                LogError("The following exception occurred in port mapper thread: " + std::string(e.what()));
+                std::string message = "The following exception occurred in port mapper thread: ";
+                message.append(e.what());
+                LogError(message);
             }
         }
     }
@@ -76,7 +77,10 @@ private:
                 CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
                 return true;
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 
@@ -85,15 +89,18 @@ private:
         CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            LogTrace("Get '" + name + "'");
+            std::string message = "Get '";
+            message.append(name);
+            message.append("'");
+            LogTrace(message);
         }
 
         const auto search = _ports.find(name);
         if (search == _ports.end()) {
-            CheckResultWithMessage(
-                Protocol::SendError(channel.GetWriter(),
-                                    "Could not find port for dSPACE VEOS CoSim server '" + name + "'."),
-                "Could not send error frame.");
+            std::string message = "Could not find port for dSPACE VEOS CoSim server '";
+            message.append(name);
+            message.append("'.");
+            CheckResultWithMessage(Protocol::SendError(channel.GetWriter(), message), "Could not send error frame.");
             return true;
         }
 
@@ -109,7 +116,11 @@ private:
                                "Could not read set port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            LogTrace("Set '" + name + "':" + std::to_string(port));
+            std::string message = "Set '";
+            message.append(name);
+            message.append("': ");
+            message.append(std::to_string(port));
+            LogTrace(message);
         }
 
         _ports[name] = port;
@@ -127,7 +138,10 @@ private:
         CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            LogTrace("Unset '" + name + "'");
+            std::string message = "Unset '";
+            message.append(name);
+            message.append("'");
+            LogTrace(message);
         }
 
         _ports.erase(name);
@@ -147,7 +161,11 @@ private:
             LogTrace("PortMapper Ports:");
 
             for (auto& [name, port] : _ports) {
-                LogTrace("  '" + name + "': {}" + std::to_string(port));
+                std::string message = "  '";
+                message.append(name);
+                message.append("': ");
+                message.append(std::to_string(port));
+                LogTrace(message);
             }
         }
     }
@@ -167,7 +185,12 @@ private:
 
 [[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        LogTrace("PortMapper_GetPort(ipAddress: '" + ipAddress + "', serverName: '" + serverName + "')");
+        std::string message = "PortMapper_GetPort(ipAddress: '";
+        message.append(ipAddress);
+        message.append("', serverName: '");
+        message.append(serverName);
+        message.append("')");
+        LogTrace(message);
     }
 
     const std::unique_ptr<Channel> channel =
@@ -189,10 +212,13 @@ private:
             std::string errorMessage;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorMessage),
                                    "Could not read error frame.");
-            throw CoSimException(errorMessage);
+            throw std::runtime_error(errorMessage);
         }
         default:
-            throw CoSimException("PortMapper_GetPort: Received unexpected frame " + ToString(frameKind) + ".");
+            std::string message = "PortMapper_GetPort: Received unexpected frame '";
+            message.append(ToString(frameKind));
+            message.append("'.");
+            throw std::runtime_error(message);
     }
 }
 
@@ -213,10 +239,13 @@ private:
             std::string errorString;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorString),
                                    "Could not read error frame.");
-            throw CoSimException(errorString);
+            throw std::runtime_error(errorString);
         }
         default:
-            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+            std::string message = "PortMapper_SetPort: Received unexpected frame '";
+            message.append(ToString(frameKind));
+            message.append("'.");
+            throw std::runtime_error(message);
     }
 }
 
@@ -237,10 +266,13 @@ private:
             std::string errorString;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorString),
                                    "Could not read error frame.");
-            throw CoSimException(errorString);
+            throw std::runtime_error(errorString);
         }
         default:
-            throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+            std::string message = "PortMapper_UnsetPort: Received unexpected frame '";
+            message.append(ToString(frameKind));
+            message.append("'.");
+            throw std::runtime_error(message);
     }
 }
 
