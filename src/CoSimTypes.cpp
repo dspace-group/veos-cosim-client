@@ -378,27 +378,27 @@ namespace {
     std::string str;
 
     if (HasFlag(flags, CanMessageFlags::Loopback)) {
-        str += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, CanMessageFlags::Error)) {
-        str += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, CanMessageFlags::Drop)) {
-        str += ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(flags, CanMessageFlags::ExtendedId)) {
-        str += ",ExtendedId";
+        str.append(",ExtendedId");
     }
 
     if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-        str += ",BitRateSwitch";
+        str.append(",BitRateSwitch");
     }
 
     if (HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        str += ",FlexibleDataRateFormat";
+        str.append(",FlexibleDataRateFormat");
     }
 
     if (!str.empty()) {
@@ -569,15 +569,15 @@ void CanMessageContainer::CheckFlags() const {
     std::string str;
 
     if (HasFlag(flags, EthMessageFlags::Loopback)) {
-        str += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, EthMessageFlags::Error)) {
-        str += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, EthMessageFlags::Drop)) {
-        str += ",Drop";
+        str.append(",Drop");
     }
 
     if (!str.empty()) {
@@ -739,51 +739,51 @@ void EthMessageContainer::CheckMaxLength() const {
     std::string str;
 
     if (HasFlag(flags, LinMessageFlags::Loopback)) {
-        str += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, LinMessageFlags::Error)) {
-        str += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, LinMessageFlags::Drop)) {
-        str += ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(flags, LinMessageFlags::Header)) {
-        str += ",Header";
+        str.append(",Header");
     }
 
     if (HasFlag(flags, LinMessageFlags::Response)) {
-        str += ",Response";
+        str.append(",Response");
     }
 
     if (HasFlag(flags, LinMessageFlags::WakeEvent)) {
-        str += ",WakeEvent";
+        str.append(",WakeEvent");
     }
 
     if (HasFlag(flags, LinMessageFlags::SleepEvent)) {
-        str += ",SleepEvent";
+        str.append(",SleepEvent");
     }
 
     if (HasFlag(flags, LinMessageFlags::EnhancedChecksum)) {
-        str += ",EnhancedChecksum";
+        str.append(",EnhancedChecksum");
     }
 
     if (HasFlag(flags, LinMessageFlags::TransferOnce)) {
-        str += ",TransferOnce";
+        str.append(",TransferOnce");
     }
 
     if (HasFlag(flags, LinMessageFlags::ParityFailure)) {
-        str += ",ParityFailure";
+        str.append(",ParityFailure");
     }
 
     if (HasFlag(flags, LinMessageFlags::Collision)) {
-        str += ",Collision";
+        str.append(",Collision");
     }
 
     if (HasFlag(flags, LinMessageFlags::NoResponse)) {
-        str += ",NoResponse";
+        str.append(",NoResponse");
     }
 
     if (!str.empty()) {

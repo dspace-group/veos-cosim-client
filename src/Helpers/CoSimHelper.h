@@ -19,14 +19,14 @@ void LogProtocolDataTrace(const std::string& message);
     do {                                        \
         if (!(result)) {                        \
             LogTrace(message);                  \
-            return false;                       \
+            return {};                          \
         }                                       \
     } while (0)
 
 #define CheckResult(result) \
     do {                    \
         if (!(result)) {    \
-            return false;   \
+            return {};      \
         }                   \
     } while (0)
 
