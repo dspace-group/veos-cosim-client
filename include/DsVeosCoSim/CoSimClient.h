@@ -70,6 +70,6 @@ public:
     [[nodiscard]] virtual bool Receive(LinMessage& message) const = 0;
 };
 
-std::unique_ptr<CoSimClient> CreateClient();
+[[nodiscard]] std::unique_ptr<CoSimClient> CreateClient();
 
 }  // namespace DsVeosCoSim
