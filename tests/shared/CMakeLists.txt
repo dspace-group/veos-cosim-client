@@ -25,12 +25,12 @@ target_include_directories(
 )
 
 if(WIN32)
-target_compile_definitions(
-  shared
-  PUBLIC
-  _CRT_SECURE_NO_WARNINGS
-  WIN32_LEAN_AND_MEAN
-)
+  target_compile_definitions(
+    shared
+    PUBLIC
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+  )
 endif()
 
 target_link_libraries(

@@ -51,13 +51,17 @@ INSTANTIATE_TEST_SUITE_P(,
 TEST_F(TestTcpChannel, StartServer) {
     // Arrange
 
-    // Act and assert
-    ASSERT_NO_THROW((void)CreateTcpChannelServer(0, true));
+    // Act
+    const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+
+    // Assert
+    ASSERT_TRUE(server);
 }
 
 TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
     // Arrange
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
 
     // Act
     const uint16_t port = server->GetLocalPort();
@@ -76,6 +80,7 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
 
     {
         const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+        EXPECT_TRUE(server);
         port = server->GetLocalPort();
     }
 
@@ -93,6 +98,7 @@ TEST_P(TestTcpChannel, Connect) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
     // Act
@@ -119,9 +125,11 @@ TEST_P(TestTcpChannel, Accept) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    (void)ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
 
     // Act
     const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
@@ -136,10 +144,13 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     // Act
     const std::string connectedChannelRemoteAddress = connectedChannel->GetRemoteAddress();
@@ -152,6 +163,7 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
 TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
     // Arrange
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
     // Act
@@ -164,9 +176,11 @@ TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
 TEST_F(TestTcpChannel, AcceptClientWithHostName) {
     // Arrange
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    (void)ConnectToTcpChannel("localhost", port);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
 
     // Act
     const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
@@ -181,9 +195,11 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
     connectedChannel->Disconnect();
@@ -201,10 +217,13 @@ TEST_P(TestTcpChannel, WriteToChannel) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -219,10 +238,13 @@ TEST_P(TestTcpChannel, ReadFromChannel) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -244,10 +266,13 @@ TEST_P(TestTcpChannel, PingPong) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
@@ -275,10 +300,13 @@ TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue1 = GenerateU32();
     const uint64_t sendValue2 = GenerateU64();
@@ -315,10 +343,13 @@ TEST_P(TestTcpChannel, Stream) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(StreamClient, std::ref(*connectedChannel));
 
@@ -347,10 +378,13 @@ TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     const std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
 
     const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
+    EXPECT_TRUE(server);
     const uint16_t port = server->GetLocalPort();
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToTcpChannel(ipAddress, port);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(ReceiveBigElement, std::ref(*connectedChannel));
 

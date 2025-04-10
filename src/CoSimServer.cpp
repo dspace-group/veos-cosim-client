@@ -27,7 +27,8 @@ namespace {
 
 class CoSimServerImpl final : public CoSimServer {
 public:
-    CoSimServerImpl() = default;
+    CoSimServerImpl() noexcept = default;
+
     ~CoSimServerImpl() noexcept override {
         Unload();
     }
@@ -228,7 +229,7 @@ public:
             return _tcpChannelServer->GetLocalPort();
         }
 
-        return 0;
+        return {};
     }
 
 private:

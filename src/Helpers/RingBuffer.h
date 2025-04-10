@@ -10,7 +10,7 @@ namespace DsVeosCoSim {
 template <typename T>
 class RingBuffer final {
 public:
-    RingBuffer() = default;
+    RingBuffer() noexcept = default;
     explicit RingBuffer(const size_t capacity) {
         _items.resize(capacity);
     }
@@ -23,21 +23,21 @@ public:
     RingBuffer(RingBuffer&& other) noexcept = default;
     RingBuffer& operator=(RingBuffer&& other) noexcept = default;
 
-    void Clear() {
+    void Clear() noexcept {
         _readIndex = 0;
         _writeIndex = 0;
         _size = 0;
     }
 
-    [[nodiscard]] size_t Size() const {
+    [[nodiscard]] size_t Size() const noexcept {
         return _size;
     }
 
-    [[nodiscard]] bool IsEmpty() const {
+    [[nodiscard]] bool IsEmpty() const noexcept {
         return _size == 0;
     }
 
-    [[nodiscard]] bool IsFull() const {
+    [[nodiscard]] bool IsFull() const noexcept {
         return _size == _items.size();
     }
 

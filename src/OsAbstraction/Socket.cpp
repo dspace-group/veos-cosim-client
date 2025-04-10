@@ -291,7 +291,7 @@ void SwitchToBlockingMode(const SocketHandle& socket) {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(const AddressFamily addressFamily) {
+[[nodiscard]] std::string_view ToString(const AddressFamily addressFamily) noexcept {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";
@@ -349,8 +349,8 @@ Socket::Socket(const AddressFamily addressFamily) : _addressFamily(addressFamily
     }
 }
 
-Socket::Socket(const SocketHandle socket, const AddressFamily addressFamily)
-    : _socket(socket), _addressFamily(addressFamily) {
+Socket::Socket(const SocketHandle socket, const AddressFamily addressFamily, const std::string& path)
+    : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
 Socket::~Socket() noexcept {
@@ -505,7 +505,7 @@ void Socket::EnableIpv6Only() const {  // NOLINT
             continue;
         }
 
-        Socket connectedSocket(socket, static_cast<AddressFamily>(addressFamily));
+        Socket connectedSocket(socket, static_cast<AddressFamily>(addressFamily), {});
 
         if (localPort != 0) {
             try {
@@ -533,15 +533,16 @@ void Socket::EnableIpv6Only() const {  // NOLINT
     return {};
 }
 
-[[nodiscard]] bool Socket::TryConnect(const std::string& name) const {
-    EnsureIsValid();
-
-    if (_addressFamily != AddressFamily::Uds) {
-        throw std::runtime_error("Not supported for address family.");
-    }
-
+[[nodiscard]] std::optional<Socket> Socket::TryConnect(const std::string& name) {
     if (name.empty()) {
         throw std::runtime_error("Empty name is not valid.");
+    }
+
+    SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (socket == InvalidSocket) {
+        std::string message = "Could not create socket. ";
+        message.append(GetSystemErrorMessage(GetLastNetworkError()));
+        throw std::runtime_error(message);
     }
 
     const std::string path = GetUdsPath(name);
@@ -554,12 +555,20 @@ void Socket::EnableIpv6Only() const {  // NOLINT
     address.sun_path[0] = '\0';
 #endif
 
-    return connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address) >= 0;
+    const int32_t result = connect(socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    if (result != 0) {
+        const int32_t errorCode = GetLastNetworkError();
+        CloseSocket(socket);
+        std::string message = "Could not connect socket. ";
+        message.append(GetSystemErrorMessage(errorCode));
+        LogError(message);
+        return {};
+    }
+
+    return Socket{socket, AddressFamily::Uds, path};
 }
 
 void Socket::Bind(const uint16_t port, const bool enableRemoteAccess) const {
-    EnsureIsValid();
-
     if (_addressFamily == AddressFamily::Uds) {
         throw std::runtime_error("Not supported for address family.");
     }
@@ -603,8 +612,6 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
 }
 
 void Socket::Bind(const std::string& name) {
-    EnsureIsValid();
-
     if (_addressFamily != AddressFamily::Uds) {
         throw std::runtime_error("Not supported for address family.");
     }
@@ -635,8 +642,6 @@ void Socket::Bind(const std::string& name) {
 }
 
 void Socket::EnableReuseAddress() const {
-    EnsureIsValid();
-
     if (_addressFamily == AddressFamily::Uds) {
         throw std::runtime_error("Not supported for address family.");
     }
@@ -652,8 +657,6 @@ void Socket::EnableReuseAddress() const {
 }
 
 void Socket::EnableNoDelay() const {
-    EnsureIsValid();
-
     int32_t flags = 1;
     const int32_t result =
         setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
@@ -665,8 +668,6 @@ void Socket::EnableNoDelay() const {
 }
 
 void Socket::Listen() const {
-    EnsureIsValid();
-
     const int32_t result = listen(_socket, SOMAXCONN);
     if (result != 0) {
         std::string message = "Could not listen on socket. ";
@@ -676,8 +677,6 @@ void Socket::Listen() const {
 }
 
 [[nodiscard]] std::optional<Socket> Socket::TryAccept(const uint32_t timeoutInMilliseconds) const {
-    EnsureIsValid();
-
     if (!PollInternal(_socket, POLLRDNORM, timeoutInMilliseconds)) {
         return {};
     }
@@ -689,12 +688,10 @@ void Socket::Listen() const {
         throw std::runtime_error(message);
     }
 
-    return Socket(socket, _addressFamily);
+    return Socket(socket, _addressFamily, _path);
 }
 
 [[nodiscard]] uint16_t Socket::GetLocalPort() const {
-    EnsureIsValid();
-
     if (_addressFamily == AddressFamily::Ipv4) {
         return GetLocalPortForIpv4();
     }
@@ -739,8 +736,6 @@ void Socket::Listen() const {
 }
 
 [[nodiscard]] SocketAddress Socket::GetRemoteAddress() const {
-    EnsureIsValid();
-
     if (_addressFamily == AddressFamily::Ipv4) {
         return GetRemoteAddressForIpv4();
     }
@@ -850,12 +845,6 @@ void Socket::Listen() const {
     message.append(GetSystemErrorMessage(errorCode));
     LogError(message);
     return false;
-}
-
-void Socket::EnsureIsValid() const {
-    if (!IsValid()) {
-        throw std::runtime_error("Socket is not valid.");
-    }
 }
 
 }  // namespace DsVeosCoSim

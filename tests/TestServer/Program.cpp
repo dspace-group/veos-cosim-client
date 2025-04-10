@@ -192,21 +192,21 @@ void TransmitCanMessage(const CanControllerContainer& controller) {
     CanMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<CanMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void TransmitEthMessage(const EthControllerContainer& controller) {
     EthMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<EthMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void TransmitLinMessage(const LinControllerContainer& controller) {
     LinMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<LinMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void SendSomeData(const SimulationTime simulationTime) {

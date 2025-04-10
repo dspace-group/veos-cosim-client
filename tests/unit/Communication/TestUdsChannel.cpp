@@ -80,7 +80,8 @@ TEST_F(TestUdsChannel, Accept) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    (void)ConnectToUdsChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
 
     // Act
     const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
@@ -95,7 +96,8 @@ TEST_F(TestUdsChannel, AcceptAfterDisconnect) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
     connectedChannel->Disconnect();
@@ -113,8 +115,10 @@ TEST_F(TestUdsChannel, WriteToChannel) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -129,8 +133,10 @@ TEST_F(TestUdsChannel, ReadFromChannel) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -152,8 +158,10 @@ TEST_F(TestUdsChannel, PingPong) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
@@ -181,8 +189,10 @@ TEST_F(TestUdsChannel, SendTwoFramesAtOnce) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     uint32_t sendValue1 = GenerateU32();
     uint64_t sendValue2 = GenerateU64();
@@ -219,8 +229,10 @@ TEST_F(TestUdsChannel, Stream) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(StreamClient, std::ref(*connectedChannel));
 
@@ -249,8 +261,10 @@ TEST_F(TestUdsChannel, SendAndReceiveBigElement) {
 
     const std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToUdsChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToUdsChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(ReceiveBigElement, std::ref(*connectedChannel));
 

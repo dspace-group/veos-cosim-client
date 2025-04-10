@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string_view>
 
+#include "Channel.h"
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
@@ -20,10 +21,11 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
                                  const bool& isStopped) {
     try {
 #ifdef _WIN32
-        std::unique_ptr<Channel> channel = ConnectToLocalChannel(LocalName);
+        std::unique_ptr<Channel> channel = TryConnectToLocalChannel(LocalName);
 #else
-        std::unique_ptr<Channel> channel = ConnectToUdsChannel(LocalName);
+        std::unique_ptr<Channel> channel = TryConnectToUdsChannel(LocalName);
 #endif
+        MUST_BE_TRUE(channel);
 
         std::array<char, BufferSize> buffer{};
 

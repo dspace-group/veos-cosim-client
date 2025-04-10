@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <array>
+#include <optional>
 #include <string_view>
 
 #include "CoSimHelper.h"

@@ -13,7 +13,7 @@ namespace DsVeosCoSim {
 
 class BusBuffer {
 protected:
-    BusBuffer() = default;
+    BusBuffer() noexcept = default;
 
 public:
     virtual ~BusBuffer() noexcept = default;

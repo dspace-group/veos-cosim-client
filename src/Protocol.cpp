@@ -214,7 +214,7 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(const FrameKind& frameKind) {
+[[nodiscard]] std::string_view ToString(const FrameKind& frameKind) noexcept {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";

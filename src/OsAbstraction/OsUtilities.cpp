@@ -64,7 +64,7 @@ namespace {
 
 class Handle final {
 public:
-    Handle() = default;
+    Handle() noexcept = default;
 
     Handle(void* handle) : _handle(handle) {  // NOLINT
     }
@@ -248,6 +248,28 @@ private:
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
+    const DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    const DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+    LPSTR buffer = nullptr;
+    const DWORD size =
+        FormatMessageA(flags, nullptr, errorCode, languageId, reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
+
+    std::string message;
+    if ((size > 0) && buffer) {
+        message.assign(buffer, size);
+        (void)LocalFree(buffer);
+
+        while (!message.empty() && (message.back() == L'\r' || message.back() == L'\n' || message.back() == L' ')) {
+            message.pop_back();
+        }
+    } else {
+        message = "Unknown error.";
+    }
+
+    return message;
+}
+
 [[nodiscard]] std::unique_ptr<NamedEvent> CreateOrOpenNamedEvent(const std::string& name) {
     const std::wstring fullName = GetFullNamedEventName(name);
     void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());  // NOLINT
@@ -257,30 +279,6 @@ private:
         message.append("'. ");
         message.append(GetSystemErrorMessage(GetLastWindowsError()));
         throw std::runtime_error(message);
-    }
-
-    return std::make_unique<NamedEventImpl>(handle, name);
-}
-
-[[nodiscard]] std::unique_ptr<NamedEvent> OpenExistingNamedEvent(const std::string& name) {
-    const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
-    if (!handle) {
-        std::string message = "Could not open event '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<NamedEventImpl>(handle, name);
-}
-
-[[nodiscard]] std::unique_ptr<NamedEvent> TryOpenExistingNamedEvent(const std::string& name) {
-    const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = OpenEventW(EVENT_ALL_ACCESS, FALSE, fullName.c_str());
-    if (!handle) {
-        return {};
     }
 
     return std::make_unique<NamedEventImpl>(handle, name);
@@ -300,30 +298,6 @@ private:
     return std::make_unique<NamedMutexImpl>(handle);
 }
 
-[[nodiscard]] std::unique_ptr<NamedMutex> OpenExistingNamedMutex(const std::string& name) {
-    const std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
-    if (!handle) {
-        std::string message = "Could not open mutex '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<NamedMutexImpl>(handle);
-}
-
-[[nodiscard]] std::unique_ptr<NamedMutex> TryOpenExistingNamedMutex(const std::string& name) {
-    const std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = OpenMutexW(MUTEX_ALL_ACCESS, FALSE, fullName.c_str());  // NOLINT
-    if (!handle) {
-        return {};
-    }
-
-    return std::make_unique<NamedMutexImpl>(handle);
-}
-
 [[nodiscard]] std::unique_ptr<SharedMemory> CreateOrOpenSharedMemory(const std::string& name, size_t size) {
     const std::wstring fullName = GetFullSharedMemoryName(name);
     constexpr DWORD sizeHigh{};                              // NOLINT
@@ -336,20 +310,6 @@ private:
                                       fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open shared memory '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<SharedMemoryImpl>(name, size, handle);
-}
-
-[[nodiscard]] std::unique_ptr<SharedMemory> OpenExistingSharedMemory(const std::string& name, size_t size) {
-    const std::wstring fullName = GetFullSharedMemoryName(name);
-    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());  // NOLINT
-    if (!handle) {
-        std::string message = "Could not open shared memory '";
         message.append(name);
         message.append("'. ");
         message.append(GetSystemErrorMessage(GetLastWindowsError()));

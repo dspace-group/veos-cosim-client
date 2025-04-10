@@ -27,6 +27,24 @@ namespace DsVeosCoSim {
 
 namespace {
 
+void Check(const CanMessageContainer& message) {
+    if (message.length > CanMessageMaxLength) {
+        throw std::runtime_error("CAN message data exceeds maximum length.");
+    }
+
+    if (!HasFlag(message.flags, CanMessageFlags::FlexibleDataRateFormat)) {
+        if (message.length > 8) {
+            throw std::runtime_error(
+                "CAN message flags invalid. A DLC > 8 requires the flexible data rate format flag.");
+        }
+
+        if (HasFlag(message.flags, CanMessageFlags::BitRateSwitch)) {
+            throw std::runtime_error(
+                "CAN message flags invalid. A bit rate switch flag requires the flexible data rate format flag.");
+        }
+    }
+}
+
 [[nodiscard]] bool SerializeTo(const CanMessageContainer& message, ChannelWriter& writer) {
     CheckResultWithMessage(writer.Write(message.timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(message.controllerId), "Could not write controller id.");
@@ -43,7 +61,7 @@ namespace {
     CheckResultWithMessage(reader.Read(message.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(message.length), "Could not read length");
-    message.CheckMaxLength();
+    Check(message);
     CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
     return true;
 }
@@ -55,6 +73,12 @@ void WriteTo(const CanMessageContainer& container, CanMessage& message) {
     message.flags = container.flags;
     message.length = container.length;
     message.data = container.data.data();
+}
+
+void Check(const EthMessageContainer& message) {
+    if (message.length > EthMessageMaxLength) {
+        throw std::runtime_error("Ethernet message data exceeds maximum length.");
+    }
 }
 
 [[nodiscard]] bool SerializeTo(const EthMessageContainer& message, ChannelWriter& writer) {
@@ -71,7 +95,7 @@ void WriteTo(const CanMessageContainer& container, CanMessage& message) {
     CheckResultWithMessage(reader.Read(message.controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(message.length), "Could not read length.");
-    message.CheckMaxLength();
+    Check(message);
     CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
     return true;
 }
@@ -82,6 +106,12 @@ void WriteTo(const EthMessageContainer& container, EthMessage& message) {
     message.flags = container.flags;
     message.length = container.length;
     message.data = container.data.data();
+}
+
+void Check(const LinMessageContainer& message) {
+    if (message.length > LinMessageMaxLength) {
+        throw std::runtime_error("LIN message data exceeds maximum length.");
+    }
 }
 
 [[nodiscard]] bool SerializeTo(const LinMessageContainer& message, ChannelWriter& writer) {
@@ -100,7 +130,7 @@ void WriteTo(const EthMessageContainer& container, EthMessage& message) {
     CheckResultWithMessage(reader.Read(message.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(message.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(message.length), "Could not read length.");
-    message.CheckMaxLength();
+    Check(message);
     CheckResultWithMessage(reader.Read(message.data.data(), message.length), "Could not read data.");
     return true;
 }
@@ -130,7 +160,7 @@ protected:
     };
 
 public:
-    BusProtocolBufferBase() = default;
+    BusProtocolBufferBase() noexcept = default;
     virtual ~BusProtocolBufferBase() noexcept = default;
 
     BusProtocolBufferBase(const BusProtocolBufferBase&) = delete;
@@ -251,7 +281,7 @@ class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExter
     using Extension = typename Base::ControllerExtension;
 
 public:
-    RemoteBusProtocolBuffer() = default;
+    RemoteBusProtocolBuffer() noexcept = default;
     ~RemoteBusProtocolBuffer() noexcept override = default;
 
     RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
@@ -293,7 +323,8 @@ protected:
             return false;
         }
 
-        auto message = static_cast<TMessage>(messageExtern);
+        auto message = Convert(messageExtern);
+        Check(message);
 
         _messageBuffer.PushBack(std::move(message));
         ++_messageCountPerController[extension.controllerIndex];
@@ -351,7 +382,7 @@ protected:
             Extension& extension = Base::FindController(message.controllerId);
 
             if (callback) {
-                callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
+                callback(simulationTime, extension.info, Convert(message));
                 continue;
             }
 
@@ -385,7 +416,7 @@ private:
 template <typename T>
 class ShmRingBuffer final {
 public:
-    ShmRingBuffer() = default;
+    ShmRingBuffer() noexcept = default;
     ~ShmRingBuffer() noexcept = default;
 
     ShmRingBuffer(const ShmRingBuffer&) = delete;
@@ -394,25 +425,25 @@ public:
     ShmRingBuffer(ShmRingBuffer&& other) = delete;
     ShmRingBuffer& operator=(ShmRingBuffer&& other) = delete;
 
-    void Initialize(const uint32_t capacity) {
+    void Initialize(const uint32_t capacity) noexcept {
         _capacity = capacity;
     }
 
-    void Clear() {
+    void Clear() noexcept {
         _readIndex = 0;
         _writeIndex = 0;
         _size = 0;
     }
 
-    [[nodiscard]] uint32_t Size() const {
+    [[nodiscard]] uint32_t Size() const noexcept {
         return _size;
     }
 
-    [[nodiscard]] bool IsEmpty() const {
+    [[nodiscard]] bool IsEmpty() const noexcept {
         return _size == 0;
     }
 
-    [[nodiscard]] bool IsFull() const {
+    [[nodiscard]] bool IsFull() const noexcept {
         return _size == _capacity;
     }
 
@@ -466,7 +497,7 @@ class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern
     using Extension = typename Base::ControllerExtension;
 
 public:
-    LocalBusProtocolBuffer() = default;
+    LocalBusProtocolBuffer() noexcept = default;
     ~LocalBusProtocolBuffer() noexcept override = default;
 
     LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
@@ -534,7 +565,8 @@ protected:
             return false;
         }
 
-        auto message = static_cast<TMessage>(messageExtern);
+        auto message = Convert(messageExtern);
+        Check(message);
 
         _messageBuffer->PushBack(std::move(message));
         messageCount.fetch_add(1);
@@ -553,6 +585,7 @@ protected:
         std::atomic<uint32_t>& receiveCount = _messageCountPerController[extension.controllerIndex];
         receiveCount.fetch_sub(1);
         _totalReceiveCount--;
+
         return true;
     }
 
@@ -584,7 +617,7 @@ protected:
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;
 
-            callback(simulationTime, extension.info, static_cast<TMessageExtern>(message));
+            callback(simulationTime, extension.info, Convert(message));
         }
 
         return true;

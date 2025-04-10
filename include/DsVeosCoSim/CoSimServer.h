@@ -36,7 +36,7 @@ struct CoSimServerConfig {
 
 class CoSimServer {
 protected:
-    CoSimServer() = default;
+    CoSimServer() noexcept = default;
 
 public:
     virtual ~CoSimServer() noexcept = default;

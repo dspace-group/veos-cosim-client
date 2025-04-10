@@ -10,7 +10,7 @@ namespace DsVeosCoSim {
 
 class PortMapperServer {
 protected:
-    PortMapperServer() = default;
+    PortMapperServer() noexcept = default;
 
 public:
     virtual ~PortMapperServer() noexcept = default;

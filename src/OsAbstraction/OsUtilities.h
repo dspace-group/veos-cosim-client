@@ -13,13 +13,9 @@ namespace DsVeosCoSim {
 
 constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
 
-[[nodiscard]] uint32_t GetCurrentProcessId();
-
-[[nodiscard]] bool IsProcessRunning(uint32_t processId);
-
 class NamedEvent {
 protected:
-    NamedEvent() = default;
+    NamedEvent() noexcept = default;
 
 public:
     virtual ~NamedEvent() noexcept = default;
@@ -35,13 +31,9 @@ public:
     [[nodiscard]] virtual bool Wait(uint32_t milliseconds) const = 0;
 };
 
-[[nodiscard]] std::unique_ptr<NamedEvent> CreateOrOpenNamedEvent(const std::string& name);
-[[nodiscard]] std::unique_ptr<NamedEvent> OpenExistingNamedEvent(const std::string& name);
-[[nodiscard]] std::unique_ptr<NamedEvent> TryOpenExistingNamedEvent(const std::string& name);
-
 class NamedMutex {
 protected:
-    NamedMutex() = default;
+    NamedMutex() noexcept = default;
 
 public:
     virtual ~NamedMutex() noexcept = default;
@@ -58,13 +50,9 @@ public:
     virtual void unlock() const = 0;                                   // NOLINT
 };
 
-[[nodiscard]] std::unique_ptr<NamedMutex> CreateOrOpenNamedMutex(const std::string& name);
-[[nodiscard]] std::unique_ptr<NamedMutex> OpenExistingNamedMutex(const std::string& name);
-[[nodiscard]] std::unique_ptr<NamedMutex> TryOpenExistingNamedMutex(const std::string& name);
-
 class SharedMemory {
 protected:
-    SharedMemory() = default;
+    SharedMemory() noexcept = default;
 
 public:
     virtual ~SharedMemory() noexcept = default;
@@ -80,8 +68,17 @@ public:
     [[nodiscard]] virtual size_t size() const noexcept = 0;  // NOLINT
 };
 
+[[nodiscard]] uint32_t GetCurrentProcessId();
+
+[[nodiscard]] bool IsProcessRunning(uint32_t processId);
+
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode);
+
+[[nodiscard]] std::unique_ptr<NamedEvent> CreateOrOpenNamedEvent(const std::string& name);
+
+[[nodiscard]] std::unique_ptr<NamedMutex> CreateOrOpenNamedMutex(const std::string& name);
+
 [[nodiscard]] std::unique_ptr<SharedMemory> CreateOrOpenSharedMemory(const std::string& name, size_t size);
-[[nodiscard]] std::unique_ptr<SharedMemory> OpenExistingSharedMemory(const std::string& name, size_t size);
 [[nodiscard]] std::unique_ptr<SharedMemory> TryOpenExistingSharedMemory(const std::string& name, size_t size);
 
 }  // namespace DsVeosCoSim

@@ -39,7 +39,7 @@ enum class FrameKind {
     UnsetPort
 };
 
-[[nodiscard]] std::string_view ToString(const FrameKind& frameKind);
+[[nodiscard]] std::string_view ToString(const FrameKind& frameKind) noexcept;
 
 namespace Protocol {
 

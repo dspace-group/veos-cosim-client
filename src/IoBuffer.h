@@ -14,7 +14,7 @@ namespace DsVeosCoSim {
 
 class IoBuffer {
 protected:
-    IoBuffer() = default;
+    IoBuffer() noexcept = default;
 
 public:
     virtual ~IoBuffer() noexcept = default;

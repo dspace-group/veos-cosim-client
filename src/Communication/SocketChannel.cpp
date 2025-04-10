@@ -36,8 +36,8 @@ public:
     SocketChannelWriter(const SocketChannelWriter&) = delete;
     SocketChannelWriter& operator=(const SocketChannelWriter&) = delete;
 
-    SocketChannelWriter(SocketChannelWriter&&) noexcept = delete;
-    SocketChannelWriter& operator=(SocketChannelWriter&&) noexcept = delete;
+    SocketChannelWriter(SocketChannelWriter&&) = delete;
+    SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
     [[nodiscard]] bool Write(const void* source, size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
@@ -94,8 +94,8 @@ public:
     SocketChannelReader(const SocketChannelReader&) = delete;
     SocketChannelReader& operator=(const SocketChannelReader&) = delete;
 
-    SocketChannelReader(SocketChannelReader&&) noexcept = delete;
-    SocketChannelReader& operator=(SocketChannelReader&&) noexcept = delete;
+    SocketChannelReader(SocketChannelReader&&) = delete;
+    SocketChannelReader& operator=(SocketChannelReader&&) = delete;
 
     [[nodiscard]] bool Read(void* destination, size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
@@ -185,8 +185,8 @@ public:
     SocketChannel(const SocketChannel&) = delete;
     SocketChannel& operator=(const SocketChannel&) = delete;
 
-    SocketChannel(SocketChannel&&) noexcept = delete;
-    SocketChannel& operator=(SocketChannel&&) noexcept = delete;
+    SocketChannel(SocketChannel&&) = delete;
+    SocketChannel& operator=(SocketChannel&&) = delete;
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
         const SocketAddress socketAddress = _socket.GetRemoteAddress();
@@ -218,8 +218,6 @@ private:
 class TcpChannelServer final : public ChannelServer {
 public:
     TcpChannelServer(const uint16_t port, const bool enableRemoteAccess) : _port(port) {
-        StartupNetwork();
-
         if (Socket::IsIpv4Supported()) {
             _listenSocketIpv4 = Socket(AddressFamily::Ipv4);
             _listenSocketIpv4.EnableReuseAddress();
@@ -291,8 +289,6 @@ private:
 class UdsChannelServer final : public ChannelServer {
 public:
     explicit UdsChannelServer(const std::string& name) {
-        StartupNetwork();
-
         _listenSocket = Socket(AddressFamily::Uds);
         _listenSocket.Bind(name);
         _listenSocket.Listen();
@@ -348,9 +344,13 @@ private:
 [[nodiscard]] std::unique_ptr<Channel> TryConnectToUdsChannel(const std::string& name) {
     StartupNetwork();
 
-    Socket socket(AddressFamily::Uds);
-    if (socket.TryConnect(name)) {
-        return std::make_unique<SocketChannel>(std::move(socket));
+    if (!Socket::IsUdsSupported()) {
+        return {};
+    }
+
+    std::optional<Socket> connectedSocket = Socket::TryConnect(name);
+    if (connectedSocket) {
+        return std::make_unique<SocketChannel>(std::move(*connectedSocket));
     }
 
     return {};
@@ -358,10 +358,14 @@ private:
 
 [[nodiscard]] std::unique_ptr<ChannelServer> CreateTcpChannelServer(const uint16_t port,
                                                                     const bool enableRemoteAccess) {
+    StartupNetwork();
+
     return std::make_unique<TcpChannelServer>(port, enableRemoteAccess);
 }
 
 [[nodiscard]] std::unique_ptr<ChannelServer> CreateUdsChannelServer(const std::string& name) {
+    StartupNetwork();
+
     if (!Socket::IsUdsSupported()) {
         return {};
     }

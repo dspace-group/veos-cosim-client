@@ -31,7 +31,7 @@ enum class ResponderMode {
 
 class CoSimClientImpl final : public CoSimClient {
 public:
-    CoSimClientImpl() = default;
+    CoSimClientImpl() noexcept = default;
     ~CoSimClientImpl() noexcept override = default;
 
     CoSimClientImpl(const CoSimClientImpl&) = delete;

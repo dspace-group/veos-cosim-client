@@ -5,8 +5,11 @@
 #include <cstdint>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
-#include <system_error>
 #include <utility>
+
+#if _WIN32
+#include "OsUtilities.h"
+#endif
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -72,7 +75,13 @@ void LogProtocolDataTrace(const std::string& message) {
     std::string message = "Error code: ";
     message.append(std::to_string(errorCode));
     message.append(". ");
+
+#if _WIN32
+    message.append(GetEnglishErrorMessage(errorCode));
+#else
     message.append(std::system_category().message(errorCode));
+#endif
+
     return message;
 }
 

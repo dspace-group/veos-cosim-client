@@ -82,7 +82,7 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(const Result result) {
+[[nodiscard]] std::string_view ToString(const Result result) noexcept {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -101,7 +101,7 @@ namespace {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] std::string_view ToString(const CoSimType coSimType) {
+[[nodiscard]] std::string_view ToString(const CoSimType coSimType) noexcept {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -112,7 +112,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string_view ToString(const ConnectionKind connectionKind) {
+[[nodiscard]] std::string_view ToString(const ConnectionKind connectionKind) noexcept {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -123,7 +123,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string_view ToString(const Command command) {
+[[nodiscard]] std::string_view ToString(const Command command) noexcept {
     switch (command) {
         case Command::None:
             return "None";
@@ -148,7 +148,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string_view ToString(const Severity severity) {
+[[nodiscard]] std::string_view ToString(const Severity severity) noexcept {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -163,7 +163,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string_view ToString(const TerminateReason terminateReason) {
+[[nodiscard]] std::string_view ToString(const TerminateReason terminateReason) noexcept {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -174,7 +174,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string_view ToString(const ConnectionState connectionState) {
+[[nodiscard]] std::string_view ToString(const ConnectionState connectionState) noexcept {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -185,7 +185,7 @@ namespace {
     return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] size_t GetDataTypeSize(const DataType dataType) {
+[[nodiscard]] size_t GetDataTypeSize(const DataType dataType) noexcept {
     switch (dataType) {
         case DataType::Bool:
         case DataType::Int8:
@@ -207,7 +207,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string_view ToString(const DataType dataType) {
+[[nodiscard]] std::string_view ToString(const DataType dataType) noexcept {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -236,7 +236,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string_view ToString(const SizeKind sizeKind) {
+[[nodiscard]] std::string_view ToString(const SizeKind sizeKind) noexcept {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -260,7 +260,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string_view ToString(const SimulationState simulationState) {
+[[nodiscard]] std::string_view ToString(const SimulationState simulationState) noexcept {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -277,7 +277,7 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string_view ToString([[maybe_unused]] const Mode mode) {
+[[nodiscard]] std::string_view ToString([[maybe_unused]] const Mode mode) noexcept {
     return "<Unused>";
 }
 
@@ -408,61 +408,6 @@ namespace {
     return str;
 }
 
-[[nodiscard]] CanControllerContainer::operator CanController() const {
-    CanController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.flexibleDataRateBitsPerSecond = flexibleDataRateBitsPerSecond;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] CanMessage::operator CanMessageContainer() const {
-    CanMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] CanMessageContainer::operator CanMessage() const {
-    CheckMaxLength();
-    CheckFlags();
-    CanMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void CanMessageContainer::CheckMaxLength() const {
-    if (length > CanMessageMaxLength) {
-        throw std::runtime_error("CAN message data exceeds maximum length.");
-    }
-}
-
-void CanMessageContainer::CheckFlags() const {
-    if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (length > 8) {
-            throw std::runtime_error("CAN message flags invalid. A DLC > 8 requires the flexible data rate format flag.");
-        }
-
-        if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-            throw std::runtime_error(
-                "CAN message flags invalid. A bit rate switch flag requires the flexible data rate format flag.");
-        }
-    }
-}
-
 [[nodiscard]] std::string ToString(const CanMessage& message) {
     std::string str = "CAN Message { Timestamp: ";
     str.append(SimulationTimeToString(message.timestamp));
@@ -554,15 +499,49 @@ void CanMessageContainer::CheckFlags() const {
     return str;
 }
 
+[[nodiscard]] CanController Convert(const CanControllerContainer& controller) {
+    CanController canController{};
+    canController.id = controller.id;
+    canController.queueSize = controller.queueSize;
+    canController.bitsPerSecond = controller.bitsPerSecond;
+    canController.flexibleDataRateBitsPerSecond = controller.flexibleDataRateBitsPerSecond;
+    canController.name = controller.name.c_str();
+    canController.channelName = controller.channelName.c_str();
+    canController.clusterName = controller.clusterName.c_str();
+    return canController;
+}
+
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers) {
     std::vector<CanController> canControllers;
     canControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        canControllers.push_back(static_cast<CanController>(controller));
+        canControllers.push_back(Convert(controller));
     }
 
     return canControllers;
+}
+
+[[nodiscard]] CanMessageContainer Convert(const CanMessage& message) {
+    CanMessageContainer canMessage{};
+    canMessage.timestamp = message.timestamp;
+    canMessage.controllerId = message.controllerId;
+    canMessage.id = message.id;
+    canMessage.flags = message.flags;
+    canMessage.length = message.length;
+    (void)memcpy(canMessage.data.data(), message.data, message.length);
+    return canMessage;
+}
+
+[[nodiscard]] CanMessage Convert(const CanMessageContainer& message) {
+    CanMessage canMessage{};
+    canMessage.timestamp = message.timestamp;
+    canMessage.controllerId = message.controllerId;
+    canMessage.id = message.id;
+    canMessage.flags = message.flags;
+    canMessage.length = message.length;
+    canMessage.data = message.data.data();
+    return canMessage;
 }
 
 [[nodiscard]] std::string ToString(const EthMessageFlags flags) {
@@ -585,45 +564,6 @@ void CanMessageContainer::CheckFlags() const {
     }
 
     return str;
-}
-
-[[nodiscard]] EthControllerContainer::operator EthController() const {
-    EthController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.macAddress = macAddress;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] EthMessage::operator EthMessageContainer() const {
-    EthMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] EthMessageContainer::operator EthMessage() const {
-    CheckMaxLength();
-    EthMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void EthMessageContainer::CheckMaxLength() const {
-    if (length > EthMessageMaxLength) {
-        throw std::runtime_error("Ethernet message data exceeds maximum length.");
-    }
 }
 
 [[nodiscard]] std::string ToString(const EthMessage& message) {
@@ -713,18 +653,50 @@ void EthMessageContainer::CheckMaxLength() const {
     return str;
 }
 
+[[nodiscard]] EthController Convert(const EthControllerContainer& controller) {
+    EthController ethController{};
+    ethController.id = controller.id;
+    ethController.queueSize = controller.queueSize;
+    ethController.bitsPerSecond = controller.bitsPerSecond;
+    ethController.macAddress = controller.macAddress;
+    ethController.name = controller.name.c_str();
+    ethController.channelName = controller.channelName.c_str();
+    ethController.clusterName = controller.clusterName.c_str();
+    return ethController;
+}
+
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers) {
     std::vector<EthController> ethControllers;
     ethControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        ethControllers.push_back(static_cast<EthController>(controller));
+        ethControllers.push_back(Convert(controller));
     }
 
     return ethControllers;
 }
 
-[[nodiscard]] std::string_view ToString(const LinControllerType type) {
+[[nodiscard]] EthMessageContainer Convert(const EthMessage& message) {
+    EthMessageContainer ethMessage{};
+    ethMessage.timestamp = message.timestamp;
+    ethMessage.controllerId = message.controllerId;
+    ethMessage.flags = message.flags;
+    ethMessage.length = message.length;
+    (void)memcpy(ethMessage.data.data(), message.data, message.length);
+    return ethMessage;
+}
+
+[[nodiscard]] EthMessage Convert(const EthMessageContainer& message) {
+    EthMessage ethMessage{};
+    ethMessage.timestamp = message.timestamp;
+    ethMessage.controllerId = message.controllerId;
+    ethMessage.flags = message.flags;
+    ethMessage.length = message.length;
+    ethMessage.data = message.data.data();
+    return ethMessage;
+}
+
+[[nodiscard]] std::string_view ToString(const LinControllerType type) noexcept {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";
@@ -791,47 +763,6 @@ void EthMessageContainer::CheckMaxLength() const {
     }
 
     return str;
-}
-
-[[nodiscard]] LinControllerContainer::operator LinController() const {
-    LinController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.type = type;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] LinMessage::operator LinMessageContainer() const {
-    LinMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] LinMessageContainer::operator LinMessage() const {
-    CheckMaxLength();
-    LinMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void LinMessageContainer::CheckMaxLength() const {
-    if (length > LinMessageMaxLength) {
-        throw std::runtime_error("LIN message data exceeds maximum length.");
-    }
 }
 
 [[nodiscard]] std::string ToString(const LinMessage& message) {
@@ -925,15 +856,49 @@ void LinMessageContainer::CheckMaxLength() const {
     return str;
 }
 
+[[nodiscard]] LinController Convert(const LinControllerContainer& controller) {
+    LinController linController{};
+    linController.id = controller.id;
+    linController.queueSize = controller.queueSize;
+    linController.bitsPerSecond = controller.bitsPerSecond;
+    linController.type = controller.type;
+    linController.name = controller.name.c_str();
+    linController.channelName = controller.channelName.c_str();
+    linController.clusterName = controller.clusterName.c_str();
+    return linController;
+}
+
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers) {
     std::vector<LinController> linControllers;
     linControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        linControllers.push_back(static_cast<LinController>(controller));
+        linControllers.push_back(Convert(controller));
     }
 
     return linControllers;
+}
+
+[[nodiscard]] LinMessageContainer Convert(const LinMessage& message) {
+    LinMessageContainer linMessage{};
+    linMessage.timestamp = message.timestamp;
+    linMessage.controllerId = message.controllerId;
+    linMessage.id = message.id;
+    linMessage.flags = message.flags;
+    linMessage.length = message.length;
+    (void)memcpy(linMessage.data.data(), message.data, message.length);
+    return linMessage;
+}
+
+[[nodiscard]] LinMessage Convert(const LinMessageContainer& message) {
+    LinMessage linMessage{};
+    linMessage.timestamp = message.timestamp;
+    linMessage.controllerId = message.controllerId;
+    linMessage.id = message.id;
+    linMessage.flags = message.flags;
+    linMessage.length = message.length;
+    linMessage.data = message.data.data();
+    return linMessage;
 }
 
 }  // namespace DsVeosCoSim

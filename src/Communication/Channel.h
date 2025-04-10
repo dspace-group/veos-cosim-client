@@ -11,7 +11,7 @@ namespace DsVeosCoSim {
 
 class ChannelWriter {
 protected:
-    ChannelWriter() = default;
+    ChannelWriter() noexcept = default;
 
 public:
     virtual ~ChannelWriter() noexcept = default;
@@ -36,7 +36,7 @@ public:
 
 class ChannelReader {
 protected:
-    ChannelReader() = default;
+    ChannelReader() noexcept = default;
 
 public:
     virtual ~ChannelReader() noexcept = default;
@@ -59,7 +59,7 @@ public:
 
 class Channel {
 protected:
-    Channel() = default;
+    Channel() noexcept = default;
 
 public:
     virtual ~Channel() noexcept = default;
@@ -80,7 +80,7 @@ public:
 
 class ChannelServer {
 protected:
-    ChannelServer() = default;
+    ChannelServer() noexcept = default;
 
 public:
     virtual ~ChannelServer() noexcept = default;

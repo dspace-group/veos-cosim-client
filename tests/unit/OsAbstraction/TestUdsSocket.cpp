@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <optional>
+
 #include <gtest/gtest.h>
 
 #include "Generator.h"
@@ -51,13 +53,11 @@ TEST_F(TestUdsSocket, ConnectWithoutListening) {
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
 
-    const Socket clientSocket(addressFamily);
-
     // Act
-    const bool result = clientSocket.TryConnect(path);
+    const std::optional<Socket> connectedSocket = Socket::TryConnect(path);
 
     // Assert
-    ASSERT_FALSE(result);
+    ASSERT_FALSE(connectedSocket);
 }
 
 TEST_F(TestUdsSocket, Connect) {
@@ -72,10 +72,10 @@ TEST_F(TestUdsSocket, Connect) {
     const Socket clientSocket(addressFamily);
 
     // Act
-    const bool result = clientSocket.TryConnect(path);
+    const std::optional<Socket> connectedSocket = Socket::TryConnect(path);
 
     // Assert
-    ASSERT_TRUE(result);
+    ASSERT_TRUE(connectedSocket);
 }
 
 TEST_F(TestUdsSocket, Accept) {
@@ -87,8 +87,8 @@ TEST_F(TestUdsSocket, Accept) {
     serverSocket.Bind(path);
     serverSocket.Listen();
 
-    const Socket clientSocket(addressFamily);
-    EXPECT_TRUE(clientSocket.TryConnect(path));
+    const std::optional<Socket> clientSocket = Socket::TryConnect(path);
+    EXPECT_TRUE(clientSocket);
 
     // Act
     const std::optional<Socket> acceptedSocket = serverSocket.TryAccept();
@@ -106,17 +106,18 @@ TEST_F(TestUdsSocket, SendAndReceive) {
     serverSocket.Bind(path);
     serverSocket.Listen();
 
-    const Socket clientSocket(addressFamily);
-    EXPECT_TRUE(clientSocket.TryConnect(path));
+    const std::optional<Socket> clientSocket = Socket::TryConnect(path);
+    EXPECT_TRUE(clientSocket);
 
-    const Socket acceptedSocket = Accept(serverSocket);
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedSocket);
 
     const uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
 
     // Act
-    ASSERT_TRUE(SendComplete(clientSocket, &sendValue, sizeof(sendValue)));
-    ASSERT_TRUE(ReceiveComplete(acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    ASSERT_TRUE(SendComplete(*clientSocket, &sendValue, sizeof(sendValue)));
+    ASSERT_TRUE(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert
     ASSERT_EQ(sendValue, receiveValue);

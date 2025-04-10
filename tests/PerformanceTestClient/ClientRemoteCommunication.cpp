@@ -3,6 +3,7 @@
 #include <array>
 #include <string_view>
 
+#include "Channel.h"
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
@@ -18,7 +19,8 @@ void RemoteCommunicationClientRun(const std::string_view host,
                                   uint64_t& counter,
                                   const bool& isStopped) {
     try {
-        std::unique_ptr<Channel> channel = ConnectToTcpChannel(host, CommunicationPort);
+        std::unique_ptr<Channel> channel = TryConnectToTcpChannel(host, CommunicationPort, 0, DefaultTimeout);
+        MUST_BE_TRUE(channel);
 
         std::array<char, BufferSize> buffer{};
 

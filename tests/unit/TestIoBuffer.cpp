@@ -4,6 +4,7 @@
 
 #include <deque>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -85,10 +86,14 @@ protected:
 
     static void SetUpTestSuite() {
         std::unique_ptr<ChannelServer> remoteServer = CreateTcpChannelServer(0, true);
-        const uint16_t port = remoteServer->GetLocalPort();
+        EXPECT_TRUE(remoteServer);
+        const std::optional<uint16_t> port = remoteServer->GetLocalPort();
+        EXPECT_TRUE(port);
 
-        _senderChannel = ConnectToTcpChannel("127.0.0.1", port);
-        _receiverChannel = Accept(*remoteServer);
+        _senderChannel = TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout);
+        EXPECT_TRUE(_senderChannel);
+        _receiverChannel = remoteServer->TryAccept(DefaultTimeout);
+        EXPECT_TRUE(_receiverChannel);
     }
 
     static void TearDownTestSuite() {

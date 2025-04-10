@@ -49,8 +49,6 @@ protected:
 
         std::lock_guard lock(*mutex);
 
-        bool initShm{};
-
         std::string dataName = name;
         dataName.append(".Data");
         std::string newDataName = name;
@@ -60,17 +58,15 @@ protected:
 
         constexpr uint32_t totalSize = BufferSize + sizeof(Header);
 
+        bool initShm{};
         _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);  // NOLINT
-        if (_sharedMemory) {
-            _newDataEvent = OpenExistingNamedEvent(newDataName);
-            _newSpaceEvent = OpenExistingNamedEvent(newSpaceName);
-            initShm = false;
-        } else {
+        if (!_sharedMemory) {
             _sharedMemory = CreateOrOpenSharedMemory(dataName, totalSize);
-            _newDataEvent = CreateOrOpenNamedEvent(newDataName);
-            _newSpaceEvent = CreateOrOpenNamedEvent(newSpaceName);
             initShm = true;
         }
+
+        _newDataEvent = CreateOrOpenNamedEvent(newDataName);
+        _newSpaceEvent = CreateOrOpenNamedEvent(newSpaceName);
 
         _header = static_cast<Header*>(_sharedMemory->data());
         _data = static_cast<uint8_t*>(_sharedMemory->data()) + sizeof(Header);
@@ -101,8 +97,8 @@ public:
     LocalChannelBase(const LocalChannelBase&) = delete;
     LocalChannelBase& operator=(const LocalChannelBase&) = delete;
 
-    LocalChannelBase(LocalChannelBase&&) noexcept = delete;
-    LocalChannelBase& operator=(LocalChannelBase&&) noexcept = delete;
+    LocalChannelBase(LocalChannelBase&&) = delete;
+    LocalChannelBase& operator=(LocalChannelBase&&) = delete;
 
     void Disconnect() const {
         if (_ownPid) {
@@ -153,10 +149,11 @@ protected:
     Header* _header{};
     bool _connectionDetected{};
     alignas(LockFreeCacheLineBytes) uint8_t* _data{};
+
+private:
     alignas(LockFreeCacheLineBytes) uint32_t* _counterpartPid{};
     alignas(LockFreeCacheLineBytes) uint32_t* _ownPid{};
 
-private:
     std::unique_ptr<SharedMemory> _sharedMemory;
     uint32_t _detectionCounter{};
 };
@@ -172,8 +169,8 @@ public:
     LocalChannelWriter(const LocalChannelWriter&) = delete;
     LocalChannelWriter& operator=(const LocalChannelWriter&) = delete;
 
-    LocalChannelWriter(LocalChannelWriter&&) noexcept = delete;
-    LocalChannelWriter& operator=(LocalChannelWriter&&) noexcept = delete;
+    LocalChannelWriter(LocalChannelWriter&&) = delete;
+    LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
     [[nodiscard]] bool Write(const void* source, const size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
@@ -184,9 +181,7 @@ public:
             const uint32_t readIndex = _header->readIndex.load();
             uint32_t currentSize = _writeIndex - readIndex;
             if (currentSize == BufferSize) {
-                if (!WaitForFreeSpace(currentSize)) {
-                    return false;
-                }
+                CheckResult(WaitForFreeSpace(currentSize));
             }
 
             _connectionDetected = true;
@@ -230,9 +225,7 @@ private:
                 return true;
             }
 
-            if (!CheckIfConnectionIsAlive()) {
-                return false;
-            }
+            CheckResult(CheckIfConnectionIsAlive());
         }
 
         currentSize = _writeIndex - _header->readIndex.load();
@@ -254,8 +247,8 @@ public:
     LocalChannelReader(const LocalChannelReader&) = delete;
     LocalChannelReader& operator=(const LocalChannelReader&) = delete;
 
-    LocalChannelReader(LocalChannelReader&&) noexcept = delete;
-    LocalChannelReader& operator=(LocalChannelReader&&) noexcept = delete;
+    LocalChannelReader(LocalChannelReader&&) = delete;
+    LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
     [[nodiscard]] bool Read(void* destination, const size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
@@ -266,9 +259,7 @@ public:
             const uint32_t writeIndex = _header->writeIndex.load();
             uint32_t currentSize = writeIndex - _readIndex;
             if (currentSize == 0) {
-                if (!BeginRead(currentSize)) {
-                    return false;
-                }
+                CheckResult(BeginRead(currentSize));
             }
 
             _connectionDetected = true;
@@ -304,9 +295,7 @@ private:
                 return true;
             }
 
-            if (!CheckIfConnectionIsAlive()) {
-                return false;
-            }
+            CheckResult(CheckIfConnectionIsAlive());
         }
 
         currentSize = _header->writeIndex.load() - _readIndex;
@@ -327,8 +316,8 @@ public:
     LocalChannel(const LocalChannel&) = delete;
     LocalChannel& operator=(const LocalChannel&) = delete;
 
-    LocalChannel(LocalChannel&&) noexcept = delete;
-    LocalChannel& operator=(LocalChannel&&) noexcept = delete;
+    LocalChannel(LocalChannel&&) = delete;
+    LocalChannel& operator=(LocalChannel&&) = delete;
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
         return {};

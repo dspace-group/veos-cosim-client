@@ -12,7 +12,7 @@ namespace DsVeosCoSim {
 
 class CoSimClient {
 protected:
-    CoSimClient() = default;
+    CoSimClient() noexcept = default;
 
 public:
     virtual ~CoSimClient() noexcept = default;

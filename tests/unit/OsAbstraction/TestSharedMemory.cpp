@@ -71,7 +71,7 @@ TEST_F(TestSharedMemory, CouldOpenExisting) {
     const std::unique_ptr<SharedMemory> sharedMemory1 = CreateOrOpenSharedMemory(name, 100);
 
     // Act
-    const std::unique_ptr<SharedMemory> sharedMemory2 = OpenExistingSharedMemory(name, 100);
+    const std::unique_ptr<SharedMemory> sharedMemory2 = TryOpenExistingSharedMemory(name, 100);
 
     // Assert
     ASSERT_TRUE(sharedMemory2);

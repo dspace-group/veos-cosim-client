@@ -20,8 +20,8 @@ namespace {
 }
 
 void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
-    const std::unique_ptr<NamedEvent> event1 = OpenExistingNamedEvent(eventName1);
-    const std::unique_ptr<NamedEvent> event2 = OpenExistingNamedEvent(eventName2);
+    const std::unique_ptr<NamedEvent> event1 = CreateOrOpenNamedEvent(eventName1);
+    const std::unique_ptr<NamedEvent> event2 = CreateOrOpenNamedEvent(eventName2);
 
     event1->Wait();
     event2->Set();
@@ -125,7 +125,7 @@ TEST_F(TestNamedEvent, SetAndWaitOnDifferentNamedEvents) {
     // Arrange
     const std::string name = GenerateName();
     const std::unique_ptr<NamedEvent> event1 = CreateOrOpenNamedEvent(name);
-    const std::unique_ptr<NamedEvent> event2 = OpenExistingNamedEvent(name);
+    const std::unique_ptr<NamedEvent> event2 = CreateOrOpenNamedEvent(name);
 
     // Act
     ASSERT_NO_THROW(event1->Set());
@@ -138,7 +138,7 @@ TEST_F(TestNamedEvent, ResetOnSettingNamedEvents) {
     // Arrange
     const std::string name = GenerateName();
     const std::unique_ptr<NamedEvent> event1 = CreateOrOpenNamedEvent(name);
-    const std::unique_ptr<NamedEvent> event2 = OpenExistingNamedEvent(name);
+    const std::unique_ptr<NamedEvent> event2 = CreateOrOpenNamedEvent(name);
 
     // Act
     for (int32_t i = 0; i < 10; i++) {
@@ -153,7 +153,7 @@ TEST_F(TestNamedEvent, ResetOnWaitingNamedEvents) {
     // Arrange
     const std::string name = GenerateName();
     const std::unique_ptr<NamedEvent> event1 = CreateOrOpenNamedEvent(name);
-    const std::unique_ptr<NamedEvent> event2 = OpenExistingNamedEvent(name);
+    const std::unique_ptr<NamedEvent> event2 = CreateOrOpenNamedEvent(name);
 
     // Act
     for (int32_t i = 0; i < 10; i++) {
@@ -168,7 +168,7 @@ TEST_F(TestNamedEvent, NoResetOnNamedEvents) {
     // Arrange
     const std::string name = GenerateName();
     const std::unique_ptr<NamedEvent> event1 = CreateOrOpenNamedEvent(name);
-    const std::unique_ptr<NamedEvent> event2 = OpenExistingNamedEvent(name);
+    const std::unique_ptr<NamedEvent> event2 = CreateOrOpenNamedEvent(name);
 
     // Act
     for (int32_t i = 0; i < 10; i++) {
