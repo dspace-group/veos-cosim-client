@@ -20,6 +20,7 @@ target_sources(
 
 target_link_libraries(
   PerformanceTestServer
+  PRIVATE
   DsVeosCoSim
   shared
 )

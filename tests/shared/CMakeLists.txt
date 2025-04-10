@@ -35,6 +35,7 @@ endif()
 
 target_link_libraries(
   shared
+  PUBLIC
   DsVeosCoSim
   fmt::fmt
 )

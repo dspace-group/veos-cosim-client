@@ -18,6 +18,7 @@ target_include_directories(
 
 target_link_libraries(
   TestClient
+  PRIVATE
   DsVeosCoSim
   fmt::fmt
   shared

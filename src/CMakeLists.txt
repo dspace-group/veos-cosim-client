@@ -64,6 +64,7 @@ endif()
 if(WIN32)
   target_link_libraries(
     DsVeosCoSim
+    PRIVATE
     WS2_32
   )
 endif()
