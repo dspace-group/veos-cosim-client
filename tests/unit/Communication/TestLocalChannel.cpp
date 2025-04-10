@@ -11,8 +11,8 @@
 #include <string>
 #include <thread>
 
+#include "Channel.h"
 #include "Generator.h"
-#include "Helper.h"
 
 using namespace DsVeosCoSim;
 
@@ -30,8 +30,11 @@ TEST_F(TestLocalChannel, StartServer) {
     // Arrange
     const std::string name = GenerateName();
 
-    // Act and assert
-    ASSERT_NO_THROW((void)CreateLocalChannelServer(name));
+    // Act
+    std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+
+    // Assert
+    ASSERT_TRUE(server);
 }
 
 TEST_F(TestLocalChannel, ConnectWithoutStart) {
@@ -40,6 +43,7 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
 
     {
         const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+        EXPECT_TRUE(server);
     }
 
     // Act
@@ -54,6 +58,7 @@ TEST_F(TestLocalChannel, Connect) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
     // Act
     const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
@@ -67,6 +72,7 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
     // Act
     const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
@@ -80,8 +86,10 @@ TEST_F(TestLocalChannel, Accept) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    (void)ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
 
     // Act
     const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
@@ -95,8 +103,10 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
     connectedChannel->Disconnect();
@@ -113,9 +123,12 @@ TEST_F(TestLocalChannel, WriteToChannel) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -129,9 +142,12 @@ TEST_F(TestLocalChannel, ReadFromChannel) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue = GenerateU32();
 
@@ -152,9 +168,12 @@ TEST_F(TestLocalChannel, PingPong) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
@@ -181,9 +200,12 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     const uint32_t sendValue1 = GenerateU32();
     const uint64_t sendValue2 = GenerateU64();
@@ -219,9 +241,12 @@ TEST_F(TestLocalChannel, Stream) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(StreamClient, std::ref(*connectedChannel));
 
@@ -249,9 +274,12 @@ TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     const std::string name = GenerateName();
 
     const std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+    EXPECT_TRUE(server);
 
-    const std::unique_ptr<Channel> connectedChannel = ConnectToLocalChannel(name);
-    const std::unique_ptr<Channel> acceptedChannel = Accept(*server);
+    const std::unique_ptr<Channel> connectedChannel = TryConnectToLocalChannel(name);
+    EXPECT_TRUE(connectedChannel);
+    const std::unique_ptr<Channel> acceptedChannel = server->TryAccept();
+    EXPECT_TRUE(acceptedChannel);
 
     std::thread thread(ReceiveBigElement, std::ref(*connectedChannel));
 

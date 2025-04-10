@@ -73,17 +73,17 @@ public:
 
     void Transmit(const CanMessage& message) {
         std::lock_guard lock(_mutex);
-        (void)_server->Transmit(message);
+        _server->Transmit(message);
     }
 
     void Transmit(const EthMessage& message) {
         std::lock_guard lock(_mutex);
-        (void)_server->Transmit(message);
+        _server->Transmit(message);
     }
 
     void Transmit(const LinMessage& message) {
         std::lock_guard lock(_mutex);
-        (void)_server->Transmit(message);
+        _server->Transmit(message);
     }
 
     void StartBackgroundThread() {
@@ -155,9 +155,9 @@ SimulationState State;
 
 void PrintStatus(const bool value, const std::string& what) {
     if (value) {
-        LogInfo("Enabled sending " + what);
+        LogInfo("Enabled sending {}.", what);
     } else {
-        LogInfo("Disabled sending " + what);
+        LogInfo("Disabled sending {}.", what);
     }
 }
 
@@ -192,21 +192,21 @@ void TransmitCanMessage(const CanControllerContainer& controller) {
     CanMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<CanMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void TransmitEthMessage(const EthControllerContainer& controller) {
     EthMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<EthMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void TransmitLinMessage(const LinControllerContainer& controller) {
     LinMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    Server->Transmit(static_cast<LinMessage>(message));
+    Server->Transmit(Convert(message));
 }
 
 void SendSomeData(const SimulationTime simulationTime) {
@@ -294,7 +294,7 @@ void StartSimulation() {
     }
 
     if (State != SimulationState::Stopped) {
-        LogError("Could not start in state " + ToString(State) + ".");
+        LogError("Could not start in state {}.", ToString(State));
         return;
     }
 
@@ -315,7 +315,7 @@ void StopSimulation() {
     }
 
     if ((State != SimulationState::Running) && (State != SimulationState::Paused)) {
-        LogError("Could not stop in state " + ToString(State) + ".");
+        LogError("Could not stop in state {}.", ToString(State));
         return;
     }
 
@@ -336,7 +336,7 @@ void PauseSimulation() {
     }
 
     if (State != SimulationState::Running) {
-        LogError("Could not pause in state " + ToString(State) + ".");
+        LogError("Could not pause in state {}.", ToString(State));
         return;
     }
 
@@ -357,7 +357,7 @@ void ContinueSimulation() {
     }
 
     if (State != SimulationState::Paused) {
-        LogError("Could not start in state " + ToString(State) + ".");
+        LogError("Could not start in state {}.", ToString(State));
         return;
     }
 
@@ -377,7 +377,7 @@ void TerminateSimulation() {
     }
 
     if (State == SimulationState::Unloaded) {
-        LogError("Could not terminate in state " + ToString(State) + ".");
+        LogError("Could not terminate in state {}.", ToString(State));
         return;
     }
 
@@ -422,7 +422,7 @@ void LoadSimulation(const bool isClientOptional, const std::string_view name) {
     LogInfo("Loading ...");
 
     if (State != SimulationState::Unloaded) {
-        LogError("Could not load in state " + ToString(State) + ".");
+        LogError("Could not load in state {}.", ToString(State));
         return;
     }
 

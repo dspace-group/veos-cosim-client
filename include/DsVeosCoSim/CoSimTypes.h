@@ -7,7 +7,6 @@
 #include <array>
 #include <chrono>
 #include <functional>
-#include <stdexcept>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
 
@@ -50,12 +49,6 @@ constexpr uint32_t EthMessageMaxLength = 9018U;  // NOLINT
 constexpr uint32_t LinMessageMaxLength = 8U;     // NOLINT
 constexpr uint32_t EthAddressLength = 6U;
 
-class CoSimException final : public std::runtime_error {
-public:
-    explicit CoSimException(const std::string_view message) : std::runtime_error(message.data()) {
-    }
-};
-
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
 
 using SimulationTime = std::chrono::nanoseconds;
@@ -71,21 +64,21 @@ enum class Result : uint32_t {
     Disconnected
 };
 
-[[nodiscard]] std::string ToString(Result result);
+[[nodiscard]] std::string_view ToString(Result result) noexcept;
 
 enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
-[[nodiscard]] std::string ToString(CoSimType coSimType);
+[[nodiscard]] std::string_view ToString(CoSimType coSimType) noexcept;
 
 enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
 
-[[nodiscard]] std::string ToString(ConnectionKind connectionKind);
+[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) noexcept;
 
 enum class Command : uint32_t {
     None,
@@ -99,7 +92,7 @@ enum class Command : uint32_t {
     Ping
 };
 
-[[nodiscard]] std::string ToString(Command command);
+[[nodiscard]] std::string_view ToString(Command command) noexcept;
 
 enum class Severity : uint32_t {
     Error,
@@ -108,21 +101,21 @@ enum class Severity : uint32_t {
     Trace
 };
 
-[[nodiscard]] std::string ToString(Severity severity);
+[[nodiscard]] std::string_view ToString(Severity severity) noexcept;
 
 enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
 
-[[nodiscard]] std::string ToString(TerminateReason terminateReason);
+[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) noexcept;
 
 enum class ConnectionState : uint32_t {
     Disconnected,
     Connected
 };
 
-[[nodiscard]] std::string ToString(ConnectionState connectionState);
+[[nodiscard]] std::string_view ToString(ConnectionState connectionState) noexcept;
 
 enum class DataType : uint32_t {
     Bool = 1,
@@ -138,16 +131,16 @@ enum class DataType : uint32_t {
     Float64
 };
 
-[[nodiscard]] size_t GetDataTypeSize(DataType dataType);
+[[nodiscard]] size_t GetDataTypeSize(DataType dataType) noexcept;
 
-[[nodiscard]] std::string ToString(DataType dataType);
+[[nodiscard]] std::string_view ToString(DataType dataType) noexcept;
 
 enum class SizeKind : uint32_t {
     Fixed = 1,
     Variable
 };
 
-[[nodiscard]] std::string ToString(SizeKind sizeKind);
+[[nodiscard]] std::string_view ToString(SizeKind sizeKind) noexcept;
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
 
@@ -159,12 +152,12 @@ enum class SimulationState {
     Terminated
 };
 
-[[nodiscard]] std::string ToString(SimulationState simulationState);
+[[nodiscard]] std::string_view ToString(SimulationState simulationState) noexcept;
 
 enum class Mode {
 };
 
-[[nodiscard]] std::string ToString(Mode mode);
+[[nodiscard]] std::string_view ToString(Mode mode) noexcept;
 
 [[nodiscard]] std::string DataToString(uint8_t* data, size_t dataLength, char separator = 0);
 
@@ -239,11 +232,7 @@ struct CanControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
-
-    [[nodiscard]] explicit operator CanController() const;
 };
-
-struct CanMessageContainer;
 
 struct CanMessage {
     SimulationTime timestamp{};
@@ -252,8 +241,6 @@ struct CanMessage {
     CanMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
-
-    [[nodiscard]] explicit operator CanMessageContainer() const;
 };
 
 struct CanMessageContainer {
@@ -264,11 +251,6 @@ struct CanMessageContainer {
     CanMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
-
-    [[nodiscard]] explicit operator CanMessage() const;
-
-    void CheckMaxLength() const;
-    void CheckFlags() const;
 };
 
 [[nodiscard]] std::string ToString(const CanController& controller);
@@ -277,7 +259,11 @@ struct CanMessageContainer {
 [[nodiscard]] std::string ToString(const CanMessageContainer& message);
 [[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& controllers);
 
+[[nodiscard]] CanController Convert(const CanControllerContainer& controller);
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers);
+
+[[nodiscard]] CanMessageContainer Convert(const CanMessage& message);
+[[nodiscard]] CanMessage Convert(const CanMessageContainer& message);
 
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
@@ -307,11 +293,7 @@ struct EthControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
-
-    [[nodiscard]] explicit operator EthController() const;
 };
-
-struct EthMessageContainer;
 
 struct EthMessage {
     SimulationTime timestamp{};
@@ -320,8 +302,6 @@ struct EthMessage {
     EthMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
-
-    [[nodiscard]] explicit operator EthMessageContainer() const;
 };
 
 struct EthMessageContainer {
@@ -331,10 +311,6 @@ struct EthMessageContainer {
     EthMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
-
-    [[nodiscard]] explicit operator EthMessage() const;
-
-    void CheckMaxLength() const;
 };
 
 [[nodiscard]] std::string ToString(const EthController& controller);
@@ -342,14 +318,19 @@ struct EthMessageContainer {
 [[nodiscard]] std::string ToString(const EthMessage& message);
 [[nodiscard]] std::string ToString(const EthMessageContainer& message);
 [[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& controllers);
+
+[[nodiscard]] EthController Convert(const EthControllerContainer& controller);
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers);
+
+[[nodiscard]] EthMessageContainer Convert(const EthMessage& message);
+[[nodiscard]] EthMessage Convert(const EthMessageContainer& message);
 
 enum class LinControllerType : uint32_t {
     Responder = 1,
     Commander
 };
 
-[[nodiscard]] std::string ToString(LinControllerType type);
+[[nodiscard]] std::string_view ToString(LinControllerType type) noexcept;
 
 enum class LinMessageFlags : uint32_t {
     Loopback = 1,
@@ -388,11 +369,7 @@ struct LinControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
-
-    [[nodiscard]] explicit operator LinController() const;
 };
-
-struct LinMessageContainer;
 
 struct LinMessage {
     SimulationTime timestamp{};
@@ -401,8 +378,6 @@ struct LinMessage {
     LinMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
-
-    [[nodiscard]] explicit operator LinMessageContainer() const;
 };
 
 struct LinMessageContainer {
@@ -413,10 +388,6 @@ struct LinMessageContainer {
     LinMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
-
-    [[nodiscard]] explicit operator LinMessage() const;
-
-    void CheckMaxLength() const;
 };
 
 [[nodiscard]] std::string ToString(const LinController& controller);
@@ -425,7 +396,11 @@ struct LinMessageContainer {
 [[nodiscard]] std::string ToString(const LinMessageContainer& message);
 [[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& controllers);
 
+[[nodiscard]] LinController Convert(const LinControllerContainer& controller);
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers);
+
+[[nodiscard]] LinMessageContainer Convert(const LinMessage& message);
+[[nodiscard]] LinMessage Convert(const LinMessageContainer& message);
 
 using LogCallback = std::function<void(Severity, std::string_view)>;
 

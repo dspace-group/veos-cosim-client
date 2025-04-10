@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "BusBuffer.h"
@@ -24,23 +25,32 @@ protected:
     void CustomSetUp(const ConnectionKind connectionKind) {
         if (connectionKind == ConnectionKind::Remote) {
             std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
-            const uint16_t port = server->GetLocalPort();
+            EXPECT_TRUE(server);
+            const std::optional<uint16_t> port = server->GetLocalPort();
+            EXPECT_TRUE(port);
 
-            _senderChannel = ConnectToTcpChannel("127.0.0.1", port);
-            _receiverChannel = Accept(*server);
+            _senderChannel = TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout);
+            EXPECT_TRUE(_senderChannel);
+            _receiverChannel = server->TryAccept(DefaultTimeout);
+            EXPECT_TRUE(_receiverChannel);
         } else {
 #ifdef _WIN32
             const std::string name = GenerateString("LocalChannel名前");
             std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
-            _senderChannel = ConnectToLocalChannel(name);
-            _receiverChannel = Accept(*server);
+            _senderChannel = TryConnectToLocalChannel(name);
+            EXPECT_TRUE(_senderChannel);
+            _receiverChannel = server->TryAccept(DefaultTimeout);
+            EXPECT_TRUE(_receiverChannel);
 #else
             const std::string name = GenerateString("UdsChannel名前");
             std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
+            EXPECT_TRUE(server);
 
-            _senderChannel = ConnectToUdsChannel(name);
-            _receiverChannel = Accept(*server);
+            _senderChannel = TryConnectToUdsChannel(name);
+            EXPECT_TRUE(_senderChannel);
+            _receiverChannel = server->TryAccept(DefaultTimeout);
+            EXPECT_TRUE(_receiverChannel);
 #endif
         }
     }
@@ -61,7 +71,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestProtocol,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
                          [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return ToString(info.param);
+                             return std::string(ToString(info.param));
                          });
 
 TEST_P(TestProtocol, SendAndReceiveOk) {
@@ -202,11 +212,11 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ(static_cast<int32_t>(sendMode), static_cast<int32_t>(receiveMode));
     ASSERT_EQ(sendStepSize, receiveStepSize);
-    AssertEq<IoSignalContainer, IoSignal>(sendIncomingSignals, receiveIncomingSignals);
-    AssertEq<IoSignalContainer, IoSignal>(sendOutgoingSignals, receiveOutgoingSignals);
-    AssertEq<CanControllerContainer, CanController>(sendCanControllers, receiveCanControllers);
-    AssertEq<EthControllerContainer, EthController>(sendEthControllers, receiveEthControllers);
-    AssertEq<LinControllerContainer, LinController>(sendLinControllers, receiveLinControllers);
+    AssertEq<IoSignal>(Convert(sendIncomingSignals), Convert(receiveIncomingSignals));
+    AssertEq<IoSignal>(Convert(sendOutgoingSignals), Convert(receiveOutgoingSignals));
+    AssertEq<CanController>(Convert(sendCanControllers), Convert(receiveCanControllers));
+    AssertEq<EthController>(Convert(sendEthControllers), Convert(receiveEthControllers));
+    AssertEq<LinController>(Convert(sendLinControllers), Convert(receiveLinControllers));
 }
 
 TEST_P(TestProtocol, SendAndReceiveStart) {

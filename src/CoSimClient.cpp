@@ -5,6 +5,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -30,7 +31,7 @@ enum class ResponderMode {
 
 class CoSimClientImpl final : public CoSimClient {
 public:
-    CoSimClientImpl() = default;
+    CoSimClientImpl() noexcept = default;
     ~CoSimClientImpl() noexcept override = default;
 
     CoSimClientImpl(const CoSimClientImpl&) = delete;
@@ -41,7 +42,7 @@ public:
 
     [[nodiscard]] bool Connect(const ConnectConfig& connectConfig) override {
         if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
-            throw CoSimException("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
+            throw std::runtime_error("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
         }
 
         if (_isConnected) {
@@ -124,7 +125,7 @@ public:
         EnsureIsInResponderModeNonBlocking();
 
         if (_currentCommand != Command::None) {
-            throw CoSimException("Call to FinishCommand() for last command is missing.");
+            throw std::runtime_error("Call to FinishCommand() for last command is missing.");
         }
 
         if (!PollCommandInternal(simulationTime, command, returnOnPing)) {
@@ -140,7 +141,7 @@ public:
         EnsureIsInResponderModeNonBlocking();
 
         if (_currentCommand == Command::None) {
-            throw CoSimException("Call to PollCommand(...) is missing.");
+            throw std::runtime_error("Call to PollCommand(...) is missing.");
         }
 
         if (!FinishCommandInternal()) {
@@ -181,7 +182,10 @@ public:
                 return;
         }
 
-        throw CoSimException("Unknown terminate reason " + ToString(terminateReason) + ".");
+        std::string message = "Unknown terminate reason '";
+        message.append(ToString(terminateReason));
+        message.append("'.");
+        throw std::runtime_error(message);
     }
 
     void Pause() override {
@@ -347,7 +351,10 @@ private:
         _channel = TryConnectToUdsChannel(_serverName);
 #endif
         if (!_channel) {
-            LogTrace("Could not connect to local dSPACE VEOS CoSim server '" + _serverName + "'.");
+            std::string message = "Could not connect to local dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append("'.");
+            LogTrace(message);
             return false;
         }
 
@@ -357,18 +364,32 @@ private:
 
     [[nodiscard]] bool RemoteConnect() {
         if (_remotePort == 0) {
-            LogInfo("Obtaining TCP port of dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress +
-                    " ...");
+            std::string message = "Obtaining TCP port of dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append("' at ");
+            message.append(_remoteIpAddress);
+            message.append(" ...");
+            LogInfo(message);
             CheckResultWithMessage(PortMapper_GetPort(_remoteIpAddress, _serverName, _remotePort),
                                    "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
-            LogInfo("Connecting to dSPACE VEOS CoSim server at " + _remoteIpAddress + ":" +
-                    std::to_string(_remotePort) + "...");
+            std::string message = "Connecting to dSPACE VEOS CoSim server at ";
+            message.append(_remoteIpAddress);
+            message.append(":");
+            message.append(std::to_string(_remotePort));
+            message.append(" ...");
+            LogInfo(message);
         } else {
-            LogInfo("Connecting to dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + ":" +
-                    std::to_string(_remotePort) + "...");
+            std::string message = "Connecting to dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append("' at ");
+            message.append(_remoteIpAddress);
+            message.append(":");
+            message.append(std::to_string(_remotePort));
+            message.append(" ...");
+            LogInfo(message);
         }
 
         _channel = TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds);
@@ -410,14 +431,27 @@ private:
         _linControllersExtern = Convert(_linControllers);
 
         if (_connectionKind == ConnectionKind::Local) {
-            LogInfo("Connected to local dSPACE VEOS CoSim server '" + _serverName + "'.");
+            std::string message = "Connected to local dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append(".");
+            LogInfo(message);
         } else {
             if (_serverName.empty()) {
-                LogInfo("Connected to dSPACE VEOS CoSim server at " + _remoteIpAddress + ":" +
-                        std::to_string(_remotePort) + ".");
+                std::string message = "Connected to dSPACE VEOS CoSim server at ";
+                message.append(_remoteIpAddress);
+                message.append(":");
+                message.append(std::to_string(_remotePort));
+                message.append(".");
+                LogInfo(message);
             } else {
-                LogInfo("Connected to dSPACE VEOS CoSim server '" + _serverName + "' at " + _remoteIpAddress + ":" +
-                        std::to_string(_remotePort) + ".");
+                std::string message = "Connected to dSPACE VEOS CoSim server '";
+                message.append(_serverName);
+                message.append("' at ");
+                message.append(_remoteIpAddress);
+                message.append(":");
+                message.append(std::to_string(_remotePort));
+                message.append(".");
+                LogInfo(message);
             }
         }
 
@@ -457,7 +491,10 @@ private:
                 CheckResultWithMessage(OnConnectError(), "Could not handle connect error.");
                 return false;
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 
@@ -529,7 +566,10 @@ private:
                     break;
                 }
                 default:
-                    throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                    std::string message = "Received unexpected frame '";
+                    message.append(ToString(frameKind));
+                    message.append("'.");
+                    throw std::runtime_error(message);
             }
         }
 
@@ -572,7 +612,10 @@ private:
                     _currentCommand = Command::Ping;
                     break;
                 default:
-                    throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                    std::string message = "Received unexpected frame '";
+                    message.append(ToString(frameKind));
+                    message.append("'.");
+                    throw std::runtime_error(message);
             }
 
             if (returnOnPing || (_currentCommand != Command::Ping)) {
@@ -698,7 +741,7 @@ private:
 
     void EnsureIsConnected() const {
         if (!_isConnected) {
-            throw CoSimException("Not connected.");
+            throw std::runtime_error("Not connected.");
         }
     }
 
@@ -708,7 +751,7 @@ private:
                 _responderMode = ResponderMode::Blocking;
                 break;
             case ResponderMode::NonBlocking:
-                throw CoSimException(
+                throw std::runtime_error(
                     "dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
             case ResponderMode::Blocking:
                 // Nothing to do
@@ -722,7 +765,7 @@ private:
                 _responderMode = ResponderMode::NonBlocking;
                 break;
             case ResponderMode::Blocking:
-                throw CoSimException(
+                throw std::runtime_error(
                     "dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
             case ResponderMode::NonBlocking:
                 // Nothing to do

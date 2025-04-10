@@ -10,15 +10,10 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "Handle.h"
-#include "NamedEvent.h"
-#include "NamedMutex.h"
 #include "OsUtilities.h"
-#include "SharedMemory.h"
 
 namespace DsVeosCoSim {
 
@@ -28,17 +23,19 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-std::string ServerToClientPostFix = "ServerToClient";
-std::string ClientToServerPostFix = "ClientToServer";
+std::string ServerToClientPostFix = ".ServerToClient";
+std::string ClientToServerPostFix = ".ClientToServer";
 
 [[nodiscard]] std::string GetWriterName(const std::string& name, const bool isServer) {
-    const std::string postfix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-    return name + "." + postfix;
+    std::string writerName = name;
+    writerName.append(isServer ? ServerToClientPostFix : ClientToServerPostFix);
+    return writerName;
 }
 
 [[nodiscard]] std::string GetReaderName(const std::string& name, const bool isServer) {
-    const std::string postfix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-    return name + "." + postfix;
+    std::string readerName = name;
+    readerName.append(isServer ? ClientToServerPostFix : ServerToClientPostFix);
+    return readerName;
 }
 
 [[nodiscard]] constexpr uint32_t MaskIndex(const uint32_t index) noexcept {
@@ -48,33 +45,31 @@ std::string ClientToServerPostFix = "ClientToServer";
 class LocalChannelBase {
 protected:
     LocalChannelBase(const std::string& name, const bool isServer) {
-        NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+        std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-        std::lock_guard lock(mutex);
+        std::lock_guard lock(*mutex);
 
-        bool initShm{};
-
-        const std::string dataName = name + ".Data";
-        const std::string newDataName = name + ".NewData";
-        const std::string newSpaceName = name + ".NewSpace";
+        std::string dataName = name;
+        dataName.append(".Data");
+        std::string newDataName = name;
+        newDataName.append(".NewData");
+        std::string newSpaceName = name;
+        newSpaceName.append(".NewSpace");
 
         constexpr uint32_t totalSize = BufferSize + sizeof(Header);
 
-        std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(dataName, totalSize);  // NOLINT
-        if (sharedMemory) {
-            _sharedMemory = std::move(*sharedMemory);
-            _newDataEvent = NamedEvent::OpenExisting(newDataName);
-            _newSpaceEvent = NamedEvent::OpenExisting(newSpaceName);
-            initShm = false;
-        } else {
-            _sharedMemory = SharedMemory::CreateOrOpen(dataName, totalSize);
-            _newDataEvent = NamedEvent::CreateOrOpen(newDataName);
-            _newSpaceEvent = NamedEvent::CreateOrOpen(newSpaceName);
+        bool initShm{};
+        _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);  // NOLINT
+        if (!_sharedMemory) {
+            _sharedMemory = CreateOrOpenSharedMemory(dataName, totalSize);
             initShm = true;
         }
 
-        _header = static_cast<Header*>(_sharedMemory.data());
-        _data = static_cast<uint8_t*>(_sharedMemory.data()) + sizeof(Header);
+        _newDataEvent = CreateOrOpenNamedEvent(newDataName);
+        _newSpaceEvent = CreateOrOpenNamedEvent(newSpaceName);
+
+        _header = static_cast<Header*>(_sharedMemory->data());
+        _data = static_cast<uint8_t*>(_sharedMemory->data()) + sizeof(Header);
 
         if (initShm) {
             _header->serverPid = 0;
@@ -102,8 +97,8 @@ public:
     LocalChannelBase(const LocalChannelBase&) = delete;
     LocalChannelBase& operator=(const LocalChannelBase&) = delete;
 
-    LocalChannelBase(LocalChannelBase&&) noexcept = delete;
-    LocalChannelBase& operator=(LocalChannelBase&&) noexcept = delete;
+    LocalChannelBase(LocalChannelBase&&) = delete;
+    LocalChannelBase& operator=(LocalChannelBase&&) = delete;
 
     void Disconnect() const {
         if (_ownPid) {
@@ -131,9 +126,15 @@ protected:
             return false;
         }
 
-        CheckResultWithMessage(IsProcessRunning(counterpartPid),
-                               "Process with id " + std::to_string(counterpartPid) + " exited.");
-        return true;
+        if (IsProcessRunning(counterpartPid)) {
+            return true;
+        }
+
+        std::string message = "Process with id ";
+        message.append(std::to_string(counterpartPid));
+        message.append(" is not running anymore.");
+        LogTrace(message);
+        return false;
     }
 
     struct Header {
@@ -143,16 +144,17 @@ protected:
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex{};
     };
 
-    NamedEvent _newDataEvent;
-    NamedEvent _newSpaceEvent;
+    std::unique_ptr<NamedEvent> _newDataEvent;
+    std::unique_ptr<NamedEvent> _newSpaceEvent;
     Header* _header{};
     bool _connectionDetected{};
     alignas(LockFreeCacheLineBytes) uint8_t* _data{};
+
+private:
     alignas(LockFreeCacheLineBytes) uint32_t* _counterpartPid{};
     alignas(LockFreeCacheLineBytes) uint32_t* _ownPid{};
 
-private:
-    SharedMemory _sharedMemory;
+    std::unique_ptr<SharedMemory> _sharedMemory;
     uint32_t _detectionCounter{};
 };
 
@@ -167,8 +169,8 @@ public:
     LocalChannelWriter(const LocalChannelWriter&) = delete;
     LocalChannelWriter& operator=(const LocalChannelWriter&) = delete;
 
-    LocalChannelWriter(LocalChannelWriter&&) noexcept = delete;
-    LocalChannelWriter& operator=(LocalChannelWriter&&) noexcept = delete;
+    LocalChannelWriter(LocalChannelWriter&&) = delete;
+    LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
     [[nodiscard]] bool Write(const void* source, const size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
@@ -179,9 +181,7 @@ public:
             const uint32_t readIndex = _header->readIndex.load();
             uint32_t currentSize = _writeIndex - readIndex;
             if (currentSize == BufferSize) {
-                if (!WaitForFreeSpace(currentSize)) {
-                    return false;
-                }
+                CheckResult(WaitForFreeSpace(currentSize));
             }
 
             _connectionDetected = true;
@@ -207,27 +207,25 @@ public:
     }
 
     [[nodiscard]] bool EndWrite() override {
-        _newDataEvent.Set();
+        _newDataEvent->Set();
         return true;
     }
 
 private:
     [[nodiscard]] bool WaitForFreeSpace(uint32_t& currentSize) {
-        (void)SignalAndWait(_newDataEvent, _newSpaceEvent, 1);
+        _newDataEvent->Set();
         currentSize = _writeIndex - _header->readIndex.load();
         if (currentSize < BufferSize) {
             return true;
         }
 
-        while (!_newSpaceEvent.Wait(1)) {
+        while (!_newSpaceEvent->Wait(1)) {
             currentSize = _writeIndex - _header->readIndex.load();
             if (currentSize < BufferSize) {
                 return true;
             }
 
-            if (!CheckIfConnectionIsAlive()) {
-                return false;
-            }
+            CheckResult(CheckIfConnectionIsAlive());
         }
 
         currentSize = _writeIndex - _header->readIndex.load();
@@ -249,8 +247,8 @@ public:
     LocalChannelReader(const LocalChannelReader&) = delete;
     LocalChannelReader& operator=(const LocalChannelReader&) = delete;
 
-    LocalChannelReader(LocalChannelReader&&) noexcept = delete;
-    LocalChannelReader& operator=(LocalChannelReader&&) noexcept = delete;
+    LocalChannelReader(LocalChannelReader&&) = delete;
+    LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
     [[nodiscard]] bool Read(void* destination, const size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
@@ -261,9 +259,7 @@ public:
             const uint32_t writeIndex = _header->writeIndex.load();
             uint32_t currentSize = writeIndex - _readIndex;
             if (currentSize == 0) {
-                if (!BeginRead(currentSize)) {
-                    return false;
-                }
+                CheckResult(BeginRead(currentSize));
             }
 
             _connectionDetected = true;
@@ -282,7 +278,7 @@ public:
             _maskedReadIndex = MaskIndex(_readIndex);
             _header->readIndex.store(_readIndex);
             if (currentSize == BufferSize) {
-                _newSpaceEvent.Set();
+                _newSpaceEvent->Set();
             }
 
             totalSizeToCopy -= sizeToCopy;
@@ -293,15 +289,13 @@ public:
 
 private:
     [[nodiscard]] bool BeginRead(uint32_t& currentSize) {
-        while (!_newDataEvent.Wait(1)) {
+        while (!_newDataEvent->Wait(1)) {
             currentSize = _header->writeIndex.load() - _readIndex;
             if (currentSize > 0) {
                 return true;
             }
 
-            if (!CheckIfConnectionIsAlive()) {
-                return false;
-            }
+            CheckResult(CheckIfConnectionIsAlive());
         }
 
         currentSize = _header->writeIndex.load() - _readIndex;
@@ -322,8 +316,8 @@ public:
     LocalChannel(const LocalChannel&) = delete;
     LocalChannel& operator=(const LocalChannel&) = delete;
 
-    LocalChannel(LocalChannel&&) noexcept = delete;
-    LocalChannel& operator=(LocalChannel&&) noexcept = delete;
+    LocalChannel(LocalChannel&&) = delete;
+    LocalChannel& operator=(LocalChannel&&) = delete;
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
         return {};
@@ -350,12 +344,12 @@ private:
 class LocalChannelServer final : public ChannelServer {
 public:
     explicit LocalChannelServer(const std::string& name) : _name(name) {
-        NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+        std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-        std::lock_guard lock(mutex);
+        std::lock_guard lock(*mutex);
 
-        _sharedMemory = SharedMemory::CreateOrOpen(_name, ServerSharedMemorySize);
-        _counter = static_cast<std::atomic<int32_t>*>(_sharedMemory.data());  // NOLINT
+        _sharedMemory = CreateOrOpenSharedMemory(_name, ServerSharedMemorySize);
+        _counter = static_cast<std::atomic<int32_t>*>(_sharedMemory->data());  // NOLINT
         _counter->store(0);
     }
 
@@ -374,7 +368,9 @@ public:
     [[nodiscard]] std::unique_ptr<Channel> TryAccept() override {
         const int32_t currentCounter = _counter->load();
         if (currentCounter > _lastCounter) {
-            const std::string specificName = _name + "." + std::to_string(_lastCounter);
+            std::string specificName = _name;
+            specificName.append(".");
+            specificName.append(std::to_string(_lastCounter));
             _lastCounter++;
             return std::make_unique<LocalChannel>(specificName, true);
         }
@@ -388,7 +384,7 @@ public:
 
 private:
     std::string _name;
-    SharedMemory _sharedMemory;
+    std::unique_ptr<SharedMemory> _sharedMemory;
 
     std::atomic<int32_t>* _counter{};
     int32_t _lastCounter{};
@@ -397,18 +393,20 @@ private:
 }  // namespace
 
 [[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name) {
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-    std::lock_guard lock(mutex);
+    std::lock_guard lock(*mutex);
 
-    const std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(name, ServerSharedMemorySize);
+    const std::unique_ptr<SharedMemory> sharedMemory = TryOpenExistingSharedMemory(name, ServerSharedMemorySize);
     if (!sharedMemory) {
         return {};
     }
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
     const int32_t currentCounter = counter.fetch_add(1);
-    const std::string specificName = name + "." + std::to_string(currentCounter);
+    std::string specificName = name;
+    specificName.append(".");
+    specificName.append(std::to_string(currentCounter));
 
     return std::make_unique<LocalChannel>(specificName, false);
 }

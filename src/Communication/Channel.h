@@ -9,9 +9,18 @@
 
 namespace DsVeosCoSim {
 
-class ChannelWriter {  // NOLINT
+class ChannelWriter {
+protected:
+    ChannelWriter() noexcept = default;
+
 public:
     virtual ~ChannelWriter() noexcept = default;
+
+    ChannelWriter(const ChannelWriter&) = delete;
+    ChannelWriter& operator=(const ChannelWriter&) = delete;
+
+    ChannelWriter(ChannelWriter&&) = delete;
+    ChannelWriter& operator=(ChannelWriter&&) = delete;
 
     template <typename T>
     [[nodiscard]] bool Write(const T& value) {
@@ -25,9 +34,18 @@ public:
     [[nodiscard]] virtual bool EndWrite() = 0;
 };
 
-class ChannelReader {  // NOLINT
+class ChannelReader {
+protected:
+    ChannelReader() noexcept = default;
+
 public:
     virtual ~ChannelReader() noexcept = default;
+
+    ChannelReader(const ChannelReader&) = delete;
+    ChannelReader& operator=(const ChannelReader&) = delete;
+
+    ChannelReader(ChannelReader&&) = delete;
+    ChannelReader& operator=(ChannelReader&&) = delete;
 
     template <typename T>
     [[nodiscard]] bool Read(T& value) {
@@ -39,9 +57,18 @@ public:
     [[nodiscard]] virtual bool Read(void* destination, size_t size) = 0;
 };
 
-class Channel {  // NOLINT
+class Channel {
+protected:
+    Channel() noexcept = default;
+
 public:
     virtual ~Channel() noexcept = default;
+
+    Channel(const Channel&) = delete;
+    Channel& operator=(const Channel&) = delete;
+
+    Channel(Channel&&) = delete;
+    Channel& operator=(Channel&&) = delete;
 
     [[nodiscard]] virtual std::string GetRemoteAddress() const = 0;
 
@@ -51,9 +78,18 @@ public:
     [[nodiscard]] virtual ChannelReader& GetReader() = 0;
 };
 
-class ChannelServer {  // NOLINT
+class ChannelServer {
+protected:
+    ChannelServer() noexcept = default;
+
 public:
     virtual ~ChannelServer() noexcept = default;
+
+    ChannelServer(const ChannelServer&) = delete;
+    ChannelServer& operator=(const ChannelServer&) = delete;
+
+    ChannelServer(ChannelServer&&) = delete;
+    ChannelServer& operator=(ChannelServer&&) = delete;
 
     [[nodiscard]] virtual uint16_t GetLocalPort() const = 0;
 

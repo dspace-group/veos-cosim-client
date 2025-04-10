@@ -10,7 +10,7 @@
 class InternetAddress final {
 public:
     InternetAddress(std::string_view ipAddress, uint16_t port);
-    ~InternetAddress() = default;
+    ~InternetAddress() noexcept = default;
 
     InternetAddress(const InternetAddress&) = delete;
     InternetAddress& operator=(InternetAddress const&) = delete;

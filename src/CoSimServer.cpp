@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -26,7 +27,8 @@ namespace {
 
 class CoSimServerImpl final : public CoSimServer {
 public:
-    CoSimServerImpl() = default;
+    CoSimServerImpl() noexcept = default;
+
     ~CoSimServerImpl() noexcept override {
         Unload();
     }
@@ -84,8 +86,10 @@ public:
                 return;
             }
 
-            LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '" + _serverName +
-                    "' ...");
+            std::string message = "Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append("' ...");
+            LogInfo(message);
 
             while (!AcceptChannel()) {
                 std::this_thread::sleep_for(milliseconds(1));
@@ -142,7 +146,7 @@ public:
         }
     }
 
-    SimulationTime Step(const SimulationTime simulationTime) override {
+    [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) override {
         if (!_channel) {
             return {};
         }
@@ -166,36 +170,37 @@ public:
         _ioBuffer->Write(signalId, length, value);
     }
 
-    void Read(const IoSignalId signalId, uint32_t& length, const void** value) const override {
+    [[nodiscard]] bool Read(const IoSignalId signalId, uint32_t& length, const void** value) const override {
+        if (!_channel) {
+            return false;
+        }
+
+        _ioBuffer->Read(signalId, length, value);
+        return true;
+    }
+
+    void Transmit(const CanMessage& message) const override {
         if (!_channel) {
             return;
         }
 
-        _ioBuffer->Read(signalId, length, value);
+        (void)_busBuffer->Transmit(message);
     }
 
-    [[nodiscard]] bool Transmit(const CanMessage& message) const override {
+    void Transmit(const EthMessage& message) const override {
         if (!_channel) {
-            return true;
+            return;
         }
 
-        return _busBuffer->Transmit(message);
+        (void)_busBuffer->Transmit(message);
     }
 
-    [[nodiscard]] bool Transmit(const EthMessage& message) const override {
+    void Transmit(const LinMessage& message) const override {
         if (!_channel) {
-            return true;
+            return;
         }
 
-        return _busBuffer->Transmit(message);
-    }
-
-    [[nodiscard]] bool Transmit(const LinMessage& message) const override {
-        if (!_channel) {
-            return true;
-        }
-
-        return _busBuffer->Transmit(message);
+        (void)_busBuffer->Transmit(message);
     }
 
     void BackgroundService() override {
@@ -224,7 +229,7 @@ public:
             return _tcpChannelServer->GetLocalPort();
         }
 
-        return 0;
+        return {};
     }
 
 private:
@@ -311,9 +316,14 @@ private:
                 }
             }
 
-            const std::string localIpAddress = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
-            LogInfo("dSPACE VEOS CoSim server '" + _serverName + "' is listening on " + localIpAddress + ":" +
-                    std::to_string(port) + ".");
+            std::string message = "dSPACE VEOS CoSim server '";
+            message.append(_serverName);
+            message.append("' is listening on ");
+            message.append(_enableRemoteAccess ? "0.0.0.0" : "127.0.0.1");
+            message.append(":");
+            message.append(std::to_string(port));
+            message.append(".");
+            LogInfo(message);
         }
     }
 
@@ -324,7 +334,9 @@ private:
                     LogTrace("Could not unset port in port mapper.");
                 }
             } catch (const std::exception& e) {
-                LogTrace("Could not unset port in port mapper. Reason: " + std::string(e.what()));
+                std::string message = "Could not unset port in port mapper. Reason: ";
+                message.append(e.what());
+                LogTrace(message);
             }
         }
 
@@ -402,15 +414,26 @@ private:
         if (_connectionKind == ConnectionKind::Remote) {
             const std::string remoteAddress = _channel->GetRemoteAddress();
             if (clientName.empty()) {
-                LogInfo("dSPACE VEOS CoSim client at " + remoteAddress + " connected.");
+                std::string message = "dSPACE VEOS CoSim client at ";
+                message.append(remoteAddress);
+                message.append(" connected.");
+                LogInfo(message);
             } else {
-                LogInfo("dSPACE VEOS CoSim client '" + clientName + "' at " + remoteAddress + " connected.");
+                std::string message = "dSPACE VEOS CoSim client '";
+                message.append(clientName);
+                message.append("' at ");
+                message.append(remoteAddress);
+                message.append(" connected.");
+                LogInfo(message);
             }
         } else {
             if (clientName.empty()) {
                 LogInfo("Local dSPACE VEOS CoSim client connected.");
             } else {
-                LogInfo("Local dSPACE VEOS CoSim client '" + clientName + "' connected.");
+                std::string message = "Local dSPACE VEOS CoSim client '";
+                message.append(clientName);
+                message.append("' connected.");
+                LogInfo(message);
             }
         }
 
@@ -428,10 +451,13 @@ private:
                 std::string errorMessage;
                 CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
                                        "Could not read error frame.");
-                throw CoSimException(errorMessage);
+                throw std::runtime_error(errorMessage);
             }
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 
@@ -445,7 +471,10 @@ private:
                                        "Could not read ping ok frame.");
                 return true;
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 
@@ -463,7 +492,10 @@ private:
                 return true;
             }
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 
@@ -485,10 +517,13 @@ private:
                 std::string errorMessage;
                 CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
                                        "Could not read error frame.");
-                throw CoSimException(errorMessage);
+                throw std::runtime_error(errorMessage);
             }
             default:
-                throw CoSimException("Received unexpected frame " + ToString(frameKind) + ".");
+                std::string message = "Received unexpected frame '";
+                message.append(ToString(frameKind));
+                message.append("'.");
+                throw std::runtime_error(message);
         }
     }
 

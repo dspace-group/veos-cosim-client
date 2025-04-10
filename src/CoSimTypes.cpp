@@ -62,27 +62,27 @@ namespace {
 
 [[nodiscard]] std::string SimulationTimeToString(const SimulationTime simulationTime) {
     const int64_t nanoseconds = simulationTime.count();
-    std::string representation = std::to_string(nanoseconds);
+    std::string str = std::to_string(nanoseconds);
 
-    const size_t length = representation.size();
+    const size_t length = str.size();
     if (length < 10) {
         const size_t countOfMissingZerosInFront = 10 - length;
-        representation.insert(representation.begin(), countOfMissingZerosInFront, '0');
+        str.insert(str.begin(), countOfMissingZerosInFront, '0');
     }
 
-    representation.insert(representation.size() - 9, ".");
-    while (representation[representation.size() - 1] == '0') {
-        representation.pop_back();
+    str.insert(str.size() - 9, ".");
+    while (str[str.size() - 1] == '0') {
+        str.pop_back();
     }
 
-    if (representation[representation.size() - 1] == '.') {
-        representation.pop_back();
+    if (str[str.size() - 1] == '.') {
+        str.pop_back();
     }
 
-    return representation;
+    return str;
 }
 
-[[nodiscard]] std::string ToString(const Result result) {
+[[nodiscard]] std::string_view ToString(const Result result) noexcept {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -101,7 +101,7 @@ namespace {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] std::string ToString(const CoSimType coSimType) {
+[[nodiscard]] std::string_view ToString(const CoSimType coSimType) noexcept {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -112,7 +112,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string ToString(const ConnectionKind connectionKind) {
+[[nodiscard]] std::string_view ToString(const ConnectionKind connectionKind) noexcept {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -123,7 +123,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string ToString(const Command command) {
+[[nodiscard]] std::string_view ToString(const Command command) noexcept {
     switch (command) {
         case Command::None:
             return "None";
@@ -148,7 +148,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string ToString(const Severity severity) {
+[[nodiscard]] std::string_view ToString(const Severity severity) noexcept {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -163,7 +163,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string ToString(const TerminateReason terminateReason) {
+[[nodiscard]] std::string_view ToString(const TerminateReason terminateReason) noexcept {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -174,7 +174,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string ToString(const ConnectionState connectionState) {
+[[nodiscard]] std::string_view ToString(const ConnectionState connectionState) noexcept {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -185,7 +185,7 @@ namespace {
     return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] size_t GetDataTypeSize(const DataType dataType) {
+[[nodiscard]] size_t GetDataTypeSize(const DataType dataType) noexcept {
     switch (dataType) {
         case DataType::Bool:
         case DataType::Int8:
@@ -207,7 +207,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string ToString(const DataType dataType) {
+[[nodiscard]] std::string_view ToString(const DataType dataType) noexcept {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -236,7 +236,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string ToString(const SizeKind sizeKind) {
+[[nodiscard]] std::string_view ToString(const SizeKind sizeKind) noexcept {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -260,7 +260,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string ToString(const SimulationState simulationState) {
+[[nodiscard]] std::string_view ToString(const SimulationState simulationState) noexcept {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -277,7 +277,7 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string ToString([[maybe_unused]] const Mode mode) {
+[[nodiscard]] std::string_view ToString([[maybe_unused]] const Mode mode) noexcept {
     return "<Unused>";
 }
 
@@ -296,23 +296,43 @@ namespace {
 }
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, const uint32_t length, const void* value) {
-    return "IO Data { Id: " + ToString(ioSignal.id) + ", Length: " + std::to_string(length) +
-           ", Data: " + ValueToString(ioSignal.dataType, length, value) + " }";
+    std::string str = "IO Data { Id: ";
+    str.append(ToString(ioSignal.id));
+    str.append(", Length: ");
+    str.append(std::to_string(length));
+    str.append(", Data: ");
+    str.append(ValueToString(ioSignal.dataType, length, value));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const IoSignal& signal) {
-    std::string str = "IO Signal { Id: " + ToString(signal.id) + ", Length: " + std::to_string(signal.length) +
-                      ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
-                      ", Name: \"" + signal.name + "\"}";
-
+    std::string str = "IO Signal { Id: ";
+    str.append(ToString(signal.id));
+    str.append(", Length: ");
+    str.append(std::to_string(signal.length));
+    str.append(", DataType: ");
+    str.append(ToString(signal.dataType));
+    str.append(", SizeKind: ");
+    str.append(ToString(signal.sizeKind));
+    str.append(", Name: \"");
+    str.append(signal.name);
+    str.append("\" }");
     return str;
 }
 
 [[nodiscard]] std::string ToString(const IoSignalContainer& signal) {
-    std::string str = "IO Signal { Id: " + ToString(signal.id) + ", Length: " + std::to_string(signal.length) +
-                      ", DataType: " + ToString(signal.dataType) + ", SizeKind: " + ToString(signal.sizeKind) +
-                      ", Name: \"" + signal.name + "\" }";
-
+    std::string str = "IO Signal { Id: ";
+    str.append(ToString(signal.id));
+    str.append(", Length: ");
+    str.append(std::to_string(signal.length));
+    str.append(", DataType: ");
+    str.append(ToString(signal.dataType));
+    str.append(", SizeKind: ");
+    str.append(ToString(signal.sizeKind));
+    str.append(", Name: \"");
+    str.append(signal.name);
+    str.append("\" }");
     return str;
 }
 
@@ -355,123 +375,109 @@ namespace {
 }
 
 [[nodiscard]] std::string ToString(const CanMessageFlags flags) {
-    std::string flagsStr;
+    std::string str;
 
     if (HasFlag(flags, CanMessageFlags::Loopback)) {
-        flagsStr += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, CanMessageFlags::Error)) {
-        flagsStr += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, CanMessageFlags::Drop)) {
-        flagsStr += ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(flags, CanMessageFlags::ExtendedId)) {
-        flagsStr += ",ExtendedId";
+        str.append(",ExtendedId");
     }
 
     if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-        flagsStr += ",BitRateSwitch";
+        str.append(",BitRateSwitch");
     }
 
     if (HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        flagsStr += ",FlexibleDataRateFormat";
+        str.append(",FlexibleDataRateFormat");
     }
 
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
+    if (!str.empty()) {
+        str.erase(0, 1);
     }
 
-    return flagsStr;
-}
-
-[[nodiscard]] CanControllerContainer::operator CanController() const {
-    CanController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.flexibleDataRateBitsPerSecond = flexibleDataRateBitsPerSecond;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] CanMessage::operator CanMessageContainer() const {
-    CanMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] CanMessageContainer::operator CanMessage() const {
-    CheckMaxLength();
-    CheckFlags();
-    CanMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void CanMessageContainer::CheckMaxLength() const {
-    if (length > CanMessageMaxLength) {
-        throw CoSimException("CAN message data exceeds maximum length.");
-    }
-}
-
-void CanMessageContainer::CheckFlags() const {
-    if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (length > 8) {
-            throw CoSimException("CAN message flags invalid. A DLC > 8 requires the flexible data rate format flag.");
-        }
-
-        if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-            throw CoSimException(
-                "CAN message flags invalid. A bit rate switch flag requires the flexible data rate format flag.");
-        }
-    }
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const CanMessage& message) {
-    return "CAN Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Id: " + ToString(message.id) +
-           ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data, message.length, '-') + ", Flags: " + ToString(message.flags) + " }";
+    std::string str = "CAN Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Id: ");
+    str.append(ToString(message.id));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data, message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const CanMessageContainer& message) {
-    return "CAN Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Id: " + ToString(message.id) +
-           ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data.data(), message.length, '-') + ", Flags: " + ToString(message.flags) +
-           " }";
+    std::string str = "CAN Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Id: ");
+    str.append(ToString(message.id));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data.data(), message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const CanController& controller) {
-    return "CAN Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
-           ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
-           ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "CAN Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", FlexibleDataRateBitsPerSecond: ");
+    str.append(std::to_string(controller.flexibleDataRateBitsPerSecond));
+    str.append(", Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const CanControllerContainer& controller) {
-    return "CAN Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) +
-           ", FlexibleDataRateBitsPerSecond: " + std::to_string(controller.flexibleDataRateBitsPerSecond) +
-           ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "CAN Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", FlexibleDataRateBitsPerSecond: ");
+    str.append(std::to_string(controller.flexibleDataRateBitsPerSecond));
+    str.append(", Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& controllers) {
@@ -493,105 +499,139 @@ void CanMessageContainer::CheckFlags() const {
     return str;
 }
 
+[[nodiscard]] CanController Convert(const CanControllerContainer& controller) {
+    CanController canController{};
+    canController.id = controller.id;
+    canController.queueSize = controller.queueSize;
+    canController.bitsPerSecond = controller.bitsPerSecond;
+    canController.flexibleDataRateBitsPerSecond = controller.flexibleDataRateBitsPerSecond;
+    canController.name = controller.name.c_str();
+    canController.channelName = controller.channelName.c_str();
+    canController.clusterName = controller.clusterName.c_str();
+    return canController;
+}
+
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers) {
     std::vector<CanController> canControllers;
     canControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        canControllers.push_back(static_cast<CanController>(controller));
+        canControllers.push_back(Convert(controller));
     }
 
     return canControllers;
 }
 
+[[nodiscard]] CanMessageContainer Convert(const CanMessage& message) {
+    CanMessageContainer canMessage{};
+    canMessage.timestamp = message.timestamp;
+    canMessage.controllerId = message.controllerId;
+    canMessage.id = message.id;
+    canMessage.flags = message.flags;
+    canMessage.length = message.length;
+    (void)memcpy(canMessage.data.data(), message.data, message.length);
+    return canMessage;
+}
+
+[[nodiscard]] CanMessage Convert(const CanMessageContainer& message) {
+    CanMessage canMessage{};
+    canMessage.timestamp = message.timestamp;
+    canMessage.controllerId = message.controllerId;
+    canMessage.id = message.id;
+    canMessage.flags = message.flags;
+    canMessage.length = message.length;
+    canMessage.data = message.data.data();
+    return canMessage;
+}
+
 [[nodiscard]] std::string ToString(const EthMessageFlags flags) {
-    std::string flagsStr;
+    std::string str;
 
     if (HasFlag(flags, EthMessageFlags::Loopback)) {
-        flagsStr += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, EthMessageFlags::Error)) {
-        flagsStr += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, EthMessageFlags::Drop)) {
-        flagsStr += ",Drop";
+        str.append(",Drop");
     }
 
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
+    if (!str.empty()) {
+        str.erase(0, 1);
     }
 
-    return flagsStr;
-}
-
-[[nodiscard]] EthControllerContainer::operator EthController() const {
-    EthController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.macAddress = macAddress;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] EthMessage::operator EthMessageContainer() const {
-    EthMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] EthMessageContainer::operator EthMessage() const {
-    CheckMaxLength();
-    EthMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void EthMessageContainer::CheckMaxLength() const {
-    if (length > EthMessageMaxLength) {
-        throw CoSimException("Ethernet message data exceeds maximum length.");
-    }
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const EthMessage& message) {
-    return "ETH Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data, message.length, '-') + ", Flags: " + ToString(message.flags) + " }";
+    std::string str = "ETH Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data, message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const EthMessageContainer& message) {
-    return "ETH Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data.data(), message.length, '-') + ", Flags: " + ToString(message.flags) +
-           " }";
+    std::string str = "ETH Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data.data(), message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const EthController& controller) {
-    return "ETH Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
-           DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':') + "], Name: \"" +
-           controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "ETH Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", MacAddress: [");
+    str.append(DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':'));
+    str.append("], Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const EthControllerContainer& controller) {
-    return "ETH Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", MacAddress: [" +
-           DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':') + "], Name: \"" +
-           controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "ETH Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", MacAddress: [");
+    str.append(DataToString(controller.macAddress.data(), sizeof(controller.macAddress), ':'));
+    str.append("], Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& controllers) {
@@ -613,18 +653,50 @@ void EthMessageContainer::CheckMaxLength() const {
     return str;
 }
 
+[[nodiscard]] EthController Convert(const EthControllerContainer& controller) {
+    EthController ethController{};
+    ethController.id = controller.id;
+    ethController.queueSize = controller.queueSize;
+    ethController.bitsPerSecond = controller.bitsPerSecond;
+    ethController.macAddress = controller.macAddress;
+    ethController.name = controller.name.c_str();
+    ethController.channelName = controller.channelName.c_str();
+    ethController.clusterName = controller.clusterName.c_str();
+    return ethController;
+}
+
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers) {
     std::vector<EthController> ethControllers;
     ethControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        ethControllers.push_back(static_cast<EthController>(controller));
+        ethControllers.push_back(Convert(controller));
     }
 
     return ethControllers;
 }
 
-[[nodiscard]] std::string ToString(const LinControllerType type) {
+[[nodiscard]] EthMessageContainer Convert(const EthMessage& message) {
+    EthMessageContainer ethMessage{};
+    ethMessage.timestamp = message.timestamp;
+    ethMessage.controllerId = message.controllerId;
+    ethMessage.flags = message.flags;
+    ethMessage.length = message.length;
+    (void)memcpy(ethMessage.data.data(), message.data, message.length);
+    return ethMessage;
+}
+
+[[nodiscard]] EthMessage Convert(const EthMessageContainer& message) {
+    EthMessage ethMessage{};
+    ethMessage.timestamp = message.timestamp;
+    ethMessage.controllerId = message.controllerId;
+    ethMessage.flags = message.flags;
+    ethMessage.length = message.length;
+    ethMessage.data = message.data.data();
+    return ethMessage;
+}
+
+[[nodiscard]] std::string_view ToString(const LinControllerType type) noexcept {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";
@@ -636,131 +708,133 @@ void EthMessageContainer::CheckMaxLength() const {
 }
 
 [[nodiscard]] std::string ToString(const LinMessageFlags flags) {
-    std::string flagsStr;
+    std::string str;
 
     if (HasFlag(flags, LinMessageFlags::Loopback)) {
-        flagsStr += ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(flags, LinMessageFlags::Error)) {
-        flagsStr += ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(flags, LinMessageFlags::Drop)) {
-        flagsStr += ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(flags, LinMessageFlags::Header)) {
-        flagsStr += ",Header";
+        str.append(",Header");
     }
 
     if (HasFlag(flags, LinMessageFlags::Response)) {
-        flagsStr += ",Response";
+        str.append(",Response");
     }
 
     if (HasFlag(flags, LinMessageFlags::WakeEvent)) {
-        flagsStr += ",WakeEvent";
+        str.append(",WakeEvent");
     }
 
     if (HasFlag(flags, LinMessageFlags::SleepEvent)) {
-        flagsStr += ",SleepEvent";
+        str.append(",SleepEvent");
     }
 
     if (HasFlag(flags, LinMessageFlags::EnhancedChecksum)) {
-        flagsStr += ",EnhancedChecksum";
+        str.append(",EnhancedChecksum");
     }
 
     if (HasFlag(flags, LinMessageFlags::TransferOnce)) {
-        flagsStr += ",TransferOnce";
+        str.append(",TransferOnce");
     }
 
     if (HasFlag(flags, LinMessageFlags::ParityFailure)) {
-        flagsStr += ",ParityFailure";
+        str.append(",ParityFailure");
     }
 
     if (HasFlag(flags, LinMessageFlags::Collision)) {
-        flagsStr += ",Collision";
+        str.append(",Collision");
     }
 
     if (HasFlag(flags, LinMessageFlags::NoResponse)) {
-        flagsStr += ",NoResponse";
+        str.append(",NoResponse");
     }
 
-    if (!flagsStr.empty()) {
-        flagsStr.erase(0, 1);
+    if (!str.empty()) {
+        str.erase(0, 1);
     }
 
-    return flagsStr;
-}
-
-[[nodiscard]] LinControllerContainer::operator LinController() const {
-    LinController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.type = type;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] LinMessage::operator LinMessageContainer() const {
-    LinMessageContainer message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    (void)memcpy(message.data.data(), data, length);
-    return message;
-}
-
-[[nodiscard]] LinMessageContainer::operator LinMessage() const {
-    CheckMaxLength();
-    LinMessage message{};
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
-    return message;
-}
-
-void LinMessageContainer::CheckMaxLength() const {
-    if (length > LinMessageMaxLength) {
-        throw CoSimException("LIN message data exceeds maximum length.");
-    }
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const LinMessage& message) {
-    return "LIN Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Id: " + ToString(message.id) +
-           ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data, message.length, '-') + ", Flags: " + ToString(message.flags) + " }";
+    std::string str = "LIN Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Id: ");
+    str.append(ToString(message.id));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data, message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const LinMessageContainer& message) {
-    return "LIN Message { Timestamp: " + SimulationTimeToString(message.timestamp) +
-           ", ControllerId: " + ToString(message.controllerId) + ", Id: " + ToString(message.id) +
-           ", Length: " + std::to_string(message.length) +
-           ", Data: " + DataToString(message.data.data(), message.length, '-') + ", Flags: " + ToString(message.flags) +
-           " }";
+    std::string str = "LIN Message { Timestamp: ";
+    str.append(SimulationTimeToString(message.timestamp));
+    str.append(", ControllerId: ");
+    str.append(ToString(message.controllerId));
+    str.append(", Id: ");
+    str.append(ToString(message.id));
+    str.append(", Length: ");
+    str.append(std::to_string(message.length));
+    str.append(", Data: ");
+    str.append(DataToString(message.data.data(), message.length, '-'));
+    str.append(", Flags: ");
+    str.append(ToString(message.flags));
+    str.append(" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const LinController& controller) {
-    return "LIN Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", Type: " + ToString(controller.type) +
-           ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "LIN Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", Type: ");
+    str.append(ToString(controller.type));
+    str.append(", Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const LinControllerContainer& controller) {
-    return "LIN Controller { Id: " + ToString(controller.id) + ", QueueSize: " + std::to_string(controller.queueSize) +
-           ", BitsPerSecond: " + std::to_string(controller.bitsPerSecond) + ", Type: " + ToString(controller.type) +
-           ", Name: \"" + controller.name + "\", ChannelName: \"" + controller.channelName + "\", ClusterName: \"" +
-           controller.clusterName + "\" }";
+    std::string str = "LIN Controller { Id: ";
+    str.append(ToString(controller.id));
+    str.append(", QueueSize: ");
+    str.append(std::to_string(controller.queueSize));
+    str.append(", BitsPerSecond: ");
+    str.append(std::to_string(controller.bitsPerSecond));
+    str.append(", Type: ");
+    str.append(ToString(controller.type));
+    str.append(", Name: \"");
+    str.append(controller.name);
+    str.append("\", ChannelName: \"");
+    str.append(controller.channelName);
+    str.append("\", ClusterName: \"");
+    str.append(controller.clusterName);
+    str.append("\" }");
+    return str;
 }
 
 [[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& controllers) {
@@ -782,15 +856,49 @@ void LinMessageContainer::CheckMaxLength() const {
     return str;
 }
 
+[[nodiscard]] LinController Convert(const LinControllerContainer& controller) {
+    LinController linController{};
+    linController.id = controller.id;
+    linController.queueSize = controller.queueSize;
+    linController.bitsPerSecond = controller.bitsPerSecond;
+    linController.type = controller.type;
+    linController.name = controller.name.c_str();
+    linController.channelName = controller.channelName.c_str();
+    linController.clusterName = controller.clusterName.c_str();
+    return linController;
+}
+
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers) {
     std::vector<LinController> linControllers;
     linControllers.reserve(controllers.size());
 
     for (const auto& controller : controllers) {
-        linControllers.push_back(static_cast<LinController>(controller));
+        linControllers.push_back(Convert(controller));
     }
 
     return linControllers;
+}
+
+[[nodiscard]] LinMessageContainer Convert(const LinMessage& message) {
+    LinMessageContainer linMessage{};
+    linMessage.timestamp = message.timestamp;
+    linMessage.controllerId = message.controllerId;
+    linMessage.id = message.id;
+    linMessage.flags = message.flags;
+    linMessage.length = message.length;
+    (void)memcpy(linMessage.data.data(), message.data, message.length);
+    return linMessage;
+}
+
+[[nodiscard]] LinMessage Convert(const LinMessageContainer& message) {
+    LinMessage linMessage{};
+    linMessage.timestamp = message.timestamp;
+    linMessage.controllerId = message.controllerId;
+    linMessage.id = message.id;
+    linMessage.flags = message.flags;
+    linMessage.length = message.length;
+    linMessage.data = message.data.data();
+    return linMessage;
 }
 
 }  // namespace DsVeosCoSim

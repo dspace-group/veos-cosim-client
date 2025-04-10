@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -148,7 +149,9 @@ TEST_P(TestTcpSocket, Accept) {
     const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
-    (void)ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
+    const std::optional<Socket> connectedSocket =
+        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedSocket);
 
     // Act
     const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
@@ -166,18 +169,21 @@ TEST_P(TestTcpSocket, PortsAfterConnectAndAccept) {
     const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
-    const Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
+    const std::optional<Socket> connectedSocket =
+        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedSocket);
 
-    const Socket acceptedSocket = Accept(serverSocket);
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedSocket);
 
     // Act
-    const uint16_t connectedSocketLocalPort = connectedSocket.GetLocalPort();
+    const uint16_t connectedSocketLocalPort = connectedSocket->GetLocalPort();
 
     // Assert
     ASSERT_NE(connectedSocketLocalPort, port);
 #ifdef _WIN32
-    ASSERT_EQ(connectedSocketLocalPort, acceptedSocket.GetRemoteAddress().port);
-    ASSERT_EQ(acceptedSocket.GetLocalPort(), connectedSocket.GetRemoteAddress().port);
+    ASSERT_EQ(connectedSocketLocalPort, acceptedSocket->GetRemoteAddress().port);
+    ASSERT_EQ(acceptedSocket->GetLocalPort(), connectedSocket->GetRemoteAddress().port);
 #endif
 }
 
@@ -190,16 +196,19 @@ TEST_P(TestTcpSocket, SendAndReceive) {
     const uint16_t port = serverSocket.GetLocalPort();
     serverSocket.Listen();
 
-    const Socket connectedSocket = ConnectSocket(GetLoopBackAddress(param.addressFamily), port);
+    const std::optional<Socket> connectedSocket =
+        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
+    EXPECT_TRUE(connectedSocket);
 
-    const Socket acceptedSocket = Accept(serverSocket);
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    EXPECT_TRUE(acceptedSocket);
 
     const uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
 
     // Act
-    ASSERT_TRUE(SendComplete(connectedSocket, &sendValue, sizeof(sendValue)));
-    ASSERT_TRUE(ReceiveComplete(acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    ASSERT_TRUE(SendComplete(*connectedSocket, &sendValue, sizeof(sendValue)));
+    ASSERT_TRUE(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert
     ASSERT_EQ(sendValue, receiveValue);

@@ -32,9 +32,9 @@ bool SendLinMessages;
 
 void PrintStatus(const bool value, const std::string& what) {
     if (value) {
-        LogInfo("Enabled sending " + what);
+        LogInfo("Enabled sending {}.", what);
     } else {
-        LogInfo("Disabled sending " + what);
+        LogInfo("Disabled sending {}.", what);
     }
 }
 
@@ -69,21 +69,21 @@ void TransmitCanMessage(const CanController& controller) {
     CanMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(static_cast<CanMessage>(message));
+    (void)Client->Transmit(Convert(message));
 }
 
 void TransmitEthMessage(const EthController& controller) {
     EthMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(static_cast<EthMessage>(message));
+    (void)Client->Transmit(Convert(message));
 }
 
 void TransmitLinMessage(const LinController& controller) {
     LinMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(static_cast<LinMessage>(message));
+    (void)Client->Transmit(Convert(message));
 }
 
 void SendSomeData(const SimulationTime simulationTime) {
@@ -132,24 +132,23 @@ void StartSimulationThread(const std::function<void()>& function) {
 }
 
 void OnSimulationStartedCallback(const SimulationTime simulationTime) {
-    LogInfo("Simulation started at " + SimulationTimeToString(simulationTime) + " s.");
+    LogInfo("Simulation started at {} s.", SimulationTimeToString(simulationTime));
 }
 
 void OnSimulationStoppedCallback(const SimulationTime simulationTime) {
-    LogInfo("Simulation stopped at " + SimulationTimeToString(simulationTime) + " s.");
+    LogInfo("Simulation stopped at {} s.", SimulationTimeToString(simulationTime));
 }
 
 void OnSimulationTerminatedCallback(const SimulationTime simulationTime, const TerminateReason reason) {
-    LogInfo("Simulation terminated with reason " + ToString(reason) + " at " + SimulationTimeToString(simulationTime) +
-            " s.");
+    LogInfo("Simulation terminated with reason {} at {} s.", ToString(reason), SimulationTimeToString(simulationTime));
 }
 
 void OnSimulationPausedCallback(const SimulationTime simulationTime) {
-    LogInfo("Simulation paused at " + SimulationTimeToString(simulationTime) + " s.");
+    LogInfo("Simulation paused at {} s.", SimulationTimeToString(simulationTime));
 }
 
 void OnSimulationContinuedCallback(const SimulationTime simulationTime) {
-    LogInfo("Simulation continued at " + SimulationTimeToString(simulationTime) + " s.");
+    LogInfo("Simulation continued at {} s.", SimulationTimeToString(simulationTime));
 }
 
 void Connect(const std::string_view host, const std::string_view serverName) {
@@ -173,8 +172,8 @@ void Connect(const std::string_view host, const std::string_view serverName) {
 
     LogTrace("");
 
-    SimulationTime stepSize = Client->GetStepSize();
-    LogTrace("Step size: " + SimulationTimeToString(stepSize) + " s");
+    const SimulationTime stepSize = Client->GetStepSize();
+    LogTrace("Step size: {} s", SimulationTimeToString(stepSize));
     LogTrace("");
 
     const std::vector<CanController>& canControllers = Client->GetCanControllers();

@@ -19,11 +19,7 @@ target_sources(
   Communication/SocketChannel.cpp
   Helpers/CoSimHelper.cpp
   Helpers/Environment.cpp
-  OsAbstraction/Handle.cpp
-  OsAbstraction/NamedEvent.cpp
-  OsAbstraction/NamedMutex.cpp
   OsAbstraction/OsUtilities.cpp
-  OsAbstraction/SharedMemory.cpp
   OsAbstraction/Socket.cpp
   BusBuffer.cpp
   CoSimClient.cpp
@@ -68,6 +64,7 @@ endif()
 if(WIN32)
   target_link_libraries(
     DsVeosCoSim
+    PRIVATE
     WS2_32
   )
 endif()

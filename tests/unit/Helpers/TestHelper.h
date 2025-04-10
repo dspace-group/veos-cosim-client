@@ -35,11 +35,3 @@ void AssertEq(const std::vector<T>& expected, const std::vector<T>& actual) {
         AssertEq(expected[i], actual[i]);
     }
 }
-
-template <typename T, typename TC>
-void AssertEq(const std::vector<T>& expected, const std::vector<T>& actual) {
-    ASSERT_EQ(expected.size(), actual.size());
-    for (size_t i = 0; i < expected.size(); i++) {
-        AssertEq(static_cast<TC>(expected[i]), static_cast<TC>(actual[i]));
-    }
-}

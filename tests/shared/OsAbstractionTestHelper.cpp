@@ -2,6 +2,8 @@
 
 #include "OsAbstractionTestHelper.h"
 
+#include "fmt/format.h"
+
 #include <stdexcept>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
@@ -156,10 +158,10 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 
 Pipe::Pipe(const std::string& name) {
 #ifdef _WIN32
-    _name = R"(\\.\pipe\)" + name;
+    _name = fmt::format(R"(\\.\pipe\{})", name);
 #else
-    _pipe1 = CreatePipe("/tmp/Pipe1" + name);
-    _pipe2 = CreatePipe("/tmp/Pipe2" + name);
+    _pipe1 = CreatePipe(fmt::format("/tmp/Pipe1{}", name));
+    _pipe2 = CreatePipe(fmt::format("/tmp/Pipe2{}", name));
 #endif
 }
 

@@ -5,8 +5,13 @@
 #include <cstdint>
 #include <string>
 #include <string_view>  // IWYU pragma: keep
-#include <system_error>
 #include <utility>
+
+#if _WIN32
+#include "OsUtilities.h"
+#else
+#include <system_error>
+#endif
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -51,19 +56,35 @@ void LogTrace(const std::string_view message) {
 }
 
 void LogProtocolBeginTrace(const std::string& message) {
-    LogTrace("PROT BEGIN " + message);
+    std::string traceMessage = "PROT BEGIN ";
+    traceMessage.append(message);
+    LogTrace(traceMessage);
 }
 
 void LogProtocolEndTrace(const std::string& message) {
-    LogTrace("PROT END   " + message);
+    std::string traceMessage = "PROT END   ";
+    traceMessage.append(message);
+    LogTrace(traceMessage);
 }
 
 void LogProtocolDataTrace(const std::string& message) {
-    LogTrace("PROT DATA  " + message);
+    std::string traceMessage = "PROT DATA  ";
+    traceMessage.append(message);
+    LogTrace(traceMessage);
 }
 
 [[nodiscard]] std::string GetSystemErrorMessage(const int32_t errorCode) {
-    return "Error code: " + std::to_string(errorCode) + ". " + std::system_category().message(errorCode);
+    std::string message = "Error code: ";
+    message.append(std::to_string(errorCode));
+    message.append(". ");
+
+#if _WIN32
+    message.append(GetEnglishErrorMessage(errorCode));
+#else
+    message.append(std::system_category().message(errorCode));
+#endif
+
+    return message;
 }
 
 }  // namespace DsVeosCoSim

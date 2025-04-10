@@ -9,6 +9,7 @@
 #ifdef __cplusplus
 #include <cstddef>
 #include <string>
+#include <string_view>
 #endif
 
 #if (defined __GNUC__) && (!defined _DOXYGEN)
@@ -1149,13 +1150,15 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosC
 
 #ifdef __cplusplus
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_TerminateReasonToString(
+    DsVeosCoSim_TerminateReason terminateReason);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_ConnectionStateToString(
+    DsVeosCoSim_ConnectionState connectionState);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType);
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal& ioSignal);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController& controller);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController& controller);
@@ -1170,7 +1173,7 @@ extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage& message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage& message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage& message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerTypeToString(
+extern DSVEOSCOSIM_API std::string_view DsVeosCoSim_LinControllerTypeToString(
     DsVeosCoSim_LinControllerType linControllerType);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags);

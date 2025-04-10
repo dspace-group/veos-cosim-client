@@ -12,9 +12,18 @@
 
 namespace DsVeosCoSim {
 
-class IoBuffer {  // NOLINT
+class IoBuffer {
+protected:
+    IoBuffer() noexcept = default;
+
 public:
     virtual ~IoBuffer() noexcept = default;
+
+    IoBuffer(const IoBuffer&) = delete;
+    IoBuffer& operator=(const IoBuffer&) = delete;
+
+    IoBuffer(IoBuffer&&) = delete;
+    IoBuffer& operator=(IoBuffer&&) = delete;
 
     virtual void ClearData() const = 0;
 

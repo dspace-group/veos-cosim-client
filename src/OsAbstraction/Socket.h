@@ -17,18 +17,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] inline std::string ToString(const AddressFamily addressFamily) {
-    switch (addressFamily) {
-        case AddressFamily::Ipv4:
-            return "Ipv4";
-        case AddressFamily::Ipv6:
-            return "Ipv6";
-        case AddressFamily::Uds:
-            return "Uds";
-    }
-
-    return "<Invalid AddressFamily>";
-}
+[[nodiscard]] std::string_view ToString(AddressFamily addressFamily) noexcept;
 
 #ifdef _WIN32
 using SocketHandle = uintptr_t;
@@ -45,11 +34,11 @@ struct SocketAddress {
 
 class Socket {
 public:
-    Socket() = default;
+    Socket() noexcept = default;
     explicit Socket(AddressFamily addressFamily);
 
 private:
-    Socket(SocketHandle socket, AddressFamily addressFamily);
+    Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path);
 
 public:
     ~Socket() noexcept;
@@ -74,7 +63,7 @@ public:
                                                           uint16_t localPort,
                                                           uint32_t timeoutInMilliseconds);
 
-    [[nodiscard]] bool TryConnect(const std::string& name) const;
+    [[nodiscard]] static std::optional<Socket> TryConnect(const std::string& name);
     void EnableIpv6Only() const;
     void Bind(uint16_t port, bool enableRemoteAccess) const;
     void Bind(const std::string& name);
@@ -96,8 +85,6 @@ private:
 
     [[nodiscard]] SocketAddress GetRemoteAddressForIpv4() const;
     [[nodiscard]] SocketAddress GetRemoteAddressForIpv6() const;
-
-    void EnsureIsValid() const;
 
     SocketHandle _socket = InvalidSocket;
     AddressFamily _addressFamily{};
