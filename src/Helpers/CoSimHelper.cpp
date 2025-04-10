@@ -9,6 +9,8 @@
 
 #if _WIN32
 #include "OsUtilities.h"
+#else
+#include <system_error>
 #endif
 
 #include "DsVeosCoSim/CoSimTypes.h"
