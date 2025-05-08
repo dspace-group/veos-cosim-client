@@ -433,7 +433,7 @@ private:
         if (_connectionKind == ConnectionKind::Local) {
             std::string message = "Connected to local dSPACE VEOS CoSim server '";
             message.append(_serverName);
-            message.append(".");
+            message.append("'.");
             LogInfo(message);
         } else {
             if (_serverName.empty()) {
