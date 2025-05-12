@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <string_view>
 
@@ -45,3 +47,12 @@ void RunUdpTest(const std::string_view host) {  // NOLINT
     RunPerformanceTest(UdpClientRun, host);
     LogTrace("");
 }
+
+#else
+
+#include <string_view>
+
+void RunUdpTest(const std::string_view host) {  // NOLINT
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <stdexcept>
 #include <string_view>
 
@@ -72,3 +74,12 @@ void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
     RunPerformanceTest(CoSimClientRun, host);
     LogTrace("");
 }
+
+#else
+
+#include <string_view>
+
+void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

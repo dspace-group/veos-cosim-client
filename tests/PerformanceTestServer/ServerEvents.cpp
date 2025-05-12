@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
+
 #include <array>
 #include <thread>
 
@@ -39,7 +40,10 @@ void EventsServerRun() {
 void StartEventsServer() {  // NOLINT
     std::thread(EventsServerRun).detach();
 }
+
 #else
+
 void StartEventsServer() {  // NOLINT
 }
+
 #endif

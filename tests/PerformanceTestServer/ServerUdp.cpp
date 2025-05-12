@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <thread>
 
@@ -41,3 +43,10 @@ void UdpServerRun() {
 void StartUdpServer() {  // NOLINT
     std::thread(UdpServerRun).detach();
 }
+
+#else
+
+void StartUdpServer() {  // NOLINT
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

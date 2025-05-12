@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <thread>
 
@@ -39,3 +41,10 @@ void PipeServerRun() {
 void StartPipeServer() {  // NOLINT
     std::thread(PipeServerRun).detach();
 }
+
+#else
+
+void StartPipeServer() {  // NOLINT
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

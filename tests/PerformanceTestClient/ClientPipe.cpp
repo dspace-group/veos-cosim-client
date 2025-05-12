@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -47,3 +49,10 @@ void RunPipeTest() {  // NOLINT
     RunPerformanceTest(PipeClientRun, "");
     LogTrace("");
 }
+
+#else
+
+void RunPipeTest() {  // NOLINT
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

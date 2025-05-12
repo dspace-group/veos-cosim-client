@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #ifdef _WIN32
+
 #include <array>
 #include <cstdint>
 #include <string_view>  // IWYU pragma: keep
@@ -50,7 +51,10 @@ void RunEventsTest() {  // NOLINT
     RunPerformanceTest(EventsClientRun, "");
     LogTrace("");
 }
+
 #else
-void RunEventsTest() {
+
+void RunEventsTest() {  // NOLINT
 }
+
 #endif

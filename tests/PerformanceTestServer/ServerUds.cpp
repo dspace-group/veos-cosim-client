@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#if defined(ALL_COMMUNICATION_TESTS) || !defined(_WIN32)
+
 #include <array>
 #include <thread>
 
@@ -46,3 +48,10 @@ void UdsServerRun() {
 void StartUdsServer() {  // NOLINT
     std::thread(UdsServerRun).detach();
 }
+
+#else
+
+void StartUdsServer() {  // NOLINT
+}
+
+#endif
