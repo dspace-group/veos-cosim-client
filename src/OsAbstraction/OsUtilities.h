@@ -7,11 +7,10 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
 
 namespace DsVeosCoSim {
 
-constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
+[[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
 class NamedEvent {
 protected:
@@ -45,9 +44,9 @@ public:
     NamedMutex& operator=(NamedMutex&&) = delete;
 
     // Small case, so this mutex can directly be used in std::lock_guard
-    virtual void lock() const = 0;                                     // NOLINT
-    [[nodiscard]] virtual bool lock(uint32_t milliseconds) const = 0;  // NOLINT
-    virtual void unlock() const = 0;                                   // NOLINT
+    virtual void lock() const = 0;                                     // NOLINT(readability-identifier-naming)
+    [[nodiscard]] virtual bool lock(uint32_t milliseconds) const = 0;  // NOLINT(readability-identifier-naming)
+    virtual void unlock() const = 0;                                   // NOLINT(readability-identifier-naming)
 };
 
 class SharedMemory {
@@ -64,8 +63,8 @@ public:
     SharedMemory& operator=(SharedMemory&&) = delete;
 
     // Small case, so it has the same interface as std::vector
-    [[nodiscard]] virtual void* data() const noexcept = 0;   // NOLINT
-    [[nodiscard]] virtual size_t size() const noexcept = 0;  // NOLINT
+    [[nodiscard]] virtual void* data() const noexcept = 0;   // NOLINT(readability-identifier-naming)
+    [[nodiscard]] virtual size_t size() const noexcept = 0;  // NOLINT(readability-identifier-naming)
 };
 
 [[nodiscard]] uint32_t GetCurrentProcessId();

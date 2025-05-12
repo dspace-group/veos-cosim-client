@@ -8,7 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -311,7 +311,7 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Channel> TryAccept(const uint32_t timeoutInMilliseconds) override {
-        std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);  // NOLINT
+        std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
         if (socket) {
             return std::make_unique<SocketChannel>(std::move(*socket));
         }
@@ -331,7 +331,7 @@ private:
                                                               const uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
-    std::optional<Socket> connectedSocket =  // NOLINT
+    std::optional<Socket> connectedSocket =
         Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds);
     if (connectedSocket) {
         connectedSocket->EnableNoDelay();

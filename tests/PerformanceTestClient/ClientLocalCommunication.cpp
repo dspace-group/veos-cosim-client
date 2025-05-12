@@ -47,7 +47,7 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunLocalCommunicationTest() {  // NOLINT
+void RunLocalCommunicationTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Local Communication:");
     RunPerformanceTest(LocalCommunicationClientRun, "");
     LogTrace("");

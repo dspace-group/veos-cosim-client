@@ -12,7 +12,7 @@
 
 namespace DsVeosCoSim {
 
-constexpr uint32_t CoSimProtocolVersion = 0x10000U;  // NOLINT
+[[maybe_unused]] constexpr uint32_t CoSimProtocolVersion = 0x10000U;
 
 enum class FrameKind {
     Ok = 1,

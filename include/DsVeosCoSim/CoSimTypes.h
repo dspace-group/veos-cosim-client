@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <memory.h>  // IWYU pragma: keep
+#include <memory.h>
 
 #include <array>
 #include <chrono>
 #include <functional>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 namespace DsVeosCoSim {
 
@@ -44,9 +44,9 @@ namespace DsVeosCoSim {
     }
 // NOLINTEND
 
-constexpr uint32_t CanMessageMaxLength = 64U;    // NOLINT
-constexpr uint32_t EthMessageMaxLength = 9018U;  // NOLINT
-constexpr uint32_t LinMessageMaxLength = 8U;     // NOLINT
+constexpr uint32_t CanMessageMaxLength = 64U;
+constexpr uint32_t EthMessageMaxLength = 9018U;
+constexpr uint32_t LinMessageMaxLength = 8U;
 constexpr uint32_t EthAddressLength = 6U;
 
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);

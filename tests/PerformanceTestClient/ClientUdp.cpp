@@ -42,7 +42,7 @@ void UdpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& 
 
 }  // namespace
 
-void RunUdpTest(const std::string_view host) {  // NOLINT
+void RunUdpTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("UDP:");
     RunPerformanceTest(UdpClientRun, host);
     LogTrace("");
@@ -52,7 +52,7 @@ void RunUdpTest(const std::string_view host) {  // NOLINT
 
 #include <string_view>
 
-void RunUdpTest(const std::string_view host) {  // NOLINT
+void RunUdpTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

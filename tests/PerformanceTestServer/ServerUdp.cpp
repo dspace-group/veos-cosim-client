@@ -40,13 +40,13 @@ void UdpServerRun() {
 
 }  // namespace
 
-void StartUdpServer() {  // NOLINT
+void StartUdpServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(UdpServerRun).detach();
 }
 
 #else
 
-void StartUdpServer() {  // NOLINT
+void StartUdpServer() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

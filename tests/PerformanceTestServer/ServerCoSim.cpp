@@ -50,6 +50,6 @@ void CoSimServerRun() {
 
 }  // namespace
 
-void StartCoSimServer() {  // NOLINT
+void StartCoSimServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(CoSimServerRun).detach();
 }

@@ -8,7 +8,7 @@
 
 #include "Socket.h"
 
-constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
+[[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
 #define MUST_BE_TRUE(actual)                             \
     do {                                                 \
@@ -21,7 +21,7 @@ constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
 #define CTRL(c) ((c) & 037)
 #endif
 
-constexpr uint32_t DefaultTimeout = 1000;  // NOLINT
+[[maybe_unused]] constexpr uint32_t DefaultTimeout = 1000;
 
 [[nodiscard]] int32_t GetChar();
 

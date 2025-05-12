@@ -64,7 +64,7 @@ void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t
 
 }  // namespace
 
-void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
+void RunCoSimPollingTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     if (host.empty()) {
         LogTrace("Local dSPACE VEOS CoSim Polling:");
     } else {
@@ -79,7 +79,7 @@ void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
 
 #include <string_view>
 
-void RunCoSimPollingTest(const std::string_view host) {  // NOLINT
+void RunCoSimPollingTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

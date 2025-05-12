@@ -15,9 +15,8 @@
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
-#include <Windows.h>  // NOLINT
+#include <Windows.h>
 #include <afunix.h>
-#include <stdio.h>  // NOLINT
 #include <winsock2.h>
 #else
 #include <arpa/inet.h>
@@ -78,10 +77,10 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 [[nodiscard]] int64_t GetCurrentTimeInMilliseconds() {
 #ifdef _WIN32
-    FILETIME fileTime{};                 // NOLINT
-    GetSystemTimeAsFileTime(&fileTime);  // NOLINT
+    FILETIME fileTime{};
+    GetSystemTimeAsFileTime(&fileTime);
 
-    ULARGE_INTEGER largeInteger{};  // NOLINT
+    ULARGE_INTEGER largeInteger{};
     largeInteger.LowPart = fileTime.dwLowDateTime;
     largeInteger.HighPart = fileTime.dwHighDateTime;
 
@@ -139,7 +138,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     return socketAddress;
 }
 
-[[nodiscard]] SocketAddress ConvertFromInternetAddress(const sockaddr_in6& ipv6Address) {  // NOLINT
+[[nodiscard]] SocketAddress ConvertFromInternetAddress(const sockaddr_in6& ipv6Address) {
     SocketAddress socketAddress;
     socketAddress.port = ntohs(ipv6Address.sin6_port);
 
@@ -360,9 +359,9 @@ Socket::~Socket() noexcept {
 Socket::Socket(Socket&& other) noexcept {
     Close();
 
-    _socket = other._socket;                // NOLINT
-    _addressFamily = other._addressFamily;  // NOLINT
-    _path = other._path;                    // NOLINT
+    _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
@@ -466,7 +465,7 @@ void Socket::Close() {
     return _socket != InvalidSocket;
 }
 
-void Socket::EnableIpv6Only() const {  // NOLINT
+void Socket::EnableIpv6Only() const {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
@@ -601,7 +600,7 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
 
     // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same
     // symbol
-    address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;  // NOLINT
+    address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;
 
     const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
@@ -744,7 +743,7 @@ void Socket::Listen() const {
         return GetRemoteAddressForIpv6();
     }
 
-    return {"127.0.0.1", 0};  // NOLINT
+    return {"127.0.0.1", 0};
 }
 
 [[nodiscard]] SocketAddress Socket::GetRemoteAddressForIpv4() const {

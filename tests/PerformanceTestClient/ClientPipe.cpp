@@ -44,7 +44,7 @@ void PipeClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunPipeTest() {  // NOLINT
+void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Pipes:");
     RunPerformanceTest(PipeClientRun, "");
     LogTrace("");
@@ -52,7 +52,7 @@ void RunPipeTest() {  // NOLINT
 
 #else
 
-void RunPipeTest() {  // NOLINT
+void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

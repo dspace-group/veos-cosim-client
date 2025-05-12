@@ -2,9 +2,9 @@
 
 #include "LogHelper.h"
 
-#include <fmt/color.h>
+#include <string_view>
 
-#include <string_view>  // IWYU pragma: keep
+#include <fmt/color.h>
 
 #include "DsVeosCoSim/CoSimTypes.h"
 

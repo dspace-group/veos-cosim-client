@@ -43,7 +43,7 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunUdsTest() {  // NOLINT
+void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Unix Domain Socket:");
     RunPerformanceTest(UdsClientRun, "");
     LogTrace("");
@@ -51,7 +51,7 @@ void RunUdsTest() {  // NOLINT
 
 #else
 
-void RunUdsTest() {  // NOLINT
+void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif

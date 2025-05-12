@@ -21,7 +21,7 @@ using namespace std::chrono_literals;
 
 namespace {
 
-class ServerWrapper final {  // NOLINT
+class ServerWrapper final {
 public:
     ServerWrapper() : _server(CreateServer()) {
     }
@@ -29,6 +29,12 @@ public:
     ~ServerWrapper() {
         StopBackgroundThread();
     }
+
+    ServerWrapper(const ServerWrapper&) = delete;
+    ServerWrapper& operator=(const ServerWrapper&) = delete;
+
+    ServerWrapper(ServerWrapper&&) = delete;
+    ServerWrapper& operator=(ServerWrapper&&) = delete;
 
     void Load(const CoSimServerConfig& config) {
         _config = config;

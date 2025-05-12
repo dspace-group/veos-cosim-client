@@ -48,6 +48,6 @@ void RemoteCommunicationServerRun() {
 
 }  // namespace
 
-void StartRemoteCommunicationServer() {  // NOLINT
+void StartRemoteCommunicationServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(RemoteCommunicationServerRun).detach();
 }

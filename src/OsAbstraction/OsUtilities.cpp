@@ -4,7 +4,7 @@
 
 #include "OsUtilities.h"
 
-#include <Windows.h>  // NOLINT
+#include <Windows.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -22,12 +22,8 @@ namespace {
         return {};
     }
 
-    const int32_t sizeNeeded = MultiByteToWideChar(CP_UTF8,  // NOLINT
-                                                   0,
-                                                   utf8String.data(),
-                                                   static_cast<int32_t>(utf8String.size()),
-                                                   nullptr,
-                                                   0);
+    const int32_t sizeNeeded =
+        MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
 
     std::wstring wideString(sizeNeeded, L'\0');
     (void)MultiByteToWideChar(CP_UTF8,
@@ -59,18 +55,18 @@ namespace {
 }
 
 [[nodiscard]] int32_t GetLastWindowsError() {
-    return static_cast<int32_t>(GetLastError());  // NOLINT
+    return static_cast<int32_t>(GetLastError());
 }
 
 class Handle final {
 public:
     Handle() noexcept = default;
 
-    Handle(void* handle) : _handle(handle) {  // NOLINT
+    Handle(void* handle) : _handle(handle) {  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
     }
 
     ~Handle() noexcept {
-        (void)CloseHandle(_handle);  // NOLINT
+        (void)CloseHandle(_handle);
     }
 
     Handle(const Handle&) = delete;
@@ -88,7 +84,7 @@ public:
         return *this;
     }
 
-    operator void*() const noexcept {  // NOLINT
+    operator void*() const noexcept {  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
         return _handle;
     }
 
@@ -97,7 +93,8 @@ public:
     }
 
     [[nodiscard]] bool Wait(uint32_t milliseconds) const {
-        switch (const DWORD result = WaitForSingleObject(_handle, milliseconds)) {  // NOLINT
+        const DWORD result = WaitForSingleObject(_handle, milliseconds);
+        switch (result) {
             case WAIT_OBJECT_0:
                 return true;
             case WAIT_ABANDONED:
@@ -135,7 +132,7 @@ public:
     NamedEventImpl& operator=(NamedEventImpl&&) = delete;
 
     void Set() const override {
-        const BOOL result = SetEvent(_handle);  // NOLINT
+        const BOOL result = SetEvent(_handle);
         if (result == FALSE) {
             std::string message = "Could not set event '";
             message.append(_name);
@@ -172,16 +169,16 @@ public:
     NamedMutexImpl& operator=(NamedMutexImpl&&) = delete;
 
     // Small case, so this mutex can directly be used in std::lock_guard
-    void lock() const override {  // NOLINT
+    void lock() const override {
         (void)lock(Infinite);
     }
 
-    [[nodiscard]] bool lock(uint32_t milliseconds) const override {  // NOLINT
+    [[nodiscard]] bool lock(const uint32_t milliseconds) const override {
         return _handle.Wait(milliseconds);
     }
 
-    void unlock() const override {    // NOLINT
-        (void)ReleaseMutex(_handle);  // NOLINT
+    void unlock() const override {
+        (void)ReleaseMutex(_handle);
     }
 
 private:
@@ -190,12 +187,10 @@ private:
 
 class SharedMemoryImpl final : public SharedMemory {
 public:
-    SharedMemoryImpl(const std::string& name, size_t size, Handle handle)
-        : _size(size),
-          _handle(std::move(handle)),
-          _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {  // NOLINT
+    SharedMemoryImpl(const std::string& name, const size_t size, Handle handle)
+        : _size(size), _handle(std::move(handle)), _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
         if (!_data) {
-            (void)CloseHandle(_handle);  // NOLINT
+            (void)CloseHandle(_handle);
             std::string message = "Could not map view of shared memory '";
             message.append(name);
             message.append("'. ");
@@ -212,11 +207,11 @@ public:
     SharedMemoryImpl(SharedMemoryImpl&&) = delete;
     SharedMemoryImpl& operator=(SharedMemoryImpl&&) = delete;
 
-    [[nodiscard]] void* data() const noexcept override {  // NOLINT
+    [[nodiscard]] void* data() const noexcept override {
         return _data;
     }
 
-    [[nodiscard]] size_t size() const noexcept override {  // NOLINT
+    [[nodiscard]] size_t size() const noexcept override {
         return _size;
     }
 
@@ -231,20 +226,20 @@ private:
 [[nodiscard]] uint32_t GetCurrentProcessId() {
     static uint32_t processId{};
     if (processId == 0) {
-        processId = static_cast<uint32_t>(::GetCurrentProcessId());  // NOLINT
+        processId = static_cast<uint32_t>(::GetCurrentProcessId());
     }
 
     return processId;
 }
 
 [[nodiscard]] bool IsProcessRunning(const uint32_t processId) {
-    void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);  // NOLINT
+    void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
     if (processHandle == nullptr) {
         return false;
     }
 
-    DWORD exitCode{};                                                  // NOLINT
-    const BOOL result = GetExitCodeProcess(processHandle, &exitCode);  // NOLINT
+    DWORD exitCode{};
+    const BOOL result = GetExitCodeProcess(processHandle, &exitCode);
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
@@ -272,7 +267,7 @@ private:
 
 [[nodiscard]] std::unique_ptr<NamedEvent> CreateOrOpenNamedEvent(const std::string& name) {
     const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());  // NOLINT
+    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open event '";
         message.append(name);
@@ -286,7 +281,7 @@ private:
 
 [[nodiscard]] std::unique_ptr<NamedMutex> CreateOrOpenNamedMutex(const std::string& name) {
     const std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());  // NOLINT
+    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open mutex '";
         message.append(name);
@@ -300,14 +295,10 @@ private:
 
 [[nodiscard]] std::unique_ptr<SharedMemory> CreateOrOpenSharedMemory(const std::string& name, size_t size) {
     const std::wstring fullName = GetFullSharedMemoryName(name);
-    constexpr DWORD sizeHigh{};                              // NOLINT
-    const auto sizeLow = static_cast<DWORD>(size);           // NOLINT
-    void* handle = CreateFileMappingW(INVALID_HANDLE_VALUE,  // NOLINT
-                                      nullptr,
-                                      PAGE_READWRITE,
-                                      sizeHigh,
-                                      sizeLow,
-                                      fullName.c_str());
+    constexpr DWORD sizeHigh{};
+    const auto sizeLow = static_cast<DWORD>(size);
+    void* handle =
+        CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open shared memory '";
         message.append(name);
@@ -321,7 +312,7 @@ private:
 
 [[nodiscard]] std::unique_ptr<SharedMemory> TryOpenExistingSharedMemory(const std::string& name, size_t size) {
     const std::wstring fullName = GetFullSharedMemoryName(name);
-    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());  // NOLINT
+    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         return {};
     }

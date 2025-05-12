@@ -38,13 +38,13 @@ void PipeServerRun() {
 
 }  // namespace
 
-void StartPipeServer() {  // NOLINT
+void StartPipeServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(PipeServerRun).detach();
 }
 
 #else
 
-void StartPipeServer() {  // NOLINT
+void StartPipeServer() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

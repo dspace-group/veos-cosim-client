@@ -42,7 +42,7 @@ void TcpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& 
 
 }  // namespace
 
-void RunTcpTest(const std::string_view host) {  // NOLINT
+void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("TCP:");
     RunPerformanceTest(TcpClientRun, host);
     LogTrace("");

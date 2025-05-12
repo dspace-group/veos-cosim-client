@@ -42,7 +42,7 @@ void RemoteCommunicationClientRun(const std::string_view host,
 
 }  // namespace
 
-void RunRemoteCommunicationTest(const std::string_view host) {  // NOLINT
+void RunRemoteCommunicationTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Remote Communication:");
     RunPerformanceTest(RemoteCommunicationClientRun, host);
     LogTrace("");

@@ -44,6 +44,6 @@ void TcpServerRun() {
 
 }  // namespace
 
-void StartTcpServer() {  // NOLINT
+void StartTcpServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(TcpServerRun).detach();
 }

@@ -234,7 +234,7 @@ protected:
                 currentLength = 0;
             }
 
-            std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));  // NOLINT
+            std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));
         }
     }
 

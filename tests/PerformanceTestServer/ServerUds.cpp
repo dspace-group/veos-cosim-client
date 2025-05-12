@@ -45,13 +45,13 @@ void UdsServerRun() {
 
 }  // namespace
 
-void StartUdsServer() {  // NOLINT
+void StartUdsServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(UdsServerRun).detach();
 }
 
 #else
 
-void StartUdsServer() {  // NOLINT
+void StartUdsServer() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif

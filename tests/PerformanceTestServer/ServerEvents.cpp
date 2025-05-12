@@ -37,13 +37,13 @@ void EventsServerRun() {
 
 }  // namespace
 
-void StartEventsServer() {  // NOLINT
+void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(EventsServerRun).detach();
 }
 
 #else
 
-void StartEventsServer() {  // NOLINT
+void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif

@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstdint>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "LogHelper.h"
@@ -46,7 +46,7 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunEventsTest() {  // NOLINT
+void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
     RunPerformanceTest(EventsClientRun, "");
     LogTrace("");
@@ -54,7 +54,7 @@ void RunEventsTest() {  // NOLINT
 
 #else
 
-void RunEventsTest() {  // NOLINT
+void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif
