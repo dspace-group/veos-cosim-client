@@ -86,9 +86,12 @@ void SetThreadAffinity(std::string_view name);
 
 #else
 
+#include <cstdint>
 #include <string_view>
 
 namespace DsVeosCoSim {
+
+[[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
 void SetThreadAffinity(std::string_view name);
 
