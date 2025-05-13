@@ -25,7 +25,7 @@ void RemoteCommunicationServerRun() {
         std::array<char, BufferSize> buffer{};
 
         while (true) {
-            std::unique_ptr<Channel> acceptedChannel = server->TryAccept(UINT32_MAX);
+            std::unique_ptr<Channel> acceptedChannel = server->TryAccept(Infinite);
             if (!acceptedChannel) {
                 break;
             }

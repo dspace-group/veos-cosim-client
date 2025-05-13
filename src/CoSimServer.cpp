@@ -93,7 +93,7 @@ public:
             LogInfo(message);
 
             while (!AcceptChannel()) {
-                std::this_thread::sleep_for(milliseconds(1));
+                std::this_thread::sleep_for(milliseconds(100));
             }
 
             if (!OnHandleConnect()) {

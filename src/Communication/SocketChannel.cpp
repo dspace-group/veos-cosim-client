@@ -49,7 +49,9 @@ public:
                 continue;
             }
 
-            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)], bufferPointer, static_cast<size_t>(sizeToCopy));
+            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
+                         bufferPointer,
+                         static_cast<size_t>(sizeToCopy));
             _writeIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
             size -= sizeToCopy;
@@ -125,7 +127,9 @@ private:
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
             const int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            (void)memcpy(_readBuffer.data(), &_readBuffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
+            (void)memcpy(_readBuffer.data(),
+                         &_readBuffer[static_cast<size_t>(_endFrameIndex)],
+                         static_cast<size_t>(bytesToMove));
 
             _writeIndex -= _endFrameIndex;
 
@@ -253,7 +257,7 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Channel> TryAccept(uint32_t timeoutInMilliseconds) override {
-        do {
+        while (true) {
             if (_listenSocketIpv4.IsValid()) {
                 std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
                 if (socket) {
@@ -270,12 +274,16 @@ public:
                 }
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-            if (timeoutInMilliseconds > 0) {
-                timeoutInMilliseconds--;
+            if (timeoutInMilliseconds >= 100) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                timeoutInMilliseconds -= 100;
+            } else if (timeoutInMilliseconds > 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeoutInMilliseconds));
+                timeoutInMilliseconds = 0;
+            } else {
+                break;
             }
-        } while (timeoutInMilliseconds > 0);
+        }
 
         return {};
     }

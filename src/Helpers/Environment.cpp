@@ -40,7 +40,7 @@ namespace {
     const char* maskString = std::getenv(environmentVariableName.c_str());
     if (maskString) {
         char* end{};
-        if (SIZE_MAX == UINT64_MAX) {
+        if constexpr (sizeof(void*) == 8) {
             mask = std::strtoull(maskString, &end, 16);
         } else {
             mask = std::strtoul(maskString, &end, 16);
