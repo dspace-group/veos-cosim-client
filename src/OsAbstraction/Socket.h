@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 namespace DsVeosCoSim {
 

@@ -56,10 +56,10 @@ protected:
         std::string newSpaceName = name;
         newSpaceName.append(".NewSpace");
 
-        constexpr uint32_t totalSize = BufferSize + sizeof(Header);
+        constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
 
         bool initShm{};
-        _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);  // NOLINT
+        _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);
         if (!_sharedMemory) {
             _sharedMemory = CreateOrOpenSharedMemory(dataName, totalSize);
             initShm = true;
@@ -114,7 +114,7 @@ protected:
         } else {
             if (!_connectionDetected) {
                 _detectionCounter++;
-                if (_detectionCounter == 5000) {
+                if (_detectionCounter == 5000U) {
                     LogError("Counterpart still not connected after 5 seconds.");
                     return false;
                 }
@@ -349,7 +349,8 @@ public:
         std::lock_guard lock(*mutex);
 
         _sharedMemory = CreateOrOpenSharedMemory(_name, ServerSharedMemorySize);
-        _counter = static_cast<std::atomic<int32_t>*>(_sharedMemory->data());  // NOLINT
+        _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+            _sharedMemory->data());
         _counter->store(0);
     }
 

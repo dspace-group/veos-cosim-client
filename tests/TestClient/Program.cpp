@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <thread>
 #include <vector>
 

@@ -7,11 +7,11 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 namespace DsVeosCoSim {
 
-constexpr uint32_t Infinite = UINT32_MAX;  // NOLINT
+[[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
 class NamedEvent {
 protected:
@@ -45,9 +45,9 @@ public:
     NamedMutex& operator=(NamedMutex&&) = delete;
 
     // Small case, so this mutex can directly be used in std::lock_guard
-    virtual void lock() const = 0;                                     // NOLINT
-    [[nodiscard]] virtual bool lock(uint32_t milliseconds) const = 0;  // NOLINT
-    virtual void unlock() const = 0;                                   // NOLINT
+    virtual void lock() const = 0;                                     // NOLINT(readability-identifier-naming)
+    [[nodiscard]] virtual bool lock(uint32_t milliseconds) const = 0;  // NOLINT(readability-identifier-naming)
+    virtual void unlock() const = 0;                                   // NOLINT(readability-identifier-naming)
 };
 
 class SharedMemory {
@@ -64,13 +64,14 @@ public:
     SharedMemory& operator=(SharedMemory&&) = delete;
 
     // Small case, so it has the same interface as std::vector
-    [[nodiscard]] virtual void* data() const noexcept = 0;   // NOLINT
-    [[nodiscard]] virtual size_t size() const noexcept = 0;  // NOLINT
+    [[nodiscard]] virtual void* data() const noexcept = 0;   // NOLINT(readability-identifier-naming)
+    [[nodiscard]] virtual size_t size() const noexcept = 0;  // NOLINT(readability-identifier-naming)
 };
 
 [[nodiscard]] uint32_t GetCurrentProcessId();
-
 [[nodiscard]] bool IsProcessRunning(uint32_t processId);
+
+void SetThreadAffinity(std::string_view name);
 
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode);
 
@@ -80,6 +81,16 @@ public:
 
 [[nodiscard]] std::unique_ptr<SharedMemory> CreateOrOpenSharedMemory(const std::string& name, size_t size);
 [[nodiscard]] std::unique_ptr<SharedMemory> TryOpenExistingSharedMemory(const std::string& name, size_t size);
+
+}  // namespace DsVeosCoSim
+
+#else
+
+#include <string_view>
+
+namespace DsVeosCoSim {
+
+void SetThreadAffinity(std::string_view name);
 
 }  // namespace DsVeosCoSim
 

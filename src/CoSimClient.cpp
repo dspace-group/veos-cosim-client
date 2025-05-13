@@ -14,6 +14,7 @@
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
+#include "OsUtilities.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 
@@ -105,6 +106,8 @@ public:
 
         _callbacks = callbacks;
 
+        SetThreadAffinity(_serverName);
+
         if (!RunCallbackBasedCoSimulationInternal()) {
             CloseConnection();
             return false;
@@ -116,6 +119,8 @@ public:
     void StartPollingBasedCoSimulation(const Callbacks& callbacks) override {
         EnsureIsConnected();
         EnsureIsInResponderModeNonBlocking();
+
+        SetThreadAffinity(_serverName);
 
         _callbacks = callbacks;
     }
@@ -433,7 +438,7 @@ private:
         if (_connectionKind == ConnectionKind::Local) {
             std::string message = "Connected to local dSPACE VEOS CoSim server '";
             message.append(_serverName);
-            message.append(".");
+            message.append("'.");
             LogInfo(message);
         } else {
             if (_serverName.empty()) {

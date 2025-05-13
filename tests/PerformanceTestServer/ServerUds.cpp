@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <thread>
 
@@ -43,6 +45,13 @@ void UdsServerRun() {
 
 }  // namespace
 
-void StartUdsServer() {  // NOLINT
+void StartUdsServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(UdsServerRun).detach();
 }
+
+#else
+
+void StartUdsServer() {  // NOLINT(misc-use-internal-linkage)
+}
+
+#endif

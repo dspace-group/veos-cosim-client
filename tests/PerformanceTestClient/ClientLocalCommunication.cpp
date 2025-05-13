@@ -8,6 +8,7 @@
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 
@@ -26,6 +27,8 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
         std::unique_ptr<Channel> channel = TryConnectToUdsChannel(LocalName);
 #endif
         MUST_BE_TRUE(channel);
+
+        SetThreadAffinity(LocalName);
 
         std::array<char, BufferSize> buffer{};
 
@@ -47,7 +50,7 @@ void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunLocalCommunicationTest() {  // NOLINT
+void RunLocalCommunicationTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Local Communication:");
     RunPerformanceTest(LocalCommunicationClientRun, "");
     LogTrace("");

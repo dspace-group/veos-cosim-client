@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 namespace DsVeosCoSim {
 
@@ -14,5 +16,7 @@ namespace DsVeosCoSim {
 [[nodiscard]] bool IsPortMapperClientVerbose();
 
 [[nodiscard]] uint16_t GetPortMapperPort();
+
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask);
 
 }  // namespace DsVeosCoSim

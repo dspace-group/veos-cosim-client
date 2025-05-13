@@ -24,24 +24,27 @@ using namespace testing;
 
 namespace {
 
-[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
-                                                         ConnectionKind connectionKind,
-                                                         const std::string& name,
-                                                         const std::vector<CanController>& canControllers) {
+[[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
+    CoSimType coSimType,
+    ConnectionKind connectionKind,
+    const std::string& name,
+    const std::vector<CanController>& canControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, canControllers, {}, {});
 }
 
-[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
-                                                         ConnectionKind connectionKind,
-                                                         const std::string& name,
-                                                         const std::vector<EthController>& ethControllers) {
+[[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
+    CoSimType coSimType,
+    ConnectionKind connectionKind,
+    const std::string& name,
+    const std::vector<EthController>& ethControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, ethControllers, {});
 }
 
-[[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,  // NOLINT
-                                                         ConnectionKind connectionKind,
-                                                         const std::string& name,
-                                                         const std::vector<LinController>& linControllers) {
+[[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
+    CoSimType coSimType,
+    ConnectionKind connectionKind,
+    const std::string& name,
+    const std::vector<LinController>& linControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, linControllers);
 }
 
@@ -107,7 +110,7 @@ protected:
         ClearLastMessage();
     }
 
-    void Transfer(const ConnectionKind connectionKind,  // NOLINT
+    void Transfer(const ConnectionKind connectionKind,
                   const BusBuffer& senderBusBuffer,
                   const BusBuffer& receiverBusBuffer) {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()

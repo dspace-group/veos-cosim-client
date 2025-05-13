@@ -8,7 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -49,7 +49,7 @@ public:
                 continue;
             }
 
-            (void)memcpy(&_writeBuffer[_writeIndex], bufferPointer, sizeToCopy);
+            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)], bufferPointer, static_cast<size_t>(sizeToCopy));
             _writeIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
             size -= sizeToCopy;
@@ -107,7 +107,7 @@ public:
                 continue;
             }
 
-            (void)memcpy(bufferPointer, &_readBuffer[_readIndex], sizeToCopy);
+            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeToCopy));
             _readIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
             size -= sizeToCopy;
@@ -125,7 +125,7 @@ private:
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
             const int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            (void)memcpy(_readBuffer.data(), &_readBuffer[_endFrameIndex], bytesToMove);
+            (void)memcpy(_readBuffer.data(), &_readBuffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
 
             _writeIndex -= _endFrameIndex;
 
@@ -147,7 +147,7 @@ private:
 
         while (sizeToRead > 0) {
             int32_t receivedSize{};
-            CheckResult(_socket->Receive(&_readBuffer[_writeIndex], sizeToRead, receivedSize));
+            CheckResult(_socket->Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], sizeToRead, receivedSize));
 
             sizeToRead -= receivedSize;
             _writeIndex += receivedSize;
@@ -311,7 +311,7 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Channel> TryAccept(const uint32_t timeoutInMilliseconds) override {
-        std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);  // NOLINT
+        std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
         if (socket) {
             return std::make_unique<SocketChannel>(std::move(*socket));
         }
@@ -331,7 +331,7 @@ private:
                                                               const uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
-    std::optional<Socket> connectedSocket =  // NOLINT
+    std::optional<Socket> connectedSocket =
         Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds);
     if (connectedSocket) {
         connectedSocket->EnableNoDelay();

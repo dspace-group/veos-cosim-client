@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include <cstdint>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <thread>
 
 #include "Event.h"

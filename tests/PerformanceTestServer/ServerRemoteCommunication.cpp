@@ -1,12 +1,13 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <array>
+#include <string>
 #include <thread>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "Helper.h"
 #include "LogHelper.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;
@@ -19,10 +20,12 @@ void RemoteCommunicationServerRun() {
 
         const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(CommunicationPort, true);
 
+        SetThreadAffinity(std::to_string(CommunicationPort));
+
         std::array<char, BufferSize> buffer{};
 
         while (true) {
-            std::unique_ptr<Channel> acceptedChannel = server->TryAccept(Infinite);
+            std::unique_ptr<Channel> acceptedChannel = server->TryAccept(UINT32_MAX);
             if (!acceptedChannel) {
                 break;
             }
@@ -48,6 +51,6 @@ void RemoteCommunicationServerRun() {
 
 }  // namespace
 
-void StartRemoteCommunicationServer() {  // NOLINT
+void StartRemoteCommunicationServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(RemoteCommunicationServerRun).detach();
 }

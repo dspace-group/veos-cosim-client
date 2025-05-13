@@ -1,9 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <cstdint>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
-#include "CoSimHelper.h"
 #include "Helper.h"
 
 extern void RunTcpTest(std::string_view host);
@@ -27,8 +26,6 @@ int32_t main(const int32_t argc, char* argv[]) {
         RunTcpTest(argv[1]);
         RunUdpTest(argv[1]);
 
-        LogTrace("----------------------------------------\n");
-
         RunRemoteCommunicationTest(argv[1]);
         RunCoSimCallbackTest(argv[1]);
         RunCoSimPollingTest(argv[1]);
@@ -38,8 +35,6 @@ int32_t main(const int32_t argc, char* argv[]) {
         RunUdsTest();
         RunPipeTest();
         RunEventsTest();
-
-        LogTrace("----------------------------------------\n");
 
         RunRemoteCommunicationTest("127.0.0.1");
         RunLocalCommunicationTest();

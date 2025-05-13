@@ -234,7 +234,7 @@ protected:
                 currentLength = 0;
             }
 
-            std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));  // NOLINT
+            std::fill(buffer.begin(), buffer.end(), static_cast<uint8_t>(0));
         }
     }
 
@@ -641,7 +641,7 @@ private:
 class IoBufferImpl final : public IoBuffer {
 public:
     IoBufferImpl(CoSimType coSimType,
-                 const ConnectionKind connectionKind,
+                 [[maybe_unused]] const ConnectionKind connectionKind,
                  const std::string& name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {

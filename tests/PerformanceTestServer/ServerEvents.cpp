@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#ifdef _WIN32
+#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
+
 #include <array>
 #include <thread>
 
@@ -36,10 +37,13 @@ void EventsServerRun() {
 
 }  // namespace
 
-void StartEventsServer() {  // NOLINT
+void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(EventsServerRun).detach();
 }
+
 #else
-void StartEventsServer() {  // NOLINT
+
+void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
 }
+
 #endif

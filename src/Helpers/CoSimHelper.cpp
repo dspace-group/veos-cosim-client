@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <utility>
 
 #if _WIN32

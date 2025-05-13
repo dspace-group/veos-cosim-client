@@ -39,3 +39,9 @@ target_link_libraries(
   DsVeosCoSim
   fmt::fmt
 )
+
+if(MSVC)
+  target_compile_options(shared PRIVATE /Wall /wd4061 /wd4324 /wd4514 /wd4582 /wd4625 /wd4623 /wd4626 /wd4668 /wd4710 /wd4711 /wd4820 /wd5026 /wd5027 /wd5039 /wd5045)
+else()
+  target_compile_options(shared PRIVATE -Wall -Wextra -Wpedantic)
+endif()

@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <optional>
 #include <string_view>
@@ -41,8 +43,15 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunUdsTest() {  // NOLINT
+void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Unix Domain Socket:");
     RunPerformanceTest(UdsClientRun, "");
     LogTrace("");
 }
+
+#else
+
+void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
+}
+
+#endif

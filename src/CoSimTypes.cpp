@@ -341,13 +341,13 @@ namespace {
 
     bool first = true;
     for (const IoSignalContainer& signal : signals) {
-        str.append(ToString(signal));
-
         if (first) {
             first = false;
         } else {
             str.append(", ");
         }
+
+        str.append(ToString(signal));
     }
 
     str.append("]");
@@ -485,13 +485,13 @@ namespace {
 
     bool first = true;
     for (const CanControllerContainer& controller : controllers) {
-        str.append(ToString(controller));
-
         if (first) {
             first = false;
         } else {
             str.append(", ");
         }
+
+        str.append(ToString(controller));
     }
 
     str.append("]");
@@ -639,13 +639,13 @@ namespace {
 
     bool first = true;
     for (const EthControllerContainer& controller : controllers) {
-        str.append(ToString(controller));
-
         if (first) {
             first = false;
         } else {
             str.append(", ");
         }
+
+        str.append(ToString(controller));
     }
 
     str.append("]");
@@ -842,13 +842,13 @@ namespace {
 
     bool first = true;
     for (const LinControllerContainer& controller : controllers) {
-        str.append(ToString(controller));
-
         if (first) {
             first = false;
         } else {
             str.append(", ");
         }
+
+        str.append(ToString(controller));
     }
 
     str.append("]");

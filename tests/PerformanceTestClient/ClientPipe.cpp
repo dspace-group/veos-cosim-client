@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -42,8 +44,15 @@ void PipeClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunPipeTest() {  // NOLINT
+void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Pipes:");
     RunPerformanceTest(PipeClientRun, "");
     LogTrace("");
 }
+
+#else
+
+void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

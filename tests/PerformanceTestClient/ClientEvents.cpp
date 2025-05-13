@@ -1,9 +1,10 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#ifdef _WIN32
+#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
+
 #include <array>
 #include <cstdint>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 #include "CoSimHelper.h"
 #include "LogHelper.h"
@@ -45,12 +46,15 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
 
 }  // namespace
 
-void RunEventsTest() {  // NOLINT
+void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
     RunPerformanceTest(EventsClientRun, "");
     LogTrace("");
 }
+
 #else
-void RunEventsTest() {
+
+void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
 }
+
 #endif

@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 #include <string>
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 
 #ifdef _WIN32
 #include <WS2tcpip.h>

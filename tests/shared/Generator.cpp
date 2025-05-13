@@ -35,7 +35,7 @@ namespace {
 [[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
     static bool first = true;
     if (first) {
-        srand(std::time({}));
+        srand(static_cast<uint32_t>(std::time({})));
         first = false;
     }
 

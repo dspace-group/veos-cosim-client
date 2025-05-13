@@ -313,10 +313,10 @@ protected:
 
         if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
             if (!extension.warningSent) {
-                std::string message = "Transmit buffer for controller '";
-                message.append(extension.info.name);
-                message.append("' is full. Messages are dropped.");
-                LogWarning(message);
+                std::string warningMessage = "Transmit buffer for controller '";
+                warningMessage.append(extension.info.name);
+                warningMessage.append("' is full. Messages are dropped.");
+                LogWarning(warningMessage);
                 extension.warningSent = true;
             }
 
@@ -388,10 +388,10 @@ protected:
 
             if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
                 if (!extension.warningSent) {
-                    std::string message = "Receive buffer for controller '";
-                    message.append(extension.info.name);
-                    message.append("' is full. Messages are dropped.");
-                    LogWarning(message);
+                    std::string warningMessage = "Receive buffer for controller '";
+                    warningMessage.append(extension.info.name);
+                    warningMessage.append("' is full. Messages are dropped.");
+                    LogWarning(warningMessage);
                     extension.warningSent = true;
                 }
 

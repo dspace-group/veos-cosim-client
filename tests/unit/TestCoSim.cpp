@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <string_view>  // IWYU pragma: keep
+#include <string_view>
 #include <thread>
 
 #include "DsVeosCoSim/CoSimClient.h"
