@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <thread>
 
@@ -47,3 +49,10 @@ void TcpServerRun() {
 void StartTcpServer() {  // NOLINT(misc-use-internal-linkage)
     std::thread(TcpServerRun).detach();
 }
+
+#else
+
+void StartTcpServer() {  // NOLINT(misc-use-internal-linkage)
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

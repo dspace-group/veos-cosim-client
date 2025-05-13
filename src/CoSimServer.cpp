@@ -16,6 +16,7 @@
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
+#include "OsUtilities.h"
 #include "PortMapper.h"
 #include "Protocol.h"
 
@@ -269,7 +270,12 @@ private:
 
     [[nodiscard]] bool StepInternal(const SimulationTime simulationTime,
                                     SimulationTime& nextSimulationTime,
-                                    Command& command) const {
+                                    Command& command) {
+        if (_firstStep) {
+            SetThreadAffinity(_serverName);
+            _firstStep = false;
+        }
+
         CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
                                "Could not send step frame.");
         CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
@@ -358,6 +364,7 @@ private:
             _channel = _localChannelServer->TryAccept();
             if (_channel) {
                 _connectionKind = ConnectionKind::Local;
+                _firstStep = true;
                 return true;
             }
         }
@@ -366,6 +373,7 @@ private:
             _channel = _tcpChannelServer->TryAccept();
             if (_channel) {
                 _connectionKind = ConnectionKind::Remote;
+                _firstStep = true;
                 return true;
             }
         }
@@ -569,6 +577,8 @@ private:
     bool _isClientOptional{};
     SimulationTime _stepSize{};
     bool _registerAtPortMapper{};
+
+    bool _firstStep{true};
 
     std::vector<IoSignalContainer> _incomingSignals;
     std::vector<IoSignalContainer> _outgoingSignals;

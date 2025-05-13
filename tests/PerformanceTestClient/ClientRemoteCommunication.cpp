@@ -7,6 +7,7 @@
 #include "CoSimHelper.h"
 #include "Helper.h"
 #include "LogHelper.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 #include "RunPerformanceTest.h"
 
@@ -21,6 +22,8 @@ void RemoteCommunicationClientRun(const std::string_view host,
     try {
         std::unique_ptr<Channel> channel = TryConnectToTcpChannel(host, CommunicationPort, 0, DefaultTimeout);
         MUST_BE_TRUE(channel);
+
+        SetThreadAffinity(std::to_string(CommunicationPort));
 
         std::array<char, BufferSize> buffer{};
 

@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#ifdef ALL_COMMUNICATION_TESTS
+
 #include <array>
 #include <optional>
 #include <string_view>
@@ -47,3 +49,12 @@ void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-link
     RunPerformanceTest(TcpClientRun, host);
     LogTrace("");
 }
+
+#else
+
+#include <string_view>
+
+void RunTcpTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+}
+
+#endif  // ALL_COMMUNICATION_TESTS

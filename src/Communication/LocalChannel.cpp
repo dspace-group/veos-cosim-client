@@ -56,7 +56,7 @@ protected:
         std::string newSpaceName = name;
         newSpaceName.append(".NewSpace");
 
-        constexpr uint32_t totalSize = BufferSize + sizeof(Header);
+        constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
 
         bool initShm{};
         _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);
@@ -114,7 +114,7 @@ protected:
         } else {
             if (!_connectionDetected) {
                 _detectionCounter++;
-                if (_detectionCounter == 5000) {
+                if (_detectionCounter == 5000U) {
                     LogError("Counterpart still not connected after 5 seconds.");
                     return false;
                 }

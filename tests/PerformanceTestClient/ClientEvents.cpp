@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#ifdef _WIN32
+#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
 
 #include <array>
 #include <cstdint>

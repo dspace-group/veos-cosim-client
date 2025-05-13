@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#if defined(ALL_COMMUNICATION_TESTS) || !defined(_WIN32)
+#ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
 #include <optional>

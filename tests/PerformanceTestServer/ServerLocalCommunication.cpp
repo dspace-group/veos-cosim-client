@@ -7,6 +7,7 @@
 #include "Channel.h"
 #include "CoSimHelper.h"
 #include "LogHelper.h"
+#include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;
@@ -22,6 +23,8 @@ void LocalCommunicationServerRun() {
 #else
         std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(LocalName);
 #endif
+
+        SetThreadAffinity(LocalName);
 
         std::array<char, BufferSize> buffer{};
 

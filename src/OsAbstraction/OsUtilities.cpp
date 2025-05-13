@@ -1,8 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#ifdef _WIN32
-
 #include "OsUtilities.h"
+
+#ifdef _WIN32
 
 #include <Windows.h>
 
@@ -12,10 +12,15 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
+#include "Environment.h"
 
 namespace DsVeosCoSim {
 
 namespace {
+
+[[nodiscard]] int32_t GetLastWindowsError() {
+    return static_cast<int32_t>(GetLastError());
+}
 
 [[nodiscard]] std::wstring Utf8ToWide(const std::string_view utf8String) {
     if (utf8String.empty()) {
@@ -24,8 +29,13 @@ namespace {
 
     const int32_t sizeNeeded =
         MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
+    if (sizeNeeded <= 0) {
+        std::string message = "Could not convert UTF-8 string to wide string. ";
+        message.append(GetSystemErrorMessage(GetLastWindowsError()));
+        throw std::runtime_error(message);
+    }
 
-    std::wstring wideString(sizeNeeded, L'\0');
+    std::wstring wideString(static_cast<size_t>(sizeNeeded), L'\0');
     (void)MultiByteToWideChar(CP_UTF8,
                               0,
                               utf8String.data(),
@@ -52,10 +62,6 @@ namespace {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name);
-}
-
-[[nodiscard]] int32_t GetLastWindowsError() {
-    return static_cast<int32_t>(GetLastError());
 }
 
 class Handle final {
@@ -243,12 +249,26 @@ private:
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
+void SetThreadAffinity(std::string_view name) {
+    size_t mask{};
+    if (!TryGetAffinityMask(name, mask)) {
+        return;
+    }
+
+    (void)SetThreadAffinityMask(GetCurrentThread(), mask);
+}
+
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     const DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     const DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     LPSTR buffer = nullptr;
-    const DWORD size =
-        FormatMessageA(flags, nullptr, errorCode, languageId, reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
+    const DWORD size = FormatMessageA(flags,
+                                      nullptr,
+                                      static_cast<DWORD>(errorCode),
+                                      languageId,
+                                      reinterpret_cast<LPSTR>(&buffer),
+                                      0,
+                                      nullptr);
 
     std::string message;
     if ((size > 0) && buffer) {
@@ -318,6 +338,43 @@ private:
     }
 
     return std::make_unique<SharedMemoryImpl>(name, size, handle);
+}
+
+}  // namespace DsVeosCoSim
+
+#else
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pthread.h>
+#include <sched.h>
+
+#include "Environment.h"
+
+namespace DsVeosCoSim {
+
+void SetThreadAffinity(std::string_view name) {
+    size_t mask{};
+    if (!TryGetAffinityMask(name, mask)) {
+        return;
+    }
+
+    const int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
+
+    cpu_set_t cpuSet{};
+    CPU_ZERO(&cpuSet);
+
+    for (int cpuId = 0; cpuId < maxCpuCount; ++cpuId) {
+        const size_t maskId = 1 << cpuId;
+        if ((maskId & mask) != 0) {
+            CPU_SET(cpuId, &cpuSet);
+        }
+    }
+
+    pthread_t thread = pthread_self();
+    (void)pthread_setaffinity_np(thread, sizeof(cpuSet), &cpuSet);
 }
 
 }  // namespace DsVeosCoSim

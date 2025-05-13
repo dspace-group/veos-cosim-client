@@ -641,7 +641,7 @@ private:
 class IoBufferImpl final : public IoBuffer {
 public:
     IoBufferImpl(CoSimType coSimType,
-                 const ConnectionKind connectionKind,
+                 [[maybe_unused]] const ConnectionKind connectionKind,
                  const std::string& name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {
