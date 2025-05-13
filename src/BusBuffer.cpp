@@ -3,7 +3,6 @@
 #include "BusBuffer.h"
 
 #include <cstdint>
-#include <cstring>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -160,7 +159,7 @@ protected:
     };
 
 public:
-    BusProtocolBufferBase() noexcept = default;
+    BusProtocolBufferBase() = default;
     virtual ~BusProtocolBufferBase() noexcept = default;
 
     BusProtocolBufferBase(const BusProtocolBufferBase&) = delete;
@@ -197,7 +196,7 @@ public:
 
     void ClearData() {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             ClearDataInternal();
             return;
         }
@@ -207,7 +206,7 @@ public:
 
     [[nodiscard]] bool Transmit(const TMessageExtern& messageExtern) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return TransmitInternal(messageExtern);
         }
 
@@ -216,7 +215,7 @@ public:
 
     [[nodiscard]] bool Receive(TMessageExtern& messageExtern) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return ReceiveInternal(messageExtern);
         }
 
@@ -225,7 +224,7 @@ public:
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return SerializeInternal(writer);
         }
 
@@ -236,7 +235,7 @@ public:
                                    const SimulationTime simulationTime,
                                    const Callback& callback) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return DeserializeInternal(reader, simulationTime, callback);
         }
 
@@ -281,7 +280,7 @@ class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExter
     using Extension = typename Base::ControllerExtension;
 
 public:
-    RemoteBusProtocolBuffer() noexcept = default;
+    RemoteBusProtocolBuffer() = default;
     ~RemoteBusProtocolBuffer() noexcept override = default;
 
     RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
@@ -339,7 +338,7 @@ protected:
         TMessage& message = _messageBuffer.PopFront();
         WriteTo(message, messageExtern);
 
-        Extension& extension = Base::FindController(message.controllerId);
+        const Extension& extension = Base::FindController(message.controllerId);
         --_messageCountPerController[extension.controllerIndex];
         return true;
     }
@@ -497,7 +496,7 @@ class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessageExtern
     using Extension = typename Base::ControllerExtension;
 
 public:
-    LocalBusProtocolBuffer() noexcept = default;
+    LocalBusProtocolBuffer() = default;
     ~LocalBusProtocolBuffer() noexcept override = default;
 
     LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
@@ -581,7 +580,7 @@ protected:
         TMessage& message = _messageBuffer->PopFront();
         WriteTo(message, messageExtern);
 
-        Extension& extension = Base::FindController(messageExtern.controllerId);
+        const Extension& extension = Base::FindController(messageExtern.controllerId);
         std::atomic<uint32_t>& receiveCount = _messageCountPerController[extension.controllerIndex];
         receiveCount.fetch_sub(1);
         _totalReceiveCount--;
@@ -612,7 +611,7 @@ protected:
                 LogProtocolDataTrace(ToString(message));
             }
 
-            Extension& extension = Base::FindController(message.controllerId);
+            const Extension& extension = Base::FindController(message.controllerId);
             std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension.controllerIndex];
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;

@@ -102,7 +102,7 @@ public:
 
     void ClearData() {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             ClearDataInternal();
             return;
         }
@@ -112,7 +112,7 @@ public:
 
     void Write(const IoSignalId signalId, const uint32_t length, const void* value) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             WriteInternal(signalId, length, value);
             return;
         }
@@ -122,7 +122,7 @@ public:
 
     void Read(const IoSignalId signalId, uint32_t& length, void* value) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             ReadInternal(signalId, length, value);
             return;
         }
@@ -132,7 +132,7 @@ public:
 
     void Read(const IoSignalId signalId, uint32_t& length, const void** value) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             ReadInternal(signalId, length, value);
             return;
         }
@@ -142,7 +142,7 @@ public:
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return SerializeInternal(writer);
         }
 
@@ -153,7 +153,7 @@ public:
                                    const SimulationTime simulationTime,
                                    const Callbacks& callbacks) {
         if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
+            const std::lock_guard lock(_mutex);
             return DeserializeInternal(reader, simulationTime, callbacks);
         }
 
@@ -350,7 +350,7 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
-            MetaData& metaData = FindMetaData(signalId);
+            const MetaData& metaData = FindMetaData(signalId);
             Data& data = _dataVector[metaData.signalIndex];
 
             if (metaData.info.sizeKind == SizeKind::Variable) {
@@ -594,7 +594,7 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
-            MetaData& metaData = FindMetaData(signalId);
+            const MetaData& metaData = FindMetaData(signalId);
             Data& data = _dataVector[metaData.signalIndex];
 
             FlipBuffers(data);

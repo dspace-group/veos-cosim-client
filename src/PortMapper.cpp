@@ -46,13 +46,16 @@ public:
 
 private:
     void RunPortMapperServer() {
-        while (!_stopEvent.Wait(10)) {
+        constexpr uint32_t timeoutInMilliseconds = 100U;
+        while (!_stopEvent.Wait(timeoutInMilliseconds)) {
             try {
-                std::unique_ptr<Channel> channel = _server->TryAccept();
-                if (channel) {
-                    if (!HandleClient(*channel)) {
-                        LogTrace("Port mapper client disconnected unexpectedly.");
-                    }
+                const std::unique_ptr<Channel> channel = _server->TryAccept();
+                if (!channel) {
+                    continue;
+                }
+
+                if (!HandleClient(*channel)) {
+                    LogTrace("Port mapper client disconnected unexpectedly.");
                 }
             } catch (const std::exception& e) {
                 std::string message = "The following exception occurred in port mapper thread: ";

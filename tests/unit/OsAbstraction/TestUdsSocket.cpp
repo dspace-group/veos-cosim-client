@@ -91,7 +91,7 @@ TEST_F(TestUdsSocket, Accept) {
     EXPECT_TRUE(clientSocket);
 
     // Act
-    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept();
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
 
     // Assert
     ASSERT_TRUE(acceptedSocket);

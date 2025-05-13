@@ -4,9 +4,7 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -23,8 +21,8 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-std::string ServerToClientPostFix = ".ServerToClient";
-std::string ClientToServerPostFix = ".ClientToServer";
+const auto ServerToClientPostFix = ".ServerToClient";
+const auto ClientToServerPostFix = ".ClientToServer";
 
 [[nodiscard]] std::string GetWriterName(const std::string& name, const bool isServer) {
     std::string writerName = name;
@@ -45,9 +43,9 @@ std::string ClientToServerPostFix = ".ClientToServer";
 class LocalChannelBase {
 protected:
     LocalChannelBase(const std::string& name, const bool isServer) {
-        std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+        const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-        std::lock_guard lock(*mutex);
+        const std::lock_guard lock(*mutex);
 
         std::string dataName = name;
         dataName.append(".Data");
@@ -185,7 +183,7 @@ public:
             }
 
             _connectionDetected = true;
-            uint32_t sizeToCopy = std::min(totalSizeToCopy, BufferSize - currentSize);
+            const uint32_t sizeToCopy = std::min(totalSizeToCopy, BufferSize - currentSize);
 
             const uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedWriteIndex);
             (void)memcpy(&_data[_maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
@@ -263,7 +261,7 @@ public:
             }
 
             _connectionDetected = true;
-            uint32_t sizeToCopy = std::min(totalSizeToCopy, currentSize);
+            const uint32_t sizeToCopy = std::min(totalSizeToCopy, currentSize);
             const uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedReadIndex);
             (void)memcpy(bufferPointer, &_data[_maskedReadIndex], sizeUntilBufferEnd);
             bufferPointer += sizeUntilBufferEnd;
@@ -344,9 +342,9 @@ private:
 class LocalChannelServer final : public ChannelServer {
 public:
     explicit LocalChannelServer(const std::string& name) : _name(name) {
-        std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+        const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-        std::lock_guard lock(*mutex);
+        const std::lock_guard lock(*mutex);
 
         _sharedMemory = CreateOrOpenSharedMemory(_name, ServerSharedMemorySize);
         _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
@@ -394,9 +392,9 @@ private:
 }  // namespace
 
 [[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name) {
-    std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
 
-    std::lock_guard lock(*mutex);
+    const std::lock_guard lock(*mutex);
 
     const std::unique_ptr<SharedMemory> sharedMemory = TryOpenExistingSharedMemory(name, ServerSharedMemorySize);
     if (!sharedMemory) {

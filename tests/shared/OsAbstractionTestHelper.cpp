@@ -2,11 +2,11 @@
 
 #include "OsAbstractionTestHelper.h"
 
-#include "fmt/format.h"
-
 #include <stdexcept>
 #include <string>
 #include <string_view>
+
+#include <fmt/format.h>
 
 #ifdef _WIN32
 #include <WS2tcpip.h>

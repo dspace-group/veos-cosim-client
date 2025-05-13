@@ -2,7 +2,6 @@
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>

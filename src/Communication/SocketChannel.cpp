@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <cstring>
+#include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -54,7 +54,7 @@ public:
                          static_cast<size_t>(sizeToCopy));
             _writeIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
-            size -= sizeToCopy;
+            size -= static_cast<size_t>(sizeToCopy);
         }
 
         return true;
@@ -112,7 +112,7 @@ public:
             (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeToCopy));
             _readIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
-            size -= sizeToCopy;
+            size -= static_cast<size_t>(sizeToCopy);
         }
 
         return true;
@@ -193,10 +193,10 @@ public:
     SocketChannel& operator=(SocketChannel&&) = delete;
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
-        const SocketAddress socketAddress = _socket.GetRemoteAddress();
-        std::string remoteAddress = socketAddress.ipAddress;
+        const auto [ipAddress, port] = _socket.GetRemoteAddress();
+        std::string remoteAddress = ipAddress;
         remoteAddress.append(":");
-        remoteAddress.append(std::to_string(socketAddress.port));
+        remoteAddress.append(std::to_string(port));
         return remoteAddress;
     }
 
@@ -257,9 +257,10 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Channel> TryAccept(uint32_t timeoutInMilliseconds) override {
+        constexpr uint32_t timeoutPeriodInMilliseconds = 100U;
         while (true) {
             if (_listenSocketIpv4.IsValid()) {
-                std::optional<Socket> socket = _listenSocketIpv4.TryAccept();
+                std::optional<Socket> socket = _listenSocketIpv4.TryAccept(0);
                 if (socket) {
                     socket->EnableNoDelay();
                     return std::make_unique<SocketChannel>(std::move(*socket));
@@ -267,19 +268,19 @@ public:
             }
 
             if (_listenSocketIpv6.IsValid()) {
-                std::optional<Socket> socket = _listenSocketIpv6.TryAccept();
+                std::optional<Socket> socket = _listenSocketIpv6.TryAccept(0);
                 if (socket) {
                     socket->EnableNoDelay();
                     return std::make_unique<SocketChannel>(std::move(*socket));
                 }
             }
 
-            if (timeoutInMilliseconds >= 100) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                timeoutInMilliseconds -= 100;
-            } else if (timeoutInMilliseconds > 0) {
+            if (timeoutInMilliseconds >= timeoutPeriodInMilliseconds) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeoutPeriodInMilliseconds));
+                timeoutInMilliseconds -= timeoutPeriodInMilliseconds;
+            } else if (timeoutInMilliseconds > 0U) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(timeoutInMilliseconds));
-                timeoutInMilliseconds = 0;
+                timeoutInMilliseconds = 0U;
             } else {
                 break;
             }

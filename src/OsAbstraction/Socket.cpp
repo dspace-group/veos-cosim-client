@@ -4,7 +4,6 @@
 
 #include <array>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
 #include <optional>
 #include <stdexcept>
@@ -15,7 +14,6 @@
 
 #ifdef _WIN32
 #include <WS2tcpip.h>
-#include <Windows.h>
 #include <afunix.h>
 #include <winsock2.h>
 #else
@@ -155,7 +153,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     return socketAddress;
 }
 
-void CloseSocket(SocketHandle socket) {
+void CloseSocket(SocketHandle socket) noexcept {
     if (socket == InvalidSocket) {
         return;
     }
@@ -272,8 +270,8 @@ void SwitchToBlockingMode(const SocketHandle& socket) {
     FD_SET(socket, &set);
 
     timeval timeout{};
-    timeout.tv_sec = static_cast<long>(timeoutInMilliseconds / 1000);
-    timeout.tv_usec = static_cast<long>(timeoutInMilliseconds % 1000) * 1000;
+    timeout.tv_sec = static_cast<decltype(timeout.tv_sec)>(timeoutInMilliseconds / 1000);
+    timeout.tv_usec = static_cast<decltype(timeout.tv_usec)>(timeoutInMilliseconds % 1000) * 1000;
 
 #ifdef _WIN32
     const int32_t selectResult = select(0, nullptr, &set, nullptr, &timeout);
@@ -361,11 +359,10 @@ Socket::Socket(Socket&& other) noexcept {
 
     _socket = other._socket;                // NOLINT(cppcoreguidelines-prefer-member-initializer)
     _addressFamily = other._addressFamily;  // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    _path = other._path;                    // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _path = std::move(other._path);         // NOLINT(cppcoreguidelines-prefer-member-initializer)
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
-    other._path = {};
 }
 
 Socket& Socket::operator=(Socket&& other) noexcept {
@@ -373,11 +370,10 @@ Socket& Socket::operator=(Socket&& other) noexcept {
 
     _socket = other._socket;
     _addressFamily = other._addressFamily;
-    _path = other._path;
+    _path = std::move(other._path);
 
     other._socket = InvalidSocket;
     other._addressFamily = {};
-    other._path = {};
 
     return *this;
 }
@@ -430,7 +426,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     return isSupported;
 }
 
-void Socket::Shutdown() const {
+void Socket::Shutdown() const noexcept {
     if (_socket == InvalidSocket) {
         return;
     }
@@ -442,7 +438,7 @@ void Socket::Shutdown() const {
 #endif
 }
 
-void Socket::Close() {
+void Socket::Close() noexcept {
     const SocketHandle socket = _socket;
     if (socket == InvalidSocket) {
         return;
@@ -455,7 +451,7 @@ void Socket::Close() {
 
     if (!_path.empty()) {
         (void)Unlink(_path.c_str());
-        _path = {};
+        _path.clear();
     }
 
     CloseSocket(socket);
@@ -495,7 +491,7 @@ void Socket::EnableIpv6Only() const {
     const addrinfo* currentAddressInfo = addressInfo;
 
     while (currentAddressInfo) {
-        int32_t addressFamily = currentAddressInfo->ai_family;
+        const int32_t addressFamily = currentAddressInfo->ai_family;
 
         const SocketHandle socket =
             ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
@@ -537,7 +533,7 @@ void Socket::EnableIpv6Only() const {
         throw std::runtime_error("Empty name is not valid.");
     }
 
-    SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    const SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (socket == InvalidSocket) {
         std::string message = "Could not create socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -796,7 +792,7 @@ void Socket::Listen() const {
         return false;
     }
 
-    int32_t errorCode = GetLastNetworkError();
+    const int32_t errorCode = GetLastNetworkError();
 
     if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32
@@ -829,7 +825,7 @@ void Socket::Listen() const {
         return false;
     }
 
-    int32_t errorCode = GetLastNetworkError();
+    const int32_t errorCode = GetLastNetworkError();
 
     if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32

@@ -134,7 +134,7 @@ TEST_P(TestTcpSocket, AcceptWithoutConnect) {
     serverSocket.Listen();
 
     // Act
-    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept();
+    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
 
     // Assert
     ASSERT_FALSE(acceptedSocket);
