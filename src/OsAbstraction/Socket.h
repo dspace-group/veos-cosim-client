@@ -46,15 +46,15 @@ public:
     Socket(const Socket&) = delete;
     Socket& operator=(const Socket&) = delete;
 
-    Socket(Socket&&) noexcept;
-    Socket& operator=(Socket&&) noexcept;
+    Socket(Socket&& other) noexcept;
+    Socket& operator=(Socket&& other) noexcept;
 
     [[nodiscard]] static bool IsIpv4Supported();
     [[nodiscard]] static bool IsIpv6Supported();
     [[nodiscard]] static bool IsUdsSupported();
 
-    void Shutdown() const;
-    void Close();
+    void Shutdown() const noexcept;
+    void Close() noexcept;
 
     [[nodiscard]] bool IsValid() const;
 
@@ -70,7 +70,7 @@ public:
     void EnableReuseAddress() const;
     void EnableNoDelay() const;
     void Listen() const;
-    [[nodiscard]] std::optional<Socket> TryAccept(uint32_t timeoutInMilliseconds = 0) const;
+    [[nodiscard]] std::optional<Socket> TryAccept(uint32_t timeoutInMilliseconds) const;
     [[nodiscard]] uint16_t GetLocalPort() const;
     [[nodiscard]] SocketAddress GetRemoteAddress() const;
     [[nodiscard]] bool Receive(void* destination, int32_t size, int32_t& receivedSize) const;

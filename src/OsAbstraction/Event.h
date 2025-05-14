@@ -11,7 +11,7 @@ namespace DsVeosCoSim {
 class Event {
 public:
     void Set() {
-        std::lock_guard guard(_mutex);
+        const std::lock_guard guard(_mutex);
         _signaled = true;
         _conditionVariable.notify_one();
     }

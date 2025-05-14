@@ -25,8 +25,6 @@ namespace {
         }                                                    \
     } while (0)
 
-DsVeosCoSim_LogCallback LogCallbackHandler;
-
 void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& callbacks) {
     const DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback = callbacks.canMessageReceivedCallback;
     const DsVeosCoSim_EthMessageReceivedCallback ethMessageReceivedCallback = callbacks.ethMessageReceivedCallback;
@@ -135,10 +133,9 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 }  // namespace
 
 void DsVeosCoSim_SetLogCallback(const DsVeosCoSim_LogCallback logCallback) {
-    LogCallbackHandler = logCallback;
-    SetLogCallback([](const Severity severity, const std::string_view message) {
-        if (LogCallbackHandler) {
-            LogCallbackHandler(static_cast<DsVeosCoSim_Severity>(severity), message.data());
+    SetLogCallback([=](const Severity severity, const std::string_view message) {
+        if (logCallback) {
+            logCallback(static_cast<DsVeosCoSim_Severity>(severity), message.data());
         }
     });
 }

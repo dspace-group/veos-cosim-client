@@ -54,7 +54,7 @@ private:
 
 auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Remote);
 
-[[nodiscard]] CoSimServerConfig CreateServerConfig(const bool isClientOptional = false) {
+[[nodiscard]] CoSimServerConfig CreateServerConfig(const bool isClientOptional) {
     CoSimServerConfig config{};
     config.serverName = GenerateString("Server名前");
     config.startPortMapper = false;
@@ -65,7 +65,7 @@ auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
 
 [[nodiscard]] ConnectConfig CreateConnectConfig(const ConnectionKind connectionKind,
                                                 const std::string_view serverName,
-                                                const uint16_t port = 0) {
+                                                const uint16_t port) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("Client名前");
@@ -90,7 +90,7 @@ INSTANTIATE_TEST_SUITE_P(, TestCoSim, ConnectionKinds, [](const testing::TestPar
 
 TEST_F(TestCoSim, LoadServer) {
     // Arrange
-    const CoSimServerConfig config = CreateServerConfig();
+    const CoSimServerConfig config = CreateServerConfig(false);
 
     std::unique_ptr<CoSimServer> server = CreateServer();
 
@@ -191,7 +191,7 @@ TEST_P(TestCoSim, ConnectWithoutServer) {
     // Arrange
     const ConnectionKind connectionKind = GetParam();
 
-    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, GenerateString("Server名前"));
+    const ConnectConfig connectConfig = CreateConnectConfig(connectionKind, GenerateString("Server名前"), 0);
 
     std::unique_ptr<CoSimClient> client = CreateClient();
 
@@ -223,7 +223,7 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     // Arrange
     const ConnectionKind connectionKind = GetParam();
 
-    const CoSimServerConfig config = CreateServerConfig();
+    const CoSimServerConfig config = CreateServerConfig(false);
 
     std::unique_ptr<CoSimServer> server = CreateServer();
     server->Load(config);
@@ -245,7 +245,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
 
     Event stoppedEvent;
 
-    CoSimServerConfig config = CreateServerConfig();
+    CoSimServerConfig config = CreateServerConfig(false);
     config.simulationStoppedCallback = [&](SimulationTime) {
         stoppedEvent.Set();
     };

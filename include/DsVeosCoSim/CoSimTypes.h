@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <memory.h>
-
 #include <array>
 #include <chrono>
 #include <functional>
@@ -159,7 +157,7 @@ enum class Mode {
 
 [[nodiscard]] std::string_view ToString(Mode mode) noexcept;
 
-[[nodiscard]] std::string DataToString(uint8_t* data, size_t dataLength, char separator = 0);
+[[nodiscard]] std::string DataToString(uint8_t* data, size_t dataLength, char separator);
 
 enum class IoSignalId : uint32_t {
 };

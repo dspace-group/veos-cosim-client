@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "CoSimHelper.h"
 #include "Environment.h"
@@ -98,7 +99,7 @@ public:
         (void)Wait(Infinite);
     }
 
-    [[nodiscard]] bool Wait(uint32_t milliseconds) const {
+    [[nodiscard]] bool Wait(const uint32_t milliseconds) const {
         const DWORD result = WaitForSingleObject(_handle, milliseconds);
         switch (result) {
             case WAIT_OBJECT_0:
@@ -152,7 +153,7 @@ public:
         (void)Wait(Infinite);
     }
 
-    [[nodiscard]] bool Wait(uint32_t milliseconds) const override {
+    [[nodiscard]] bool Wait(const uint32_t milliseconds) const override {
         return _handle.Wait(milliseconds);
     }
 
@@ -249,7 +250,7 @@ private:
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-void SetThreadAffinity(std::string_view name) {
+void SetThreadAffinity(const std::string_view name) {
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;
@@ -258,9 +259,9 @@ void SetThreadAffinity(std::string_view name) {
     (void)SetThreadAffinityMask(GetCurrentThread(), mask);
 }
 
-[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
-    const DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-    const DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+[[nodiscard]] std::string GetEnglishErrorMessage(const int32_t errorCode) {
+    constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     LPSTR buffer = nullptr;
     const DWORD size = FormatMessageA(flags,
                                       nullptr,
