@@ -22,3 +22,5 @@ if(DSVEOSCOSIM_BUILD_TESTS)
   add_subdirectory(tests)
   add_subdirectory(third_party)
 endif()
+
+#add_definitions(-DALL_COMMUNICATION_TESTS)
