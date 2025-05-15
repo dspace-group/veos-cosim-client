@@ -27,6 +27,8 @@ Checks: '
   -misc-misplaced-const,
   -misc-non-private-member-variables-in-classes,
   -modernize-avoid-c-arrays,
+  -modernize-pass-by-value,
+  -modernize-return-braced-init-list,
   -modernize-use-trailing-return-type,
   -performance-enum-size,
   -readability-function-cognitive-complexity,

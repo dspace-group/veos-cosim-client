@@ -519,9 +519,9 @@ protected:
         sizeOfSharedMemory += sizeOfMessageCountPerController;
         sizeOfSharedMemory += sizeOfRingBuffer;
 
-        _sharedMemory = CreateOrOpenSharedMemory(name, sizeOfSharedMemory);
+        _sharedMemory = SharedMemory::CreateOrOpen(name, sizeOfSharedMemory);
 
-        auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory->data());
+        auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory.data());
         auto* pointerToMessageBuffer = pointerToMessageCountPerController + sizeOfMessageCountPerController;
 
         _messageCountPerController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
@@ -627,7 +627,7 @@ private:
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessage>* _messageBuffer{};
 
-    std::unique_ptr<SharedMemory> _sharedMemory;
+    SharedMemory _sharedMemory;
 };
 
 #endif

@@ -43,9 +43,9 @@ const auto ClientToServerPostFix = ".ClientToServer";
 class LocalChannelBase {
 protected:
     LocalChannelBase(const std::string& name, const bool isServer) {
-        const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+        const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-        const std::lock_guard lock(*mutex);
+        const std::lock_guard lock(mutex);
 
         std::string dataName = name;
         dataName.append(".Data");
@@ -57,17 +57,19 @@ protected:
         constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
 
         bool initShm{};
-        _sharedMemory = TryOpenExistingSharedMemory(dataName, totalSize);
-        if (!_sharedMemory) {
-            _sharedMemory = CreateOrOpenSharedMemory(dataName, totalSize);
+        std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(dataName, totalSize);
+        if (sharedMemory) {
+            _sharedMemory = std::move(*sharedMemory);
+        } else {
+            _sharedMemory = SharedMemory::CreateOrOpen(dataName, totalSize);
             initShm = true;
         }
 
-        _newDataEvent = CreateOrOpenNamedEvent(newDataName);
-        _newSpaceEvent = CreateOrOpenNamedEvent(newSpaceName);
+        _newDataEvent = NamedEvent::CreateOrOpen(newDataName);
+        _newSpaceEvent = NamedEvent::CreateOrOpen(newSpaceName);
 
-        _header = static_cast<Header*>(_sharedMemory->data());
-        _data = static_cast<uint8_t*>(_sharedMemory->data()) + sizeof(Header);
+        _header = static_cast<Header*>(_sharedMemory.data());
+        _data = static_cast<uint8_t*>(_sharedMemory.data()) + sizeof(Header);
 
         if (initShm) {
             _header->serverPid = 0;
@@ -142,8 +144,8 @@ protected:
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex{};
     };
 
-    std::unique_ptr<NamedEvent> _newDataEvent;
-    std::unique_ptr<NamedEvent> _newSpaceEvent;
+    NamedEvent _newDataEvent;
+    NamedEvent _newSpaceEvent;
     Header* _header{};
     bool _connectionDetected{};
     alignas(LockFreeCacheLineBytes) uint8_t* _data{};
@@ -152,7 +154,7 @@ private:
     alignas(LockFreeCacheLineBytes) uint32_t* _counterpartPid{};
     alignas(LockFreeCacheLineBytes) uint32_t* _ownPid{};
 
-    std::unique_ptr<SharedMemory> _sharedMemory;
+    SharedMemory _sharedMemory;
     uint32_t _detectionCounter{};
 };
 
@@ -205,19 +207,19 @@ public:
     }
 
     [[nodiscard]] bool EndWrite() override {
-        _newDataEvent->Set();
+        _newDataEvent.Set();
         return true;
     }
 
 private:
     [[nodiscard]] bool WaitForFreeSpace(uint32_t& currentSize) {
-        _newDataEvent->Set();
+        _newDataEvent.Set();
         currentSize = _writeIndex - _header->readIndex.load();
         if (currentSize < BufferSize) {
             return true;
         }
 
-        while (!_newSpaceEvent->Wait(1)) {
+        while (!_newSpaceEvent.Wait(1)) {
             currentSize = _writeIndex - _header->readIndex.load();
             if (currentSize < BufferSize) {
                 return true;
@@ -276,7 +278,7 @@ public:
             _maskedReadIndex = MaskIndex(_readIndex);
             _header->readIndex.store(_readIndex);
             if (currentSize == BufferSize) {
-                _newSpaceEvent->Set();
+                _newSpaceEvent.Set();
             }
 
             totalSizeToCopy -= sizeToCopy;
@@ -287,7 +289,7 @@ public:
 
 private:
     [[nodiscard]] bool BeginRead(uint32_t& currentSize) {
-        while (!_newDataEvent->Wait(1)) {
+        while (!_newDataEvent.Wait(1)) {
             currentSize = _header->writeIndex.load() - _readIndex;
             if (currentSize > 0) {
                 return true;
@@ -342,13 +344,13 @@ private:
 class LocalChannelServer final : public ChannelServer {
 public:
     explicit LocalChannelServer(const std::string& name) : _name(name) {
-        const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+        const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-        const std::lock_guard lock(*mutex);
+        const std::lock_guard lock(mutex);
 
-        _sharedMemory = CreateOrOpenSharedMemory(_name, ServerSharedMemorySize);
+        _sharedMemory = SharedMemory::CreateOrOpen(_name, ServerSharedMemorySize);
         _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
-            _sharedMemory->data());
+            _sharedMemory.data());
         _counter->store(0);
     }
 
@@ -383,7 +385,7 @@ public:
 
 private:
     std::string _name;
-    std::unique_ptr<SharedMemory> _sharedMemory;
+    SharedMemory _sharedMemory;
 
     std::atomic<int32_t>* _counter{};
     int32_t _lastCounter{};
@@ -392,11 +394,11 @@ private:
 }  // namespace
 
 [[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name) {
-    const std::unique_ptr<NamedMutex> mutex = CreateOrOpenNamedMutex(name);
+    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-    const std::lock_guard lock(*mutex);
+    const std::lock_guard lock(mutex);
 
-    const std::unique_ptr<SharedMemory> sharedMemory = TryOpenExistingSharedMemory(name, ServerSharedMemorySize);
+    const std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(name, ServerSharedMemorySize);
     if (!sharedMemory) {
         return {};
     }
