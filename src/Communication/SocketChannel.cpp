@@ -27,7 +27,7 @@ constexpr int32_t ReadPacketSize = 1024;
 
 class SocketChannelWriter final : public ChannelWriter {
 public:
-    explicit SocketChannelWriter(Socket* socket) : _socket(socket), _writeIndex(HeaderSize) {
+    explicit SocketChannelWriter(Socket& socket) : _socket(socket), _writeIndex(HeaderSize) {
         _writeBuffer.resize(BufferSize);
     }
 
@@ -68,7 +68,7 @@ public:
 
         while (_writeIndex > 0) {
             int32_t sentSize{};
-            CheckResult(_socket->Send(sourcePtr, _writeIndex, sentSize));
+            CheckResult(_socket.Send(sourcePtr, _writeIndex, sentSize));
 
             sourcePtr += sentSize;
             _writeIndex -= sentSize;
@@ -79,7 +79,7 @@ public:
     }
 
 private:
-    Socket* _socket{};
+    Socket& _socket;
 
     int32_t _writeIndex{};
     std::vector<uint8_t> _writeBuffer;
@@ -87,7 +87,7 @@ private:
 
 class SocketChannelReader final : public ChannelReader {
 public:
-    explicit SocketChannelReader(Socket* socket) : _socket(socket), _readIndex(HeaderSize) {
+    explicit SocketChannelReader(Socket& socket) : _socket(socket), _readIndex(HeaderSize) {
         _readBuffer.resize(BufferSize);
     }
 
@@ -151,7 +151,7 @@ private:
 
         while (sizeToRead > 0) {
             int32_t receivedSize{};
-            CheckResult(_socket->Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], sizeToRead, receivedSize));
+            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], sizeToRead, receivedSize));
 
             sizeToRead -= receivedSize;
             _writeIndex += receivedSize;
@@ -171,7 +171,7 @@ private:
         return true;
     }
 
-    Socket* _socket{};
+    Socket& _socket;
 
     int32_t _readIndex{};
     int32_t _writeIndex{};
@@ -181,7 +181,7 @@ private:
 
 class SocketChannel final : public Channel {
 public:
-    explicit SocketChannel(Socket socket) : _socket(std::move(socket)), _writer(&_socket), _reader(&_socket) {
+    explicit SocketChannel(Socket socket) : _socket(std::move(socket)), _writer(_socket), _reader(_socket) {
     }
 
     ~SocketChannel() noexcept override = default;
