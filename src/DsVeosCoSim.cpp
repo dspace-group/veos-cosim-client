@@ -692,36 +692,61 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosC
     }
 }
 
+const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) {
+    switch (result) {
+        case DsVeosCoSim_Result_Ok:
+            return "Ok";
+        case DsVeosCoSim_Result_Error:
+            return "Error";
+        case DsVeosCoSim_Result_Empty:
+            return "Empty";
+        case DsVeosCoSim_Result_Full:
+            return "Full";
+        case DsVeosCoSim_Result_InvalidArgument:
+            return "InvalidArgument";
+        case DsVeosCoSim_Result_Disconnected:
+            return "Disconnected";
+        case DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
+    }
+
+    return "<Invalid Result>";
+}
+
+const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command) {
+    return ToString(static_cast<Command>(command)).data();
+}
+
+const char* DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity) {
+    return ToString(static_cast<Severity>(severity)).data();
+}
+
+const char* DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason) {
+    return ToString(static_cast<TerminateReason>(terminateReason)).data();
+}
+
+const char* DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState) {
+    return ToString(static_cast<ConnectionState>(connectionState)).data();
+}
+
+const char* DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType) {
+    return ToString(static_cast<DataType>(dataType)).data();
+}
+
+const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind) {
+    return ToString(static_cast<SizeKind>(sizeKind)).data();
+}
+
+const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType) {
+    return ToString(static_cast<LinControllerType>(linControllerType)).data();
+}
+
+size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType) {
+    return GetDataTypeSize(static_cast<DataType>(dataType));
+}
+
 std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
     return SimulationTimeToString(SimulationTime(simulationTime));
-}
-
-std::string_view DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) noexcept {
-    return ToString(static_cast<Result>(result));
-}
-
-std::string_view DsVeosCoSim_CommandToString(DsVeosCoSim_Command command) noexcept {
-    return ToString(static_cast<Command>(command));
-}
-
-std::string_view DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity) noexcept {
-    return ToString(static_cast<Severity>(severity));
-}
-
-std::string_view DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason) noexcept {
-    return ToString(static_cast<TerminateReason>(terminateReason));
-}
-
-std::string_view DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState) noexcept {
-    return ToString(static_cast<ConnectionState>(connectionState));
-}
-
-std::string_view DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType) noexcept {
-    return ToString(static_cast<DataType>(dataType));
-}
-
-std::string_view DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind) noexcept {
-    return ToString(static_cast<SizeKind>(sizeKind));
 }
 
 std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal& ioSignal) {
@@ -764,10 +789,6 @@ std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage& message
     return ToString(reinterpret_cast<const LinMessage&>(message));
 }
 
-std::string_view DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType) noexcept {
-    return ToString(static_cast<LinControllerType>(linControllerType));
-}
-
 std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags) {
     return ToString(static_cast<CanMessageFlags>(flags));
 }
@@ -778,8 +799,4 @@ std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flag
 
 std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags) {
     return ToString(static_cast<LinMessageFlags>(flags));
-}
-
-size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType) noexcept {
-    return GetDataTypeSize(static_cast<DataType>(dataType));
 }

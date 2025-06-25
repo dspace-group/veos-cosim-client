@@ -81,25 +81,6 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(Result result) noexcept {
-    switch (result) {
-        case Result::Ok:
-            return "Ok";
-        case Result::Error:
-            return "Error";
-        case Result::Empty:
-            return "Empty";
-        case Result::Full:
-            return "Full";
-        case Result::InvalidArgument:
-            return "InvalidArgument";
-        case Result::Disconnected:
-            return "Disconnected";
-    }
-
-    return "<Invalid Result>";
-}
-
 [[nodiscard]] std::string_view ToString(CoSimType coSimType) noexcept {
     switch (coSimType) {
         case CoSimType::Client:

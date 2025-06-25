@@ -53,17 +53,6 @@ using SimulationTime = std::chrono::nanoseconds;
 
 [[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime);
 
-enum class Result : uint32_t {
-    Ok,
-    Error,
-    Empty,
-    Full,
-    InvalidArgument,
-    Disconnected
-};
-
-[[nodiscard]] std::string_view ToString(Result result) noexcept;
-
 enum class CoSimType : uint32_t {
     Client,
     Server
