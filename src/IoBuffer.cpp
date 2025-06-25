@@ -643,10 +643,9 @@ public:
                  std::string_view name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {
-        std::string nameString = std::string(name);
-        std::string outgoingName = nameString;
+        std::string outgoingName(name);
         outgoingName.append(".Outgoing");
-        std::string incomingName = nameString;
+        std::string incomingName(name);
         incomingName.append(".Incoming");
         const std::vector<IoSignal>* writeSignals = &outgoingSignals;
         const std::vector<IoSignal>* readSignals = &incomingSignals;

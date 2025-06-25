@@ -26,7 +26,6 @@ void AssertEq(const DsVeosCoSim::CanMessage& expected, const DsVeosCoSim::CanMes
 void AssertEq(const DsVeosCoSim::EthMessage& expected, const DsVeosCoSim::EthMessage& actual);
 void AssertEq(const DsVeosCoSim::LinMessage& expected, const DsVeosCoSim::LinMessage& actual);
 void AssertEq(std::string_view expected, std::string_view actual);
-void AssertEq(const char* expected, const char* actual);
 
 template <typename T>
 void AssertEq(const std::vector<T>& expected, const std::vector<T>& actual) {

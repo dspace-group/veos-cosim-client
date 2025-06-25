@@ -100,7 +100,3 @@ void AssertEq(const LinMessage& expected, const LinMessage& actual) {
 void AssertEq(std::string_view expected, std::string_view actual) {
     ASSERT_STREQ(expected.data(), actual.data());
 }
-
-void AssertEq(const char* expected, const char* actual) {
-    ASSERT_STREQ(expected, actual);
-}

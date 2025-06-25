@@ -674,24 +674,23 @@ public:
         std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
         std::string_view suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-        std::string nameString = std::string(name);
-        std::string canTransmitBufferName = nameString;
+        std::string canTransmitBufferName(name);
         canTransmitBufferName.append(".Can.");
         canTransmitBufferName.append(suffixForTransmit);
-        std::string ethTransmitBufferName = nameString;
+        std::string ethTransmitBufferName(name);
         ethTransmitBufferName.append(".Eth.");
         ethTransmitBufferName.append(suffixForTransmit);
-        std::string linTransmitBufferName = nameString;
+        std::string linTransmitBufferName(name);
         linTransmitBufferName.append(".Lin.");
         linTransmitBufferName.append(suffixForTransmit);
 
-        std::string canReceiveBufferName = nameString;
+        std::string canReceiveBufferName(name);
         canReceiveBufferName.append(".Can.");
         canReceiveBufferName.append(suffixForReceive);
-        std::string ethReceiveBufferName = nameString;
+        std::string ethReceiveBufferName(name);
         ethReceiveBufferName.append(".Eth.");
         ethReceiveBufferName.append(suffixForReceive);
-        std::string linReceiveBufferName = nameString;
+        std::string linReceiveBufferName(name);
         linReceiveBufferName.append(".Lin.");
         linReceiveBufferName.append(suffixForReceive);
 
