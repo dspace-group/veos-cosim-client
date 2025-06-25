@@ -11,14 +11,14 @@ namespace DsVeosCoSim {
 class Event {
 public:
     void Set() {
-        const std::lock_guard guard(_mutex);
+        std::lock_guard guard(_mutex);
         _signaled = true;
         _conditionVariable.notify_one();
     }
 
-    [[nodiscard]] bool Wait(const uint32_t timeoutInMilliseconds) {
+    [[nodiscard]] bool Wait(uint32_t timeoutInMilliseconds) {
         std::unique_lock lock(_mutex);
-        const bool result = _conditionVariable.wait_for(lock, std::chrono::milliseconds(timeoutInMilliseconds), [this] {
+        bool result = _conditionVariable.wait_for(lock, std::chrono::milliseconds(timeoutInMilliseconds), [this] {
             return _signaled;
         });
         _signaled = false;

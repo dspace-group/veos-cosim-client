@@ -16,7 +16,7 @@ namespace {
 
 void TcpServerRun() {
     try {
-        const Socket serverSocket(AddressFamily::Ipv4);
+        Socket serverSocket(AddressFamily::Ipv4);
         serverSocket.EnableReuseAddress();
         serverSocket.Bind(TcpPort, true);
         serverSocket.Listen();

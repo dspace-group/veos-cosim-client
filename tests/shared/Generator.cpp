@@ -32,19 +32,19 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] int32_t Random(const int32_t min, const int32_t max) {
+[[nodiscard]] int32_t Random(int32_t min, int32_t max) {
     static bool first = true;
     if (first) {
-        srand(static_cast<uint32_t>(std::time({})));
+        srand(static_cast<uint32_t>(std::time({})));  // NOLINT(cert-msc51-cpp, cert-msc32-c)
         first = false;
     }
 
-    const int32_t diff = max + 1 - min;
+    int32_t diff = max + 1 - min;
 
-    return min + (rand() % diff);
+    return min + (rand() % diff);  // NOLINT(concurrency-mt-unsafe, cert-msc30-c, cert-msc50-cpp)
 }
 
-void FillWithRandom(uint8_t* data, const size_t length) {
+void FillWithRandom(uint8_t* data, size_t length) {
     for (size_t i = 0; i < length; i++) {
         data[i] = GenerateU8();
     }
@@ -62,7 +62,7 @@ void FillWithRandom(uint8_t* data, const size_t length) {
     return GenerateRandom(0U, 123456789U);
 }
 
-[[nodiscard]] uint32_t GenerateU32(const uint32_t min, const uint32_t max) {
+[[nodiscard]] uint32_t GenerateU32(uint32_t min, uint32_t max) {
     return static_cast<uint32_t>(Random(static_cast<int32_t>(min), static_cast<int32_t>(max)));
 }
 
@@ -82,11 +82,11 @@ void FillWithRandom(uint8_t* data, const size_t length) {
     return SimulationTime(GenerateU64());
 }
 
-[[nodiscard]] BusMessageId GenerateBusMessageId(const uint32_t min, const uint32_t max) {
+[[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max) {
     return static_cast<BusMessageId>(GenerateU32(min, max));
 }
 
-[[nodiscard]] std::vector<uint8_t> GenerateBytes(const size_t length) {
+[[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length) {
     std::vector<uint8_t> data;
     data.resize(length);
     for (size_t i = 0; i < length; i++) {
@@ -100,11 +100,11 @@ void FillWithRandom(uint8_t* data, const size_t length) {
     return CreateSignal(GenerateDataType(), GenerateSizeKind());
 }
 
-[[nodiscard]] IoSignalContainer CreateSignal(const DataType dataType) {
+[[nodiscard]] IoSignalContainer CreateSignal(DataType dataType) {
     return CreateSignal(dataType, GenerateSizeKind());
 }
 
-[[nodiscard]] IoSignalContainer CreateSignal(const DataType dataType, const SizeKind sizeKind) {
+[[nodiscard]] IoSignalContainer CreateSignal(DataType dataType, SizeKind sizeKind) {
     IoSignalContainer signal{};
     signal.id = static_cast<IoSignalId>(GenerateU32());
     signal.length = GenerateRandom(1U, 4U);
@@ -156,8 +156,8 @@ void FillWithRandom(LinControllerContainer& controller) {
     controller.clusterName = GenerateString("LinCluster名前\xF0\x9F\x98\x80");
 }
 
-void FillWithRandom(CanMessageContainer& message, const BusControllerId controllerId) {
-    const uint32_t length = GenerateRandom(1U, 8U);
+void FillWithRandom(CanMessageContainer& message, BusControllerId controllerId) {
+    uint32_t length = GenerateRandom(1U, 8U);
     message.controllerId = controllerId;
     message.id = GenerateBusMessageId();
     message.timestamp = GenerateSimulationTime();
@@ -165,16 +165,16 @@ void FillWithRandom(CanMessageContainer& message, const BusControllerId controll
     FillWithRandom(message.data.data(), length);
 }
 
-void FillWithRandom(EthMessageContainer& message, const BusControllerId controllerId) {
-    const uint32_t length = GenerateRandom(1U, 8U);
+void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId) {
+    uint32_t length = GenerateRandom(1U, 8U);
     message.controllerId = controllerId;
     message.timestamp = GenerateSimulationTime();
     message.length = length;
     FillWithRandom(message.data.data(), length);
 }
 
-void FillWithRandom(LinMessageContainer& message, const BusControllerId controllerId) {
-    const uint32_t length = GenerateRandom(1U, 8U);
+void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId) {
+    uint32_t length = GenerateRandom(1U, 8U);
     message.controllerId = controllerId;
     message.id = GenerateBusMessageId();
     message.timestamp = GenerateSimulationTime();
@@ -182,7 +182,7 @@ void FillWithRandom(LinMessageContainer& message, const BusControllerId controll
     FillWithRandom(message.data.data(), length);
 }
 
-[[nodiscard]] std::vector<IoSignalContainer> CreateSignals(const size_t count) {
+[[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count) {
     std::vector<IoSignalContainer> signals;
     signals.reserve(count);
 
@@ -193,7 +193,7 @@ void FillWithRandom(LinMessageContainer& message, const BusControllerId controll
     return signals;
 }
 
-[[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(const size_t count) {
+[[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(size_t count) {
     std::vector<CanControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {
@@ -205,7 +205,7 @@ void FillWithRandom(LinMessageContainer& message, const BusControllerId controll
     return controllers;
 }
 
-[[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(const size_t count) {
+[[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(size_t count) {
     std::vector<EthControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {
@@ -217,7 +217,7 @@ void FillWithRandom(LinMessageContainer& message, const BusControllerId controll
     return controllers;
 }
 
-[[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(const size_t count) {
+[[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(size_t count) {
     std::vector<LinControllerContainer> controllers;
 
     for (size_t i = 0; i < count; i++) {

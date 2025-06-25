@@ -32,11 +32,11 @@ TEST_F(TestPortMapper, StartOfServer) {
 
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
-    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
+    std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
-    const std::string serverName = GenerateString("Server名前");
+    std::string serverName = GenerateString("Server名前");
 
-    const uint16_t setPort = GenerateU16();
+    uint16_t setPort = GenerateU16();
 
     uint16_t port{};
 
@@ -50,12 +50,12 @@ TEST_F(TestPortMapper, SetAndGet) {
 
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
-    const std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
+    std::unique_ptr<PortMapperServer> portMapperServer = CreatePortMapperServer(false);
 
-    const std::string serverName = GenerateString("Server名前");
+    std::string serverName = GenerateString("Server名前");
 
-    const uint16_t setPort1 = GenerateU16();
-    const uint16_t setPort2 = setPort1 + 1;
+    uint16_t setPort1 = GenerateU16();
+    uint16_t setPort2 = setPort1 + 1;
 
     uint16_t port{};
 

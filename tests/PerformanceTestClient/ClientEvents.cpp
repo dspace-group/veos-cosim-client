@@ -21,9 +21,9 @@ void EventsClientRun([[maybe_unused]] std::string_view host,
                      uint64_t& counter,
                      const bool& isStopped) {
     try {
-        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
+        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
+        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
 
         std::array<char, BufferSize> buffer{};
 

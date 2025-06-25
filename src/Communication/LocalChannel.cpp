@@ -24,28 +24,28 @@ constexpr uint32_t BufferSize = 64 * 1024;
 const auto ServerToClientPostFix = ".ServerToClient";
 const auto ClientToServerPostFix = ".ClientToServer";
 
-[[nodiscard]] std::string GetWriterName(const std::string& name, const bool isServer) {
+[[nodiscard]] std::string GetWriterName(const std::string& name, bool isServer) {
     std::string writerName = name;
     writerName.append(isServer ? ServerToClientPostFix : ClientToServerPostFix);
     return writerName;
 }
 
-[[nodiscard]] std::string GetReaderName(const std::string& name, const bool isServer) {
+[[nodiscard]] std::string GetReaderName(const std::string& name, bool isServer) {
     std::string readerName = name;
     readerName.append(isServer ? ClientToServerPostFix : ServerToClientPostFix);
     return readerName;
 }
 
-[[nodiscard]] constexpr uint32_t MaskIndex(const uint32_t index) noexcept {
+[[nodiscard]] constexpr uint32_t MaskIndex(uint32_t index) noexcept {
     return index & (BufferSize - 1);
 }
 
 class LocalChannelBase {
 protected:
-    LocalChannelBase(const std::string& name, const bool isServer) {
-        const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    LocalChannelBase(const std::string& name, bool isServer) {
+        NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-        const std::lock_guard lock(mutex);
+        std::lock_guard lock(mutex);
 
         std::string dataName = name;
         dataName.append(".Data");
@@ -108,7 +108,7 @@ public:
 
 protected:
     [[nodiscard]] bool CheckIfConnectionIsAlive() {
-        const uint32_t counterpartPid = *_counterpartPid;
+        uint32_t counterpartPid = *_counterpartPid;
         if (counterpartPid != 0) {
             _connectionDetected = true;
         } else {
@@ -160,7 +160,7 @@ private:
 
 class LocalChannelWriter final : public LocalChannelBase, public ChannelWriter {
 public:
-    LocalChannelWriter(const std::string& name, const bool isServer)
+    LocalChannelWriter(const std::string& name, bool isServer)
         : LocalChannelBase(GetWriterName(name, isServer), isServer) {
     }
 
@@ -172,26 +172,26 @@ public:
     LocalChannelWriter(LocalChannelWriter&&) = delete;
     LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
-    [[nodiscard]] bool Write(const void* source, const size_t size) override {
+    [[nodiscard]] bool Write(const void* source, size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            const uint32_t readIndex = _header->readIndex.load();
+            uint32_t readIndex = _header->readIndex.load();
             uint32_t currentSize = _writeIndex - readIndex;
             if (currentSize == BufferSize) {
                 CheckResult(WaitForFreeSpace(currentSize));
             }
 
             _connectionDetected = true;
-            const uint32_t sizeToCopy = std::min(totalSizeToCopy, BufferSize - currentSize);
+            uint32_t sizeToCopy = std::min(totalSizeToCopy, BufferSize - currentSize);
 
-            const uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedWriteIndex);
+            uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedWriteIndex);
             (void)memcpy(&_data[_maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
             bufferPointer += sizeUntilBufferEnd;
 
-            const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
+            uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
             if (restSize > 0) {
                 (void)memcpy(&_data[0], bufferPointer, restSize);
                 bufferPointer += restSize;
@@ -238,7 +238,7 @@ private:
 
 class LocalChannelReader final : public LocalChannelBase, public ChannelReader {
 public:
-    LocalChannelReader(const std::string& name, const bool isServer)
+    LocalChannelReader(const std::string& name, bool isServer)
         : LocalChannelBase(GetReaderName(name, isServer), isServer) {
     }
 
@@ -250,25 +250,25 @@ public:
     LocalChannelReader(LocalChannelReader&&) = delete;
     LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
-    [[nodiscard]] bool Read(void* destination, const size_t size) override {
+    [[nodiscard]] bool Read(void* destination, size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
 
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            const uint32_t writeIndex = _header->writeIndex.load();
+            uint32_t writeIndex = _header->writeIndex.load();
             uint32_t currentSize = writeIndex - _readIndex;
             if (currentSize == 0) {
                 CheckResult(BeginRead(currentSize));
             }
 
             _connectionDetected = true;
-            const uint32_t sizeToCopy = std::min(totalSizeToCopy, currentSize);
-            const uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedReadIndex);
+            uint32_t sizeToCopy = std::min(totalSizeToCopy, currentSize);
+            uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedReadIndex);
             (void)memcpy(bufferPointer, &_data[_maskedReadIndex], sizeUntilBufferEnd);
             bufferPointer += sizeUntilBufferEnd;
 
-            const uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
+            uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
             if (restSize > 0) {
                 (void)memcpy(bufferPointer, &_data[0], restSize);
                 bufferPointer += restSize;
@@ -308,7 +308,7 @@ private:
 
 class LocalChannel final : public Channel {
 public:
-    LocalChannel(const std::string& name, const bool isServer) : _writer(name, isServer), _reader(name, isServer) {
+    LocalChannel(const std::string& name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
     }
 
     ~LocalChannel() noexcept override = default;
@@ -344,9 +344,9 @@ private:
 class LocalChannelServer final : public ChannelServer {
 public:
     explicit LocalChannelServer(const std::string& name) : _name(name) {
-        const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+        NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-        const std::lock_guard lock(mutex);
+        std::lock_guard lock(mutex);
 
         _sharedMemory = SharedMemory::CreateOrOpen(_name, ServerSharedMemorySize);
         _counter = static_cast<std::atomic<int32_t>*>(  // NOLINT(cppcoreguidelines-prefer-member-initializer)
@@ -367,7 +367,7 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Channel> TryAccept() override {
-        const int32_t currentCounter = _counter->load();
+        int32_t currentCounter = _counter->load();
         if (currentCounter > _lastCounter) {
             std::string specificName = _name;
             specificName.append(".");
@@ -394,17 +394,17 @@ private:
 }  // namespace
 
 [[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name) {
-    const NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
-    const std::lock_guard lock(mutex);
+    std::lock_guard lock(mutex);
 
-    const std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(name, ServerSharedMemorySize);
+    std::optional<SharedMemory> sharedMemory = SharedMemory::TryOpenExisting(name, ServerSharedMemorySize);
     if (!sharedMemory) {
         return {};
     }
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
-    const int32_t currentCounter = counter.fetch_add(1);
+    int32_t currentCounter = counter.fetch_add(1);
     std::string specificName = name;
     specificName.append(".");
     specificName.append(std::to_string(currentCounter));

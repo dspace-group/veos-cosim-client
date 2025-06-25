@@ -23,7 +23,7 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 class PortMapperServerImpl final : public PortMapperServer {
 public:
-    explicit PortMapperServerImpl(const bool enableRemoteAccess)
+    explicit PortMapperServerImpl(bool enableRemoteAccess)
         : _server(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess)) {
         _thread = std::thread([this] {
             RunPortMapperServer();
@@ -49,7 +49,7 @@ private:
         constexpr uint32_t timeoutInMilliseconds = 100U;
         while (!_stopEvent.Wait(timeoutInMilliseconds)) {
             try {
-                const std::unique_ptr<Channel> channel = _server->TryAccept();
+                std::unique_ptr<Channel> channel = _server->TryAccept();
                 if (!channel) {
                     continue;
                 }
@@ -98,7 +98,7 @@ private:
             LogTrace(message);
         }
 
-        const auto search = _ports.find(name);
+        auto search = _ports.find(name);
         if (search == _ports.end()) {
             std::string message = "Could not find port for dSPACE VEOS CoSim server '";
             message.append(name);
@@ -182,7 +182,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(const bool enableRemoteAccess) {
+[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(bool enableRemoteAccess) {
     return std::make_unique<PortMapperServerImpl>(enableRemoteAccess);
 }
 
@@ -196,7 +196,7 @@ private:
         LogTrace(message);
     }
 
-    const std::unique_ptr<Channel> channel =
+    std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 
@@ -225,8 +225,8 @@ private:
     }
 }
 
-[[nodiscard]] bool PortMapper_SetPort(const std::string& name, const uint16_t port) {
-    const std::unique_ptr<Channel> channel =
+[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port) {
+    std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 
@@ -253,7 +253,7 @@ private:
 }
 
 [[nodiscard]] bool PortMapper_UnsetPort(const std::string& name) {
-    const std::unique_ptr<Channel> channel =
+    std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
 

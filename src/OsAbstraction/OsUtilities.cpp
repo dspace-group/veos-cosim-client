@@ -23,12 +23,12 @@ namespace {
     return static_cast<int32_t>(GetLastError());
 }
 
-[[nodiscard]] std::wstring Utf8ToWide(const std::string_view utf8String) {
+[[nodiscard]] std::wstring Utf8ToWide(std::string_view utf8String) {
     if (utf8String.empty()) {
         return {};
     }
 
-    const int32_t sizeNeeded =
+    int32_t sizeNeeded =
         MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
     if (sizeNeeded <= 0) {
         std::string message = "Could not convert UTF-8 string to wide string. ";
@@ -94,8 +94,8 @@ void Handle::Wait() const {
     (void)Wait(Infinite);
 }
 
-[[nodiscard]] bool Handle::Wait(const uint32_t milliseconds) const {
-    const DWORD result = WaitForSingleObject(_handle, milliseconds);
+[[nodiscard]] bool Handle::Wait(uint32_t milliseconds) const {
+    DWORD result = WaitForSingleObject(_handle, milliseconds);
     switch (result) {
         case WAIT_OBJECT_0:
             return true;
@@ -120,7 +120,7 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 }
 
 [[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
-    const std::wstring fullName = GetFullNamedEventName(name);
+    std::wstring fullName = GetFullNamedEventName(name);
     void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open event '";
@@ -134,7 +134,7 @@ NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::mo
 }
 
 void NamedEvent::Set() const {
-    const BOOL result = SetEvent(_handle);  // NOLINT
+    BOOL result = SetEvent(_handle);
     if (result == FALSE) {
         std::string message = "Could not set event '";
         message.append(_name);
@@ -148,7 +148,7 @@ void NamedEvent::Wait() const {
     (void)Wait(Infinite);
 }
 
-[[nodiscard]] bool NamedEvent::Wait(const uint32_t milliseconds) const {
+[[nodiscard]] bool NamedEvent::Wait(uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 
@@ -156,7 +156,7 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
 [[nodiscard]] NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
-    const std::wstring fullName = GetFullNamedMutexName(name);
+    std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
         std::string message = "Could not create or open mutex '";
@@ -173,7 +173,7 @@ void NamedMutex::lock() const {
     (void)lock(Infinite);
 }
 
-[[nodiscard]] bool NamedMutex::lock(const uint32_t milliseconds) const {
+[[nodiscard]] bool NamedMutex::lock(uint32_t milliseconds) const {
     return _handle.Wait(milliseconds);
 }
 
@@ -181,7 +181,7 @@ void NamedMutex::unlock() const {
     (void)ReleaseMutex(_handle);
 }
 
-SharedMemory::SharedMemory(const std::string& name, const size_t size, Handle handle)
+SharedMemory::SharedMemory(const std::string& name, size_t size, Handle handle)
     : _size(size), _handle(std::move(handle)), _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
     if (!_data) {
         (void)CloseHandle(_handle);
@@ -211,9 +211,9 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 }
 
 [[nodiscard]] SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
-    const std::wstring fullName = GetFullSharedMemoryName(name);
+    std::wstring fullName = GetFullSharedMemoryName(name);
     constexpr DWORD sizeHigh{};
-    const auto sizeLow = static_cast<DWORD>(size);
+    auto sizeLow = static_cast<DWORD>(size);
     void* handle =
         CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
@@ -228,7 +228,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 }
 
 [[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, size_t size) {
-    const std::wstring fullName = GetFullSharedMemoryName(name);
+    std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         return {};
@@ -254,18 +254,18 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return processId;
 }
 
-[[nodiscard]] bool IsProcessRunning(const uint32_t processId) {
+[[nodiscard]] bool IsProcessRunning(uint32_t processId) {
     void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
     if (processHandle == nullptr) {
         return false;
     }
 
     DWORD exitCode{};
-    const BOOL result = GetExitCodeProcess(processHandle, &exitCode);
+    BOOL result = GetExitCodeProcess(processHandle, &exitCode);
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-void SetThreadAffinity(const std::string_view name) {
+void SetThreadAffinity(std::string_view name) {
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;
@@ -274,17 +274,17 @@ void SetThreadAffinity(const std::string_view name) {
     (void)SetThreadAffinityMask(GetCurrentThread(), mask);
 }
 
-[[nodiscard]] std::string GetEnglishErrorMessage(const int32_t errorCode) {
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     LPSTR buffer = nullptr;
-    const DWORD size = FormatMessageA(flags,
-                                      nullptr,
-                                      static_cast<DWORD>(errorCode),
-                                      languageId,
-                                      reinterpret_cast<LPSTR>(&buffer),
-                                      0,
-                                      nullptr);
+    DWORD size = FormatMessageA(flags,
+                                nullptr,
+                                static_cast<DWORD>(errorCode),
+                                languageId,
+                                reinterpret_cast<LPSTR>(&buffer),
+                                0,
+                                nullptr);
 
     std::string message;
     if ((size > 0) && buffer) {
@@ -322,13 +322,13 @@ void SetThreadAffinity(std::string_view name) {
         return;
     }
 
-    const int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
+    int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
 
     cpu_set_t cpuSet{};
     CPU_ZERO(&cpuSet);
 
     for (int cpuId = 0; cpuId < maxCpuCount; ++cpuId) {
-        const size_t maskId = 1 << cpuId;
+        size_t maskId = 1 << cpuId;
         if ((maskId & mask) != 0) {
             CPU_SET(cpuId, &cpuSet);
         }

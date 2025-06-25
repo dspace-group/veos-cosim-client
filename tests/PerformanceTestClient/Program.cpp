@@ -17,7 +17,7 @@ extern void RunCoSimPollingTest(std::string_view host);
 
 using namespace DsVeosCoSim;
 
-int32_t main(const int32_t argc, char* argv[]) {
+int32_t main(int32_t argc, char* argv[]) {
     if (!StartUp()) {
         return 1;
     }

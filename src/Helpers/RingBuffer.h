@@ -11,7 +11,7 @@ template <typename T>
 class RingBuffer final {
 public:
     RingBuffer() noexcept = default;
-    explicit RingBuffer(const size_t capacity) {
+    explicit RingBuffer(size_t capacity) {
         _items.resize(capacity);
     }
 
@@ -46,7 +46,7 @@ public:
             throw std::runtime_error("Ring buffer is full.");
         }
 
-        const size_t currentWriteIndex = _writeIndex;
+        size_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(element);
 
         ++_writeIndex;

@@ -13,7 +13,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
         std::unique_ptr<CoSimClient> coSimClient = CreateClient();
         ConnectConfig connectConfig{};
@@ -46,7 +46,7 @@ void CoSimClientRun(const std::string_view host, Event& connectedEvent, uint64_t
 
 }  // namespace
 
-void RunCoSimCallbackTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunCoSimCallbackTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     if (host.empty()) {
         LogTrace("Local dSPACE VEOS CoSim Callback:");
     } else {

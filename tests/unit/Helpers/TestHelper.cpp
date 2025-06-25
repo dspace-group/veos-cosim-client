@@ -13,15 +13,15 @@
 
 using namespace DsVeosCoSim;
 
-[[nodiscard]] CoSimType GetCounterPart(const CoSimType coSimType) {
+[[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-[[nodiscard]] std::string GetCounterPart(const std::string& name, const ConnectionKind connectionKind) {
+[[nodiscard]] std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
     return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 
-void AssertByteArray(const void* expected, const void* actual, const size_t size) {
+void AssertByteArray(const void* expected, const void* actual, size_t size) {
     const auto* expectedBytes = static_cast<const uint8_t*>(expected);
     const auto* actualBytes = static_cast<const uint8_t*>(actual);
     for (size_t i = 0; i < size; i++) {
@@ -29,7 +29,7 @@ void AssertByteArray(const void* expected, const void* actual, const size_t size
     }
 }
 
-void AssertLastMessage(const std::string_view message) {
+void AssertLastMessage(std::string_view message) {
     ASSERT_STREQ(message.data(), GetLastMessage().c_str());
 }
 
@@ -97,7 +97,7 @@ void AssertEq(const LinMessage& expected, const LinMessage& actual) {
     AssertByteArray(expected.data, actual.data, expected.length);
 }
 
-void AssertEq(const std::string_view expected, const std::string_view actual) {
+void AssertEq(std::string_view expected, std::string_view actual) {
     ASSERT_STREQ(expected.data(), actual.data());
 }
 

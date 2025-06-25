@@ -44,7 +44,7 @@ struct EventData {
 
 void SwitchSignals(std::vector<IoSignal>& incomingSignals,
                    std::vector<IoSignal>& outgoingSignals,
-                   const CoSimType coSimType) {
+                   CoSimType coSimType) {
     if (coSimType == CoSimType::Server) {
         std::swap(incomingSignals, outgoingSignals);
     }
@@ -70,7 +70,7 @@ TEST_P(TestIoBufferWithCoSimType, CreateWithZeroIoSignalInfos) {
     // Arrange
     auto [coSimType, connectionKind] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     // Act
     std::unique_ptr<IoBuffer> ioBuffer = CreateIoBuffer(coSimType, connectionKind, name, {}, {});
@@ -87,7 +87,7 @@ protected:
     static void SetUpTestSuite() {
         std::unique_ptr<ChannelServer> remoteServer = CreateTcpChannelServer(0, true);
         EXPECT_TRUE(remoteServer);
-        const std::optional<uint16_t> port = remoteServer->GetLocalPort();
+        std::optional<uint16_t> port = remoteServer->GetLocalPort();
         EXPECT_TRUE(port);
 
         _senderChannel = TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout);
@@ -131,18 +131,16 @@ protected:
         SimulationTime simulationTime = GenerateSimulationTime();
 
         Callbacks callbacks{};
-        callbacks.incomingSignalChangedCallback = [&](const SimulationTime simTime,
-                                                      const IoSignal& changedIoSignal,
-                                                      const uint32_t length,
-                                                      const void* value) {
-            ASSERT_EQ(simTime, simulationTime);
-            ASSERT_FALSE(expectedCallbacks.empty());
-            const auto [signal, data] = expectedCallbacks.front();
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length, length);
-            AssertByteArray(data.data(), value, data.size());
-            expectedCallbacks.pop_front();
-        };
+        callbacks.incomingSignalChangedCallback =
+            [&](SimulationTime simTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
+                ASSERT_EQ(simTime, simulationTime);
+                ASSERT_FALSE(expectedCallbacks.empty());
+                auto [signal, data] = expectedCallbacks.front();
+                ASSERT_EQ(signal.id, changedIoSignal.id);
+                ASSERT_EQ(signal.length, length);
+                AssertByteArray(data.data(), value, data.size());
+                expectedCallbacks.pop_front();
+            };
 
         std::thread thread([&] {
             ASSERT_TRUE(readerIoBuffer.Deserialize(reader, simulationTime, callbacks));
@@ -174,10 +172,10 @@ TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer incomingSignal = CreateSignal(dataType);
-    const IoSignalContainer outgoingSignal = CreateSignal(dataType);
+    IoSignalContainer incomingSignal = CreateSignal(dataType);
+    IoSignalContainer outgoingSignal = CreateSignal(dataType);
 
     // Act and assert
     ASSERT_NO_THROW((void)CreateIoBuffer(coSimType,
@@ -191,12 +189,12 @@ TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer incomingSignal1 = CreateSignal(dataType);
-    const IoSignalContainer incomingSignal2 = CreateSignal(dataType);
-    const IoSignalContainer outgoingSignal1 = CreateSignal(dataType);
-    const IoSignalContainer outgoingSignal2 = CreateSignal(dataType);
+    IoSignalContainer incomingSignal1 = CreateSignal(dataType);
+    IoSignalContainer incomingSignal2 = CreateSignal(dataType);
+    IoSignalContainer outgoingSignal1 = CreateSignal(dataType);
+    IoSignalContainer outgoingSignal2 = CreateSignal(dataType);
 
     // Act and assert
     ASSERT_NO_THROW(
@@ -211,18 +209,18 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
     std::vector incomingSignals = {static_cast<IoSignal>(signal)};
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const std::unique_ptr<IoBuffer> ioBuffer =
+    std::unique_ptr<IoBuffer> ioBuffer =
         CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    const std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
+    std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
@@ -239,15 +237,15 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
     std::vector incomingSignals = {static_cast<IoSignal>(signal)};
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const std::unique_ptr<IoBuffer> ioBuffer =
+    std::unique_ptr<IoBuffer> ioBuffer =
         CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
     uint32_t readLength{};
@@ -266,18 +264,18 @@ TEST_P(TestIoBuffer, WriteFixedSizedData) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
     std::vector<IoSignal> incomingSignals;
     std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    const std::unique_ptr<IoBuffer> ioBuffer =
+    std::unique_ptr<IoBuffer> ioBuffer =
         CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals);
 
-    const std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     // Act and assert
     ASSERT_NO_THROW(ioBuffer->Write(signal.id, signal.length, writeValue.data()));
@@ -325,7 +323,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     IoSignalContainer signal1 = CreateSignal();
@@ -367,11 +365,11 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
-    const IoSignalContainer signal1 = CreateSignal();
-    const IoSignalContainer signal2 = CreateSignal();
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
+    IoSignalContainer signal1 = CreateSignal();
+    IoSignalContainer signal2 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
     std::vector outgoingSignals = {static_cast<IoSignal>(signal),
@@ -400,11 +398,11 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
-    const IoSignalContainer signal1 = CreateSignal();
-    const IoSignalContainer signal2 = CreateSignal();
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
+    IoSignalContainer signal1 = CreateSignal();
+    IoSignalContainer signal2 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
     std::vector outgoingSignals = {static_cast<IoSignal>(signal1),
@@ -439,7 +437,7 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     signal.length = GenerateRandom(2U, 10U);
@@ -457,7 +455,7 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
                                                               incomingSignals,
                                                               outgoingSignals);
 
-    const std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
     writerIoBuffer->Write(signal.id, signal.length, writeValue.data());
 
     TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
@@ -473,9 +471,9 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
-    const IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
+    IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
     std::vector<IoSignal> incomingSignals;
     std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
@@ -503,7 +501,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveE
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -538,7 +536,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -559,7 +557,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
     IoSignalContainer signalCopy = signal;
     signalCopy.length--;
 
-    const std::vector<uint8_t> writeValue = GenerateIoData(signalCopy);
+    std::vector<uint8_t> writeValue = GenerateIoData(signalCopy);
     writerIoBuffer->Write(signal.id, signalCopy.length, writeValue.data());
 
     // Act and assert
@@ -570,7 +568,7 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    const std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("IoBuffer名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -588,7 +586,7 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
                                                               incomingSignals,
                                                               outgoingSignals);
 
-    const std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    std::vector<uint8_t> writeValue = GenerateIoData(signal);
     writerIoBuffer->Write(signal.id, signal.length, writeValue.data());
 
     TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});

@@ -12,10 +12,10 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool GetBoolValue(const std::string& name) {
-    const char* stringValue = std::getenv(name.c_str());  // NOLINT(concurrency-mt-unsafe)
+    char* stringValue = std::getenv(name.c_str());  // NOLINT(concurrency-mt-unsafe)
     if (stringValue) {
         char* end{};
-        const int32_t intValue = std::strtol(stringValue, &end, 10);
+        int32_t intValue = std::strtol(stringValue, &end, 10);
         return intValue != 0;
     }
 
@@ -26,10 +26,10 @@ namespace {
     constexpr uint16_t defaultPort = 27027;
     constexpr int32_t maxPort = 65535;
 
-    const char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
+    char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
     if (portString) {
         char* end{};
-        const int32_t port = std::strtol(portString, &end, 10);
+        int32_t port = std::strtol(portString, &end, 10);
         if ((port > 0) && (port <= maxPort)) {
             return static_cast<uint16_t>(port);
         }
@@ -41,7 +41,7 @@ namespace {
 [[nodiscard]] bool TryGetAffinityMaskInitial(const std::string& environmentVariableName, size_t& mask) {
     constexpr size_t defaultMask = SIZE_MAX;
 
-    const char* maskString = std::getenv(environmentVariableName.c_str());  // NOLINT(concurrency-mt-unsafe)
+    char* maskString = std::getenv(environmentVariableName.c_str());  // NOLINT(concurrency-mt-unsafe)
     if (maskString) {
         char* end{};
         if constexpr (sizeof(void*) == 8) {
@@ -60,37 +60,37 @@ namespace {
 }  // namespace
 
 [[nodiscard]] bool IsProtocolTracingEnabled() {
-    static const bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
+    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
     return Verbose;
 }
 
 [[nodiscard]] bool IsProtocolHeaderTracingEnabled() {
-    static const bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
+    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
     return Verbose;
 }
 
 [[nodiscard]] bool IsProtocolPingTracingEnabled() {
-    static const bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
+    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
     return Verbose;
 }
 
 [[nodiscard]] bool IsPortMapperServerVerbose() {
-    static const bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
+    static bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
     return Verbose;
 }
 
 [[nodiscard]] bool IsPortMapperClientVerbose() {
-    static const bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");
+    static bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");
     return Verbose;
 }
 
 [[nodiscard]] uint16_t GetPortMapperPort() {
-    static const uint16_t Port = GetPortMapperPortInitial();
+    static uint16_t Port = GetPortMapperPortInitial();
     return Port;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(const std::string_view name, size_t& mask) {
-    const std::string environmentVariableName = "VEOS_COSIM_AFFINITY_MASK";
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
+    std::string environmentVariableName = "VEOS_COSIM_AFFINITY_MASK";
 
     std::string fullName = environmentVariableName;
     fullName.append("_");

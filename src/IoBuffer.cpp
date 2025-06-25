@@ -26,7 +26,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-void CheckSizeKind(const SizeKind sizeKind, const std::string& name) {
+void CheckSizeKind(SizeKind sizeKind, const std::string& name) {
     switch (sizeKind) {
         case SizeKind::Fixed:
         case SizeKind::Variable:
@@ -51,7 +51,7 @@ protected:
     };
 
 public:
-    IoPartBufferBase(const CoSimType coSimType, const std::vector<IoSignal>& signals)
+    IoPartBufferBase(CoSimType coSimType, const std::vector<IoSignal>& signals)
         : _coSimType(coSimType), _changedSignalsQueue(signals.size()) {
         size_t nextSignalIndex = 0;
         for (const auto& signal : signals) {
@@ -64,7 +64,7 @@ public:
 
             CheckSizeKind(signal.sizeKind, signal.name);
 
-            const size_t dataTypeSize = GetDataTypeSize(signal.dataType);
+            size_t dataTypeSize = GetDataTypeSize(signal.dataType);
             if (dataTypeSize == 0) {
                 std::string message = "Invalid data type for IO signal '";
                 message.append(signal.name);
@@ -72,7 +72,7 @@ public:
                 throw std::runtime_error(message);
             }
 
-            const auto search = _metaDataLookup.find(signal.id);
+            auto search = _metaDataLookup.find(signal.id);
             if (search != _metaDataLookup.end()) {
                 std::string message = "Duplicated IO signal id ";
                 message.append(ToString(signal.id));
@@ -80,7 +80,7 @@ public:
                 throw std::runtime_error(message);
             }
 
-            const size_t totalDataSize = dataTypeSize * signal.length;
+            size_t totalDataSize = dataTypeSize * signal.length;
 
             MetaData metaData{};
             metaData.info = signal;
@@ -102,7 +102,7 @@ public:
 
     void ClearData() {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             ClearDataInternal();
             return;
         }
@@ -110,9 +110,9 @@ public:
         ClearDataInternal();
     }
 
-    void Write(const IoSignalId signalId, const uint32_t length, const void* value) {
+    void Write(IoSignalId signalId, uint32_t length, const void* value) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             WriteInternal(signalId, length, value);
             return;
         }
@@ -120,9 +120,9 @@ public:
         WriteInternal(signalId, length, value);
     }
 
-    void Read(const IoSignalId signalId, uint32_t& length, void* value) {
+    void Read(IoSignalId signalId, uint32_t& length, void* value) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             ReadInternal(signalId, length, value);
             return;
         }
@@ -130,9 +130,9 @@ public:
         ReadInternal(signalId, length, value);
     }
 
-    void Read(const IoSignalId signalId, uint32_t& length, const void** value) {
+    void Read(IoSignalId signalId, uint32_t& length, const void** value) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             ReadInternal(signalId, length, value);
             return;
         }
@@ -142,18 +142,16 @@ public:
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return SerializeInternal(writer);
         }
 
         return SerializeInternal(writer);
     }
 
-    [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   const SimulationTime simulationTime,
-                                   const Callbacks& callbacks) {
+    [[nodiscard]] bool Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return DeserializeInternal(reader, simulationTime, callbacks);
         }
 
@@ -172,8 +170,8 @@ protected:
                                                    SimulationTime simulationTime,
                                                    const Callbacks& callbacks) = 0;
 
-    [[nodiscard]] MetaData& FindMetaData(const IoSignalId signalId) {
-        const auto search = _metaDataLookup.find(signalId);
+    [[nodiscard]] MetaData& FindMetaData(IoSignalId signalId) {
+        auto search = _metaDataLookup.find(signalId);
         if (search != _metaDataLookup.end()) {
             return search->second;
         }
@@ -200,7 +198,7 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    RemoteIoPartBuffer(const CoSimType coSimType,
+    RemoteIoPartBuffer(CoSimType coSimType,
                        [[maybe_unused]] const std::string& name,
                        const std::vector<IoSignal>& signals)
         : IoPartBufferBase(coSimType, signals) {
@@ -238,7 +236,7 @@ protected:
         }
     }
 
-    void WriteInternal(const IoSignalId signalId, const uint32_t length, const void* value) override {
+    void WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override {
         MetaData& metaData = FindMetaData(signalId);
         auto& [currentLength, isChanged, buffer] = _dataVector[metaData.signalIndex];
 
@@ -271,9 +269,9 @@ protected:
             }
         }
 
-        const size_t totalSize = metaData.dataTypeSize * length;
+        size_t totalSize = metaData.dataTypeSize * length;
 
-        const int32_t compareResult = memcmp(buffer.data(), value, totalSize);
+        int32_t compareResult = memcmp(buffer.data(), value, totalSize);
         if (compareResult == 0) {
             return;
         }
@@ -286,32 +284,32 @@ protected:
         }
     }
 
-    void ReadInternal(const IoSignalId signalId, uint32_t& length, void* value) override {
-        const MetaData& metaData = FindMetaData(signalId);
-        const Data& data = _dataVector[metaData.signalIndex];
+    void ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override {
+        MetaData& metaData = FindMetaData(signalId);
+        Data& data = _dataVector[metaData.signalIndex];
 
         length = data.currentLength;
-        const size_t totalSize = metaData.dataTypeSize * length;
+        size_t totalSize = metaData.dataTypeSize * length;
         (void)memcpy(value, data.buffer.data(), totalSize);
     }
 
-    void ReadInternal(const IoSignalId signalId, uint32_t& length, const void** value) override {
-        const MetaData& metaData = FindMetaData(signalId);
-        const Data& data = _dataVector[metaData.signalIndex];
+    void ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override {
+        MetaData& metaData = FindMetaData(signalId);
+        Data& data = _dataVector[metaData.signalIndex];
 
         length = data.currentLength;
         *value = data.buffer.data();
     }
 
     [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override {
-        const auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
+        auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
         CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return true;
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            const MetaData* metaData = _changedSignalsQueue.PopFront();
+            MetaData* metaData = _changedSignalsQueue.PopFront();
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
             CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
@@ -320,7 +318,7 @@ protected:
                 CheckResultWithMessage(writer.Write(currentLength), "Could not write current signal length.");
             }
 
-            const size_t totalSize = metaData->dataTypeSize * currentLength;
+            size_t totalSize = metaData->dataTypeSize * currentLength;
             CheckResultWithMessage(writer.Write(buffer.data(), static_cast<uint32_t>(totalSize)),
                                    "Could not write signal data.");
             isChanged = false;
@@ -341,7 +339,7 @@ protected:
     }
 
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           const SimulationTime simulationTime,
+                                           SimulationTime simulationTime,
                                            const Callbacks& callbacks) override {
         uint32_t ioSignalChangedCount = 0;
         CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
@@ -350,7 +348,7 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
-            const MetaData& metaData = FindMetaData(signalId);
+            MetaData& metaData = FindMetaData(signalId);
             Data& data = _dataVector[metaData.signalIndex];
 
             if (metaData.info.sizeKind == SizeKind::Variable) {
@@ -366,7 +364,7 @@ protected:
                 data.currentLength = length;
             }
 
-            const size_t totalSize = metaData.dataTypeSize * data.currentLength;
+            size_t totalSize = metaData.dataTypeSize * data.currentLength;
             CheckResultWithMessage(reader.Read(data.buffer.data(), totalSize), "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
@@ -410,7 +408,7 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    LocalIoPartBuffer(const CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals)
+    LocalIoPartBuffer(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals)
         : IoPartBufferBase(coSimType, signals) {
         // The memory layout looks like this:
         // for each signal:
@@ -438,7 +436,7 @@ public:
         }
 
         for (auto& [signalId, metaData] : _metaDataLookup) {
-            const Data& data = _dataVector[metaData.signalIndex];
+            Data& data = _dataVector[metaData.signalIndex];
             DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
             DataBuffer* backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
             if (metaData.info.sizeKind == SizeKind::Fixed) {
@@ -481,7 +479,7 @@ protected:
         }
     }
 
-    void WriteInternal(const IoSignalId signalId, const uint32_t length, const void* value) override {
+    void WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override {
         MetaData& metaData = FindMetaData(signalId);
         Data& data = _dataVector[metaData.signalIndex];
 
@@ -510,9 +508,9 @@ protected:
             }
         }
 
-        const size_t totalSize = metaData.dataTypeSize * length;
+        size_t totalSize = metaData.dataTypeSize * length;
 
-        const bool dataChanged = memcmp(dataBuffer->data, value, totalSize) != 0;
+        bool dataChanged = memcmp(dataBuffer->data, value, totalSize) != 0;
 
         if (!currentLengthChanged && !dataChanged) {
             return;
@@ -531,40 +529,40 @@ protected:
         }
     }
 
-    void ReadInternal(const IoSignalId signalId, uint32_t& length, void* value) override {
-        const MetaData& metaData = FindMetaData(signalId);
-        const Data& data = _dataVector[metaData.signalIndex];
+    void ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override {
+        MetaData& metaData = FindMetaData(signalId);
+        Data& data = _dataVector[metaData.signalIndex];
 
-        const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         length = dataBuffer->currentLength;
-        const size_t totalSize = metaData.dataTypeSize * length;
+        size_t totalSize = metaData.dataTypeSize * length;
         (void)memcpy(value, dataBuffer->data, totalSize);
     }
 
-    void ReadInternal(const IoSignalId signalId, uint32_t& length, const void** value) override {
-        const MetaData& metaData = FindMetaData(signalId);
-        const Data& data = _dataVector[metaData.signalIndex];
+    void ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override {
+        MetaData& metaData = FindMetaData(signalId);
+        Data& data = _dataVector[metaData.signalIndex];
 
-        const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         length = dataBuffer->currentLength;
         *value = dataBuffer->data;
     }
 
     [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override {
-        const auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
+        auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
         CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return true;
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            const MetaData* metaData = _changedSignalsQueue.PopFront();
+            MetaData* metaData = _changedSignalsQueue.PopFront();
             Data& data = _dataVector[metaData->signalIndex];
 
             if (IsProtocolTracingEnabled()) {
-                const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+                DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
                 std::string message = "Signal { Id: ";
                 message.append(ToString(metaData->info.id));
@@ -585,7 +583,7 @@ protected:
     }
 
     [[nodiscard]] bool DeserializeInternal(ChannelReader& reader,
-                                           const SimulationTime simulationTime,
+                                           SimulationTime simulationTime,
                                            const Callbacks& callbacks) override {
         uint32_t ioSignalChangedCount = 0;
         CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
@@ -594,12 +592,12 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
 
-            const MetaData& metaData = FindMetaData(signalId);
+            MetaData& metaData = FindMetaData(signalId);
             Data& data = _dataVector[metaData.signalIndex];
 
             FlipBuffers(data);
 
-            const DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+            DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
             if (IsProtocolTracingEnabled()) {
                 std::string message = "Signal { Id: ";
@@ -624,7 +622,7 @@ protected:
     }
 
 private:
-    [[nodiscard]] DataBuffer* GetDataBuffer(const size_t offset) const {
+    [[nodiscard]] DataBuffer* GetDataBuffer(size_t offset) const {
         return reinterpret_cast<DataBuffer*>(static_cast<uint8_t*>(_sharedMemory.data()) + offset);
     }
 
@@ -641,7 +639,7 @@ private:
 class IoBufferImpl final : public IoBuffer {
 public:
     IoBufferImpl(CoSimType coSimType,
-                 [[maybe_unused]] const ConnectionKind connectionKind,
+                 [[maybe_unused]] ConnectionKind connectionKind,
                  const std::string& name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {
@@ -685,15 +683,15 @@ public:
         _writeBuffer->ClearData();
     }
 
-    void Write(const IoSignalId signalId, const uint32_t length, const void* value) const override {
+    void Write(IoSignalId signalId, uint32_t length, const void* value) const override {
         _writeBuffer->Write(signalId, length, value);
     }
 
-    void Read(const IoSignalId signalId, uint32_t& length, void* value) const override {
+    void Read(IoSignalId signalId, uint32_t& length, void* value) const override {
         _readBuffer->Read(signalId, length, value);
     }
 
-    void Read(const IoSignalId signalId, uint32_t& length, const void** value) const override {
+    void Read(IoSignalId signalId, uint32_t& length, const void** value) const override {
         _readBuffer->Read(signalId, length, value);
     }
 
@@ -702,7 +700,7 @@ public:
     }
 
     [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   const SimulationTime simulationTime,
+                                   SimulationTime simulationTime,
                                    const Callbacks& callbacks) const override {
         return _readBuffer->Deserialize(reader, simulationTime, callbacks);
     }

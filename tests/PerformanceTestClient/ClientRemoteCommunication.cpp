@@ -15,7 +15,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void RemoteCommunicationClientRun(const std::string_view host,
+void RemoteCommunicationClientRun(std::string_view host,
                                   Event& connectedEvent,
                                   uint64_t& counter,
                                   const bool& isStopped) {
@@ -45,7 +45,7 @@ void RemoteCommunicationClientRun(const std::string_view host,
 
 }  // namespace
 
-void RunRemoteCommunicationTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunRemoteCommunicationTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Remote Communication:");
     RunPerformanceTest(RemoteCommunicationClientRun, host);
     LogTrace("");

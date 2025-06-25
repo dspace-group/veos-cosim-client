@@ -18,10 +18,10 @@ namespace {
 
 std::string LastMessage;
 
-fmt::text_style Red = fg(fmt::color::red);
-fmt::text_style Yellow = fg(fmt::color::yellow);
-fmt::text_style White = fg(fmt::color::white);
-fmt::text_style Gray = fg(fmt::color::light_gray);
+const fmt::text_style Red = fg(fmt::color::red);
+const fmt::text_style Yellow = fg(fmt::color::yellow);
+const fmt::text_style White = fg(fmt::color::white);
+const fmt::text_style Gray = fg(fmt::color::light_gray);
 
 }  // namespace
 
@@ -30,10 +30,10 @@ void InitializeOutput() {
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
-    const HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     DWORD dwMode = 0;
-    const BOOL result = GetConsoleMode(console, &dwMode);
+    BOOL result = GetConsoleMode(console, &dwMode);
     if (result != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         (void)SetConsoleMode(console, dwMode);
@@ -43,7 +43,7 @@ void InitializeOutput() {
     SetLogCallback(OnLogCallback);
 }
 
-void OnLogCallback(const Severity severity, std::string_view message) {
+void OnLogCallback(Severity severity, std::string_view message) {
     LastMessage = message;
     switch (severity) {
         case Severity::Error:
@@ -61,27 +61,27 @@ void OnLogCallback(const Severity severity, std::string_view message) {
     }
 }
 
-void LogCanMessage([[maybe_unused]] const SimulationTime simulationTime,
+void LogCanMessage([[maybe_unused]] SimulationTime simulationTime,
                    [[maybe_unused]] const CanController& controller,
                    const CanMessage& message) {
     print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
 }
 
-void LogEthMessage([[maybe_unused]] const SimulationTime simulationTime,
+void LogEthMessage([[maybe_unused]] SimulationTime simulationTime,
                    [[maybe_unused]] const EthController& controller,
                    const EthMessage& message) {
     print(fg(fmt::color::cyan), "{}\n", ToString(message));
 }
 
-void LogLinMessage([[maybe_unused]] const SimulationTime simulationTime,
+void LogLinMessage([[maybe_unused]] SimulationTime simulationTime,
                    [[maybe_unused]] const LinController& controller,
                    const LinMessage& message) {
     print(fg(fmt::color::lime), "{}\n", ToString(message));
 }
 
-void LogIoData([[maybe_unused]] const SimulationTime simulationTime,
+void LogIoData([[maybe_unused]] SimulationTime simulationTime,
                const IoSignal& ioSignal,
-               const uint32_t length,
+               uint32_t length,
                const void* value) {
     print(fg(fmt::color::fuchsia), "{}\n", IoDataToString(ioSignal, length, value));
 }

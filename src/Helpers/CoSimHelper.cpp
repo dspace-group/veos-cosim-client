@@ -27,29 +27,29 @@ void SetLogCallback(LogCallback logCallback) {
     LogCallbackHandler = std::move(logCallback);
 }
 
-void LogError(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
+void LogError(std::string_view message) {
+    auto logCallback = LogCallbackHandler;
     if (logCallback) {
         logCallback(Severity::Error, message);
     }
 }
 
-void LogWarning(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
+void LogWarning(std::string_view message) {
+    auto logCallback = LogCallbackHandler;
     if (logCallback) {
         logCallback(Severity::Warning, message);
     }
 }
 
-void LogInfo(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
+void LogInfo(std::string_view message) {
+    auto logCallback = LogCallbackHandler;
     if (logCallback) {
         logCallback(Severity::Info, message);
     }
 }
 
-void LogTrace(const std::string_view message) {
-    const auto logCallback = LogCallbackHandler;
+void LogTrace(std::string_view message) {
+    auto logCallback = LogCallbackHandler;
     if (logCallback) {
         logCallback(Severity::Trace, message);
     }
@@ -73,7 +73,7 @@ void LogProtocolDataTrace(const std::string& message) {
     LogTrace(traceMessage);
 }
 
-[[nodiscard]] std::string GetSystemErrorMessage(const int32_t errorCode) {
+[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
     std::string message = "Error code: ";
     message.append(std::to_string(errorCode));
     message.append(". ");

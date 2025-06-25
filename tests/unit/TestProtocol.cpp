@@ -22,11 +22,11 @@ protected:
     std::unique_ptr<Channel> _senderChannel;
     std::unique_ptr<Channel> _receiverChannel;
 
-    void CustomSetUp(const ConnectionKind connectionKind) {
+    void CustomSetUp(ConnectionKind connectionKind) {
         if (connectionKind == ConnectionKind::Remote) {
             std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
             EXPECT_TRUE(server);
-            const std::optional<uint16_t> port = server->GetLocalPort();
+            std::optional<uint16_t> port = server->GetLocalPort();
             EXPECT_TRUE(port);
 
             _senderChannel = TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout);
@@ -35,7 +35,7 @@ protected:
             EXPECT_TRUE(_receiverChannel);
         } else {
 #ifdef _WIN32
-            const std::string name = GenerateString("LocalChannel名前");
+            std::string name = GenerateString("LocalChannel名前");
             std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
 
             _senderChannel = TryConnectToLocalChannel(name);
@@ -43,7 +43,7 @@ protected:
             _receiverChannel = server->TryAccept(DefaultTimeout);
             EXPECT_TRUE(_receiverChannel);
 #else
-            const std::string name = GenerateString("UdsChannel名前");
+            std::string name = GenerateString("UdsChannel名前");
             std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
             EXPECT_TRUE(server);
 
@@ -89,7 +89,7 @@ TEST_P(TestProtocol, SendAndReceiveError) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const std::string sendErrorMessage = GenerateString("Errorメッセージ");
+    std::string sendErrorMessage = GenerateString("Errorメッセージ");
 
     // Act
     ASSERT_TRUE(Protocol::SendError(_senderChannel->GetWriter(), sendErrorMessage));
@@ -117,7 +117,7 @@ TEST_P(TestProtocol, SendAndReceivePingOk) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const auto sendCommand = static_cast<Command>(GenerateU32());
+    auto sendCommand = static_cast<Command>(GenerateU32());
 
     // Act
     ASSERT_TRUE(Protocol::SendPingOk(_senderChannel->GetWriter(), sendCommand));
@@ -134,10 +134,10 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const uint32_t sendVersion = GenerateU32();
+    uint32_t sendVersion = GenerateU32();
     constexpr Mode sendMode{};
-    const std::string sendServerName = GenerateString("Server名前");
-    const std::string sendClientName = GenerateString("Client名前");
+    std::string sendServerName = GenerateString("Server名前");
+    std::string sendClientName = GenerateString("Client名前");
 
     // Act
     ASSERT_TRUE(
@@ -165,15 +165,15 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const uint32_t sendProtocolVersion = GenerateU32();
+    uint32_t sendProtocolVersion = GenerateU32();
     constexpr Mode sendMode{};
-    const SimulationTime sendStepSize = GenerateSimulationTime();
+    SimulationTime sendStepSize = GenerateSimulationTime();
     constexpr SimulationState sendSimulationState{};
-    const std::vector<IoSignalContainer> sendIncomingSignals = CreateSignals(2);
-    const std::vector<IoSignalContainer> sendOutgoingSignals = CreateSignals(3);
-    const std::vector<CanControllerContainer> sendCanControllers = CreateCanControllers(4);
-    const std::vector<EthControllerContainer> sendEthControllers = CreateEthControllers(5);
-    const std::vector<LinControllerContainer> sendLinControllers = CreateLinControllers(6);
+    std::vector<IoSignalContainer> sendIncomingSignals = CreateSignals(2);
+    std::vector<IoSignalContainer> sendOutgoingSignals = CreateSignals(3);
+    std::vector<CanControllerContainer> sendCanControllers = CreateCanControllers(4);
+    std::vector<EthControllerContainer> sendEthControllers = CreateEthControllers(5);
+    std::vector<LinControllerContainer> sendLinControllers = CreateLinControllers(6);
 
     // Act
     ASSERT_TRUE(Protocol::SendConnectOk(_senderChannel->GetWriter(),
@@ -223,7 +223,7 @@ TEST_P(TestProtocol, SendAndReceiveStart) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendStart(_senderChannel->GetWriter(), sendSimulationTime));
@@ -240,7 +240,7 @@ TEST_P(TestProtocol, SendAndReceiveStop) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendStop(_senderChannel->GetWriter(), sendSimulationTime));
@@ -257,8 +257,8 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
-    const TerminateReason sendTerminateReason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
+    TerminateReason sendTerminateReason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
 
     // Act
     ASSERT_TRUE(Protocol::SendTerminate(_senderChannel->GetWriter(), sendSimulationTime, sendTerminateReason));
@@ -277,7 +277,7 @@ TEST_P(TestProtocol, SendAndReceivePause) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendPause(_senderChannel->GetWriter(), sendSimulationTime));
@@ -294,7 +294,7 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
     ASSERT_TRUE(Protocol::SendContinue(_senderChannel->GetWriter(), sendSimulationTime));
@@ -309,21 +309,21 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
 
 TEST_P(TestProtocol, SendAndReceiveStep) {
     // Arrange
-    const ConnectionKind connectionKind = GetParam();
+    ConnectionKind connectionKind = GetParam();
     CustomSetUp(connectionKind);
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
-    const std::string ioBufferName = GenerateString("IoBuffer名前");
-    const std::unique_ptr<IoBuffer> clientIoBuffer =
+    std::string ioBufferName = GenerateString("IoBuffer名前");
+    std::unique_ptr<IoBuffer> clientIoBuffer =
         CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    const std::unique_ptr<IoBuffer> serverIoBuffer =
+    std::unique_ptr<IoBuffer> serverIoBuffer =
         CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
-    const std::string busBufferName = GenerateString("BusBuffer名前");
-    const std::unique_ptr<BusBuffer> clientBusBuffer =
+    std::string busBufferName = GenerateString("BusBuffer名前");
+    std::unique_ptr<BusBuffer> clientBusBuffer =
         CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    const std::unique_ptr<BusBuffer> serverBusBuffer =
+    std::unique_ptr<BusBuffer> serverBusBuffer =
         CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
@@ -343,23 +343,23 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
 
 TEST_P(TestProtocol, SendAndReceiveStepOk) {
     // Arrange
-    const ConnectionKind connectionKind = GetParam();
+    ConnectionKind connectionKind = GetParam();
     CustomSetUp(connectionKind);
 
-    const SimulationTime sendSimulationTime = GenerateSimulationTime();
+    SimulationTime sendSimulationTime = GenerateSimulationTime();
 
-    const auto sendCommand = static_cast<Command>(GenerateU32());
+    auto sendCommand = static_cast<Command>(GenerateU32());
 
-    const std::string ioBufferName = GenerateString("IoBuffer名前");
-    const std::unique_ptr<IoBuffer> clientIoBuffer =
+    std::string ioBufferName = GenerateString("IoBuffer名前");
+    std::unique_ptr<IoBuffer> clientIoBuffer =
         CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    const std::unique_ptr<IoBuffer> serverIoBuffer =
+    std::unique_ptr<IoBuffer> serverIoBuffer =
         CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
 
-    const std::string busBufferName = GenerateString("BusBuffer名前");
-    const std::unique_ptr<BusBuffer> clientBusBuffer =
+    std::string busBufferName = GenerateString("BusBuffer名前");
+    std::unique_ptr<BusBuffer> clientBusBuffer =
         CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    const std::unique_ptr<BusBuffer> serverBusBuffer =
+    std::unique_ptr<BusBuffer> serverBusBuffer =
         CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
 
     // Act
@@ -387,7 +387,7 @@ TEST_P(TestProtocol, SendAndReceiveGetPort) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const std::string sendServerName = GenerateString("Server名前");
+    std::string sendServerName = GenerateString("Server名前");
 
     // Act
     ASSERT_TRUE(Protocol::SendGetPort(_senderChannel->GetWriter(), sendServerName));
@@ -404,7 +404,7 @@ TEST_P(TestProtocol, SendAndReceiveGetPortOk) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const uint16_t sendPort = GenerateU16();
+    uint16_t sendPort = GenerateU16();
 
     // Act
     ASSERT_TRUE(Protocol::SendGetPortOk(_senderChannel->GetWriter(), sendPort));
@@ -421,8 +421,8 @@ TEST_P(TestProtocol, SendAndReceiveSetPort) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const std::string sendServerName = GenerateString("Server名前");
-    const uint16_t sendPort = GenerateU16();
+    std::string sendServerName = GenerateString("Server名前");
+    uint16_t sendPort = GenerateU16();
 
     // Act
     ASSERT_TRUE(Protocol::SendSetPort(_senderChannel->GetWriter(), sendServerName, sendPort));
@@ -441,7 +441,7 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
     // Arrange
     CustomSetUp(GetParam());
 
-    const std::string sendServerName = GenerateString("Server名前");
+    std::string sendServerName = GenerateString("Server名前");
 
     // Act
     ASSERT_TRUE(Protocol::SendUnsetPort(_senderChannel->GetWriter(), sendServerName));

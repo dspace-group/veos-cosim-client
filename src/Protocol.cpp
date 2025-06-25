@@ -18,7 +18,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool WriteHeader(ChannelWriter& writer, const FrameKind frameKind) {
+[[nodiscard]] bool WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
     CheckResultWithMessage(writer.Write(frameKind), "Could not write frame header.");
     return true;
 }
@@ -31,8 +31,8 @@ namespace {
     return true;
 }
 
-[[nodiscard]] bool WriteString(ChannelWriter& writer, const std::string_view string) {
-    const auto size = static_cast<uint32_t>(string.size());
+[[nodiscard]] bool WriteString(ChannelWriter& writer, std::string_view string) {
+    auto size = static_cast<uint32_t>(string.size());
     CheckResultWithMessage(writer.Write(size), "Could not write string size.");
     CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
     return true;
@@ -69,7 +69,7 @@ namespace {
 }
 
 [[nodiscard]] bool WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
-    const auto size = static_cast<uint32_t>(signals.size());
+    auto size = static_cast<uint32_t>(signals.size());
     CheckResultWithMessage(writer.Write(size), "Could not write signals count.");
     for (const auto& signal : signals) {
         CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
@@ -115,7 +115,7 @@ namespace {
 }
 
 [[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers) {
-    const auto size = static_cast<uint32_t>(controllers.size());
+    auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -159,7 +159,7 @@ namespace {
 }
 
 [[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers) {
-    const auto size = static_cast<uint32_t>(controllers.size());
+    auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -203,7 +203,7 @@ namespace {
 }
 
 [[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers) {
-    const auto size = static_cast<uint32_t>(controllers.size());
+    auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
@@ -214,7 +214,7 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(const FrameKind& frameKind) noexcept {
+[[nodiscard]] std::string_view ToString(FrameKind frameKind) noexcept {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";
@@ -340,7 +340,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendPingOk(ChannelWriter& writer, const Command command) {
+[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command) {
     if (IsProtocolPingTracingEnabled()) {
         std::string str = "SendPingOk(Command: ";
         str.append(ToString(command));
@@ -377,8 +377,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendConnect(ChannelWriter& writer,
-                               const uint32_t protocolVersion,
-                               const Mode clientMode,
+                               uint32_t protocolVersion,
+                               Mode clientMode,
                                const std::string& serverName,
                                const std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
@@ -439,10 +439,10 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
-                                 const uint32_t protocolVersion,
-                                 const Mode clientMode,
-                                 const SimulationTime stepSize,
-                                 const SimulationState simulationState,
+                                 uint32_t protocolVersion,
+                                 Mode clientMode,
+                                 SimulationTime stepSize,
+                                 SimulationState simulationState,
                                  const std::vector<IoSignalContainer>& incomingSignals,
                                  const std::vector<IoSignalContainer>& outgoingSignals,
                                  const std::vector<CanControllerContainer>& canControllers,
@@ -540,7 +540,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendStart(ChannelWriter& writer, const SimulationTime simulationTime) {
+[[nodiscard]] bool SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStart(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -576,7 +576,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendStop(ChannelWriter& writer, const SimulationTime simulationTime) {
+[[nodiscard]] bool SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStop(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -613,8 +613,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendTerminate(ChannelWriter& writer,
-                                 const SimulationTime simulationTime,
-                                 const TerminateReason reason) {
+                                 SimulationTime simulationTime,
+                                 TerminateReason reason) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendTerminate(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -656,7 +656,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendPause(ChannelWriter& writer, const SimulationTime simulationTime) {
+[[nodiscard]] bool SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendPause(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -692,7 +692,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendContinue(ChannelWriter& writer, const SimulationTime simulationTime) {
+[[nodiscard]] bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendContinue(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -729,7 +729,7 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendStep(ChannelWriter& writer,
-                            const SimulationTime simulationTime,
+                            SimulationTime simulationTime,
                             const IoBuffer& ioBuffer,
                             const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
@@ -781,8 +781,8 @@ namespace Protocol {
 }
 
 [[nodiscard]] bool SendStepOk(ChannelWriter& writer,
-                              const SimulationTime nextSimulationTime,
-                              const Command command,
+                              SimulationTime nextSimulationTime,
+                              Command command,
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
@@ -842,7 +842,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, const uint16_t port) {
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendSetPort(ServerName: \"";
         str.append(serverName);
@@ -956,7 +956,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, const uint16_t port) {
+[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendGetPortOk(Port: ";
         str.append(std::to_string(port));

@@ -24,7 +24,7 @@ using namespace DsVeosCoSim;
 namespace {
 
 [[nodiscard]] uint16_t GetNextFreeDynamicPort() {
-    const Socket socket(AddressFamily::Ipv4);
+    Socket socket(AddressFamily::Ipv4);
     socket.Bind(0, false);
     return socket.GetLocalPort();
 }
@@ -60,10 +60,10 @@ namespace {
     }
 
     try {
-        const uint16_t portMapperPort = GetNextFreeDynamicPort();
-        const std::string portMapperPortString = std::to_string(portMapperPort);
+        uint16_t portMapperPort = GetNextFreeDynamicPort();
+        std::string portMapperPortString = std::to_string(portMapperPort);
 #ifdef _WIN32
-        const std::string environmentString = "VEOS_COSIM_PORTMAPPER_PORT=" + portMapperPortString;
+        std::string environmentString = "VEOS_COSIM_PORTMAPPER_PORT=" + portMapperPortString;
         (void)_putenv(environmentString.c_str());
 #else
         (void)setenv("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString.c_str(), 1);
@@ -76,7 +76,7 @@ namespace {
     return true;
 }
 
-[[nodiscard]] std::string_view GetLoopBackAddress(const AddressFamily addressFamily) {
+[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
         return "127.0.0.1";
     }

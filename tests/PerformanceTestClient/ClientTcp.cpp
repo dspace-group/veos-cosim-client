@@ -17,9 +17,9 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void TcpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void TcpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     try {
-        const std::optional<Socket> clientSocket = Socket::TryConnect(host, TcpPort, 0, 1000);
+        std::optional<Socket> clientSocket = Socket::TryConnect(host, TcpPort, 0, 1000);
         if (!clientSocket) {
             throw std::runtime_error("Could not connect to TCP server.");
         }
@@ -44,7 +44,7 @@ void TcpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& 
 
 }  // namespace
 
-void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunTcpTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("TCP:");
     RunPerformanceTest(TcpClientRun, host);
     LogTrace("");
@@ -54,7 +54,7 @@ void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-link
 
 #include <string_view>
 
-void RunTcpTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunTcpTest([[maybe_unused]] std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

@@ -18,7 +18,7 @@ void RemoteCommunicationServerRun() {
     try {
         LogTrace("Remote communication server is listening ...");
 
-        const std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(CommunicationPort, true);
+        std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(CommunicationPort, true);
 
         SetThreadAffinity(std::to_string(CommunicationPort));
 

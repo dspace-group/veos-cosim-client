@@ -81,7 +81,7 @@ public:
         }
     }
 
-    void Start(const SimulationTime simulationTime) override {
+    void Start(SimulationTime simulationTime) override {
         if (!_channel) {
             if (_isClientOptional) {
                 return;
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    void Stop(const SimulationTime simulationTime) override {
+    void Stop(SimulationTime simulationTime) override {
         if (!_channel) {
             return;
         }
@@ -117,7 +117,7 @@ public:
         }
     }
 
-    void Terminate(const SimulationTime simulationTime, const TerminateReason reason) override {
+    void Terminate(SimulationTime simulationTime, TerminateReason reason) override {
         if (!_channel) {
             return;
         }
@@ -127,7 +127,7 @@ public:
         }
     }
 
-    void Pause(const SimulationTime simulationTime) override {
+    void Pause(SimulationTime simulationTime) override {
         if (!_channel) {
             return;
         }
@@ -137,7 +137,7 @@ public:
         }
     }
 
-    void Continue(const SimulationTime simulationTime) override {
+    void Continue(SimulationTime simulationTime) override {
         if (!_channel) {
             return;
         }
@@ -147,7 +147,7 @@ public:
         }
     }
 
-    [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) override {
+    [[nodiscard]] SimulationTime Step(SimulationTime simulationTime) override {
         if (!_channel) {
             return {};
         }
@@ -163,7 +163,7 @@ public:
         return nextSimulationTime;
     }
 
-    void Write(const IoSignalId signalId, const uint32_t length, const void* value) const override {
+    void Write(IoSignalId signalId, uint32_t length, const void* value) const override {
         if (!_channel) {
             return;
         }
@@ -171,7 +171,7 @@ public:
         _ioBuffer->Write(signalId, length, value);
     }
 
-    [[nodiscard]] bool Read(const IoSignalId signalId, uint32_t& length, const void** value) const override {
+    [[nodiscard]] bool Read(IoSignalId signalId, uint32_t& length, const void** value) const override {
         if (!_channel) {
             return false;
         }
@@ -234,41 +234,41 @@ public:
     }
 
 private:
-    [[nodiscard]] bool StartInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] bool StartInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime),
                                "Could not send start frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         return true;
     }
 
-    [[nodiscard]] bool StopInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] bool StopInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         return true;
     }
 
-    [[nodiscard]] bool TerminateInternal(const SimulationTime simulationTime, const TerminateReason reason) const {
+    [[nodiscard]] bool TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
         CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                                "Could not send terminate frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         return true;
     }
 
-    [[nodiscard]] bool PauseInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] bool PauseInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime),
                                "Could not send pause frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         return true;
     }
 
-    [[nodiscard]] bool ContinueInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] bool ContinueInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                                "Could not send continue frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         return true;
     }
 
-    [[nodiscard]] bool StepInternal(const SimulationTime simulationTime,
+    [[nodiscard]] bool StepInternal(SimulationTime simulationTime,
                                     SimulationTime& nextSimulationTime,
                                     Command& command) {
         if (_firstStep) {
@@ -399,17 +399,17 @@ private:
                                                        _linControllers),
                                "Could not send connect ok frame.");
 
-        const std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
-        const std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
+        std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
+        std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
         _ioBuffer = CreateIoBuffer(CoSimType::Server,
                                    _connectionKind,
                                    _serverName,
                                    incomingSignalsExtern,
                                    outgoingSignalsExtern);
 
-        const std::vector<CanController> canControllersExtern = Convert(_canControllers);
-        const std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
-        const std::vector<LinController> linControllersExtern = Convert(_linControllers);
+        std::vector<CanController> canControllersExtern = Convert(_canControllers);
+        std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
+        std::vector<LinController> linControllersExtern = Convert(_linControllers);
         _busBuffer = CreateBusBuffer(CoSimType::Server,
                                      _connectionKind,
                                      _serverName,
@@ -420,7 +420,7 @@ private:
         StopAccepting();
 
         if (_connectionKind == ConnectionKind::Remote) {
-            const std::string remoteAddress = _channel->GetRemoteAddress();
+            std::string remoteAddress = _channel->GetRemoteAddress();
             if (clientName.empty()) {
                 std::string message = "dSPACE VEOS CoSim client at ";
                 message.append(remoteAddress);
@@ -535,7 +535,7 @@ private:
         }
     }
 
-    void HandlePendingCommand(const Command command) const {
+    void HandlePendingCommand(Command command) const {
         switch (command) {
             case Command::Start:
                 _callbacks.simulationStartedCallback({});

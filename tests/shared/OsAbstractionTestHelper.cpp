@@ -36,9 +36,9 @@ using socklen_t = int32_t;
 
 namespace {
 
-void Socket_InitializeAddress(sockaddr_in& address, const std::string_view ipAddress, const uint16_t port) {
+void Socket_InitializeAddress(sockaddr_in& address, std::string_view ipAddress, uint16_t port) {
     in_addr ipAddressInt{};
-    const int32_t result = inet_pton(AF_INET, ipAddress.data(), &ipAddressInt);
+    int32_t result = inet_pton(AF_INET, ipAddress.data(), &ipAddressInt);
     if (result <= 0) {
         throw std::runtime_error("Could not convert IP address string to integer.");
     }
@@ -50,7 +50,7 @@ void Socket_InitializeAddress(sockaddr_in& address, const std::string_view ipAdd
 
 }  // namespace
 
-InternetAddress::InternetAddress(const std::string_view ipAddress, const uint16_t port) {
+InternetAddress::InternetAddress(std::string_view ipAddress, uint16_t port) {
     auto* address = reinterpret_cast<sockaddr_in*>(_address.data());
     Socket_InitializeAddress(*address, ipAddress, port);
 }
@@ -70,72 +70,70 @@ UdpSocket::~UdpSocket() {
 #endif
 }
 
-void UdpSocket::Bind(const std::string_view ipAddress, const uint16_t port) const {
+void UdpSocket::Bind(std::string_view ipAddress, uint16_t port) const {
     sockaddr_in address{};
     Socket_InitializeAddress(address, ipAddress, port);
-    const int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
     if (result < 0) {
         throw std::runtime_error("Could not bind.");
     }
 }
 
-void UdpSocket::Connect(const std::string_view ipAddress, const uint16_t port) const {
+void UdpSocket::Connect(std::string_view ipAddress, uint16_t port) const {
     sockaddr_in address{};
     Socket_InitializeAddress(address, ipAddress, port);
-    const int32_t result = connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    int32_t result = connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
     if (result < 0) {
         throw std::runtime_error("Could not connect.");
     }
 }
 
-void UdpSocket::SetNoDelay(const bool value) const {
-    const int32_t flags = value ? 1 : 0;
+void UdpSocket::SetNoDelay(bool value) const {
+    int32_t flags = value ? 1 : 0;
     constexpr auto flagsLength = static_cast<socklen_t>(sizeof flags);
-    const int32_t result =
-        setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&flags), flagsLength);
+    int32_t result = setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&flags), flagsLength);
     if (result < 0) {
         throw std::runtime_error("Could not set no delay.");
     }
 }
 
-void UdpSocket::SetReuseAddress(const bool value) const {
-    const int32_t flags = value ? 1 : 0;
+void UdpSocket::SetReuseAddress(bool value) const {
+    int32_t flags = value ? 1 : 0;
     constexpr auto flagsLength = static_cast<socklen_t>(sizeof(flags));
-    const int32_t result =
-        setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&flags), flagsLength);
+    int32_t result = setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&flags), flagsLength);
     if (result < 0) {
         throw std::runtime_error("Could not set reuse address.");
     }
 }
 
 void UdpSocket::Listen() const {
-    const int32_t result = listen(_socket, SOMAXCONN);
+    int32_t result = listen(_socket, SOMAXCONN);
     if (result < 0) {
         throw std::runtime_error("Could not listen.");
     }
 }
 
-[[nodiscard]] bool UdpSocket::SendTo(const void* source, const uint32_t size, const InternetAddress& address) const {
-    const auto* const sourcePointer = static_cast<const char*>(source);
+[[nodiscard]] bool UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
+    const auto* sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    const auto length = CAST(sendto(_socket,
-                                    sourcePointer,
-                                    static_cast<int32_t>(size),
-                                    0,
-                                    reinterpret_cast<const sockaddr*>(&address),
-                                    addressLength));
+    auto length = CAST(sendto(_socket,
+                              sourcePointer,
+                              static_cast<int32_t>(size),
+                              0,
+                              reinterpret_cast<const sockaddr*>(&address),
+                              addressLength));
     return length == static_cast<int32_t>(size);
 }
 
-[[nodiscard]] bool UdpSocket::ReceiveFrom(void* destination, const uint32_t size, InternetAddress& address) const {
-    auto* const destinationPointer = static_cast<char*>(destination);
+[[nodiscard]] bool UdpSocket::ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const {
+    auto* destinationPointer = static_cast<char*>(destination);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    const auto length = CAST(recvfrom(_socket,
-                                      destinationPointer,
-                                      static_cast<int32_t>(size),
-                                      0,
-                                      reinterpret_cast<sockaddr*>(&address),
-                                      &addressLength));
+    auto length = CAST(recvfrom(_socket,
+                                destinationPointer,
+                                static_cast<int32_t>(size),
+                                0,
+                                reinterpret_cast<sockaddr*>(&address),
+                                &addressLength));
     return length == static_cast<int32_t>(size);
 }
 
@@ -147,7 +145,7 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 [[nodiscard]] Pipe::pipe_t Pipe::CreatePipe(std::string_view name) {
     mkfifo(name.data(), 0666);
 
-    const pipe_t pipe = open(name.data(), O_RDWR | O_CLOEXEC);
+    pipe_t pipe = open(name.data(), O_RDWR | O_CLOEXEC);
     if (pipe < 0) {
         throw std::runtime_error("Could not open pipe.");
     }
@@ -189,7 +187,7 @@ void Pipe::Accept() {
         throw std::runtime_error("Could not create pipe.");
     }
 
-    const bool connected = ConnectNamedPipe(_pipe, nullptr) != 0 ? true : GetLastError() == ERROR_PIPE_CONNECTED;
+    bool connected = ConnectNamedPipe(_pipe, nullptr) != 0 ? true : GetLastError() == ERROR_PIPE_CONNECTED;
     if (!connected) {
         throw std::runtime_error("Could not connect.");
     }
@@ -207,19 +205,19 @@ void Pipe::Connect() {
             break;
         }
 
-        const DWORD lastError = GetLastError();
+        DWORD lastError = GetLastError();
         if (lastError != ERROR_PIPE_BUSY) {
             throw std::runtime_error("Could not create pipe.");
         }
 
-        const BOOL result = WaitNamedPipeA(_name.c_str(), 10);
+        BOOL result = WaitNamedPipeA(_name.c_str(), 10);
         if (result == 0) {
             throw std::runtime_error("Could not create pipe.");
         }
     }
 
     DWORD dwMode = PIPE_READMODE_MESSAGE;
-    const BOOL success = SetNamedPipeHandleState(_pipe, &dwMode, nullptr, nullptr);
+    BOOL success = SetNamedPipeHandleState(_pipe, &dwMode, nullptr, nullptr);
     if (success == 0) {
         throw std::runtime_error("Could not set pipe to message mode.");
     }
@@ -232,7 +230,7 @@ void Pipe::Connect() {
 [[nodiscard]] bool Pipe::Write(const void* source, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
-    const BOOL success = WriteFile(_pipe, source, size, &processedSize, nullptr);
+    BOOL success = WriteFile(_pipe, source, size, &processedSize, nullptr);
     return (success != 0) && (size == processedSize);
 #else
     ssize_t length = write(_writePipe, source, size);
@@ -243,7 +241,7 @@ void Pipe::Connect() {
 [[nodiscard]] bool Pipe::Read(void* destination, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
-    const BOOL success = ReadFile(_pipe, destination, size, &processedSize, nullptr);
+    BOOL success = ReadFile(_pipe, destination, size, &processedSize, nullptr);
     return (success != 0) && (size == processedSize);
 #else
     ssize_t length = read(_readPipe, destination, size);

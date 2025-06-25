@@ -25,7 +25,7 @@ TEST_F(TestUdsSocket, Create) {
 TEST_F(TestUdsSocket, Bind) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
 
@@ -36,7 +36,7 @@ TEST_F(TestUdsSocket, Bind) {
 TEST_F(TestUdsSocket, Listen) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
@@ -48,13 +48,13 @@ TEST_F(TestUdsSocket, Listen) {
 TEST_F(TestUdsSocket, ConnectWithoutListening) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
 
     // Act
-    const std::optional<Socket> connectedSocket = Socket::TryConnect(path);
+    std::optional<Socket> connectedSocket = Socket::TryConnect(path);
 
     // Assert
     ASSERT_FALSE(connectedSocket);
@@ -63,16 +63,16 @@ TEST_F(TestUdsSocket, ConnectWithoutListening) {
 TEST_F(TestUdsSocket, Connect) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
     serverSocket.Listen();
 
-    const Socket clientSocket(addressFamily);
+    Socket clientSocket(addressFamily);
 
     // Act
-    const std::optional<Socket> connectedSocket = Socket::TryConnect(path);
+    std::optional<Socket> connectedSocket = Socket::TryConnect(path);
 
     // Assert
     ASSERT_TRUE(connectedSocket);
@@ -81,17 +81,17 @@ TEST_F(TestUdsSocket, Connect) {
 TEST_F(TestUdsSocket, Accept) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
     serverSocket.Listen();
 
-    const std::optional<Socket> clientSocket = Socket::TryConnect(path);
+    std::optional<Socket> clientSocket = Socket::TryConnect(path);
     EXPECT_TRUE(clientSocket);
 
     // Act
-    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
+    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
 
     // Assert
     ASSERT_TRUE(acceptedSocket);
@@ -100,19 +100,19 @@ TEST_F(TestUdsSocket, Accept) {
 TEST_F(TestUdsSocket, SendAndReceive) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
-    const std::string path = GenerateString("UdsPath");
+    std::string path = GenerateString("UdsPath");
 
     Socket serverSocket(addressFamily);
     serverSocket.Bind(path);
     serverSocket.Listen();
 
-    const std::optional<Socket> clientSocket = Socket::TryConnect(path);
+    std::optional<Socket> clientSocket = Socket::TryConnect(path);
     EXPECT_TRUE(clientSocket);
 
-    const std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
     EXPECT_TRUE(acceptedSocket);
 
-    const uint32_t sendValue = GenerateU32();
+    uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
 
     // Act

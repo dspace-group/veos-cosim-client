@@ -22,7 +22,7 @@ void UdsClientRun([[maybe_unused]] std::string_view host,
                   uint64_t& counter,
                   const bool& isStopped) {
     try {
-        const std::optional<Socket> clientSocket = Socket::TryConnect(UdsName);
+        std::optional<Socket> clientSocket = Socket::TryConnect(UdsName);
         MUST_BE_TRUE(clientSocket);
 
         std::array<char, BufferSize> buffer{};

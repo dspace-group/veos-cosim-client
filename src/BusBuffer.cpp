@@ -168,15 +168,13 @@ public:
     BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
-    void Initialize(const CoSimType coSimType,
-                    const std::string& name,
-                    const std::vector<TControllerExtern>& controllers) {
+    void Initialize(CoSimType coSimType, const std::string& name, const std::vector<TControllerExtern>& controllers) {
         _coSimType = coSimType;
 
         size_t totalQueueItemsCountPerBuffer = 0;
         size_t nextControllerIndex = 0;
         for (const auto& controller : controllers) {
-            const auto search = _controllers.find(controller.id);
+            auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
                 std::string message = "Duplicated controller id ";
                 message.append(ToString(controller.id));
@@ -196,7 +194,7 @@ public:
 
     void ClearData() {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             ClearDataInternal();
             return;
         }
@@ -206,7 +204,7 @@ public:
 
     [[nodiscard]] bool Transmit(const TMessageExtern& messageExtern) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return TransmitInternal(messageExtern);
         }
 
@@ -215,7 +213,7 @@ public:
 
     [[nodiscard]] bool Receive(TMessageExtern& messageExtern) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return ReceiveInternal(messageExtern);
         }
 
@@ -224,18 +222,16 @@ public:
 
     [[nodiscard]] bool Serialize(ChannelWriter& writer) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return SerializeInternal(writer);
         }
 
         return SerializeInternal(writer);
     }
 
-    [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   const SimulationTime simulationTime,
-                                   const Callback& callback) {
+    [[nodiscard]] bool Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callback& callback) {
         if (_coSimType == CoSimType::Client) {
-            const std::lock_guard lock(_mutex);
+            std::lock_guard lock(_mutex);
             return DeserializeInternal(reader, simulationTime, callback);
         }
 
@@ -256,7 +252,7 @@ protected:
                                                    const Callback& callback) = 0;
 
     [[nodiscard]] ControllerExtension& FindController(BusControllerId controllerId) {
-        const auto search = _controllers.find(controllerId);
+        auto search = _controllers.find(controllerId);
         if (search != _controllers.end()) {
             return search->second;
         }
@@ -338,13 +334,13 @@ protected:
         TMessage& message = _messageBuffer.PopFront();
         WriteTo(message, messageExtern);
 
-        const Extension& extension = Base::FindController(message.controllerId);
+        Extension& extension = Base::FindController(message.controllerId);
         --_messageCountPerController[extension.controllerIndex];
         return true;
     }
 
     [[nodiscard]] bool SerializeInternal(ChannelWriter& writer) override {
-        const auto count = static_cast<uint32_t>(_messageBuffer.Size());
+        auto count = static_cast<uint32_t>(_messageBuffer.Size());
         CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
 
         for (uint32_t i = 0; i < count; i++) {
@@ -424,7 +420,7 @@ public:
     ShmRingBuffer(ShmRingBuffer&& other) = delete;
     ShmRingBuffer& operator=(ShmRingBuffer&& other) = delete;
 
-    void Initialize(const uint32_t capacity) noexcept {
+    void Initialize(uint32_t capacity) noexcept {
         _capacity = capacity;
     }
 
@@ -451,7 +447,7 @@ public:
             throw std::runtime_error("SHM ring buffer is full.");
         }
 
-        const uint32_t currentWriteIndex = _writeIndex;
+        uint32_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(element);
 
         ++_writeIndex;
@@ -506,14 +502,13 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal(const std::string& name, const size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
 
-        const size_t sizeOfMessageCountPerController = Base::_controllers.size() * sizeof(std::atomic<uint32_t>);
-        const size_t sizeOfRingBuffer =
-            sizeof(ShmRingBuffer<TMessage>) + (totalQueueItemsCountPerBuffer * sizeof(TMessage));
+        size_t sizeOfMessageCountPerController = Base::_controllers.size() * sizeof(std::atomic<uint32_t>);
+        size_t sizeOfRingBuffer = sizeof(ShmRingBuffer<TMessage>) + (totalQueueItemsCountPerBuffer * sizeof(TMessage));
 
         size_t sizeOfSharedMemory = 0;
         sizeOfSharedMemory += sizeOfMessageCountPerController;
@@ -580,7 +575,7 @@ protected:
         TMessage& message = _messageBuffer->PopFront();
         WriteTo(message, messageExtern);
 
-        const Extension& extension = Base::FindController(messageExtern.controllerId);
+        Extension& extension = Base::FindController(messageExtern.controllerId);
         std::atomic<uint32_t>& receiveCount = _messageCountPerController[extension.controllerIndex];
         receiveCount.fetch_sub(1);
         _totalReceiveCount--;
@@ -611,7 +606,7 @@ protected:
                 LogProtocolDataTrace(ToString(message));
             }
 
-            const Extension& extension = Base::FindController(message.controllerId);
+            Extension& extension = Base::FindController(message.controllerId);
             std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension.controllerIndex];
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;
@@ -648,8 +643,8 @@ class BusBufferImpl final : public BusBuffer {
     using LinBufferBase = BusProtocolBufferBase<LinMessage, LinController>;
 
 public:
-    BusBufferImpl(const CoSimType coSimType,
-                  [[maybe_unused]] const ConnectionKind connectionKind,
+    BusBufferImpl(CoSimType coSimType,
+                  [[maybe_unused]] ConnectionKind connectionKind,
                   const std::string& name,
                   const std::vector<CanController>& canControllers,
                   const std::vector<EthController>& ethControllers,
@@ -676,8 +671,8 @@ public:
         }
 #endif
 
-        const std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-        const std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+        std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+        std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
         std::string canTransmitBufferName = name;
         canTransmitBufferName.append(".Can.");
@@ -757,7 +752,7 @@ public:
     }
 
     [[nodiscard]] bool Deserialize(ChannelReader& reader,
-                                   const SimulationTime simulationTime,
+                                   SimulationTime simulationTime,
                                    const Callbacks& callbacks) const override {
         CheckResultWithMessage(
             _canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback),

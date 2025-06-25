@@ -125,7 +125,7 @@ public:
         _callbacks = callbacks;
     }
 
-    [[nodiscard]] bool PollCommand(SimulationTime& simulationTime, Command& command, const bool returnOnPing) override {
+    [[nodiscard]] bool PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing) override {
         EnsureIsConnected();
         EnsureIsInResponderModeNonBlocking();
 
@@ -157,7 +157,7 @@ public:
         return true;
     }
 
-    void SetNextSimulationTime(const SimulationTime simulationTime) override {
+    void SetNextSimulationTime(SimulationTime simulationTime) override {
         EnsureIsConnected();
 
         _nextSimulationTime = simulationTime;
@@ -175,7 +175,7 @@ public:
         _nextCommand.exchange(Command::Stop);
     }
 
-    void Terminate(const TerminateReason terminateReason) override {
+    void Terminate(TerminateReason terminateReason) override {
         EnsureIsConnected();
 
         switch (terminateReason) {
@@ -231,19 +231,19 @@ public:
         return _outgoingSignalsExtern;
     }
 
-    void Write(const IoSignalId outgoingSignalId, const uint32_t length, const void* value) const override {
+    void Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const override {
         EnsureIsConnected();
 
         _ioBuffer->Write(outgoingSignalId, length, value);
     }
 
-    void Read(const IoSignalId incomingSignalId, uint32_t& length, void* value) const override {
+    void Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const override {
         EnsureIsConnected();
 
         _ioBuffer->Read(incomingSignalId, length, value);
     }
 
-    void Read(const IoSignalId incomingSignalId, uint32_t& length, const void** value) const override {
+    void Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const override {
         EnsureIsConnected();
 
         _ioBuffer->Read(incomingSignalId, length, value);
@@ -515,7 +515,7 @@ private:
                         return true;
                     }
 
-                    const Command nextCommand = _nextCommand.exchange({});
+                    Command nextCommand = _nextCommand.exchange({});
                     CheckResultWithMessage(Protocol::SendStepOk(_channel->GetWriter(),
                                                                 _nextSimulationTime,
                                                                 nextCommand,
@@ -565,7 +565,7 @@ private:
                     CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
                     break;
                 case FrameKind::Ping: {
-                    const Command nextCommand = _nextCommand.exchange({});
+                    Command nextCommand = _nextCommand.exchange({});
                     CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
                                            "Could not send ping ok frame.");
                     break;
@@ -581,7 +581,7 @@ private:
         return true;
     }
 
-    [[nodiscard]] bool PollCommandInternal(SimulationTime& simulationTime, Command& command, const bool returnOnPing) {
+    [[nodiscard]] bool PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing) {
         simulationTime = _currentSimulationTime;
         command = Command::Terminate;
 
@@ -627,7 +627,7 @@ private:
                 break;
             }
 
-            const Command nextCommand = _nextCommand.exchange({});
+            Command nextCommand = _nextCommand.exchange({});
             CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
                                    "Could not send ping ok frame.");
         }
@@ -649,7 +649,7 @@ private:
                 CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
                 break;
             case Command::Step: {
-                const Command nextCommand = _nextCommand.exchange({});
+                Command nextCommand = _nextCommand.exchange({});
                 CheckResultWithMessage(Protocol::SendStepOk(_channel->GetWriter(),
                                                             _nextSimulationTime,
                                                             nextCommand,
@@ -659,7 +659,7 @@ private:
                 break;
             }
             case Command::Ping: {
-                const Command nextCommand = _nextCommand.exchange({});
+                Command nextCommand = _nextCommand.exchange({});
                 CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
                                        "Could not send ping ok frame.");
                 break;

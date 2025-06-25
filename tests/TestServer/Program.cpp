@@ -42,37 +42,37 @@ public:
         _server->Load(config);
     }
 
-    [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) {
+    [[nodiscard]] SimulationTime Step(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         return _server->Step(simulationTime);
     }
 
-    void Start(const SimulationTime simulationTime) {
+    void Start(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         _server->Start(simulationTime);
     }
 
-    void Stop(const SimulationTime simulationTime) {
+    void Stop(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         _server->Stop(simulationTime);
     }
 
-    void Pause(const SimulationTime simulationTime) {
+    void Pause(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         _server->Pause(simulationTime);
     }
 
-    void Continue(const SimulationTime simulationTime) {
+    void Continue(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         _server->Continue(simulationTime);
     }
 
-    void Terminate(const SimulationTime simulationTime) {
+    void Terminate(SimulationTime simulationTime) {
         std::lock_guard lock(_mutex);
         _server->Terminate(simulationTime, TerminateReason::Error);
     }
 
-    void Write(const IoSignalId signalId, const uint32_t length, const std::vector<uint8_t>& value) {
+    void Write(IoSignalId signalId, uint32_t length, const std::vector<uint8_t>& value) {
         std::lock_guard lock(_mutex);
         _server->Write(signalId, length, value.data());
     }
@@ -159,7 +159,7 @@ SimulationTime CurrentTime;
 std::unique_ptr<ServerWrapper> Server;
 SimulationState State;
 
-void PrintStatus(const bool value, const std::string& what) {
+void PrintStatus(bool value, std::string_view what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -188,8 +188,8 @@ void SwitchSendingLinMessages() {
 }
 
 void WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
-    const size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
-    const std::vector<uint8_t> data = GenerateBytes(length);
+    size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
+    std::vector<uint8_t> data = GenerateBytes(length);
 
     Server->Write(ioSignal.id, ioSignal.length, data);
 }
@@ -215,10 +215,10 @@ void TransmitLinMessage(const LinControllerContainer& controller) {
     Server->Transmit(Convert(message));
 }
 
-void SendSomeData(const SimulationTime simulationTime) {
+void SendSomeData(SimulationTime simulationTime) {
     static SimulationTime lastHalfSecond = -1s;
     static int64_t counter = 0;
-    const SimulationTime currentHalfSecond = simulationTime / 500000000;
+    SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
         return;
     }
@@ -424,7 +424,7 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
     std::thread(TerminateSimulation).detach();
 }
 
-void LoadSimulation(const bool isClientOptional, const std::string_view name) {
+void LoadSimulation(bool isClientOptional, std::string_view name) {
     LogInfo("Loading ...");
 
     if (State != SimulationState::Unloaded) {
@@ -472,7 +472,7 @@ void UnloadSimulation() {
     LogInfo("Unloaded.");
 }
 
-void HostServer(const bool isClientOptional, const std::string_view name) {
+void HostServer(bool isClientOptional, std::string_view name) {
     LoadSimulation(isClientOptional, name);
 
     while (true) {
@@ -521,7 +521,7 @@ void HostServer(const bool isClientOptional, const std::string_view name) {
 
 }  // namespace
 
-int32_t main(const int32_t argc, char** argv) {
+int32_t main(int32_t argc, char** argv) {
     InitializeOutput();
 
     std::string name = "CoSimTest";

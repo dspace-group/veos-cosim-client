@@ -42,7 +42,7 @@ public:
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
         while (size > 0) {
-            const int32_t sizeToCopy = std::min(static_cast<int32_t>(size), BufferSize - _writeIndex);
+            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), BufferSize - _writeIndex);
             if (sizeToCopy <= 0) {
                 CheckResult(EndWrite());
                 continue;
@@ -101,7 +101,7 @@ public:
         auto* bufferPointer = static_cast<uint8_t*>(destination);
 
         while (size > 0) {
-            const int32_t sizeToCopy = std::min(static_cast<int32_t>(size), _endFrameIndex - _readIndex);
+            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), _endFrameIndex - _readIndex);
             if (sizeToCopy <= 0) {
                 CheckResult(BeginRead());
                 continue;
@@ -124,7 +124,7 @@ private:
 
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
-            const int32_t bytesToMove = _writeIndex - _endFrameIndex;
+            int32_t bytesToMove = _writeIndex - _endFrameIndex;
             (void)memcpy(_readBuffer.data(),
                          &_readBuffer[static_cast<size_t>(_endFrameIndex)],
                          static_cast<size_t>(bytesToMove));
@@ -191,7 +191,7 @@ public:
     SocketChannel& operator=(SocketChannel&&) = delete;
 
     [[nodiscard]] std::string GetRemoteAddress() const override {
-        const auto [ipAddress, port] = _socket.GetRemoteAddress();
+        auto [ipAddress, port] = _socket.GetRemoteAddress();
         std::string remoteAddress = ipAddress;
         remoteAddress.append(":");
         remoteAddress.append(std::to_string(port));
@@ -219,7 +219,7 @@ private:
 
 class TcpChannelServer final : public ChannelServer {
 public:
-    TcpChannelServer(const uint16_t port, const bool enableRemoteAccess) : _port(port) {
+    TcpChannelServer(uint16_t port, bool enableRemoteAccess) : _port(port) {
         if (Socket::IsIpv4Supported()) {
             _listenSocketIpv4 = Socket(AddressFamily::Ipv4);
             _listenSocketIpv4.EnableReuseAddress();
@@ -317,7 +317,7 @@ public:
         return TryAccept(0);
     }
 
-    [[nodiscard]] std::unique_ptr<Channel> TryAccept(const uint32_t timeoutInMilliseconds) override {
+    [[nodiscard]] std::unique_ptr<Channel> TryAccept(uint32_t timeoutInMilliseconds) override {
         std::optional<Socket> socket = _listenSocket.TryAccept(timeoutInMilliseconds);
         if (socket) {
             return std::make_unique<SocketChannel>(std::move(*socket));
@@ -332,10 +332,10 @@ private:
 
 }  // namespace
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToTcpChannel(const std::string_view remoteIpAddress,
-                                                              const uint16_t remotePort,
-                                                              const uint16_t localPort,
-                                                              const uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::unique_ptr<Channel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
+                                                              uint16_t remotePort,
+                                                              uint16_t localPort,
+                                                              uint32_t timeoutInMilliseconds) {
     StartupNetwork();
 
     std::optional<Socket> connectedSocket =
@@ -363,8 +363,7 @@ private:
     return {};
 }
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateTcpChannelServer(const uint16_t port,
-                                                                    const bool enableRemoteAccess) {
+[[nodiscard]] std::unique_ptr<ChannelServer> CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess) {
     StartupNetwork();
 
     return std::make_unique<TcpChannelServer>(port, enableRemoteAccess);

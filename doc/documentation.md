@@ -1106,14 +1106,14 @@ The CoSim client can send data to other co-simulation participants via the CoSim
 
     ```cpp
     void OnEndStep(DsVeosCoSim_SimulationTime simulationTime, void* userData) {
-        const uint8_t data[1]{42};
-        const DsVeosCoSim_Handle handle = userData;
+        uint8_t data[1]{42};
+        DsVeosCoSim_Handle handle = userData;
         DsVeosCoSim_CanMessage canMessage{};
         canMessage.id = 12;
         canMessage.flags = DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat;
         canMessage.length = 1;
         canMessage.data = data;
-        const DsVeosCoSim_Result result = DsVeosCoSim_TransmitCanMessage(handle, &canMessage);
+        DsVeosCoSim_Result result = DsVeosCoSim_TransmitCanMessage(handle, &canMessage);
         if (result == DsVeosCoSim_Result_Full) {
             // No more space in the internal buffer
         } else if (result != DsVeosCoSim_Result_Ok) {
@@ -1227,10 +1227,10 @@ This example shows how to receive data from other co-simulation participants usi
 
     ```cpp
     void OnEndStep(DsVeosCoSim_SimulationTime simulationTime, void* userData) {
-        const DsVeosCoSim_Handle handle = userData;
+        DsVeosCoSim_Handle handle = userData;
         while (true) {
             DsVeosCoSim_CanMessage message{};
-            const DsVeosCoSim_Result result = DsVeosCoSim_ReceiveCanMessage(handle, &message);
+            DsVeosCoSim_Result result = DsVeosCoSim_ReceiveCanMessage(handle, &message);
             if (result == DsVeosCoSim_Result_Ok) {
                 std::cout << "Received CAN message with ID " << message.id << " at " << 
                 DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
@@ -1364,13 +1364,13 @@ A polling-based co-simulation can be useful in cases where the CoSim server has 
  
         switch (command) {
             case DsVeosCoSim_Command_Step: {
-                const uint8_t data[1]{42};
+                uint8_t data[1]{42};
                 DsVeosCoSim_CanMessage canMessage{};
                 canMessage.id = 12;
                 canMessage.flags = DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat;
                 canMessage.length = 1;
                 canMessage.data = data;
-                const DsVeosCoSim_Result result = DsVeosCoSim_CanMessageTransmit(handle, &canMessage);
+                DsVeosCoSim_Result result = DsVeosCoSim_CanMessageTransmit(handle, &canMessage);
                 if (result == DsVeosCoSim_Result_Full) {
                     // No more place in the internal buffer
                 } else if (result != DsVeosCoSim_Result_Ok) {

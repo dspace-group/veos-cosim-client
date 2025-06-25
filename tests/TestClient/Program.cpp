@@ -30,7 +30,7 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 
-void PrintStatus(const bool value, const std::string& what) {
+void PrintStatus(bool value, const std::string& what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -59,8 +59,8 @@ void SwitchSendingLinMessages() {
 }
 
 void WriteOutGoingSignal(const IoSignal& ioSignal) {
-    const size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
-    const std::vector<uint8_t> data = GenerateBytes(length);
+    size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
+    std::vector<uint8_t> data = GenerateBytes(length);
 
     Client->Write(ioSignal.id, ioSignal.length, data.data());
 }
@@ -86,10 +86,10 @@ void TransmitLinMessage(const LinController& controller) {
     (void)Client->Transmit(Convert(message));
 }
 
-void SendSomeData(const SimulationTime simulationTime) {
+void SendSomeData(SimulationTime simulationTime) {
     static SimulationTime lastHalfSecond = -1s;
     static int64_t counter = 0;
-    const SimulationTime currentHalfSecond = simulationTime / 500000000;
+    SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
         return;
     }
@@ -122,7 +122,7 @@ void SendSomeData(const SimulationTime simulationTime) {
     }
 }
 
-void OnSimulationPostStepCallback(const SimulationTime simulationTime) {
+void OnSimulationPostStepCallback(SimulationTime simulationTime) {
     SendSomeData(simulationTime);
 }
 
@@ -131,30 +131,30 @@ void StartSimulationThread(const std::function<void()>& function) {
     SimulationThread.detach();
 }
 
-void OnSimulationStartedCallback(const SimulationTime simulationTime) {
+void OnSimulationStartedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation started at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationStoppedCallback(const SimulationTime simulationTime) {
+void OnSimulationStoppedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation stopped at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationTerminatedCallback(const SimulationTime simulationTime, const TerminateReason reason) {
+void OnSimulationTerminatedCallback(SimulationTime simulationTime, TerminateReason reason) {
     LogInfo("Simulation terminated with reason {} at {} s.", ToString(reason), SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationPausedCallback(const SimulationTime simulationTime) {
+void OnSimulationPausedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation paused at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationContinuedCallback(const SimulationTime simulationTime) {
+void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation continued at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void Connect(const std::string_view host, const std::string_view serverName) {
+void Connect(std::string_view host, std::string_view serverName) {
     LogInfo("Connecting ...");
 
-    const ConnectionState connectionState = Client->GetConnectionState();
+    ConnectionState connectionState = Client->GetConnectionState();
     if (connectionState == ConnectionState::Connected) {
         LogInfo("Already connected.");
         return;
@@ -172,7 +172,7 @@ void Connect(const std::string_view host, const std::string_view serverName) {
 
     LogTrace("");
 
-    const SimulationTime stepSize = Client->GetStepSize();
+    SimulationTime stepSize = Client->GetStepSize();
     LogTrace("Step size: {} s", SimulationTimeToString(stepSize));
     LogTrace("");
 
@@ -258,7 +258,7 @@ void Disconnect() {
     exit(1);
 }
 
-void HostClient(const std::string_view host, const std::string_view name) {
+void HostClient(std::string_view host, std::string_view name) {
     Connect(host, name);
 
     StartSimulationThread(RunCallbackBasedCoSimulation);
@@ -304,7 +304,7 @@ void HostClient(const std::string_view host, const std::string_view name) {
 
 }  // namespace
 
-int32_t main(const int32_t argc, char** argv) {
+int32_t main(int32_t argc, char** argv) {
     InitializeOutput();
 
     std::string host;

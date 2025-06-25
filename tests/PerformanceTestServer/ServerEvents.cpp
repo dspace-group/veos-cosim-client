@@ -19,9 +19,9 @@ void EventsServerRun() {
 
         std::array<char, BufferSize> buffer{};
 
-        const NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        const NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        const SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
+        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
+        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
 
         while (true) {
             beginEvent.Wait();

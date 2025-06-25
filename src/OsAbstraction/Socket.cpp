@@ -65,8 +65,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
     std::string fileName = "dSPACE.VEOS.CoSim.";
     fileName.append(name);
 #ifdef _WIN32
-    const std::filesystem::path tempDir = std::filesystem::temp_directory_path();
-    const std::filesystem::path fileDir = tempDir / fileName;
+    std::filesystem::path tempDir = std::filesystem::temp_directory_path();
+    std::filesystem::path fileDir = tempDir / fileName;
     return fileDir.string();
 #else
     return fileName;
@@ -99,8 +99,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 #endif
 }
 
-[[nodiscard]] addrinfo* ConvertToInternetAddress(const std::string_view ipAddress, const uint16_t port) {
-    const std::string portString = std::to_string(port);
+[[nodiscard]] addrinfo* ConvertToInternetAddress(std::string_view ipAddress, uint16_t port) {
+    std::string portString = std::to_string(port);
 
     addrinfo hints{};
     hints.ai_family = AF_UNSPEC;
@@ -109,7 +109,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
     addrinfo* addressInfo{};
 
-    const int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
+    int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
         std::string message = "Could not get address information. ";
         message.append(GetSystemErrorMessage(errorCode));
@@ -165,8 +165,8 @@ void CloseSocket(SocketHandle socket) noexcept {
 #endif
 }
 
-[[nodiscard]] bool PollInternal(const SocketHandle socket, const int16_t events, const uint32_t timeoutInMilliseconds) {
-    const int64_t deadline = GetCurrentTimeInMilliseconds() + timeoutInMilliseconds;
+[[nodiscard]] bool PollInternal(SocketHandle socket, int16_t events, uint32_t timeoutInMilliseconds) {
+    int64_t deadline = GetCurrentTimeInMilliseconds() + timeoutInMilliseconds;
     int64_t millisecondsUntilDeadline = timeoutInMilliseconds;
     while (true) {
         if (millisecondsUntilDeadline < 0) {
@@ -177,7 +177,7 @@ void CloseSocket(SocketHandle socket) noexcept {
         fdArray.fd = socket;
         fdArray.events = events;
 
-        const int32_t pollResult = Poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
+        int32_t pollResult = Poll(&fdArray, 1, static_cast<int32_t>(millisecondsUntilDeadline));
         if (pollResult < 0) {
             std::string message = "Could not poll on socket. ";
             message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -191,10 +191,9 @@ void CloseSocket(SocketHandle socket) noexcept {
         // Make sure it really succeeded
         int32_t error = 0;
         auto len = static_cast<SocketLength>(sizeof(error));
-        const int32_t getSocketOptionResult =
-            getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len);
+        int32_t getSocketOptionResult = getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&error), &len);
         if (getSocketOptionResult != 0) {
-            const int32_t errorCode = GetLastNetworkError();
+            int32_t errorCode = GetLastNetworkError();
             if (errorCode == ErrorCodeInterrupted) {
                 millisecondsUntilDeadline = deadline - GetCurrentTimeInMilliseconds();
                 continue;
@@ -212,14 +211,14 @@ void CloseSocket(SocketHandle socket) noexcept {
 void SwitchToNonBlockingMode(const SocketHandle& socket) {
 #ifdef _WIN32
     u_long mode = 1;
-    const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
+    int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
         std::string message = "Could not switch to non-blocking mode. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
         throw std::runtime_error(message);
     }
 #else
-    const int32_t result = fcntl(socket, F_SETFL, O_NONBLOCK);
+    int32_t result = fcntl(socket, F_SETFL, O_NONBLOCK);
     if (result < 0) {
         std::string message = "Could not switch to non-blocking mode. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -231,14 +230,14 @@ void SwitchToNonBlockingMode(const SocketHandle& socket) {
 void SwitchToBlockingMode(const SocketHandle& socket) {
 #ifdef _WIN32
     u_long mode = 0;
-    const int32_t result = ioctlsocket(socket, FIONBIO, &mode);
+    int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
         std::string message = "Could not switch to blocking mode. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
         throw std::runtime_error(message);
     }
 #else
-    const int32_t result = fcntl(socket, F_SETFL, 0);
+    int32_t result = fcntl(socket, F_SETFL, 0);
     if (result < 0) {
         std::string message = "Could not switch to blocking mode. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -249,16 +248,16 @@ void SwitchToBlockingMode(const SocketHandle& socket) {
 
 [[nodiscard]] bool ConnectWithTimeout(SocketHandle& socket,
                                       const sockaddr* socketAddress,
-                                      const SocketLength sizeOfSocketAddress,
-                                      const uint32_t timeoutInMilliseconds) {
+                                      SocketLength sizeOfSocketAddress,
+                                      uint32_t timeoutInMilliseconds) {
     SwitchToNonBlockingMode(socket);
 
-    const int32_t connectResult = connect(socket, socketAddress, sizeOfSocketAddress);
+    int32_t connectResult = connect(socket, socketAddress, sizeOfSocketAddress);
     if (connectResult >= 0) {
         throw std::runtime_error("Invalid connect result.");
     }
 
-    const int32_t errorCode = GetLastNetworkError();
+    int32_t errorCode = GetLastNetworkError();
     if (errorCode != ErrorCodeWouldBlock) {
         std::string message = "Could not connect to socket. ";
         message.append(GetSystemErrorMessage(errorCode));
@@ -274,9 +273,9 @@ void SwitchToBlockingMode(const SocketHandle& socket) {
     timeout.tv_usec = static_cast<decltype(timeout.tv_usec)>(timeoutInMilliseconds % 1000) * 1000;
 
 #ifdef _WIN32
-    const int32_t selectResult = select(0, nullptr, &set, nullptr, &timeout);
+    int32_t selectResult = select(0, nullptr, &set, nullptr, &timeout);
 #else
-    const int32_t selectResult = select(socket + 1, nullptr, &set, nullptr, &timeout);
+    int32_t selectResult = select(socket + 1, nullptr, &set, nullptr, &timeout);
 #endif
     if ((selectResult > 0) && FD_ISSET(socket, &set)) {
         SwitchToBlockingMode(socket);
@@ -288,7 +287,7 @@ void SwitchToBlockingMode(const SocketHandle& socket) {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(const AddressFamily addressFamily) noexcept {
+[[nodiscard]] std::string_view ToString(AddressFamily addressFamily) noexcept {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";
@@ -307,7 +306,7 @@ void StartupNetwork() {
     if (!networkStarted) {
         WSADATA wsaData;
 
-        const int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
         if (errorCode != 0) {
             std::string message = "Could not initialize Windows sockets. ";
             message.append(GetSystemErrorMessage(errorCode));
@@ -319,7 +318,7 @@ void StartupNetwork() {
 #endif
 }
 
-Socket::Socket(const AddressFamily addressFamily) : _addressFamily(addressFamily) {
+Socket::Socket(AddressFamily addressFamily) : _addressFamily(addressFamily) {
     int32_t protocol{};
     int32_t domain{};
     switch (addressFamily) {
@@ -346,7 +345,7 @@ Socket::Socket(const AddressFamily addressFamily) : _addressFamily(addressFamily
     }
 }
 
-Socket::Socket(const SocketHandle socket, const AddressFamily addressFamily, const std::string& path)
+Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path)
     : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
@@ -383,7 +382,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const SocketHandle socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        SocketHandle socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -399,7 +398,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const SocketHandle socket = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        SocketHandle socket = ::socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -415,7 +414,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     static bool isSupported = false;
 
     if (!hasValue) {
-        const SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
 
         isSupported = (socket != InvalidSocket) || (GetLastNetworkError() != ErrorCodeNotSupported);
 
@@ -439,7 +438,7 @@ void Socket::Shutdown() const noexcept {
 }
 
 void Socket::Close() noexcept {
-    const SocketHandle socket = _socket;
+    SocketHandle socket = _socket;
     if (socket == InvalidSocket) {
         return;
     }
@@ -465,11 +464,11 @@ void Socket::EnableIpv6Only() const {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
-    const int32_t result = setsockopt(_socket,
-                                      IPPROTO_IPV6,
-                                      IPV6_V6ONLY,
-                                      reinterpret_cast<char*>(&flags),
-                                      static_cast<SocketLength>(sizeof(flags)));
+    int32_t result = setsockopt(_socket,
+                                IPPROTO_IPV6,
+                                IPV6_V6ONLY,
+                                reinterpret_cast<char*>(&flags),
+                                static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
         std::string message = "Could not enable IPv6 only. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -478,23 +477,22 @@ void Socket::EnableIpv6Only() const {
 #endif
 }
 
-[[nodiscard]] std::optional<Socket> Socket::TryConnect(const std::string_view ipAddress,
-                                                       const uint16_t remotePort,
-                                                       const uint16_t localPort,
-                                                       const uint32_t timeoutInMilliseconds) {
+[[nodiscard]] std::optional<Socket> Socket::TryConnect(std::string_view ipAddress,
+                                                       uint16_t remotePort,
+                                                       uint16_t localPort,
+                                                       uint32_t timeoutInMilliseconds) {
     if (remotePort == 0) {
         throw std::runtime_error("Remote port 0 is not valid.");
     }
 
     addrinfo* addressInfo = ConvertToInternetAddress(ipAddress, remotePort);
 
-    const addrinfo* currentAddressInfo = addressInfo;
+    addrinfo* currentAddressInfo = addressInfo;
 
     while (currentAddressInfo) {
-        const int32_t addressFamily = currentAddressInfo->ai_family;
+        int32_t addressFamily = currentAddressInfo->ai_family;
 
-        const SocketHandle socket =
-            ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
+        SocketHandle socket = ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (socket == InvalidSocket) {
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
@@ -533,14 +531,14 @@ void Socket::EnableIpv6Only() const {
         throw std::runtime_error("Empty name is not valid.");
     }
 
-    const SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (socket == InvalidSocket) {
         std::string message = "Could not create socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
         throw std::runtime_error(message);
     }
 
-    const std::string path = GetUdsPath(name);
+    std::string path = GetUdsPath(name);
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
@@ -550,9 +548,9 @@ void Socket::EnableIpv6Only() const {
     address.sun_path[0] = '\0';
 #endif
 
-    const int32_t result = connect(socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    int32_t result = connect(socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
     if (result != 0) {
-        const int32_t errorCode = GetLastNetworkError();
+        int32_t errorCode = GetLastNetworkError();
         CloseSocket(socket);
         std::string message = "Could not connect socket. ";
         message.append(GetSystemErrorMessage(errorCode));
@@ -563,7 +561,7 @@ void Socket::EnableIpv6Only() const {
     return Socket{socket, AddressFamily::Uds, path};
 }
 
-void Socket::Bind(const uint16_t port, const bool enableRemoteAccess) const {
+void Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
     if (_addressFamily == AddressFamily::Uds) {
         throw std::runtime_error("Not supported for address family.");
     }
@@ -575,13 +573,13 @@ void Socket::Bind(const uint16_t port, const bool enableRemoteAccess) const {
     }
 }
 
-void Socket::BindForIpv4(const uint16_t port, const bool enableRemoteAccess) const {
+void Socket::BindForIpv4(uint16_t port, bool enableRemoteAccess) const {
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = enableRemoteAccess ? INADDR_ANY : htonl(INADDR_LOOPBACK);
 
-    const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+    int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
         std::string message = "Could not bind socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -589,7 +587,7 @@ void Socket::BindForIpv4(const uint16_t port, const bool enableRemoteAccess) con
     }
 }
 
-void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) const {
+void Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
     sockaddr_in6 address{};
     address.sin6_family = AF_INET6;
     address.sin6_port = htons(port);
@@ -598,7 +596,7 @@ void Socket::BindForIpv6(const uint16_t port, const bool enableRemoteAccess) con
     // symbol
     address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;
 
-    const int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+    int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
         std::string message = "Could not bind socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -628,7 +626,7 @@ void Socket::Bind(const std::string& name) {
     address.sun_path[0] = '\0';
 #endif
 
-    const int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
+    int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
     if (result != 0) {
         std::string message = "Could not bind socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -642,8 +640,7 @@ void Socket::EnableReuseAddress() const {
     }
 
     int32_t flags = 1;
-    const int32_t result =
-        setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
+    int32_t result = setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
         std::string message = "Could not enable socket option reuse address. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -653,8 +650,7 @@ void Socket::EnableReuseAddress() const {
 
 void Socket::EnableNoDelay() const {
     int32_t flags = 1;
-    const int32_t result =
-        setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
+    int32_t result = setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
         std::string message = "Could not enable TCP option no delay. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -663,7 +659,7 @@ void Socket::EnableNoDelay() const {
 }
 
 void Socket::Listen() const {
-    const int32_t result = listen(_socket, SOMAXCONN);
+    int32_t result = listen(_socket, SOMAXCONN);
     if (result != 0) {
         std::string message = "Could not listen on socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -671,12 +667,12 @@ void Socket::Listen() const {
     }
 }
 
-[[nodiscard]] std::optional<Socket> Socket::TryAccept(const uint32_t timeoutInMilliseconds) const {
+[[nodiscard]] std::optional<Socket> Socket::TryAccept(uint32_t timeoutInMilliseconds) const {
     if (!PollInternal(_socket, POLLRDNORM, timeoutInMilliseconds)) {
         return {};
     }
 
-    const SocketHandle socket = accept(_socket, nullptr, nullptr);
+    SocketHandle socket = accept(_socket, nullptr, nullptr);
     if (socket == InvalidSocket) {
         std::string message = "Could not accept socket. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -703,14 +699,14 @@ void Socket::Listen() const {
     auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin_family = AF_INET;
 
-    const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
         std::string message = "Could not get local socket address. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
         throw std::runtime_error(message);
     }
 
-    const auto [ipAddress, port] = ConvertFromInternetAddress(address);
+    auto [ipAddress, port] = ConvertFromInternetAddress(address);
     return port;
 }
 
@@ -719,14 +715,14 @@ void Socket::Listen() const {
     auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin6_family = AF_INET6;
 
-    const int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
         std::string message = "Could not get local socket address. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
         throw std::runtime_error(message);
     }
 
-    const auto [ipAddress, port] = ConvertFromInternetAddress(address);
+    auto [ipAddress, port] = ConvertFromInternetAddress(address);
     return port;
 }
 
@@ -747,7 +743,7 @@ void Socket::Listen() const {
     auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin_family = AF_INET;
 
-    const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
         std::string message = "Could not get remote socket address. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -762,7 +758,7 @@ void Socket::Listen() const {
     auto addressLength = static_cast<SocketLength>(sizeof(address));
     address.sin6_family = AF_INET6;
 
-    const int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
+    int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
         std::string message = "Could not get remote socket address. ";
         message.append(GetSystemErrorMessage(GetLastNetworkError()));
@@ -792,7 +788,7 @@ void Socket::Listen() const {
         return false;
     }
 
-    const int32_t errorCode = GetLastNetworkError();
+    int32_t errorCode = GetLastNetworkError();
 
     if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32
@@ -825,7 +821,7 @@ void Socket::Listen() const {
         return false;
     }
 
-    const int32_t errorCode = GetLastNetworkError();
+    int32_t errorCode = GetLastNetworkError();
 
     if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32
