@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
@@ -11,7 +12,6 @@
 #include <string_view>
 #include <thread>
 #include <utility>
-#include <vector>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
@@ -28,7 +28,6 @@ constexpr int32_t ReadPacketSize = 1024;
 class SocketChannelWriter final : public ChannelWriter {
 public:
     explicit SocketChannelWriter(Socket& socket) : _socket(socket), _writeIndex(HeaderSize) {
-        _writeBuffer.resize(BufferSize);
     }
 
     ~SocketChannelWriter() noexcept override = default;
@@ -44,7 +43,7 @@ public:
 
         while (size > 0) {
             const int32_t sizeToCopy = std::min(static_cast<int32_t>(size), BufferSize - _writeIndex);
-            if (sizeToCopy == 0) {
+            if (sizeToCopy <= 0) {
                 CheckResult(EndWrite());
                 continue;
             }
@@ -64,7 +63,7 @@ public:
         uint8_t* sourcePtr = _writeBuffer.data();
 
         // Write header
-        (void)memcpy(sourcePtr, &_writeIndex, sizeof _writeIndex);
+        *reinterpret_cast<int32_t*>(sourcePtr) = _writeIndex;
 
         while (_writeIndex > 0) {
             int32_t sentSize{};
@@ -82,13 +81,12 @@ private:
     Socket& _socket;
 
     int32_t _writeIndex{};
-    std::vector<uint8_t> _writeBuffer;
+    std::array<uint8_t, BufferSize> _writeBuffer{};
 };
 
 class SocketChannelReader final : public ChannelReader {
 public:
     explicit SocketChannelReader(Socket& socket) : _socket(socket), _readIndex(HeaderSize) {
-        _readBuffer.resize(BufferSize);
     }
 
     ~SocketChannelReader() noexcept override = default;
@@ -136,7 +134,7 @@ private:
             // Did we read at least HeaderSize bytes more?
             if (bytesToMove >= HeaderSize) {
                 readHeader = false;
-                (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
+                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
 
                 // Did we read at least an entire second frame?
                 if (_writeIndex >= _endFrameIndex) {
@@ -158,7 +156,7 @@ private:
 
             if (readHeader && (_writeIndex >= HeaderSize)) {
                 readHeader = false;
-                (void)memcpy(&_endFrameIndex, _readBuffer.data(), HeaderSize);
+                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
 
                 if (_endFrameIndex > BufferSize) {
                     throw std::runtime_error("Protocol error. The buffer size is too small.");
@@ -176,7 +174,7 @@ private:
     int32_t _readIndex{};
     int32_t _writeIndex{};
     int32_t _endFrameIndex{};
-    std::vector<uint8_t> _readBuffer;
+    std::array<uint8_t, BufferSize> _readBuffer{};
 };
 
 class SocketChannel final : public Channel {
