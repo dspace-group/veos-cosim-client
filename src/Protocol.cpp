@@ -612,9 +612,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendTerminate(ChannelWriter& writer,
-                                 SimulationTime simulationTime,
-                                 TerminateReason reason) {
+[[nodiscard]] bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendTerminate(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
