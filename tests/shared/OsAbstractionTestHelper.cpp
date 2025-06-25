@@ -154,7 +154,7 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 }
 #endif
 
-Pipe::Pipe(const std::string& name) {
+Pipe::Pipe(std::string_view name) {
 #ifdef _WIN32
     _name = fmt::format(R"(\\.\pipe\{})", name);
 #else

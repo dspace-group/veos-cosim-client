@@ -11,8 +11,8 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool GetBoolValue(const std::string& name) {
-    char* stringValue = std::getenv(name.c_str());  // NOLINT(concurrency-mt-unsafe)
+[[nodiscard]] bool GetBoolValue(std::string_view name) {
+    char* stringValue = std::getenv(name.data());  // NOLINT(concurrency-mt-unsafe)
     if (stringValue) {
         char* end{};
         int32_t intValue = std::strtol(stringValue, &end, 10);
@@ -38,10 +38,10 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetAffinityMaskInitial(const std::string& environmentVariableName, size_t& mask) {
+[[nodiscard]] bool TryGetAffinityMaskInitial(std::string_view environmentVariableName, size_t& mask) {
     constexpr size_t defaultMask = SIZE_MAX;
 
-    char* maskString = std::getenv(environmentVariableName.c_str());  // NOLINT(concurrency-mt-unsafe)
+    char* maskString = std::getenv(environmentVariableName.data());  // NOLINT(concurrency-mt-unsafe)
     if (maskString) {
         char* end{};
         if constexpr (sizeof(void*) == 8) {

@@ -27,7 +27,7 @@ namespace {
 [[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
     CoSimType coSimType,
     ConnectionKind connectionKind,
-    const std::string& name,
+    std::string_view name,
     const std::vector<CanController>& canControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, canControllers, {}, {});
 }
@@ -35,7 +35,7 @@ namespace {
 [[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
     CoSimType coSimType,
     ConnectionKind connectionKind,
-    const std::string& name,
+    std::string_view name,
     const std::vector<EthController>& ethControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, ethControllers, {});
 }
@@ -43,7 +43,7 @@ namespace {
 [[maybe_unused]] [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(
     CoSimType coSimType,
     ConnectionKind connectionKind,
-    const std::string& name,
+    std::string_view name,
     const std::vector<LinController>& linControllers) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, linControllers);
 }

@@ -38,7 +38,7 @@ public:
     explicit Socket(AddressFamily addressFamily);
 
 private:
-    Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path);
+    Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path);
 
 public:
     ~Socket() noexcept;
@@ -63,10 +63,10 @@ public:
                                                           uint16_t localPort,
                                                           uint32_t timeoutInMilliseconds);
 
-    [[nodiscard]] static std::optional<Socket> TryConnect(const std::string& name);
+    [[nodiscard]] static std::optional<Socket> TryConnect(std::string_view name);
     void EnableIpv6Only() const;
     void Bind(uint16_t port, bool enableRemoteAccess) const;
-    void Bind(const std::string& name);
+    void Bind(std::string_view name);
     void EnableReuseAddress() const;
     void EnableNoDelay() const;
     void Listen() const;

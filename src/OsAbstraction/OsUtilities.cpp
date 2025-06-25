@@ -47,19 +47,19 @@ namespace {
     return wideString;
 }
 
-[[nodiscard]] std::wstring GetFullNamedEventName(const std::string& name) {
+[[nodiscard]] std::wstring GetFullNamedEventName(std::string_view name) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name);
 }
 
-[[nodiscard]] std::wstring GetFullNamedMutexName(const std::string& name) {
+[[nodiscard]] std::wstring GetFullNamedMutexName(std::string_view name) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name);
 }
 
-[[nodiscard]] std::wstring GetFullSharedMemoryName(const std::string& name) {
+[[nodiscard]] std::wstring GetFullSharedMemoryName(std::string_view name) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name);
@@ -116,10 +116,10 @@ void Handle::Wait() const {
     }
 }
 
-NamedEvent::NamedEvent(Handle handle, const std::string& name) : _handle(std::move(handle)), _name(name) {
+NamedEvent::NamedEvent(Handle handle, std::string_view name) : _handle(std::move(handle)), _name(name) {
 }
 
-[[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(const std::string& name) {
+[[nodiscard]] NamedEvent NamedEvent::CreateOrOpen(std::string_view name) {
     std::wstring fullName = GetFullNamedEventName(name);
     void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
@@ -155,7 +155,7 @@ void NamedEvent::Wait() const {
 NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 }
 
-[[nodiscard]] NamedMutex NamedMutex::CreateOrOpen(const std::string& name) {
+[[nodiscard]] NamedMutex NamedMutex::CreateOrOpen(std::string_view name) {
     std::wstring fullName = GetFullNamedMutexName(name);
     void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
@@ -181,7 +181,7 @@ void NamedMutex::unlock() const {
     (void)ReleaseMutex(_handle);
 }
 
-SharedMemory::SharedMemory(const std::string& name, size_t size, Handle handle)
+SharedMemory::SharedMemory(std::string_view name, size_t size, Handle handle)
     : _size(size), _handle(std::move(handle)), _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
     if (!_data) {
         (void)CloseHandle(_handle);
@@ -210,7 +210,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return *this;
 }
 
-[[nodiscard]] SharedMemory SharedMemory::CreateOrOpen(const std::string& name, size_t size) {
+[[nodiscard]] SharedMemory SharedMemory::CreateOrOpen(std::string_view name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     constexpr DWORD sizeHigh{};
     auto sizeLow = static_cast<DWORD>(size);
@@ -227,7 +227,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return SharedMemory(name, size, handle);
 }
 
-[[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(const std::string& name, size_t size) {
+[[nodiscard]] std::optional<SharedMemory> SharedMemory::TryOpenExisting(std::string_view name, size_t size) {
     std::wstring fullName = GetFullSharedMemoryName(name);
     void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {

@@ -295,7 +295,7 @@ private:
 
 class UdsChannelServer final : public ChannelServer {
 public:
-    explicit UdsChannelServer(const std::string& name) {
+    explicit UdsChannelServer(std::string_view name) {
         _listenSocket = Socket(AddressFamily::Uds);
         _listenSocket.Bind(name);
         _listenSocket.Listen();
@@ -348,7 +348,7 @@ private:
     return {};
 }
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToUdsChannel(const std::string& name) {
+[[nodiscard]] std::unique_ptr<Channel> TryConnectToUdsChannel(std::string_view name) {
     StartupNetwork();
 
     if (!Socket::IsUdsSupported()) {
@@ -369,7 +369,7 @@ private:
     return std::make_unique<TcpChannelServer>(port, enableRemoteAccess);
 }
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateUdsChannelServer(const std::string& name) {
+[[nodiscard]] std::unique_ptr<ChannelServer> CreateUdsChannelServer(std::string_view name) {
     StartupNetwork();
 
     if (!Socket::IsUdsSupported()) {

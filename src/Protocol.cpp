@@ -289,7 +289,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendError(ChannelWriter& writer, const std::string& errorMessage) {
+[[nodiscard]] bool SendError(ChannelWriter& writer, std::string_view errorMessage) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendError(ErrorMessage: \"";
         str.append(errorMessage);
@@ -379,8 +379,8 @@ namespace Protocol {
 [[nodiscard]] bool SendConnect(ChannelWriter& writer,
                                uint32_t protocolVersion,
                                Mode clientMode,
-                               const std::string& serverName,
-                               const std::string& clientName) {
+                               std::string_view serverName,
+                               std::string_view clientName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendConnect(ProtocolVersion: ";
         str.append(std::to_string(protocolVersion));
@@ -842,7 +842,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
+[[nodiscard]] bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendSetPort(ServerName: \"";
         str.append(serverName);
@@ -884,7 +884,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
+[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendUnsetPort(ServerName: \"";
         str.append(serverName);
@@ -920,7 +920,7 @@ namespace Protocol {
     return true;
 }
 
-[[nodiscard]] bool SendGetPort(ChannelWriter& writer, const std::string& serverName) {
+[[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendGetPort(ServerName: \"";
         str.append(serverName);

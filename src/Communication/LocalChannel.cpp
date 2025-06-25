@@ -24,14 +24,14 @@ constexpr uint32_t BufferSize = 64 * 1024;
 const auto ServerToClientPostFix = ".ServerToClient";
 const auto ClientToServerPostFix = ".ClientToServer";
 
-[[nodiscard]] std::string GetWriterName(const std::string& name, bool isServer) {
-    std::string writerName = name;
+[[nodiscard]] std::string GetWriterName(std::string_view name, bool isServer) {
+    std::string writerName(name);
     writerName.append(isServer ? ServerToClientPostFix : ClientToServerPostFix);
     return writerName;
 }
 
-[[nodiscard]] std::string GetReaderName(const std::string& name, bool isServer) {
-    std::string readerName = name;
+[[nodiscard]] std::string GetReaderName(std::string_view name, bool isServer) {
+    std::string readerName(name);
     readerName.append(isServer ? ClientToServerPostFix : ServerToClientPostFix);
     return readerName;
 }
@@ -42,16 +42,16 @@ const auto ClientToServerPostFix = ".ClientToServer";
 
 class LocalChannelBase {
 protected:
-    LocalChannelBase(const std::string& name, bool isServer) {
+    LocalChannelBase(std::string_view name, bool isServer) {
         NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
         std::lock_guard lock(mutex);
 
-        std::string dataName = name;
+        std::string dataName(name);
         dataName.append(".Data");
-        std::string newDataName = name;
+        std::string newDataName(name);
         newDataName.append(".NewData");
-        std::string newSpaceName = name;
+        std::string newSpaceName(name);
         newSpaceName.append(".NewSpace");
 
         constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
@@ -160,7 +160,7 @@ private:
 
 class LocalChannelWriter final : public LocalChannelBase, public ChannelWriter {
 public:
-    LocalChannelWriter(const std::string& name, bool isServer)
+    LocalChannelWriter(std::string_view name, bool isServer)
         : LocalChannelBase(GetWriterName(name, isServer), isServer) {
     }
 
@@ -238,7 +238,7 @@ private:
 
 class LocalChannelReader final : public LocalChannelBase, public ChannelReader {
 public:
-    LocalChannelReader(const std::string& name, bool isServer)
+    LocalChannelReader(std::string_view name, bool isServer)
         : LocalChannelBase(GetReaderName(name, isServer), isServer) {
     }
 
@@ -308,7 +308,7 @@ private:
 
 class LocalChannel final : public Channel {
 public:
-    LocalChannel(const std::string& name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
+    LocalChannel(std::string_view name, bool isServer) : _writer(name, isServer), _reader(name, isServer) {
     }
 
     ~LocalChannel() noexcept override = default;
@@ -343,7 +343,7 @@ private:
 
 class LocalChannelServer final : public ChannelServer {
 public:
-    explicit LocalChannelServer(const std::string& name) : _name(name) {
+    explicit LocalChannelServer(std::string_view name) : _name(name) {
         NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
         std::lock_guard lock(mutex);
@@ -393,7 +393,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name) {
+[[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(std::string_view name) {
     NamedMutex mutex = NamedMutex::CreateOrOpen(name);
 
     std::lock_guard lock(mutex);
@@ -405,14 +405,14 @@ private:
 
     auto& counter = *static_cast<std::atomic<int32_t>*>(sharedMemory->data());
     int32_t currentCounter = counter.fetch_add(1);
-    std::string specificName = name;
+    std::string specificName(name);
     specificName.append(".");
     specificName.append(std::to_string(currentCounter));
 
     return std::make_unique<LocalChannel>(specificName, false);
 }
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateLocalChannelServer(const std::string& name) {
+[[nodiscard]] std::unique_ptr<ChannelServer> CreateLocalChannelServer(std::string_view name) {
     return std::make_unique<LocalChannelServer>(name);
 }
 

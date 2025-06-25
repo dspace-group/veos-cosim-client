@@ -18,7 +18,7 @@ namespace {
     return GenerateString("Event名前\xF0\x9F\x98\x80");
 }
 
-void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
+void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
     NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
     NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
 

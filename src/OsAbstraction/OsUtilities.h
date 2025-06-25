@@ -35,7 +35,7 @@ private:
 };
 
 class NamedEvent final {
-    NamedEvent(Handle handle, const std::string& name);
+    NamedEvent(Handle handle, std::string_view name);
 
 public:
     NamedEvent() = default;
@@ -47,7 +47,7 @@ public:
     NamedEvent(NamedEvent&&) noexcept = default;
     NamedEvent& operator=(NamedEvent&&) noexcept = default;
 
-    [[nodiscard]] static NamedEvent CreateOrOpen(const std::string& name);
+    [[nodiscard]] static NamedEvent CreateOrOpen(std::string_view name);
 
     void Set() const;
     void Wait() const;
@@ -71,7 +71,7 @@ public:
     NamedMutex(NamedMutex&&) noexcept = default;
     NamedMutex& operator=(NamedMutex&&) noexcept = default;
 
-    [[nodiscard]] static NamedMutex CreateOrOpen(const std::string& name);
+    [[nodiscard]] static NamedMutex CreateOrOpen(std::string_view name);
 
     // Small case, so this mutex can directly be used in std::lock_guard
     void lock() const;                                     // NOLINT(readability-identifier-naming)
@@ -83,7 +83,7 @@ private:
 };
 
 class SharedMemory final {
-    SharedMemory(const std::string& name, size_t size, Handle handle);
+    SharedMemory(std::string_view name, size_t size, Handle handle);
 
 public:
     SharedMemory() = default;
@@ -95,8 +95,8 @@ public:
     SharedMemory(SharedMemory&&) noexcept;
     SharedMemory& operator=(SharedMemory&&) noexcept;
 
-    [[nodiscard]] static SharedMemory CreateOrOpen(const std::string& name, size_t size);
-    [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(const std::string& name, size_t size);
+    [[nodiscard]] static SharedMemory CreateOrOpen(std::string_view name, size_t size);
+    [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(std::string_view name, size_t size);
 
     [[nodiscard]] void* data() const noexcept;   // NOLINT(readability-identifier-naming)
     [[nodiscard]] size_t size() const noexcept;  // NOLINT(readability-identifier-naming)

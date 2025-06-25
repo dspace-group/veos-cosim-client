@@ -57,7 +57,7 @@ private:
 
 class Pipe final {
 public:
-    explicit Pipe(const std::string& name);
+    explicit Pipe(std::string_view name);
     ~Pipe();
 
     Pipe(const Pipe&) = delete;

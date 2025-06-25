@@ -61,7 +61,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 #define Unlink unlink
 #endif
 
-[[nodiscard]] std::string GetUdsPath(const std::string& name) {
+[[nodiscard]] std::string GetUdsPath(std::string_view name) {
     std::string fileName = "dSPACE.VEOS.CoSim.";
     fileName.append(name);
 #ifdef _WIN32
@@ -345,7 +345,7 @@ Socket::Socket(AddressFamily addressFamily) : _addressFamily(addressFamily) {
     }
 }
 
-Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path)
+Socket::Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path)
     : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
@@ -526,7 +526,7 @@ void Socket::EnableIpv6Only() const {
     return {};
 }
 
-[[nodiscard]] std::optional<Socket> Socket::TryConnect(const std::string& name) {
+[[nodiscard]] std::optional<Socket> Socket::TryConnect(std::string_view name) {
     if (name.empty()) {
         throw std::runtime_error("Empty name is not valid.");
     }
@@ -604,7 +604,7 @@ void Socket::BindForIpv6(uint16_t port, bool enableRemoteAccess) const {
     }
 }
 
-void Socket::Bind(const std::string& name) {
+void Socket::Bind(std::string_view name) {
     if (_addressFamily != AddressFamily::Uds) {
         throw std::runtime_error("Not supported for address family.");
     }

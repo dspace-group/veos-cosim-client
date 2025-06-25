@@ -30,7 +30,7 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 
-void PrintStatus(bool value, const std::string& what) {
+void PrintStatus(bool value, std::string_view what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {

@@ -3,7 +3,7 @@
 #pragma once
 
 #include <memory>
-#include <string>
+#include <string_view>
 #include <vector>
 
 #include "Channel.h"
@@ -42,7 +42,7 @@ public:
 
 [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,
                                                          ConnectionKind connectionKind,
-                                                         const std::string& name,
+                                                         std::string_view name,
                                                          const std::vector<CanController>& canControllers,
                                                          const std::vector<EthController>& ethControllers,
                                                          const std::vector<LinController>& linControllers);

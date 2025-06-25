@@ -168,7 +168,7 @@ public:
     BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
-    void Initialize(CoSimType coSimType, const std::string& name, const std::vector<TControllerExtern>& controllers) {
+    void Initialize(CoSimType coSimType, std::string_view name, const std::vector<TControllerExtern>& controllers) {
         _coSimType = coSimType;
 
         size_t totalQueueItemsCountPerBuffer = 0;
@@ -239,7 +239,7 @@ public:
     }
 
 protected:
-    virtual void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) = 0;
+    virtual void InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) = 0;
 
     virtual void ClearDataInternal() = 0;
 
@@ -286,7 +286,7 @@ public:
     RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal([[maybe_unused]] const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal([[maybe_unused]] std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
         _messageCountPerController.resize(this->_controllers.size());
         _messageBuffer = RingBuffer<TMessage>(totalQueueItemsCountPerBuffer);
     }
@@ -502,7 +502,7 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    void InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
+    void InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
@@ -645,7 +645,7 @@ class BusBufferImpl final : public BusBuffer {
 public:
     BusBufferImpl(CoSimType coSimType,
                   [[maybe_unused]] ConnectionKind connectionKind,
-                  const std::string& name,
+                  std::string_view name,
                   const std::vector<CanController>& canControllers,
                   const std::vector<EthController>& ethControllers,
                   const std::vector<LinController>& linControllers) {
@@ -671,26 +671,27 @@ public:
         }
 #endif
 
-        std::string suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-        std::string suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+        std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+        std::string_view suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-        std::string canTransmitBufferName = name;
+        std::string nameString = std::string(name);
+        std::string canTransmitBufferName = nameString;
         canTransmitBufferName.append(".Can.");
         canTransmitBufferName.append(suffixForTransmit);
-        std::string ethTransmitBufferName = name;
+        std::string ethTransmitBufferName = nameString;
         ethTransmitBufferName.append(".Eth.");
         ethTransmitBufferName.append(suffixForTransmit);
-        std::string linTransmitBufferName = name;
+        std::string linTransmitBufferName = nameString;
         linTransmitBufferName.append(".Lin.");
         linTransmitBufferName.append(suffixForTransmit);
 
-        std::string canReceiveBufferName = name;
+        std::string canReceiveBufferName = nameString;
         canReceiveBufferName.append(".Can.");
         canReceiveBufferName.append(suffixForReceive);
-        std::string ethReceiveBufferName = name;
+        std::string ethReceiveBufferName = nameString;
         ethReceiveBufferName.append(".Eth.");
         ethReceiveBufferName.append(suffixForReceive);
-        std::string linReceiveBufferName = name;
+        std::string linReceiveBufferName = nameString;
         linReceiveBufferName.append(".Lin.");
         linReceiveBufferName.append(suffixForReceive);
 
@@ -780,7 +781,7 @@ private:
 
 [[nodiscard]] std::unique_ptr<BusBuffer> CreateBusBuffer(CoSimType coSimType,
                                                          ConnectionKind connectionKind,
-                                                         const std::string& name,
+                                                         std::string_view name,
                                                          const std::vector<CanController>& canControllers,
                                                          const std::vector<EthController>& ethControllers,
                                                          const std::vector<LinController>& linControllers) {

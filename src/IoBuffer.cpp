@@ -26,7 +26,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-void CheckSizeKind(SizeKind sizeKind, const std::string& name) {
+void CheckSizeKind(SizeKind sizeKind, std::string_view name) {
     switch (sizeKind) {
         case SizeKind::Fixed:
         case SizeKind::Variable:
@@ -199,7 +199,7 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
 
 public:
     RemoteIoPartBuffer(CoSimType coSimType,
-                       [[maybe_unused]] const std::string& name,
+                       [[maybe_unused]] std::string_view name,
                        const std::vector<IoSignal>& signals)
         : IoPartBufferBase(coSimType, signals) {
         _dataVector.resize(_metaDataLookup.size());
@@ -408,7 +408,7 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    LocalIoPartBuffer(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals)
+    LocalIoPartBuffer(CoSimType coSimType, std::string_view name, const std::vector<IoSignal>& signals)
         : IoPartBufferBase(coSimType, signals) {
         // The memory layout looks like this:
         // for each signal:
@@ -640,12 +640,13 @@ class IoBufferImpl final : public IoBuffer {
 public:
     IoBufferImpl(CoSimType coSimType,
                  [[maybe_unused]] ConnectionKind connectionKind,
-                 const std::string& name,
+                 std::string_view name,
                  const std::vector<IoSignal>& incomingSignals,
                  const std::vector<IoSignal>& outgoingSignals) {
-        std::string outgoingName = name;
+        std::string nameString = std::string(name);
+        std::string outgoingName = nameString;
         outgoingName.append(".Outgoing");
-        std::string incomingName = name;
+        std::string incomingName = nameString;
         incomingName.append(".Incoming");
         const std::vector<IoSignal>* writeSignals = &outgoingSignals;
         const std::vector<IoSignal>* readSignals = &incomingSignals;
@@ -714,7 +715,7 @@ private:
 
 [[nodiscard]] std::unique_ptr<IoBuffer> CreateIoBuffer(CoSimType coSimType,
                                                        ConnectionKind connectionKind,
-                                                       const std::string& name,
+                                                       std::string_view name,
                                                        const std::vector<IoSignal>& incomingSignals,
                                                        const std::vector<IoSignal>& outgoingSignals) {
     return std::make_unique<IoBufferImpl>(coSimType, connectionKind, name, incomingSignals, outgoingSignals);

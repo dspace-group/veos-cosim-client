@@ -11,9 +11,9 @@ void LogError(std::string_view message);
 void LogWarning(std::string_view message);
 void LogInfo(std::string_view message);
 void LogTrace(std::string_view message);
-void LogProtocolBeginTrace(const std::string& message);
-void LogProtocolEndTrace(const std::string& message);
-void LogProtocolDataTrace(const std::string& message);
+void LogProtocolBeginTrace(std::string_view message);
+void LogProtocolEndTrace(std::string_view message);
+void LogProtocolDataTrace(std::string_view message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \

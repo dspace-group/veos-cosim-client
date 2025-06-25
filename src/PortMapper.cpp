@@ -186,7 +186,7 @@ private:
     return std::make_unique<PortMapperServerImpl>(enableRemoteAccess);
 }
 
-[[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
+[[nodiscard]] bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
         std::string message = "PortMapper_GetPort(ipAddress: '";
         message.append(ipAddress);
@@ -225,7 +225,7 @@ private:
     }
 }
 
-[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port) {
+[[nodiscard]] bool PortMapper_SetPort(std::string_view name, uint16_t port) {
     std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");
@@ -252,7 +252,7 @@ private:
     }
 }
 
-[[nodiscard]] bool PortMapper_UnsetPort(const std::string& name) {
+[[nodiscard]] bool PortMapper_UnsetPort(std::string_view name) {
     std::unique_ptr<Channel> channel =
         TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
     CheckResultWithMessage(channel, "Could not connect to port mapper.");

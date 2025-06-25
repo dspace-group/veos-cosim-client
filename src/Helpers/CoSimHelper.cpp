@@ -55,19 +55,19 @@ void LogTrace(std::string_view message) {
     }
 }
 
-void LogProtocolBeginTrace(const std::string& message) {
+void LogProtocolBeginTrace(std::string_view message) {
     std::string traceMessage = "PROT BEGIN ";
     traceMessage.append(message);
     LogTrace(traceMessage);
 }
 
-void LogProtocolEndTrace(const std::string& message) {
+void LogProtocolEndTrace(std::string_view message) {
     std::string traceMessage = "PROT END   ";
     traceMessage.append(message);
     LogTrace(traceMessage);
 }
 
-void LogProtocolDataTrace(const std::string& message) {
+void LogProtocolDataTrace(std::string_view message) {
     std::string traceMessage = "PROT DATA  ";
     traceMessage.append(message);
     LogTrace(traceMessage);
