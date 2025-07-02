@@ -7,10 +7,12 @@
 #include <string>
 #include <string_view>
 
+#include "DsVeosCoSim/CoSimTypes.h"
+
 class InternetAddress final {
 public:
-    InternetAddress(std::string_view ipAddress, uint16_t port);
-    ~InternetAddress() noexcept = default;
+    InternetAddress() = default;
+    ~InternetAddress() = default;
 
     InternetAddress(const InternetAddress&) = delete;
     InternetAddress& operator=(InternetAddress const&) = delete;
@@ -18,13 +20,15 @@ public:
     InternetAddress(InternetAddress&&) = delete;
     InternetAddress& operator=(InternetAddress&&) = delete;
 
+    [[nodiscard]] DsVeosCoSim::Result Initialize(std::string_view ipAddress, uint16_t port);
+
 private:
     std::array<uint8_t, 16> _address{};
 };
 
 class UdpSocket final {
 public:
-    UdpSocket();
+    UdpSocket() = default;
     ~UdpSocket();
 
     UdpSocket(const UdpSocket&) = delete;
@@ -33,14 +37,16 @@ public:
     UdpSocket(UdpSocket&&) = delete;
     UdpSocket& operator=(UdpSocket&&) = delete;
 
-    void Bind(std::string_view ipAddress, uint16_t port) const;
-    void Connect(std::string_view ipAddress, uint16_t port) const;
-    void SetNoDelay(bool value) const;
-    void SetReuseAddress(bool value) const;
-    void Listen() const;
+    [[nodiscard]] DsVeosCoSim::Result Initialize();
 
-    [[nodiscard]] bool SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
-    [[nodiscard]] bool ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
+    [[nodiscard]] DsVeosCoSim::Result Bind(std::string_view ipAddress, uint16_t port) const;
+    [[nodiscard]] DsVeosCoSim::Result Connect(std::string_view ipAddress, uint16_t port) const;
+    [[nodiscard]] DsVeosCoSim::Result SetNoDelay(bool value) const;
+    [[nodiscard]] DsVeosCoSim::Result SetReuseAddress(bool value) const;
+    [[nodiscard]] DsVeosCoSim::Result Listen() const;
+
+    [[nodiscard]] DsVeosCoSim::Result SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
+    [[nodiscard]] DsVeosCoSim::Result ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
 
 private:
 #ifdef _WIN32
@@ -57,7 +63,7 @@ private:
 
 class Pipe final {
 public:
-    explicit Pipe(const std::string& name);
+    Pipe() = default;
     ~Pipe();
 
     Pipe(const Pipe&) = delete;
@@ -66,11 +72,13 @@ public:
     Pipe(Pipe&&) = delete;
     Pipe& operator=(Pipe&&) = delete;
 
-    void Accept();
-    void Connect();
+    [[nodiscard]] DsVeosCoSim::Result Initialize(std::string_view name);
 
-    [[nodiscard]] bool Write(const void* source, uint32_t size) const;
-    [[nodiscard]] bool Read(void* destination, uint32_t size) const;
+    [[nodiscard]] DsVeosCoSim::Result Accept();
+    [[nodiscard]] DsVeosCoSim::Result Connect();
+
+    [[nodiscard]] DsVeosCoSim::Result Write(const void* source, uint32_t size) const;
+    [[nodiscard]] DsVeosCoSim::Result Read(void* destination, uint32_t size) const;
 
 private:
 #ifdef _WIN32
@@ -80,7 +88,7 @@ private:
 #endif
 
 #ifndef _WIN32
-    [[nodiscard]] static pipe_t CreatePipe(std::string_view name);
+    [[nodiscard]] DsVeosCoSim::Result CreatePipe(std::string_view name, pipe_t& pipe);
 #endif
 
 #ifdef _WIN32

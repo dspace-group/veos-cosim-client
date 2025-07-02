@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <ios>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -15,7 +14,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] std::string DataTypeValueToString(const DataType dataType, const uint32_t index, const void* value) {
+[[nodiscard]] std::string DataTypeValueToString(DataType dataType, uint32_t index, const void* value) {
     switch (dataType) {
         case DataType::Bool:
             return std::to_string(static_cast<const uint8_t*>(value)[index]);
@@ -41,12 +40,12 @@ namespace {
             return std::to_string(static_cast<const double*>(value)[index]);
     }
 
-    throw std::runtime_error("Invalid data type.");
+    return "<Invalid DataType>";
 }
 
 }  // namespace
 
-[[nodiscard]] std::string DataToString(const uint8_t* data, const size_t dataLength, const char separator) {
+[[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator) {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     for (uint32_t i = 0; i < dataLength; i++) {
@@ -59,13 +58,13 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string SimulationTimeToString(const SimulationTime simulationTime) {
-    const int64_t nanoseconds = simulationTime.count();
+[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime) {
+    int64_t nanoseconds = simulationTime.count();
     std::string str = std::to_string(nanoseconds);
 
-    const size_t length = str.size();
+    size_t length = str.size();
     if (length < 10) {
-        const size_t countOfMissingZerosInFront = 10 - length;
+        size_t countOfMissingZerosInFront = 10 - length;
         str.insert(str.begin(), countOfMissingZerosInFront, '0');
     }
 
@@ -81,7 +80,7 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(const Result result) noexcept {
+[[nodiscard]] std::string_view ToString(Result result) {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -100,7 +99,7 @@ namespace {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] std::string_view ToString(const CoSimType coSimType) noexcept {
+[[nodiscard]] std::string_view ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -111,7 +110,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string_view ToString(const ConnectionKind connectionKind) noexcept {
+[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -122,7 +121,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string_view ToString(const Command command) noexcept {
+[[nodiscard]] std::string_view ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -147,7 +146,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string_view ToString(const Severity severity) noexcept {
+[[nodiscard]] std::string_view ToString(Severity severity) {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -162,7 +161,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string_view ToString(const TerminateReason terminateReason) noexcept {
+[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -173,7 +172,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string_view ToString(const ConnectionState connectionState) noexcept {
+[[nodiscard]] std::string_view ToString(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -184,7 +183,7 @@ namespace {
     return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] size_t GetDataTypeSize(const DataType dataType) noexcept {
+[[nodiscard]] size_t GetDataTypeSize(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
         case DataType::Int8:
@@ -206,7 +205,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string_view ToString(const DataType dataType) noexcept {
+[[nodiscard]] std::string_view ToString(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -235,7 +234,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string_view ToString(const SizeKind sizeKind) noexcept {
+[[nodiscard]] std::string_view ToString(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -246,7 +245,7 @@ namespace {
     return "<Invalid SizeKind>";
 }
 
-[[nodiscard]] std::string ValueToString(const DataType dataType, const uint32_t length, const void* value) {
+[[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value) {
     std::ostringstream oss;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {
@@ -259,7 +258,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string_view ToString(const SimulationState simulationState) noexcept {
+[[nodiscard]] std::string_view ToString(SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -276,11 +275,11 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string_view ToString([[maybe_unused]] const Mode mode) noexcept {
+[[nodiscard]] std::string_view ToString([[maybe_unused]] Mode mode) {
     return "<Unused>";
 }
 
-[[nodiscard]] std::string ToString(const IoSignalId signalId) {
+[[nodiscard]] std::string ToString(IoSignalId signalId) {
     return std::to_string(static_cast<uint32_t>(signalId));
 }
 
@@ -294,7 +293,7 @@ namespace {
     return signal;
 }
 
-[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, const uint32_t length, const void* value) {
+[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
     std::string str = "IO Data { Id: ";
     str.append(ToString(ioSignal.id));
     str.append(", Length: ");
@@ -365,15 +364,15 @@ namespace {
     return ioSignals;
 }
 
-[[nodiscard]] std::string ToString(const BusControllerId busControllerId) {
+[[nodiscard]] std::string ToString(BusControllerId busControllerId) {
     return std::to_string(static_cast<uint32_t>(busControllerId));
 }
 
-[[nodiscard]] std::string ToString(const BusMessageId busMessageId) {
+[[nodiscard]] std::string ToString(BusMessageId busMessageId) {
     return std::to_string(static_cast<uint32_t>(busMessageId));
 }
 
-[[nodiscard]] std::string ToString(const CanMessageFlags flags) {
+[[nodiscard]] std::string ToString(CanMessageFlags flags) {
     std::string str;
 
     if (HasFlag(flags, CanMessageFlags::Loopback)) {
@@ -695,7 +694,7 @@ namespace {
     return ethMessage;
 }
 
-[[nodiscard]] std::string_view ToString(const LinControllerType type) noexcept {
+[[nodiscard]] std::string_view ToString(LinControllerType type) {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";
@@ -706,7 +705,7 @@ namespace {
     return "<Invalid LinControllerType>";
 }
 
-[[nodiscard]] std::string ToString(const LinMessageFlags flags) {
+[[nodiscard]] std::string ToString(LinMessageFlags flags) {
     std::string str;
 
     if (HasFlag(flags, LinMessageFlags::Loopback)) {

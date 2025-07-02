@@ -6,45 +6,51 @@
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "Helper.h"
-#include "LogHelper.h"
 #include "OsUtilities.h"
+#include "PerformanceTestClient.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void LocalCommunicationClientRun([[maybe_unused]] std::string_view host,
+[[nodiscard]] Result Run([[maybe_unused]] std::string_view host,
+                         Event& connectedEvent,
+                         uint64_t& counter,
+                         const bool& isStopped) {
+#ifdef _WIN32
+    std::unique_ptr<Channel> channel;
+    CheckResult(TryConnectToLocalChannel(LocalName, channel));
+#else
+    std::unique_ptr<Channel> channel;
+    CheckResult(TryConnectToUdsChannel(LocalName, channel));
+#endif
+    CheckBoolResult(channel);
+
+    SetThreadAffinity(LocalName);
+
+    std::array<char, BufferSize> buffer{};
+
+    connectedEvent.Set();
+
+    while (!isStopped) {
+        CheckResult(channel->GetWriter().Write(buffer.data(), BufferSize));
+        CheckResult(channel->GetWriter().EndWrite());
+
+        CheckResult(channel->GetReader().Read(buffer.data(), BufferSize));
+
+        counter++;
+    }
+
+    return Result::Ok;
+}
+
+void LocalCommunicationClientRun(std::string_view host,
                                  Event& connectedEvent,
                                  uint64_t& counter,
                                  const bool& isStopped) {
-    try {
-#ifdef _WIN32
-        std::unique_ptr<Channel> channel = TryConnectToLocalChannel(LocalName);
-#else
-        std::unique_ptr<Channel> channel = TryConnectToUdsChannel(LocalName);
-#endif
-        MUST_BE_TRUE(channel);
-
-        SetThreadAffinity(LocalName);
-
-        std::array<char, BufferSize> buffer{};
-
-        connectedEvent.Set();
-
-        while (!isStopped) {
-            MUST_BE_TRUE(channel->GetWriter().Write(buffer.data(), BufferSize));
-            MUST_BE_TRUE(channel->GetWriter().EndWrite());
-
-            MUST_BE_TRUE(channel->GetReader().Read(buffer.data(), BufferSize));
-
-            counter++;
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in local communication client thread: {}", e.what());
-        connectedEvent.Set();
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run local communication client.");
     }
 }
 

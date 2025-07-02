@@ -6,14 +6,16 @@
 #include <string>
 #include <type_traits>
 
+#include "DsVeosCoSim/CoSimTypes.h"
+
 namespace DsVeosCoSim {
 
 class ChannelWriter {
 protected:
-    ChannelWriter() noexcept = default;
+    ChannelWriter() = default;
 
 public:
-    virtual ~ChannelWriter() noexcept = default;
+    virtual ~ChannelWriter() = default;
 
     ChannelWriter(const ChannelWriter&) = delete;
     ChannelWriter& operator=(const ChannelWriter&) = delete;
@@ -22,23 +24,23 @@ public:
     ChannelWriter& operator=(ChannelWriter&&) = delete;
 
     template <typename T>
-    [[nodiscard]] bool Write(const T& value) {
+    [[nodiscard]] Result Write(const T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
 
         return Write(&value, sizeof(T));
     }
 
-    [[nodiscard]] virtual bool Write(const void* source, size_t size) = 0;
+    [[nodiscard]] virtual Result Write(const void* source, size_t size) = 0;
 
-    [[nodiscard]] virtual bool EndWrite() = 0;
+    [[nodiscard]] virtual Result EndWrite() = 0;
 };
 
 class ChannelReader {
 protected:
-    ChannelReader() noexcept = default;
+    ChannelReader() = default;
 
 public:
-    virtual ~ChannelReader() noexcept = default;
+    virtual ~ChannelReader() = default;
 
     ChannelReader(const ChannelReader&) = delete;
     ChannelReader& operator=(const ChannelReader&) = delete;
@@ -47,21 +49,21 @@ public:
     ChannelReader& operator=(ChannelReader&&) = delete;
 
     template <typename T>
-    [[nodiscard]] bool Read(T& value) {
+    [[nodiscard]] Result Read(T& value) {
         static_assert(std::is_trivially_copyable_v<T>);
 
         return Read(&value, sizeof(T));
     }
 
-    [[nodiscard]] virtual bool Read(void* destination, size_t size) = 0;
+    [[nodiscard]] virtual Result Read(void* destination, size_t size) = 0;
 };
 
 class Channel {
 protected:
-    Channel() noexcept = default;
+    Channel() = default;
 
 public:
-    virtual ~Channel() noexcept = default;
+    virtual ~Channel() = default;
 
     Channel(const Channel&) = delete;
     Channel& operator=(const Channel&) = delete;
@@ -69,7 +71,7 @@ public:
     Channel(Channel&&) = delete;
     Channel& operator=(Channel&&) = delete;
 
-    [[nodiscard]] virtual std::string GetRemoteAddress() const = 0;
+    [[nodiscard]] virtual Result GetRemoteAddress(std::string& remoteAddress) const = 0;
 
     virtual void Disconnect() = 0;
 
@@ -79,10 +81,10 @@ public:
 
 class ChannelServer {
 protected:
-    ChannelServer() noexcept = default;
+    ChannelServer() = default;
 
 public:
-    virtual ~ChannelServer() noexcept = default;
+    virtual ~ChannelServer() = default;
 
     ChannelServer(const ChannelServer&) = delete;
     ChannelServer& operator=(const ChannelServer&) = delete;
@@ -92,23 +94,25 @@ public:
 
     [[nodiscard]] virtual uint16_t GetLocalPort() const = 0;
 
-    [[nodiscard]] virtual std::unique_ptr<Channel> TryAccept() = 0;
-    [[nodiscard]] virtual std::unique_ptr<Channel> TryAccept(uint32_t timeoutInMilliseconds) = 0;
+    [[nodiscard]] virtual Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) = 0;
 };
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToLocalChannel(const std::string& name);
+[[nodiscard]] Result TryConnectToLocalChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToTcpChannel(std::string_view remoteIpAddress,
-                                                              uint16_t remotePort,
-                                                              uint16_t localPort,
-                                                              uint32_t timeoutInMilliseconds);
+[[nodiscard]] Result TryConnectToTcpChannel(std::string_view remoteIpAddress,
+                                            uint16_t remotePort,
+                                            uint16_t localPort,
+                                            uint32_t timeoutInMilliseconds,
+                                            std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] std::unique_ptr<Channel> TryConnectToUdsChannel(const std::string& name);
+[[nodiscard]] Result TryConnectToUdsChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateLocalChannelServer(const std::string& name);
+[[nodiscard]] Result CreateLocalChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer);
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess);
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port,
+                                            bool enableRemoteAccess,
+                                            std::unique_ptr<ChannelServer>& channelServer);
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateUdsChannelServer(const std::string& name);
+[[nodiscard]] Result CreateUdsChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer);
 
 }  // namespace DsVeosCoSim

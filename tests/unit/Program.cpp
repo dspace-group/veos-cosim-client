@@ -6,8 +6,10 @@
 
 #include "Helper.h"
 
+using namespace DsVeosCoSim;
+
 int32_t main(int32_t argc, char** argv) {
-    if (!StartUp()) {
+    if (!IsOk(StartUp())) {
         return 1;
     }
 

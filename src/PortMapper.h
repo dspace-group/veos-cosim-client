@@ -4,16 +4,18 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
+#include <string_view>
+
+#include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
 
 class PortMapperServer {
 protected:
-    PortMapperServer() noexcept = default;
+    PortMapperServer() = default;
 
 public:
-    virtual ~PortMapperServer() noexcept = default;
+    virtual ~PortMapperServer() = default;
 
     PortMapperServer(const PortMapperServer&) = delete;
     PortMapperServer& operator=(const PortMapperServer&) = delete;
@@ -22,10 +24,11 @@ public:
     PortMapperServer& operator=(PortMapperServer&&) = delete;
 };
 
-[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(bool enableRemoteAccess);
+[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
+                                            std::unique_ptr<PortMapperServer>& portMapperServer);
 
-[[nodiscard]] bool PortMapper_GetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port);
-[[nodiscard]] bool PortMapper_SetPort(const std::string& name, uint16_t port);
-[[nodiscard]] bool PortMapper_UnsetPort(const std::string& name);
+[[nodiscard]] Result PortMapperGetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port);
+[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port);
+[[nodiscard]] Result PortMapperUnsetPort(std::string_view name);
 
 }  // namespace DsVeosCoSim

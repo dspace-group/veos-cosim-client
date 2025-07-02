@@ -4,9 +4,7 @@
 
 #include <chrono>
 #include <cstdint>
-#include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -28,7 +26,7 @@ namespace {
 
 class CoSimServerImpl final : public CoSimServer {
 public:
-    CoSimServerImpl() noexcept = default;
+    CoSimServerImpl() = default;
 
     ~CoSimServerImpl() noexcept override {
         Unload();
@@ -40,7 +38,7 @@ public:
     CoSimServerImpl(CoSimServerImpl&&) = delete;
     CoSimServerImpl& operator=(CoSimServerImpl&&) = delete;
 
-    void Load(const CoSimServerConfig& config) override {
+    [[nodiscard]] Result Load(const CoSimServerConfig& config) override {
         _enableRemoteAccess = config.enableRemoteAccess;
         _localPort = config.port;
         _serverName = config.serverName;
@@ -63,13 +61,13 @@ public:
         _callbacks.ethMessageReceivedCallback = config.ethMessageReceivedCallback;
 
         if (config.startPortMapper) {
-            _portMapperServer = CreatePortMapperServer(_enableRemoteAccess);
+            CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
         }
 
-        StartAccepting();
+        return StartAccepting();
     }
 
-    void Unload() noexcept override {
+    void Unload() override {
         if (_channel) {
             _channel.reset();
         }
@@ -81,10 +79,10 @@ public:
         }
     }
 
-    void Start(const SimulationTime simulationTime) override {
+    [[nodiscard]] Result Start(SimulationTime simulationTime) override {
         if (!_channel) {
             if (_isClientOptional) {
-                return;
+                return Result::Ok;
             }
 
             std::string message = "Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '";
@@ -92,185 +90,195 @@ public:
             message.append("' ...");
             LogInfo(message);
 
-            while (!AcceptChannel()) {
+            while (!IsOk(AcceptChannel())) {
                 std::this_thread::sleep_for(milliseconds(100));
             }
 
-            if (!OnHandleConnect()) {
-                CloseConnection();
-                return;
+            if (!IsOk(OnHandleConnect())) {
+                return CloseConnection();
             }
         }
 
-        if (!StartInternal(simulationTime)) {
-            CloseConnection();
+        if (!IsOk(StartInternal(simulationTime))) {
+            return CloseConnection();
         }
+
+        return Result::Ok;
     }
 
-    void Stop(const SimulationTime simulationTime) override {
+    [[nodiscard]] Result Stop(SimulationTime simulationTime) override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        if (!StopInternal(simulationTime)) {
-            CloseConnection();
+        if (!IsOk(StopInternal(simulationTime))) {
+            return CloseConnection();
         }
+
+        return Result::Ok;
     }
 
-    void Terminate(const SimulationTime simulationTime, const TerminateReason reason) override {
+    [[nodiscard]] Result Terminate(SimulationTime simulationTime, TerminateReason reason) override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        if (!TerminateInternal(simulationTime, reason)) {
-            CloseConnection();
+        if (!IsOk(TerminateInternal(simulationTime, reason))) {
+            return CloseConnection();
         }
+
+        return Result::Ok;
     }
 
-    void Pause(const SimulationTime simulationTime) override {
+    [[nodiscard]] Result Pause(SimulationTime simulationTime) override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        if (!PauseInternal(simulationTime)) {
-            CloseConnection();
+        if (!IsOk(PauseInternal(simulationTime))) {
+            return CloseConnection();
         }
+
+        return Result::Ok;
     }
 
-    void Continue(const SimulationTime simulationTime) override {
+    [[nodiscard]] Result Continue(SimulationTime simulationTime) override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        if (!ContinueInternal(simulationTime)) {
-            CloseConnection();
+        if (!IsOk(ContinueInternal(simulationTime))) {
+            return CloseConnection();
         }
+
+        return Result::Ok;
     }
 
-    [[nodiscard]] SimulationTime Step(const SimulationTime simulationTime) override {
+    [[nodiscard]] Result Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) override {
         if (!_channel) {
-            return {};
+            return Result::Ok;
         }
 
         Command command{};
-        SimulationTime nextSimulationTime{};
-        if (!StepInternal(simulationTime, nextSimulationTime, command)) {
-            CloseConnection();
-            return {};
+        if (!IsOk(StepInternal(simulationTime, nextSimulationTime, command))) {
+            return CloseConnection();
         }
 
         HandlePendingCommand(command);
-        return nextSimulationTime;
+        return Result::Ok;
     }
 
-    void Write(const IoSignalId signalId, const uint32_t length, const void* value) const override {
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) const override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        _ioBuffer->Write(signalId, length, value);
+        return _ioBuffer->Write(signalId, length, value);
     }
 
-    [[nodiscard]] bool Read(const IoSignalId signalId, uint32_t& length, const void** value) const override {
+    [[nodiscard]] Result Read(IoSignalId signalId,
+                              uint32_t& length,
+                              const void** value,
+                              bool& valueRead) const override {
         if (!_channel) {
-            return false;
+            valueRead = false;
+            return Result::Ok;
         }
 
-        _ioBuffer->Read(signalId, length, value);
-        return true;
+        valueRead = true;
+        return _ioBuffer->Read(signalId, length, value);
     }
 
-    void Transmit(const CanMessage& message) const override {
+    [[nodiscard]] Result Transmit(const CanMessage& message) const override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        (void)_busBuffer->Transmit(message);
+        return _busBuffer->Transmit(message);
     }
 
-    void Transmit(const EthMessage& message) const override {
+    [[nodiscard]] Result Transmit(const EthMessage& message) const override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        (void)_busBuffer->Transmit(message);
+        return _busBuffer->Transmit(message);
     }
 
-    void Transmit(const LinMessage& message) const override {
+    [[nodiscard]] Result Transmit(const LinMessage& message) const override {
         if (!_channel) {
-            return;
+            return Result::Ok;
         }
 
-        (void)_busBuffer->Transmit(message);
+        return _busBuffer->Transmit(message);
     }
 
-    void BackgroundService() override {
+    [[nodiscard]] Result BackgroundService() override {
         if (!_channel) {
-            if (AcceptChannel()) {
-                if (!OnHandleConnect()) {
-                    CloseConnection();
-                    return;
+            if (IsOk(AcceptChannel())) {
+                if (!IsOk(OnHandleConnect())) {
+                    return CloseConnection();
                 }
             }
 
-            return;
+            return Result::Ok;
         }
 
         Command command{};
-        if (!Ping(command)) {
-            CloseConnection();
-            return;
+        if (!IsOk(Ping(command))) {
+            return CloseConnection();
         }
 
         HandlePendingCommand(command);
+        return Result::Ok;
     }
 
-    [[nodiscard]] uint16_t GetLocalPort() const override {
+    [[nodiscard]] Result GetLocalPort(uint16_t& localPort) const override {
         if (_tcpChannelServer) {
-            return _tcpChannelServer->GetLocalPort();
+            localPort = _tcpChannelServer->GetLocalPort();
         }
 
-        return {};
+        return Result::Ok;
     }
 
 private:
-    [[nodiscard]] bool StartInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] Result StartInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime),
                                "Could not send start frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool StopInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] Result StopInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool TerminateInternal(const SimulationTime simulationTime, const TerminateReason reason) const {
+    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
         CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                                "Could not send terminate frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool PauseInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime),
                                "Could not send pause frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool ContinueInternal(const SimulationTime simulationTime) const {
+    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime) const {
         CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                                "Could not send continue frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool StepInternal(const SimulationTime simulationTime,
-                                    SimulationTime& nextSimulationTime,
-                                    Command& command) {
+    [[nodiscard]] Result StepInternal(SimulationTime simulationTime,
+                                      SimulationTime& nextSimulationTime,
+                                      Command& command) {
         if (_firstStep) {
             SetThreadAffinity(_serverName);
             _firstStep = false;
@@ -279,10 +287,10 @@ private:
         CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
                                "Could not send step frame.");
         CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
-        return true;
+        return Result::Ok;
     }
 
-    void CloseConnection() {
+    [[nodiscard]] Result CloseConnection() {
         LogWarning("dSPACE VEOS CoSim client disconnected.");
 
         _channel.reset();
@@ -291,33 +299,33 @@ private:
             _callbacks.simulationStoppedCallback(milliseconds(0));
         }
 
-        StartAccepting();
+        return StartAccepting();
     }
 
-    [[nodiscard]] bool Ping(Command& command) const {
+    [[nodiscard]] Result Ping(Command& command) const {
         CheckResultWithMessage(Protocol::SendPing(_channel->GetWriter()), "Could not send ping frame.");
         CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    void StartAccepting() {
+    [[nodiscard]] Result StartAccepting() {
         uint16_t port{};
         if (!_tcpChannelServer) {
-            _tcpChannelServer = CreateTcpChannelServer(_localPort, _enableRemoteAccess);
+            CheckResult(CreateTcpChannelServer(_localPort, _enableRemoteAccess, _tcpChannelServer));
             port = _tcpChannelServer->GetLocalPort();
         }
 
         if (!_localChannelServer) {
 #ifdef _WIN32
-            _localChannelServer = CreateLocalChannelServer(_serverName);
+            CheckResult(CreateLocalChannelServer(_serverName, _localChannelServer));
 #else
-            _localChannelServer = CreateUdsChannelServer(_serverName);
+            CheckResult(CreateUdsChannelServer(_serverName, _localChannelServer));
 #endif
         }
 
         if (port != 0) {
             if (_registerAtPortMapper) {
-                if (!PortMapper_SetPort(_serverName, port)) {
+                if (!IsOk(PortMapperSetPort(_serverName, port))) {
                     LogTrace("Could not set port in port mapper.");
                 }
             }
@@ -331,19 +339,13 @@ private:
             message.append(".");
             LogInfo(message);
         }
+
+        return Result::Ok;
     }
 
-    void StopAccepting() noexcept {
+    void StopAccepting() {
         if (_registerAtPortMapper) {
-            try {
-                if (!PortMapper_UnsetPort(_serverName)) {
-                    LogTrace("Could not unset port in port mapper.");
-                }
-            } catch (const std::exception& e) {
-                std::string message = "Could not unset port in port mapper. Reason: ";
-                message.append(e.what());
-                LogTrace(message);
-            }
+            (void)PortMapperUnsetPort(_serverName);
         }
 
         if (_tcpChannelServer) {
@@ -355,33 +357,33 @@ private:
         }
     }
 
-    [[nodiscard]] bool AcceptChannel() {
+    [[nodiscard]] Result AcceptChannel() {
         if (_channel) {
-            return true;
+            return Result::Ok;
         }
 
         if (_localChannelServer) {
-            _channel = _localChannelServer->TryAccept();
+            CheckResult(_localChannelServer->TryAccept(_channel));
             if (_channel) {
                 _connectionKind = ConnectionKind::Local;
                 _firstStep = true;
-                return true;
+                return Result::Ok;
             }
         }
 
         if (_tcpChannelServer) {
-            _channel = _tcpChannelServer->TryAccept();
+            CheckResult(_tcpChannelServer->TryAccept(_channel));
             if (_channel) {
                 _connectionKind = ConnectionKind::Remote;
                 _firstStep = true;
-                return true;
+                return Result::Ok;
             }
         }
 
-        return false;
+        return Result::Error;
     }
 
-    [[nodiscard]] bool OnHandleConnect() {
+    [[nodiscard]] Result OnHandleConnect() {
         uint32_t clientProtocolVersion{};
         std::string clientName;
         CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName),
@@ -399,28 +401,31 @@ private:
                                                        _linControllers),
                                "Could not send connect ok frame.");
 
-        const std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
-        const std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-        _ioBuffer = CreateIoBuffer(CoSimType::Server,
+        std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
+        std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
+        CheckResult(CreateIoBuffer(CoSimType::Server,
                                    _connectionKind,
                                    _serverName,
                                    incomingSignalsExtern,
-                                   outgoingSignalsExtern);
+                                   outgoingSignalsExtern,
+                                   _ioBuffer));
 
-        const std::vector<CanController> canControllersExtern = Convert(_canControllers);
-        const std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
-        const std::vector<LinController> linControllersExtern = Convert(_linControllers);
-        _busBuffer = CreateBusBuffer(CoSimType::Server,
-                                     _connectionKind,
-                                     _serverName,
-                                     canControllersExtern,
-                                     ethControllersExtern,
-                                     linControllersExtern);
+        std::vector<CanController> canControllersExtern = Convert(_canControllers);
+        std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
+        std::vector<LinController> linControllersExtern = Convert(_linControllers);
+        CheckResult(CreateBusBuffer(CoSimType::Server,
+                                    _connectionKind,
+                                    _serverName,
+                                    canControllersExtern,
+                                    ethControllersExtern,
+                                    linControllersExtern,
+                                    _busBuffer));
 
         StopAccepting();
 
         if (_connectionKind == ConnectionKind::Remote) {
-            const std::string remoteAddress = _channel->GetRemoteAddress();
+            std::string remoteAddress;
+            CheckResult(_channel->GetRemoteAddress(remoteAddress));
             if (clientName.empty()) {
                 std::string message = "dSPACE VEOS CoSim client at ";
                 message.append(remoteAddress);
@@ -445,31 +450,33 @@ private:
             }
         }
 
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool WaitForOkFrame() const {
+    [[nodiscard]] Result WaitForOkFrame() const {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
         switch (frameKind) {
             case FrameKind::Ok:
-                return true;
+                return Result::Ok;
             case FrameKind::Error: {
                 std::string errorMessage;
                 CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
                                        "Could not read error frame.");
-                throw std::runtime_error(errorMessage);
+                LogError(errorMessage);
+                return Result::Error;
             }
             default:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                throw std::runtime_error(message);
+                LogError(message);
+                return Result::Error;
         }
     }
 
-    [[nodiscard]] bool WaitForPingOkFrame(Command& command) const {
+    [[nodiscard]] Result WaitForPingOkFrame(Command& command) const {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -477,16 +484,17 @@ private:
             case FrameKind::PingOk:
                 CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                        "Could not read ping ok frame.");
-                return true;
+                return Result::Ok;
             default:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                throw std::runtime_error(message);
+                LogError(message);
+                return Result::Error;
         }
     }
 
-    [[nodiscard]] bool WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
+    [[nodiscard]] Result WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -497,17 +505,18 @@ private:
                 CheckResultWithMessage(
                     Protocol::ReadConnect(_channel->GetReader(), version, mode, serverName, clientName),
                     "Could not read connect frame.");
-                return true;
+                return Result::Ok;
             }
             default:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                throw std::runtime_error(message);
+                LogError(message);
+                return Result::Error;
         }
     }
 
-    [[nodiscard]] bool WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
+    [[nodiscard]] Result WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -520,22 +529,24 @@ private:
                                                             *_busBuffer,
                                                             _callbacks),
                                        "Could not receive step ok frame.");
-                return true;
+                return Result::Ok;
             case FrameKind::Error: {
                 std::string errorMessage;
                 CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
                                        "Could not read error frame.");
-                throw std::runtime_error(errorMessage);
+                LogError(errorMessage);
+                return Result::Error;
             }
             default:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                throw std::runtime_error(message);
+                LogError(message);
+                return Result::Error;
         }
     }
 
-    void HandlePendingCommand(const Command command) const {
+    void HandlePendingCommand(Command command) const {
         switch (command) {
             case Command::Start:
                 _callbacks.simulationStartedCallback({});
@@ -591,8 +602,9 @@ private:
 
 }  // namespace
 
-std::unique_ptr<CoSimServer> CreateServer() {
-    return std::make_unique<CoSimServerImpl>();
+[[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server) {
+    server = std::make_unique<CoSimServerImpl>();
+    return Result::Ok;
 }
 
 }  // namespace DsVeosCoSim

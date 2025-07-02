@@ -30,7 +30,7 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 
-void PrintStatus(const bool value, const std::string& what) {
+void PrintStatus(bool value, std::string_view what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -58,72 +58,109 @@ void SwitchSendingLinMessages() {
     PrintStatus(SendLinMessages, "LIN messages");
 }
 
-void WriteOutGoingSignal(const IoSignal& ioSignal) {
-    const size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
-    const std::vector<uint8_t> data = GenerateBytes(length);
+[[nodiscard]] Result WriteOutGoingSignal(const IoSignal& ioSignal) {
+    size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
+    std::vector<uint8_t> data = GenerateBytes(length);
 
-    Client->Write(ioSignal.id, ioSignal.length, data.data());
+    return Client->Write(ioSignal.id, ioSignal.length, data.data());
 }
 
-void TransmitCanMessage(const CanController& controller) {
+[[nodiscard]] Result TransmitCanMessage(const CanController& controller) {
     CanMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(Convert(message));
+    return Client->Transmit(Convert(message));
 }
 
-void TransmitEthMessage(const EthController& controller) {
+[[nodiscard]] Result TransmitEthMessage(const EthController& controller) {
     EthMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(Convert(message));
+    return Client->Transmit(Convert(message));
 }
 
-void TransmitLinMessage(const LinController& controller) {
+[[nodiscard]] Result TransmitLinMessage(const LinController& controller) {
     LinMessageContainer message{};
     FillWithRandom(message, controller.id);
 
-    (void)Client->Transmit(Convert(message));
+    return Client->Transmit(Convert(message));
 }
 
-void SendSomeData(const SimulationTime simulationTime) {
+[[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
     static SimulationTime lastHalfSecond = -1s;
     static int64_t counter = 0;
-    const SimulationTime currentHalfSecond = simulationTime / 500000000;
+    SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
-        return;
+        return Result::Ok;
     }
 
     lastHalfSecond = currentHalfSecond;
     counter++;
 
     if (SendIoData && ((counter % 4) == 0)) {
-        for (const IoSignal& signal : Client->GetOutgoingSignals()) {
-            WriteOutGoingSignal(signal);
+        std::vector<IoSignal> signals;
+        CheckResult(Client->GetOutgoingSignals(signals));
+        for (const IoSignal& signal : signals) {
+            CheckResult(WriteOutGoingSignal(signal));
         }
     }
 
     if (SendCanMessages && ((counter % 4) == 1)) {
-        for (const CanController& controller : Client->GetCanControllers()) {
-            TransmitCanMessage(controller);
+        std::vector<CanController> controllers;
+        CheckResult(Client->GetCanControllers(controllers));
+        for (const CanController& controller : controllers) {
+            CheckResult(TransmitCanMessage(controller));
         }
     }
 
     if (SendEthMessages && ((counter % 4) == 2)) {
-        for (const EthController& controller : Client->GetEthControllers()) {
-            TransmitEthMessage(controller);
+        std::vector<EthController> controllers;
+        CheckResult(Client->GetEthControllers(controllers));
+        for (const EthController& controller : controllers) {
+            CheckResult(TransmitEthMessage(controller));
         }
     }
 
     if (SendLinMessages && ((counter % 4) == 3)) {
-        for (const LinController& controller : Client->GetLinControllers()) {
-            TransmitLinMessage(controller);
+        std::vector<LinController> controllers;
+        CheckResult(Client->GetLinControllers(controllers));
+        for (const LinController& controller : controllers) {
+            CheckResult(TransmitLinMessage(controller));
         }
+    }
+
+    return Result::Ok;
+}
+
+void OnSimulationPostStepCallback(SimulationTime simulationTime) {
+    if (!IsOk(SendSomeData(simulationTime))) {
+        LogError("Could not send data.");
     }
 }
 
-void OnSimulationPostStepCallback(const SimulationTime simulationTime) {
-    SendSomeData(simulationTime);
+void OnIncomingSignalChanged([[maybe_unused]] SimulationTime simulationTime,
+                             const IoSignal& ioSignal,
+                             uint32_t length,
+                             const void* value) {
+    LogIoData(ioSignal, length, value);
+}
+
+void OnCanMessageReceived([[maybe_unused]] SimulationTime simulationTime,
+                          [[maybe_unused]] const CanController& controller,
+                          const CanMessage& message) {
+    LogCanMessage(message);
+}
+
+void OnEthMessageReceived([[maybe_unused]] SimulationTime simulationTime,
+                          [[maybe_unused]] const EthController& controller,
+                          const EthMessage& message) {
+    LogEthMessage(message);
+}
+
+void OnLinMessageReceived([[maybe_unused]] SimulationTime simulationTime,
+                          [[maybe_unused]] const LinController& controller,
+                          const LinMessage& message) {
+    LogLinMessage(message);
 }
 
 void StartSimulationThread(const std::function<void()>& function) {
@@ -131,33 +168,34 @@ void StartSimulationThread(const std::function<void()>& function) {
     SimulationThread.detach();
 }
 
-void OnSimulationStartedCallback(const SimulationTime simulationTime) {
+void OnSimulationStartedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation started at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationStoppedCallback(const SimulationTime simulationTime) {
+void OnSimulationStoppedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation stopped at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationTerminatedCallback(const SimulationTime simulationTime, const TerminateReason reason) {
+void OnSimulationTerminatedCallback(SimulationTime simulationTime, TerminateReason reason) {
     LogInfo("Simulation terminated with reason {} at {} s.", ToString(reason), SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationPausedCallback(const SimulationTime simulationTime) {
+void OnSimulationPausedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation paused at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void OnSimulationContinuedCallback(const SimulationTime simulationTime) {
+void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation continued at {} s.", SimulationTimeToString(simulationTime));
 }
 
-void Connect(const std::string_view host, const std::string_view serverName) {
+[[nodiscard]] Result Connect(std::string_view host, std::string_view serverName) {
     LogInfo("Connecting ...");
 
-    const ConnectionState connectionState = Client->GetConnectionState();
+    ConnectionState connectionState{};
+    CheckResult(Client->GetConnectionState(connectionState));
     if (connectionState == ConnectionState::Connected) {
         LogInfo("Already connected.");
-        return;
+        return Result::Ok;
     }
 
     ConnectConfig connectConfig{};
@@ -165,18 +203,20 @@ void Connect(const std::string_view host, const std::string_view serverName) {
     connectConfig.serverName = serverName;
     connectConfig.remoteIpAddress = host;
 
-    if (!Client->Connect(connectConfig)) {
+    if (!IsOk(Client->Connect(connectConfig))) {
         LogError("Could not connect.");
-        return;
+        return Result::Error;
     }
 
     LogTrace("");
 
-    const SimulationTime stepSize = Client->GetStepSize();
+    SimulationTime stepSize{};
+    CheckResult(Client->GetStepSize(stepSize));
     LogTrace("Step size: {} s", SimulationTimeToString(stepSize));
     LogTrace("");
 
-    const std::vector<CanController>& canControllers = Client->GetCanControllers();
+    std::vector<CanController> canControllers;
+    CheckResult(Client->GetCanControllers(canControllers));
     if (!canControllers.empty()) {
         LogTrace("Found the following CAN controllers:");
         for (const CanController& controller : canControllers) {
@@ -186,7 +226,8 @@ void Connect(const std::string_view host, const std::string_view serverName) {
         LogTrace("");
     }
 
-    const std::vector<EthController>& ethControllers = Client->GetEthControllers();
+    std::vector<EthController> ethControllers;
+    CheckResult(Client->GetEthControllers(ethControllers));
     if (!ethControllers.empty()) {
         LogTrace("Found the following ETH controllers:");
         for (const EthController& controller : ethControllers) {
@@ -196,7 +237,8 @@ void Connect(const std::string_view host, const std::string_view serverName) {
         LogTrace("");
     }
 
-    const std::vector<LinController>& linControllers = Client->GetLinControllers();
+    std::vector<LinController> linControllers;
+    CheckResult(Client->GetLinControllers(linControllers));
     if (!linControllers.empty()) {
         LogTrace("Found the following LIN controllers:");
         for (const LinController& controller : linControllers) {
@@ -206,7 +248,8 @@ void Connect(const std::string_view host, const std::string_view serverName) {
         LogTrace("");
     }
 
-    const std::vector<IoSignal>& incomingSignals = Client->GetIncomingSignals();
+    std::vector<IoSignal> incomingSignals;
+    CheckResult(Client->GetIncomingSignals(incomingSignals));
     if (!incomingSignals.empty()) {
         LogTrace("Found the following incoming signals:");
         for (const IoSignal& signal : incomingSignals) {
@@ -216,7 +259,8 @@ void Connect(const std::string_view host, const std::string_view serverName) {
         LogTrace("");
     }
 
-    const std::vector<IoSignal>& outgoingSignals = Client->GetOutgoingSignals();
+    std::vector<IoSignal> outgoingSignals;
+    CheckResult(Client->GetOutgoingSignals(outgoingSignals));
     if (!incomingSignals.empty()) {
         LogTrace("Found the following outgoing signals:");
         for (const IoSignal& signal : outgoingSignals) {
@@ -227,6 +271,7 @@ void Connect(const std::string_view host, const std::string_view serverName) {
     }
 
     LogInfo("Connected.");
+    return Result::Ok;
 }
 
 void Disconnect() {
@@ -243,23 +288,23 @@ void Disconnect() {
     callbacks.simulationPausedCallback = OnSimulationPausedCallback;
     callbacks.simulationContinuedCallback = OnSimulationContinuedCallback;
     callbacks.simulationEndStepCallback = OnSimulationPostStepCallback;
-    callbacks.incomingSignalChangedCallback = LogIoData;
-    callbacks.canMessageReceivedCallback = LogCanMessage;
-    callbacks.ethMessageReceivedCallback = LogEthMessage;
-    callbacks.linMessageReceivedCallback = LogLinMessage;
+    callbacks.incomingSignalChangedCallback = OnIncomingSignalChanged;
+    callbacks.canMessageReceivedCallback = OnCanMessageReceived;
+    callbacks.ethMessageReceivedCallback = OnEthMessageReceived;
+    callbacks.linMessageReceivedCallback = OnLinMessageReceived;
 
     LogInfo("Running callback-based co-simulation ...");
-    if (Client->RunCallbackBasedCoSimulation(callbacks)) {
-        LogError("Callback-based co-simulation finished successfully.");
-        exit(0);
+    if (!IsDisconnected(Client->RunCallbackBasedCoSimulation(callbacks))) {
+        LogError("Callback-based co-simulation finished with an error.");
+        exit(1);
     }
 
-    LogError("Callback-based co-simulation finished with an error.");
-    exit(1);
+    LogError("Callback-based co-simulation finished successfully.");
+    exit(0);
 }
 
-void HostClient(const std::string_view host, const std::string_view name) {
-    Connect(host, name);
+[[nodiscard]] Result HostClient(std::string_view host, std::string_view name) {
+    CheckResult(Connect(host, name));
 
     StartSimulationThread(RunCallbackBasedCoSimulation);
 
@@ -267,7 +312,7 @@ void HostClient(const std::string_view host, const std::string_view name) {
         switch (GetChar()) {
             case CTRL('c'):
                 Disconnect();
-                return;
+                return Result::Ok;
             case '1':
                 SwitchSendingIoSignals();
                 break;
@@ -281,30 +326,32 @@ void HostClient(const std::string_view host, const std::string_view name) {
                 SwitchSendingLinMessages();
                 break;
             case 's':
-                Client->Start();
+                CheckResult(Client->Start());
                 break;
             case 'o':
-                Client->Stop();
+                CheckResult(Client->Stop());
                 break;
             case 'p':
-                Client->Pause();
+                CheckResult(Client->Pause());
                 break;
             case 't':
-                Client->Terminate(TerminateReason::Error);
+                CheckResult(Client->Terminate(TerminateReason::Error));
                 break;
             case 'n':
-                Client->Continue();
+                CheckResult(Client->Continue());
                 break;
             default:
                 LogError("Unknown key.");
                 break;
         }
     }
+
+    return Result::Ok;
 }
 
 }  // namespace
 
-int32_t main(const int32_t argc, char** argv) {
+int32_t main(int32_t argc, char** argv) {
     InitializeOutput();
 
     std::string host;
@@ -330,15 +377,14 @@ int32_t main(const int32_t argc, char** argv) {
         }
     }
 
-    Client = CreateClient();
-    if (!Client) {
+    if (!IsOk(CreateClient(Client))) {
         LogError("Could not create handle.");
         return 1;
     }
 
-    HostClient(host, name);
+    Result result = HostClient(host, name);
 
     Client.reset();
 
-    return 0;
+    return IsOk(result) ? 0 : 1;
 }

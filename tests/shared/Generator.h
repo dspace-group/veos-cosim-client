@@ -22,7 +22,6 @@ template <typename T>
 [[nodiscard]] uint32_t GenerateU32();
 [[nodiscard]] uint32_t GenerateU32(uint32_t min, uint32_t max);
 [[nodiscard]] uint64_t GenerateU64();
-[[nodiscard]] int64_t GenerateI64();
 [[nodiscard]] std::string GenerateString(std::string_view prefix);
 [[nodiscard]] DsVeosCoSim::SimulationTime GenerateSimulationTime();
 [[nodiscard]] DsVeosCoSim::BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);

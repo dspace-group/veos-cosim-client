@@ -4,15 +4,16 @@
 
 #ifdef _WIN32
 
-#include <Windows.h>
-
 #include <cstdint>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
 
+#include <Windows.h>
+#include <sysinfoapi.h>
+
 #include "CoSimHelper.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 
 namespace DsVeosCoSim {
@@ -23,212 +24,242 @@ namespace {
     return static_cast<int32_t>(GetLastError());
 }
 
-[[nodiscard]] std::wstring Utf8ToWide(const std::string_view utf8String) {
+[[nodiscard]] Result Utf8ToWide(std::string_view utf8String, std::wstring& utf16String) {
     if (utf8String.empty()) {
-        return {};
+        utf16String = L"";
+        return Result::Ok;
     }
 
-    const int32_t sizeNeeded =
+    int32_t sizeNeeded =
         MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
     if (sizeNeeded <= 0) {
-        std::string message = "Could not convert UTF-8 string to wide string. ";
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
+        LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        return Result::Error;
     }
 
-    std::wstring wideString(static_cast<size_t>(sizeNeeded), L'\0');
+    utf16String.resize(static_cast<size_t>(sizeNeeded));
     (void)MultiByteToWideChar(CP_UTF8,
                               0,
                               utf8String.data(),
                               static_cast<int32_t>(utf8String.size()),
-                              wideString.data(),
+                              utf16String.data(),
                               sizeNeeded);
 
-    return wideString;
+    return Result::Ok;
 }
 
-[[nodiscard]] std::wstring GetFullNamedEventName(const std::string& name) {
+[[nodiscard]] Result GetFullNamedEventName(std::string_view name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
     utf8Name.append(name);
-    return Utf8ToWide(utf8Name);
+    return Utf8ToWide(utf8Name, fullName);
 }
 
-[[nodiscard]] std::wstring GetFullNamedMutexName(const std::string& name) {
+[[nodiscard]] Result GetFullNamedMutexName(std::string_view name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
     utf8Name.append(name);
-    return Utf8ToWide(utf8Name);
+    return Utf8ToWide(utf8Name, fullName);
 }
 
-[[nodiscard]] std::wstring GetFullSharedMemoryName(const std::string& name) {
+[[nodiscard]] Result GetFullSharedMemoryName(std::string_view name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
     utf8Name.append(name);
-    return Utf8ToWide(utf8Name);
+    return Utf8ToWide(utf8Name, fullName);
 }
 
-class Handle final {
-public:
-    Handle() noexcept = default;
-
-    Handle(void* handle) : _handle(handle) {  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-    }
-
-    ~Handle() noexcept {
-        (void)CloseHandle(_handle);
-    }
-
-    Handle(const Handle&) = delete;
-    Handle& operator=(const Handle&) = delete;
-
-    Handle(Handle&& other) noexcept : _handle(other._handle) {
-        other._handle = {};
-    }
-
-    Handle& operator=(Handle&& other) noexcept {
-        _handle = other._handle;
-
-        other._handle = {};
-
-        return *this;
-    }
-
-    operator void*() const noexcept {  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
-        return _handle;
-    }
-
-    void Wait() const {
-        (void)Wait(Infinite);
-    }
-
-    [[nodiscard]] bool Wait(const uint32_t milliseconds) const {
-        const DWORD result = WaitForSingleObject(_handle, milliseconds);
-        switch (result) {
-            case WAIT_OBJECT_0:
-                return true;
-            case WAIT_ABANDONED:
-            case WAIT_TIMEOUT:
-                return false;
-            case WAIT_FAILED: {
-                std::string message = "Could not wait for handle. ";
-                message.append(GetSystemErrorMessage(GetLastWindowsError()));
-                throw std::runtime_error(message);
-            }
-            default: {
-                std::string message = "Could not wait for handle. Invalid result: ";
-                message.append(std::to_string(result));
-                message.append(".");
-                throw std::runtime_error(message);
-            }
-        }
-    }
-
-private:
-    void* _handle{};
-};
-
-class NamedEventImpl final : public NamedEvent {
-public:
-    NamedEventImpl(Handle handle, const std::string& name) : _handle(std::move(handle)), _name(name) {
-    }
-
-    ~NamedEventImpl() override = default;
-
-    NamedEventImpl(const NamedEventImpl&) = delete;
-    NamedEventImpl& operator=(const NamedEventImpl&) = delete;
-
-    NamedEventImpl(NamedEventImpl&&) = delete;
-    NamedEventImpl& operator=(NamedEventImpl&&) = delete;
-
-    void Set() const override {
-        const BOOL result = SetEvent(_handle);
-        if (result == FALSE) {
-            std::string message = "Could not set event '";
-            message.append(_name);
-            message.append("'. ");
-            message.append(GetSystemErrorMessage(GetLastWindowsError()));
-            throw std::runtime_error(message);
-        }
-    }
-
-    void Wait() const override {
-        (void)Wait(Infinite);
-    }
-
-    [[nodiscard]] bool Wait(const uint32_t milliseconds) const override {
-        return _handle.Wait(milliseconds);
-    }
-
-private:
-    Handle _handle;
-    std::string _name;
-};
-
-class NamedMutexImpl final : public NamedMutex {
-public:
-    explicit NamedMutexImpl(Handle handle) : _handle(std::move(handle)) {
-    }
-
-    ~NamedMutexImpl() noexcept override = default;
-
-    NamedMutexImpl(const NamedMutexImpl&) = delete;
-    NamedMutexImpl& operator=(const NamedMutexImpl&) = delete;
-
-    NamedMutexImpl(NamedMutexImpl&&) = delete;
-    NamedMutexImpl& operator=(NamedMutexImpl&&) = delete;
-
-    // Small case, so this mutex can directly be used in std::lock_guard
-    void lock() const override {
-        (void)lock(Infinite);
-    }
-
-    [[nodiscard]] bool lock(const uint32_t milliseconds) const override {
-        return _handle.Wait(milliseconds);
-    }
-
-    void unlock() const override {
-        (void)ReleaseMutex(_handle);
-    }
-
-private:
-    Handle _handle;
-};
-
-class SharedMemoryImpl final : public SharedMemory {
-public:
-    SharedMemoryImpl(const std::string& name, const size_t size, Handle handle)
-        : _size(size), _handle(std::move(handle)), _data(MapViewOfFile(_handle, FILE_MAP_ALL_ACCESS, 0, 0, _size)) {
-        if (!_data) {
-            (void)CloseHandle(_handle);
-            std::string message = "Could not map view of shared memory '";
-            message.append(name);
-            message.append("'. ");
-            message.append(GetSystemErrorMessage(GetLastWindowsError()));
-            throw std::runtime_error(message);
-        }
-    }
-
-    ~SharedMemoryImpl() noexcept override = default;
-
-    SharedMemoryImpl(const SharedMemoryImpl&) = delete;
-    SharedMemoryImpl& operator=(const SharedMemoryImpl&) = delete;
-
-    SharedMemoryImpl(SharedMemoryImpl&&) = delete;
-    SharedMemoryImpl& operator=(SharedMemoryImpl&&) = delete;
-
-    [[nodiscard]] void* data() const noexcept override {
-        return _data;
-    }
-
-    [[nodiscard]] size_t size() const noexcept override {
-        return _size;
-    }
-
-private:
-    size_t _size{};
-    Handle _handle;
-    void* _data{};
-};
-
 }  // namespace
+
+Handle::Handle(void* handle) : _handle(handle) {
+}
+
+Handle::~Handle() noexcept {
+    (void)CloseHandle(_handle);
+}
+
+Handle::Handle(Handle&& other) noexcept : _handle(other._handle) {
+    other._handle = {};
+}
+
+Handle& Handle::operator=(Handle&& other) noexcept {
+    _handle = other._handle;
+
+    other._handle = {};
+
+    return *this;
+}
+
+Handle::operator void*() const {
+    return _handle;
+}
+
+[[nodiscard]] Result Handle::Wait() const {
+    bool success{};
+    return Wait(Infinite, success);
+}
+
+[[nodiscard]] Result Handle::Wait(uint32_t milliseconds, bool& success) const {
+    DWORD result = WaitForSingleObject(_handle, milliseconds);
+    switch (result) {
+        case WAIT_OBJECT_0:
+            success = true;
+            return Result::Ok;
+        case WAIT_ABANDONED:
+        case WAIT_TIMEOUT:
+            success = false;
+            return Result::Ok;
+        case WAIT_FAILED: {
+            LogSystemError("Could not wait for handle.", GetLastWindowsError());
+            return Result::Error;
+        }
+        default: {
+            LogSystemError("Could not wait for handle. Invalid result.", GetLastWindowsError());
+            return Result::Error;
+        }
+    }
+}
+
+NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
+}
+
+[[nodiscard]] Result NamedEvent::CreateOrOpen(std::string_view name, NamedEvent& namedEvent) {
+    std::wstring fullName{};
+    CheckResult(GetFullNamedEventName(name, fullName));
+    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
+    if (!handle) {
+        LogSystemError("Could not create or open event.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    namedEvent = NamedEvent(handle);
+    return Result::Ok;
+}
+
+[[nodiscard]] Result NamedEvent::Set() const {
+    BOOL result = SetEvent(_handle);
+    if (result == FALSE) {
+        LogSystemError("Could not set event.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result NamedEvent::Wait() const {
+    bool success{};
+    return Wait(Infinite, success);
+}
+
+[[nodiscard]] Result NamedEvent::Wait(uint32_t milliseconds, bool& success) const {
+    return _handle.Wait(milliseconds, success);
+}
+
+NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
+}
+
+NamedMutex::~NamedMutex() noexcept {
+    if (_isLocked) {
+        ReleaseMutex(_handle);
+    }
+}
+
+[[nodiscard]] Result NamedMutex::CreateOrOpen(std::string_view name, NamedMutex& namedMutex) {
+    std::wstring fullName{};
+    CheckResult(GetFullNamedMutexName(name, fullName));
+    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
+    if (!handle) {
+        LogSystemError("Could not create or open mutex.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    namedMutex = NamedMutex(handle);
+    return Result::Ok;
+}
+
+[[nodiscard]] Result NamedMutex::Lock() {
+    return _handle.Wait(Infinite, _isLocked);
+}
+
+void NamedMutex::Unlock() {
+    if (!_isLocked) {
+        return;
+    }
+
+    (void)ReleaseMutex(_handle);
+    _isLocked = false;
+}
+
+SharedMemory::SharedMemory(Handle handle, size_t size, void* data)
+    : _handle(std::move(handle)), _size(size), _data(data) {
+}
+
+SharedMemory::SharedMemory(SharedMemory&& sharedMemory) noexcept
+    : _handle(std::move(sharedMemory._handle)), _size(sharedMemory._size), _data(sharedMemory._data) {
+    sharedMemory._size = {};
+    sharedMemory._data = {};
+}
+
+SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
+    _size = sharedMemory._size;
+    _handle = std::move(sharedMemory._handle);
+    _data = sharedMemory._data;
+
+    sharedMemory._size = {};
+    sharedMemory._data = {};
+
+    return *this;
+}
+
+[[nodiscard]] Result SharedMemory::CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory) {
+    std::wstring fullName{};
+    CheckResult(GetFullSharedMemoryName(name, fullName));
+    DWORD sizeHigh{};
+    auto sizeLow = static_cast<DWORD>(size);
+    void* handle =
+        CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
+    if (!handle) {
+        LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
+    if (!data) {
+        (void)CloseHandle(handle);
+        LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    sharedMemory = SharedMemory(handle, size, data);
+    return Result::Ok;
+}
+
+[[nodiscard]] Result SharedMemory::TryOpenExisting(std::string_view name,
+                                                   size_t size,
+                                                   std::optional<SharedMemory>& sharedMemory) {
+    std::wstring fullName{};
+    CheckResult(GetFullSharedMemoryName(name, fullName));
+    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
+    if (!handle) {
+        sharedMemory = std::nullopt;
+        return Result::Ok;
+    }
+
+    void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
+    if (!data) {
+        (void)CloseHandle(handle);
+        LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
+        return Result::Error;
+    }
+
+    sharedMemory = SharedMemory(handle, size, data);
+    return Result::Ok;
+}
+
+[[nodiscard]] void* SharedMemory::GetData() const {
+    return _data;
+}
+
+[[nodiscard]] size_t SharedMemory::GetSize() const {
+    return _size;
+}
 
 [[nodiscard]] uint32_t GetCurrentProcessId() {
     static uint32_t processId{};
@@ -239,18 +270,18 @@ private:
     return processId;
 }
 
-[[nodiscard]] bool IsProcessRunning(const uint32_t processId) {
+[[nodiscard]] bool IsProcessRunning(uint32_t processId) {
     void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
     if (processHandle == nullptr) {
         return false;
     }
 
     DWORD exitCode{};
-    const BOOL result = GetExitCodeProcess(processHandle, &exitCode);
+    BOOL result = GetExitCodeProcess(processHandle, &exitCode);
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-void SetThreadAffinity(const std::string_view name) {
+void SetThreadAffinity(std::string_view name) {
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;
@@ -259,17 +290,17 @@ void SetThreadAffinity(const std::string_view name) {
     (void)SetThreadAffinityMask(GetCurrentThread(), mask);
 }
 
-[[nodiscard]] std::string GetEnglishErrorMessage(const int32_t errorCode) {
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     LPSTR buffer = nullptr;
-    const DWORD size = FormatMessageA(flags,
-                                      nullptr,
-                                      static_cast<DWORD>(errorCode),
-                                      languageId,
-                                      reinterpret_cast<LPSTR>(&buffer),
-                                      0,
-                                      nullptr);
+    DWORD size = FormatMessageA(flags,
+                                nullptr,
+                                static_cast<DWORD>(errorCode),
+                                languageId,
+                                reinterpret_cast<LPSTR>(&buffer),
+                                0,
+                                nullptr);
 
     std::string message;
     if ((size > 0) && buffer) {
@@ -284,61 +315,6 @@ void SetThreadAffinity(const std::string_view name) {
     }
 
     return message;
-}
-
-[[nodiscard]] std::unique_ptr<NamedEvent> CreateOrOpenNamedEvent(const std::string& name) {
-    const std::wstring fullName = GetFullNamedEventName(name);
-    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
-    if (!handle) {
-        std::string message = "Could not create or open event '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<NamedEventImpl>(handle, name);
-}
-
-[[nodiscard]] std::unique_ptr<NamedMutex> CreateOrOpenNamedMutex(const std::string& name) {
-    const std::wstring fullName = GetFullNamedMutexName(name);
-    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
-    if (!handle) {
-        std::string message = "Could not create or open mutex '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<NamedMutexImpl>(handle);
-}
-
-[[nodiscard]] std::unique_ptr<SharedMemory> CreateOrOpenSharedMemory(const std::string& name, size_t size) {
-    const std::wstring fullName = GetFullSharedMemoryName(name);
-    constexpr DWORD sizeHigh{};
-    const auto sizeLow = static_cast<DWORD>(size);
-    void* handle =
-        CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
-    if (!handle) {
-        std::string message = "Could not create or open shared memory '";
-        message.append(name);
-        message.append("'. ");
-        message.append(GetSystemErrorMessage(GetLastWindowsError()));
-        throw std::runtime_error(message);
-    }
-
-    return std::make_unique<SharedMemoryImpl>(name, size, handle);
-}
-
-[[nodiscard]] std::unique_ptr<SharedMemory> TryOpenExistingSharedMemory(const std::string& name, size_t size) {
-    const std::wstring fullName = GetFullSharedMemoryName(name);
-    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
-    if (!handle) {
-        return {};
-    }
-
-    return std::make_unique<SharedMemoryImpl>(name, size, handle);
 }
 
 }  // namespace DsVeosCoSim
@@ -362,13 +338,13 @@ void SetThreadAffinity(std::string_view name) {
         return;
     }
 
-    const int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
+    int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
 
     cpu_set_t cpuSet{};
     CPU_ZERO(&cpuSet);
 
     for (int cpuId = 0; cpuId < maxCpuCount; ++cpuId) {
-        const size_t maskId = 1 << cpuId;
+        size_t maskId = 1 << cpuId;
         if ((maskId & mask) != 0) {
             CPU_SET(cpuId, &cpuSet);
         }

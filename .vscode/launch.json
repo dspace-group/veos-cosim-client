@@ -60,6 +60,17 @@
       "console": "externalTerminal"
     },
     {
+      "name": "(Windows) Launch Benchmark",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/tmpwin/Debug/tests/benchmark/DsVeosCoSimBenchmark.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "console": "externalTerminal"
+    },
+    {
       "name": "(Linux) Launch Test",
       "type": "cppdbg",
       "request": "launch",

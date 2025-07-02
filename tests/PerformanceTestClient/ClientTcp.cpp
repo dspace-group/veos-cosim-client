@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestClient.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
@@ -7,44 +9,45 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Helper.h"
-#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 #include "Socket.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void TcpClientRun(const std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    try {
-        const std::optional<Socket> clientSocket = Socket::TryConnect(host, TcpPort, 0, 1000);
-        if (!clientSocket) {
-            throw std::runtime_error("Could not connect to TCP server.");
-        }
+[[nodiscard]] Result Run(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    std::optional<Socket> clientSocket;
+    CheckResult(Socket::TryConnect(host, TcpPort, 0, 1000, clientSocket));
+    CheckBoolResult(clientSocket);
 
-        clientSocket->EnableNoDelay();
+    CheckResult(clientSocket->EnableNoDelay());
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
 
-        connectedEvent.Set();
+    connectedEvent.Set();
 
-        while (!isStopped) {
-            MUST_BE_TRUE(SendComplete(*clientSocket, buffer.data(), BufferSize));
-            MUST_BE_TRUE(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
+    while (!isStopped) {
+        CheckResult(SendComplete(*clientSocket, buffer.data(), BufferSize));
+        CheckResult(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
 
-            counter++;
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in TCP client thread: {}", e.what());
-        connectedEvent.Set();
+        counter++;
+    }
+
+    return Result::Ok;
+}
+
+void TcpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run TCP client.");
     }
 }
 
 }  // namespace
 
-void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunTcpTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("TCP:");
     RunPerformanceTest(TcpClientRun, host);
     LogTrace("");
@@ -52,9 +55,7 @@ void RunTcpTest(const std::string_view host) {  // NOLINT(misc-use-internal-link
 
 #else
 
-#include <string_view>
-
-void RunTcpTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunTcpTest([[maybe_unused]] std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

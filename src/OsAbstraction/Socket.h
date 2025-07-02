@@ -7,9 +7,11 @@
 #include <string>
 #include <string_view>
 
+#include "DsVeosCoSim/CoSimTypes.h"
+
 namespace DsVeosCoSim {
 
-void StartupNetwork();
+[[nodiscard]] Result StartupNetwork();
 
 enum class AddressFamily {
     Uds = 1,
@@ -17,7 +19,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] std::string_view ToString(AddressFamily addressFamily) noexcept;
+[[nodiscard]] std::string_view ToString(AddressFamily addressFamily);
 
 #ifdef _WIN32
 using SocketHandle = uintptr_t;
@@ -34,11 +36,10 @@ struct SocketAddress {
 
 class Socket {
 public:
-    Socket() noexcept = default;
-    explicit Socket(AddressFamily addressFamily);
+    Socket() = default;
 
 private:
-    Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path);
+    Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path);
 
 public:
     ~Socket() noexcept;
@@ -53,38 +54,41 @@ public:
     [[nodiscard]] static bool IsIpv6Supported();
     [[nodiscard]] static bool IsUdsSupported();
 
-    void Shutdown() const noexcept;
-    void Close() noexcept;
+    void Shutdown() const;
+    void Close();
 
     [[nodiscard]] bool IsValid() const;
 
-    [[nodiscard]] static std::optional<Socket> TryConnect(std::string_view ipAddress,
-                                                          uint16_t remotePort,
-                                                          uint16_t localPort,
-                                                          uint32_t timeoutInMilliseconds);
+    [[nodiscard]] static Result Create(AddressFamily addressFamily, Socket& socket);
 
-    [[nodiscard]] static std::optional<Socket> TryConnect(const std::string& name);
-    void EnableIpv6Only() const;
-    void Bind(uint16_t port, bool enableRemoteAccess) const;
-    void Bind(const std::string& name);
-    void EnableReuseAddress() const;
-    void EnableNoDelay() const;
-    void Listen() const;
-    [[nodiscard]] std::optional<Socket> TryAccept(uint32_t timeoutInMilliseconds) const;
-    [[nodiscard]] uint16_t GetLocalPort() const;
-    [[nodiscard]] SocketAddress GetRemoteAddress() const;
-    [[nodiscard]] bool Receive(void* destination, int32_t size, int32_t& receivedSize) const;
-    [[nodiscard]] bool Send(const void* source, int32_t size, int32_t& sentSize) const;
+    [[nodiscard]] static Result TryConnect(std::string_view ipAddress,
+                                           uint16_t remotePort,
+                                           uint16_t localPort,
+                                           uint32_t timeoutInMilliseconds,
+                                           std::optional<Socket>& connectedSocket);
+
+    [[nodiscard]] static Result TryConnect(std::string_view name, std::optional<Socket>& connectedSocket);
+    [[nodiscard]] Result EnableIpv6Only() const;
+    [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess) const;
+    [[nodiscard]] Result Bind(std::string_view name);
+    [[nodiscard]] Result EnableReuseAddress() const;
+    [[nodiscard]] Result EnableNoDelay() const;
+    [[nodiscard]] Result Listen() const;
+    [[nodiscard]] Result TryAccept(std::optional<Socket>& acceptedSocket) const;
+    [[nodiscard]] Result GetLocalPort(uint16_t& localPort) const;
+    [[nodiscard]] Result GetRemoteAddress(SocketAddress& remoteAddress) const;
+    [[nodiscard]] Result Receive(void* destination, int32_t size, int32_t& receivedSize) const;
+    [[nodiscard]] Result Send(const void* source, int32_t size, int32_t& sentSize) const;
 
 private:
-    void BindForIpv4(uint16_t port, bool enableRemoteAccess) const;
-    void BindForIpv6(uint16_t port, bool enableRemoteAccess) const;
+    [[nodiscard]] Result BindForIpv4(uint16_t port, bool enableRemoteAccess) const;
+    [[nodiscard]] Result BindForIpv6(uint16_t port, bool enableRemoteAccess) const;
 
-    [[nodiscard]] uint16_t GetLocalPortForIpv4() const;
-    [[nodiscard]] uint16_t GetLocalPortForIpv6() const;
+    [[nodiscard]] Result GetLocalPortForIpv4(uint16_t& localPort) const;
+    [[nodiscard]] Result GetLocalPortForIpv6(uint16_t& localPort) const;
 
-    [[nodiscard]] SocketAddress GetRemoteAddressForIpv4() const;
-    [[nodiscard]] SocketAddress GetRemoteAddressForIpv6() const;
+    [[nodiscard]] Result GetRemoteAddressForIpv4(SocketAddress& remoteAddress) const;
+    [[nodiscard]] Result GetRemoteAddressForIpv6(SocketAddress& remoteAddress) const;
 
     SocketHandle _socket = InvalidSocket;
     AddressFamily _addressFamily{};
