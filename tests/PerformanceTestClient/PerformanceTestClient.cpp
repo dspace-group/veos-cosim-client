@@ -1,6 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "RunPerformanceTest.h"
+#include "PerformanceTestClient.h"
 
 #include <chrono>
 #include <cstdint>
@@ -8,7 +8,6 @@
 #include <thread>
 
 #include "Event.h"
-#include "Helper.h"
 #include "LogHelper.h"
 
 using namespace DsVeosCoSim;
@@ -19,7 +18,7 @@ void RunPerformanceTest(const PerformanceTestFunc& function, std::string_view ho
     bool isStopped{};
     std::thread thread(function, host, std::ref(connected), std::ref(counter), std::ref(isStopped));
 
-    (void)connected.Wait(Infinite);
+    (void)connected.Wait(UINT32_MAX);
 
     for (uint32_t i = 0; i < 5; i++) {
         auto beforeTime = std::chrono::high_resolution_clock::now();

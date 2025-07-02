@@ -1,64 +1,67 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestClient.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
-#include <stdexcept>
 #include <string_view>
 
 #include "DsVeosCoSim/CoSimClient.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
 #include "LogHelper.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
+[[nodiscard]] Result Run(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    std::unique_ptr<CoSimClient> coSimClient;
+    CheckResult(CreateClient(coSimClient));
+    ConnectConfig connectConfig{};
+    connectConfig.clientName = "PerformanceTestClient";
+    connectConfig.serverName = CoSimServerName;
+    connectConfig.remoteIpAddress = host;
+    if (!host.empty()) {
+        connectConfig.remotePort = CoSimPort;
+    }
+
+    CheckResult(coSimClient->Connect(connectConfig));
+
+    connectedEvent.Set();
+
+    CheckResult(coSimClient->StartPollingBasedCoSimulation({}));
+
+    while (!isStopped) {
+        SimulationTime simulationTime{};
+        Command command{};
+        CheckResult(coSimClient->PollCommand(simulationTime, command, false));
+
+        switch (command) {
+            case Command::Step:
+                counter++;
+                break;
+            case Command::Start:
+            case Command::Stop:
+            case Command::Terminate:
+            case Command::Pause:
+            case Command::Continue:
+                break;
+            default:
+                LogError("Invalid command.");
+                return Result::Error;
+        }
+
+        CheckResult(coSimClient->FinishCommand());
+    }
+
+    coSimClient->Disconnect();
+    return Result::Ok;
+}
+
 void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    try {
-        std::unique_ptr<CoSimClient> coSimClient = CreateClient();
-        ConnectConfig connectConfig{};
-        connectConfig.clientName = "PerformanceTestClient";
-        connectConfig.serverName = CoSimServerName;
-        connectConfig.remoteIpAddress = host;
-        if (!host.empty()) {
-            connectConfig.remotePort = CoSimPort;
-        }
-
-        MUST_BE_TRUE(coSimClient->Connect(connectConfig));
-
-        connectedEvent.Set();
-
-        coSimClient->StartPollingBasedCoSimulation({});
-
-        while (!isStopped) {
-            SimulationTime simulationTime{};
-            Command command{};
-            MUST_BE_TRUE(coSimClient->PollCommand(simulationTime, command, false));
-
-            switch (command) {
-                case Command::Step:
-                    counter++;
-                    break;
-                case Command::Start:
-                case Command::Stop:
-                case Command::Terminate:
-                case Command::Pause:
-                case Command::Continue:
-                    break;
-                default:
-                    throw std::runtime_error("Invalid command.");
-            }
-
-            MUST_BE_TRUE(coSimClient->FinishCommand());
-        }
-
-        coSimClient->Disconnect();
-    } catch (const std::exception& e) {
-        LogError("Exception in CoSim polling client thread: {}", e.what());
-        connectedEvent.Set();
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run CoSim polling client.");
     }
 }
 
@@ -77,9 +80,7 @@ void RunCoSimPollingTest(std::string_view host) {  // NOLINT(misc-use-internal-l
 
 #else
 
-#include <string_view>
-
-void RunCoSimPollingTest([[maybe_unused]] const std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunCoSimPollingTest([[maybe_unused]] std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

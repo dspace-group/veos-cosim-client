@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <ios>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -41,7 +40,7 @@ namespace {
             return std::to_string(static_cast<const double*>(value)[index]);
     }
 
-    throw std::runtime_error("Invalid data type.");
+    return "<Invalid DataType>";
 }
 
 }  // namespace
@@ -81,7 +80,26 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(CoSimType coSimType) noexcept {
+[[nodiscard]] std::string_view ToString(Result result) {
+    switch (result) {
+        case Result::Ok:
+            return "Ok";
+        case Result::Error:
+            return "Error";
+        case Result::Empty:
+            return "Empty";
+        case Result::Full:
+            return "Full";
+        case Result::InvalidArgument:
+            return "InvalidArgument";
+        case Result::Disconnected:
+            return "Disconnected";
+    }
+
+    return "<Invalid Result>";
+}
+
+[[nodiscard]] std::string_view ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -92,7 +110,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) noexcept {
+[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -103,7 +121,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string_view ToString(Command command) noexcept {
+[[nodiscard]] std::string_view ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -128,7 +146,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string_view ToString(Severity severity) noexcept {
+[[nodiscard]] std::string_view ToString(Severity severity) {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -143,7 +161,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) noexcept {
+[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -154,7 +172,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionState connectionState) noexcept {
+[[nodiscard]] std::string_view ToString(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -165,7 +183,7 @@ namespace {
     return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] size_t GetDataTypeSize(DataType dataType) noexcept {
+[[nodiscard]] size_t GetDataTypeSize(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
         case DataType::Int8:
@@ -187,7 +205,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string_view ToString(DataType dataType) noexcept {
+[[nodiscard]] std::string_view ToString(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -216,7 +234,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string_view ToString(SizeKind sizeKind) noexcept {
+[[nodiscard]] std::string_view ToString(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -240,7 +258,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string_view ToString(SimulationState simulationState) noexcept {
+[[nodiscard]] std::string_view ToString(SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -257,7 +275,7 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string_view ToString([[maybe_unused]] Mode mode) noexcept {
+[[nodiscard]] std::string_view ToString([[maybe_unused]] Mode mode) {
     return "<Unused>";
 }
 
@@ -676,7 +694,7 @@ namespace {
     return ethMessage;
 }
 
-[[nodiscard]] std::string_view ToString(LinControllerType type) noexcept {
+[[nodiscard]] std::string_view ToString(LinControllerType type) {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";

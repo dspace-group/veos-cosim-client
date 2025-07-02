@@ -34,6 +34,16 @@ void LogError(std::string_view message) {
     }
 }
 
+void LogSystemError(std::string_view message, int32_t errorCode) {
+    auto logCallback = LogCallbackHandler;
+    if (logCallback) {
+        std::string fullMessage(message);
+        fullMessage.append(" ");
+        fullMessage.append(GetSystemErrorMessage(errorCode));
+        logCallback(Severity::Error, message);
+    }
+}
+
 void LogWarning(std::string_view message) {
     auto logCallback = LogCallbackHandler;
     if (logCallback) {

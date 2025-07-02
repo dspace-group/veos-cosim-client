@@ -7,6 +7,7 @@
 #include "Generator.h"
 #include "Helper.h"
 #include "Socket.h"
+#include "TestHelper.h"
 
 using namespace DsVeosCoSim;
 
@@ -18,8 +19,13 @@ TEST_F(TestUdsSocket, Create) {
     // Arrange
     constexpr auto addressFamily = AddressFamily::Uds;
 
-    // Act and assert
-    ASSERT_NO_THROW((void)Socket(addressFamily));
+    Socket socket;
+
+    // Act
+    AssertOk(Socket::Create(addressFamily, socket));
+
+    // Assert
+    AssertTrue(socket.IsValid());
 }
 
 TEST_F(TestUdsSocket, Bind) {
@@ -27,10 +33,11 @@ TEST_F(TestUdsSocket, Bind) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
 
     // Act and assert
-    ASSERT_NO_THROW(serverSocket.Bind(path));
+    AssertOk(serverSocket.Bind(path));
 }
 
 TEST_F(TestUdsSocket, Listen) {
@@ -38,11 +45,12 @@ TEST_F(TestUdsSocket, Listen) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
-    serverSocket.Bind(path);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(path));
 
     // Act and assert
-    ASSERT_NO_THROW(serverSocket.Listen());
+    AssertOk(serverSocket.Listen());
 }
 
 TEST_F(TestUdsSocket, ConnectWithoutListening) {
@@ -50,14 +58,17 @@ TEST_F(TestUdsSocket, ConnectWithoutListening) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
-    serverSocket.Bind(path);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(path));
 
-    // Act
-    std::optional<Socket> connectedSocket = Socket::TryConnect(path);
+    std::optional<Socket> connectedSocket;
+
+    // Act and assert
+    AssertOk(Socket::TryConnect(path, connectedSocket));
 
     // Assert
-    ASSERT_FALSE(connectedSocket);
+    AssertFalse(connectedSocket);
 }
 
 TEST_F(TestUdsSocket, Connect) {
@@ -65,17 +76,21 @@ TEST_F(TestUdsSocket, Connect) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
-    serverSocket.Bind(path);
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(path));
+    ExpectOk(serverSocket.Listen());
 
-    Socket clientSocket(addressFamily);
+    Socket clientSocket;
+    ExpectOk(Socket::Create(addressFamily, clientSocket));
+
+    std::optional<Socket> connectedSocket;
 
     // Act
-    std::optional<Socket> connectedSocket = Socket::TryConnect(path);
+    AssertOk(Socket::TryConnect(path, connectedSocket));
 
     // Assert
-    ASSERT_TRUE(connectedSocket);
+    AssertTrue(connectedSocket);
 }
 
 TEST_F(TestUdsSocket, Accept) {
@@ -83,18 +98,22 @@ TEST_F(TestUdsSocket, Accept) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
-    serverSocket.Bind(path);
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(path));
+    ExpectOk(serverSocket.Listen());
 
-    std::optional<Socket> clientSocket = Socket::TryConnect(path);
-    EXPECT_TRUE(clientSocket);
+    std::optional<Socket> clientSocket;
+    ExpectOk(Socket::TryConnect(path, clientSocket));
+    ExpectTrue(clientSocket);
+
+    std::optional<Socket> acceptedSocket;
 
     // Act
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
+    AssertOk(serverSocket.TryAccept(acceptedSocket));
 
     // Assert
-    ASSERT_TRUE(acceptedSocket);
+    AssertTrue(acceptedSocket);
 }
 
 TEST_F(TestUdsSocket, SendAndReceive) {
@@ -102,25 +121,28 @@ TEST_F(TestUdsSocket, SendAndReceive) {
     constexpr auto addressFamily = AddressFamily::Uds;
     std::string path = GenerateString("UdsPath");
 
-    Socket serverSocket(addressFamily);
-    serverSocket.Bind(path);
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(path));
+    ExpectOk(serverSocket.Listen());
 
-    std::optional<Socket> clientSocket = Socket::TryConnect(path);
-    EXPECT_TRUE(clientSocket);
+    std::optional<Socket> clientSocket;
+    ExpectOk(Socket::TryConnect(path, clientSocket));
+    ExpectTrue(clientSocket);
 
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
-    EXPECT_TRUE(acceptedSocket);
+    std::optional<Socket> acceptedSocket;
+    ExpectOk(serverSocket.TryAccept(acceptedSocket));
+    ExpectTrue(acceptedSocket);
 
     uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
 
     // Act
-    ASSERT_TRUE(SendComplete(*clientSocket, &sendValue, sizeof(sendValue)));
-    ASSERT_TRUE(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    AssertOk(SendComplete(*clientSocket, &sendValue, sizeof(sendValue)));
+    AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert
-    ASSERT_EQ(sendValue, receiveValue);
+    AssertEq(sendValue, receiveValue);
 }
 
 }  // namespace

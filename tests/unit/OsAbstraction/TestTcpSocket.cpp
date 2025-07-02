@@ -11,6 +11,7 @@
 #include "Generator.h"
 #include "Helper.h"
 #include "Socket.h"
+#include "TestHelper.h"
 
 using namespace DsVeosCoSim;
 
@@ -51,43 +52,50 @@ TEST_P(TestTcpSocket, Create) {
     // Arrange
     Param param = GetParam();
 
+    Socket socket;
+
     // Act and assert
-    ASSERT_NO_THROW(Socket(param.addressFamily));
+    AssertOk(Socket::Create(param.addressFamily, socket));
 }
 
 TEST_P(TestTcpSocket, Bind) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
 
     // Act and assert
-    ASSERT_NO_THROW(serverSocket.Bind(0, param.enableRemoteAccess));
+    AssertOk(serverSocket.Bind(0, param.enableRemoteAccess));
 }
 
 TEST_P(TestTcpSocket, LocalPortIsNotZeroAfterBind) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+
+    uint16_t localPort{};
 
     // Act
-    uint16_t localPort = serverSocket.GetLocalPort();
+    AssertOk(serverSocket.GetLocalPort(localPort));
 
     // Assert
-    ASSERT_NE(localPort, 0);
+    AssertNotEq(uint16_t(0), localPort);
 }
 
 TEST_P(TestTcpSocket, Listen) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
 
     // Act and assert
-    ASSERT_NO_THROW(serverSocket.Listen());
+    AssertOk(serverSocket.Listen());
 }
 
 #ifdef _WIN32
@@ -95,16 +103,19 @@ TEST_P(TestTcpSocket, ConnectWithoutListening) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    uint16_t port{};
+    ExpectOk(serverSocket.GetLocalPort(port));
+
+    std::optional<Socket> connectedSocket;
 
     // Act
-    std::optional<Socket> connectedSocket =
-        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0);
+    AssertOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0, connectedSocket));
 
     // Assert
-    ASSERT_FALSE(connectedSocket);
+    AssertFalse(connectedSocket);
 }
 #endif
 
@@ -112,78 +123,103 @@ TEST_P(TestTcpSocket, Connect) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    uint16_t port{};
+    ExpectOk(serverSocket.GetLocalPort(port));
+    ExpectOk(serverSocket.Listen());
+
+    std::optional<Socket> connectedSocket;
 
     // Act
-    std::optional<Socket> connectedSocket =
-        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
+    AssertOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0, connectedSocket));
 
     // Assert
-    ASSERT_TRUE(connectedSocket);
+    AssertTrue(connectedSocket);
 }
 
 TEST_P(TestTcpSocket, AcceptWithoutConnect) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    ExpectOk(serverSocket.Listen());
+
+    std::optional<Socket> acceptedSocket;
 
     // Act
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(0);
+    AssertOk(serverSocket.TryAccept(acceptedSocket));
 
     // Assert
-    ASSERT_FALSE(acceptedSocket);
+    AssertFalse(acceptedSocket);
 }
 
 TEST_P(TestTcpSocket, Accept) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    uint16_t port{};
+    ExpectOk(serverSocket.GetLocalPort(port));
+    ExpectOk(serverSocket.Listen());
 
-    std::optional<Socket> connectedSocket =
-        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
-    EXPECT_TRUE(connectedSocket);
+    std::optional<Socket> connectedSocket;
+    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
+    ExpectTrue(connectedSocket);
+
+    std::optional<Socket> acceptedSocket;
 
     // Act
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
+    AssertOk(serverSocket.TryAccept(acceptedSocket));
 
     // Assert
-    ASSERT_TRUE(acceptedSocket);
+    AssertTrue(acceptedSocket);
 }
 
 TEST_P(TestTcpSocket, PortsAfterConnectAndAccept) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    uint16_t port{};
+    ExpectOk(serverSocket.GetLocalPort(port));
+    ExpectOk(serverSocket.Listen());
 
-    std::optional<Socket> connectedSocket =
-        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
-    EXPECT_TRUE(connectedSocket);
+    std::optional<Socket> connectedSocket;
+    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
+    ExpectTrue(connectedSocket);
 
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
-    EXPECT_TRUE(acceptedSocket);
+    std::optional<Socket> acceptedSocket;
+    ExpectOk(serverSocket.TryAccept(acceptedSocket));
+    ExpectTrue(acceptedSocket);
+
+    uint16_t connectedSocketLocalPort{};
+#ifdef _WIN32
+    SocketAddress remoteAddressForAcceptedSocket;
+    SocketAddress remoteAddressForConnectedSocket;
+    uint16_t localPort{};
+#endif
 
     // Act
-    uint16_t connectedSocketLocalPort = connectedSocket->GetLocalPort();
+    AssertOk(connectedSocket->GetLocalPort(connectedSocketLocalPort));
+#ifdef _WIN32
+    AssertOk(acceptedSocket->GetRemoteAddress(remoteAddressForAcceptedSocket));
+    AssertOk(acceptedSocket->GetLocalPort(localPort));
+    AssertOk(connectedSocket->GetRemoteAddress(remoteAddressForConnectedSocket));
+#endif
 
     // Assert
-    ASSERT_NE(connectedSocketLocalPort, port);
+    AssertNotEq(connectedSocketLocalPort, port);
 #ifdef _WIN32
-    ASSERT_EQ(connectedSocketLocalPort, acceptedSocket->GetRemoteAddress().port);
-    ASSERT_EQ(acceptedSocket->GetLocalPort(), connectedSocket->GetRemoteAddress().port);
+    AssertEq(connectedSocketLocalPort, remoteAddressForAcceptedSocket.port);
+    AssertEq(localPort, remoteAddressForConnectedSocket.port);
 #endif
 }
 
@@ -191,27 +227,30 @@ TEST_P(TestTcpSocket, SendAndReceive) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket(param.addressFamily);
-    serverSocket.Bind(0, param.enableRemoteAccess);
-    uint16_t port = serverSocket.GetLocalPort();
-    serverSocket.Listen();
+    Socket serverSocket;
+    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
+    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    uint16_t port{};
+    ExpectOk(serverSocket.GetLocalPort(port));
+    ExpectOk(serverSocket.Listen());
 
-    std::optional<Socket> connectedSocket =
-        Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout);
-    EXPECT_TRUE(connectedSocket);
+    std::optional<Socket> connectedSocket;
+    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
+    ExpectTrue(connectedSocket);
 
-    std::optional<Socket> acceptedSocket = serverSocket.TryAccept(DefaultTimeout);
-    EXPECT_TRUE(acceptedSocket);
+    std::optional<Socket> acceptedSocket;
+    ExpectOk(serverSocket.TryAccept(acceptedSocket));
+    ExpectTrue(acceptedSocket);
 
     uint32_t sendValue = GenerateU32();
     uint32_t receiveValue = 0;
 
     // Act
-    ASSERT_TRUE(SendComplete(*connectedSocket, &sendValue, sizeof(sendValue)));
-    ASSERT_TRUE(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    AssertOk(SendComplete(*connectedSocket, &sendValue, sizeof(sendValue)));
+    AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert
-    ASSERT_EQ(sendValue, receiveValue);
+    AssertEq(sendValue, receiveValue);
 }
 
 }  // namespace

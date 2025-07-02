@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestServer.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
@@ -9,44 +11,51 @@
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
 
+using namespace DsVeosCoSim;
+
 namespace {
 
-void UdpServerRun() {
-    try {
-        LogTrace("UDP server is listening on port {} ...", UdpPort);
+[[nodiscard]] Result Run() {
+    LogTrace("UDP server is listening on port {} ...", UdpPort);
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
+
+    while (true) {
+        UdpSocket serverSocket;
+        CheckResult(serverSocket.Bind("0.0.0.0", UdpPort));
+
+        InternetAddress address;
+        CheckResult(address.Initialize("127.0.0.1", 0));
 
         while (true) {
-            UdpSocket serverSocket;
-            serverSocket.Bind("0.0.0.0", UdpPort);
+            if (!IsOk(serverSocket.ReceiveFrom(buffer.data(), BufferSize, address))) {
+                break;
+            }
 
-            InternetAddress address("127.0.0.1", 0);
-
-            while (true) {
-                if (!serverSocket.ReceiveFrom(buffer.data(), BufferSize, address)) {
-                    break;
-                }
-
-                if (!serverSocket.SendTo(buffer.data(), BufferSize, address)) {
-                    break;
-                }
+            if (!IsOk(serverSocket.SendTo(buffer.data(), BufferSize, address))) {
+                break;
             }
         }
-    } catch (const std::exception& e) {
-        LogError("Exception in UDP server thread: {}", e.what());
+    }
+
+    return Result::Ok;
+}
+
+void UdpServerRun() {
+    if (!IsOk(Run())) {
+        LogError("Could not run UDP server.");
     }
 }
 
 }  // namespace
 
-void StartUdpServer() {  // NOLINT(misc-use-internal-linkage)
+void StartUdpServer() {
     std::thread(UdpServerRun).detach();
 }
 
 #else
 
-void StartUdpServer() {  // NOLINT(misc-use-internal-linkage)
+void StartUdpServer() {
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

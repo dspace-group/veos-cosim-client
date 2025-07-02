@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestClient.h"
+
 #if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
 
 #include <array>
@@ -7,40 +9,44 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
-#include "LogHelper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void EventsClientRun([[maybe_unused]] std::string_view host,
-                     Event& connectedEvent,
-                     uint64_t& counter,
-                     const bool& isStopped) {
-    try {
-        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
+[[nodiscard]] Result Run([[maybe_unused]] std::string_view host,
+                         Event& connectedEvent,
+                         uint64_t& counter,
+                         const bool& isStopped) {
+    NamedEvent beginEvent;
+    CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
+    NamedEvent endEvent;
+    CheckResult(NamedEvent::CreateOrOpen(EndEventName, endEvent));
+    SharedMemory sharedMemory;
+    CheckResult(SharedMemory::CreateOrOpen(ShmName, BufferSize, sharedMemory));
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
 
-        connectedEvent.Set();
+    connectedEvent.Set();
 
-        while (!isStopped) {
-            (void)memcpy(sharedMemory.data(), buffer.data(), BufferSize);
-            beginEvent.Set();
-            endEvent.Wait();
-            (void)memcpy(buffer.data(), sharedMemory.data(), BufferSize);
-            buffer[0]++;
+    while (!isStopped) {
+        (void)memcpy(sharedMemory.GetData(), buffer.data(), BufferSize);
+        CheckResult(beginEvent.Set());
+        CheckResult(endEvent.Wait());
+        (void)memcpy(buffer.data(), sharedMemory.GetData(), BufferSize);
+        buffer[0]++;
 
-            counter++;
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in event client thread: {}", e.what());
-        connectedEvent.Set();
+        counter++;
+    }
+
+    return Result::Ok;
+}
+
+void EventsClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run events client.");
     }
 }
 

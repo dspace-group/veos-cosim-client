@@ -5,51 +5,57 @@
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimServer.h"
-#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
+#include "PerformanceTestServer.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void CoSimServerRun() {
-    try {
-        LogTrace("dSPACE VEOS CoSim server is listening ...");
+[[nodiscard]] Result Run() {
+    LogTrace("dSPACE VEOS CoSim server is listening ...");
 
-        bool stopSimulation = false;
+    bool stopSimulation = false;
 
-        CoSimServerConfig config;
-        config.port = CoSimPort;
-        config.enableRemoteAccess = true;
-        config.serverName = CoSimServerName;
-        config.startPortMapper = false;
-        config.registerAtPortMapper = false;
-        config.simulationStoppedCallback = [&stopSimulation](SimulationTime) {
-            stopSimulation = true;
-        };
+    CoSimServerConfig config;
+    config.port = CoSimPort;
+    config.enableRemoteAccess = true;
+    config.serverName = CoSimServerName;
+    config.startPortMapper = false;
+    config.registerAtPortMapper = false;
+    config.simulationStoppedCallback = [&stopSimulation](SimulationTime) {
+        stopSimulation = true;
+    };
 
-        std::unique_ptr<CoSimServer> server = CreateServer();
-        server->Load(config);
+    std::unique_ptr<CoSimServer> server;
+    CheckResult(CreateServer(server));
+    CheckResult(server->Load(config));
 
-        while (true) {
-            SimulationTime simulationTime{};
-            server->Start(simulationTime);
+    while (true) {
+        SimulationTime simulationTime{};
+        CheckResult(server->Start(simulationTime));
 
-            stopSimulation = false;
+        stopSimulation = false;
 
-            while (!stopSimulation) {
-                (void)server->Step(simulationTime);
+        while (!stopSimulation) {
+            SimulationTime nextSimulationTime{};
+            CheckResult(server->Step(simulationTime, nextSimulationTime));
 
-                ++simulationTime;
-            }
+            ++simulationTime;
         }
-    } catch (const std::exception& e) {
-        LogError("Error in CoSim server thread: {}", e.what());
+    }
+
+    return Result::Ok;
+}
+
+void CoSimServerRun() {
+    if (!IsOk(Run())) {
+        LogError("Could not run CoSim server.");
     }
 }
 
 }  // namespace
 
-void StartCoSimServer() {  // NOLINT(misc-use-internal-linkage)
+void StartCoSimServer() {
     std::thread(CoSimServerRun).detach();
 }

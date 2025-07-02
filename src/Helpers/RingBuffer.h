@@ -2,76 +2,89 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <vector>
+
+#include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
 
 template <typename T>
 class RingBuffer final {
 public:
-    RingBuffer() noexcept = default;
+    RingBuffer() = default;
     explicit RingBuffer(size_t capacity) {
         _items.resize(capacity);
     }
 
-    ~RingBuffer() noexcept = default;
+    ~RingBuffer() = default;
 
     RingBuffer(const RingBuffer&) = delete;
     RingBuffer& operator=(const RingBuffer&) = delete;
 
-    RingBuffer(RingBuffer&& other) noexcept = default;
-    RingBuffer& operator=(RingBuffer&& other) noexcept = default;
+    RingBuffer(RingBuffer&& other) = default;
+    RingBuffer& operator=(RingBuffer&& other) = default;
 
-    void Clear() noexcept {
+    void Clear() {
         _readIndex = 0;
         _writeIndex = 0;
         _size = 0;
     }
 
-    [[nodiscard]] size_t Size() const noexcept {
+    [[nodiscard]] size_t Size() const {
         return _size;
     }
 
-    [[nodiscard]] bool IsEmpty() const noexcept {
+    [[nodiscard]] bool IsEmpty() const {
         return _size == 0;
     }
 
-    [[nodiscard]] bool IsFull() const noexcept {
+    [[nodiscard]] bool IsFull() const {
         return _size == _items.size();
     }
 
-    void PushBack(T&& element) {
+    [[nodiscard]] Result PushBack(T&& item) {
         if (IsFull()) {
-            throw std::runtime_error("Ring buffer is full.");
+            LogError("Ring buffer is full.");
+            return Result::Error;
         }
 
         size_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = std::move(element);
+        _items[currentWriteIndex] = std::move(item);
 
-        ++_writeIndex;
-        if (_writeIndex == _items.size()) {
-            _writeIndex = 0;
-        }
+        _writeIndex = (_writeIndex + 1) % _items.size();
 
         ++_size;
+        return Result::Ok;
     }
 
-    [[nodiscard]] T& PopFront() {
+    [[nodiscard]] Result PopFront(const T*& item) {
         if (IsEmpty()) {
-            throw std::runtime_error("Ring buffer is empty.");
+            LogError("Ring buffer is empty.");
+            return Result::Error;
         }
 
         --_size;
 
-        T& item = _items[_readIndex];
+        item = &_items[_readIndex];
 
-        ++_readIndex;
-        if (_readIndex == _items.size()) {
-            _readIndex = 0;
+        _readIndex = (_readIndex + 1) % _items.size();
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result PopFront(T& item) {
+        if (IsEmpty()) {
+            LogError("Ring buffer is empty.");
+            return Result::Error;
         }
 
-        return item;
+        --_size;
+
+        item = _items[_readIndex];
+
+        _readIndex = (_readIndex + 1) % _items.size();
+
+        return Result::Ok;
     }
 
 private:

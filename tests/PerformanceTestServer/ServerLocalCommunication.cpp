@@ -6,61 +6,66 @@
 
 #include "Channel.h"
 #include "CoSimHelper.h"
-#include "LogHelper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
+#include "PerformanceTestServer.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void LocalCommunicationServerRun() {
-    try {
-        LogTrace("Local communication server is listening ...");
+[[nodiscard]] Result Run() {
+    LogTrace("Local communication server is listening ...");
 
+    std::unique_ptr<ChannelServer> server;
 #ifdef _WIN32
-        std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(LocalName);
+    CheckResult(CreateLocalChannelServer(LocalName, server));
 #else
-        std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(LocalName);
+    CheckResult(CreateUdsChannelServer(LocalName, server));
 #endif
 
-        SetThreadAffinity(LocalName);
+    SetThreadAffinity(LocalName);
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
+
+    while (true) {
+        std::unique_ptr<Channel> acceptedChannel;
 
         while (true) {
-            std::unique_ptr<Channel> acceptedChannel;
-
-            while (true) {
-                acceptedChannel = server->TryAccept();
-                if (acceptedChannel) {
-                    break;
-                }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            CheckResult(server->TryAccept(acceptedChannel));
+            if (acceptedChannel) {
+                break;
             }
 
-            while (true) {
-                if (!acceptedChannel->GetReader().Read(buffer.data(), BufferSize)) {
-                    break;
-                }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
 
-                if (!acceptedChannel->GetWriter().Write(buffer.data(), BufferSize)) {
-                    break;
-                }
+        while (true) {
+            if (!IsOk(acceptedChannel->GetReader().Read(buffer.data(), BufferSize))) {
+                break;
+            }
 
-                if (!acceptedChannel->GetWriter().EndWrite()) {
-                    break;
-                }
+            if (!IsOk(acceptedChannel->GetWriter().Write(buffer.data(), BufferSize))) {
+                break;
+            }
+
+            if (!IsOk(acceptedChannel->GetWriter().EndWrite())) {
+                break;
             }
         }
-    } catch (const std::exception& e) {
-        LogError("Exception in local communication server thread: {}", e.what());
+    }
+
+    return Result::Ok;
+}
+
+void LocalCommunicationServerRun() {
+    if (!IsOk(Run())) {
+        LogError("Could not run local communication server.");
     }
 }
 
 }  // namespace
 
-void StartLocalCommunicationServer() {  // NOLINT(misc-use-internal-linkage)
+void StartLocalCommunicationServer() {
     std::thread(LocalCommunicationServerRun).detach();
 }

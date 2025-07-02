@@ -24,33 +24,36 @@ protected:
 
     void CustomSetUp(ConnectionKind connectionKind) {
         if (connectionKind == ConnectionKind::Remote) {
-            std::unique_ptr<ChannelServer> server = CreateTcpChannelServer(0, true);
-            EXPECT_TRUE(server);
+            std::unique_ptr<ChannelServer> server;
+            ExpectOk(CreateTcpChannelServer(0, true, server));
+            ExpectTrue(server);
             std::optional<uint16_t> port = server->GetLocalPort();
-            EXPECT_TRUE(port);
+            ExpectTrue(port);
 
-            _senderChannel = TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout);
-            EXPECT_TRUE(_senderChannel);
-            _receiverChannel = server->TryAccept(DefaultTimeout);
-            EXPECT_TRUE(_receiverChannel);
+            ExpectOk(TryConnectToTcpChannel("127.0.0.1", *port, 0, DefaultTimeout, _senderChannel));
+            ExpectTrue(_senderChannel);
+            ExpectOk(server->TryAccept(_receiverChannel));
+            ExpectTrue(_receiverChannel);
         } else {
 #ifdef _WIN32
             std::string name = GenerateString("LocalChannel名前");
-            std::unique_ptr<ChannelServer> server = CreateLocalChannelServer(name);
+            std::unique_ptr<ChannelServer> server;
+            ExpectOk(CreateLocalChannelServer(name, server));
 
-            _senderChannel = TryConnectToLocalChannel(name);
-            EXPECT_TRUE(_senderChannel);
-            _receiverChannel = server->TryAccept(DefaultTimeout);
-            EXPECT_TRUE(_receiverChannel);
+            ExpectOk(TryConnectToLocalChannel(name, _senderChannel));
+            ExpectTrue(_senderChannel);
+            ExpectOk(server->TryAccept(_receiverChannel));
+            ExpectTrue(_receiverChannel);
 #else
             std::string name = GenerateString("UdsChannel名前");
-            std::unique_ptr<ChannelServer> server = CreateUdsChannelServer(name);
-            EXPECT_TRUE(server);
+            std::unique_ptr<ChannelServer> server;
+            ExpectOk(CreateUdsChannelServer(name, server));
+            ExpectTrue(server);
 
-            _senderChannel = TryConnectToUdsChannel(name);
-            EXPECT_TRUE(_senderChannel);
-            _receiverChannel = server->TryAccept(DefaultTimeout);
-            EXPECT_TRUE(_receiverChannel);
+            ExpectOk(TryConnectToUdsChannel(name, _senderChannel));
+            ExpectTrue(_senderChannel);
+            ExpectOk(server->TryAccept(_receiverChannel));
+            ExpectTrue(_receiverChannel);
 #endif
         }
     }
@@ -62,8 +65,8 @@ protected:
 
     void AssertFrame(FrameKind expected) const {
         FrameKind frameKind{};
-        ASSERT_TRUE(Protocol::ReceiveHeader(_receiverChannel->GetReader(), frameKind));
-        ASSERT_EQ(static_cast<int32_t>(expected), static_cast<int32_t>(frameKind));
+        AssertOk(Protocol::ReceiveHeader(_receiverChannel->GetReader(), frameKind));
+        AssertEq(expected, frameKind);
     }
 };
 
@@ -79,7 +82,7 @@ TEST_P(TestProtocol, SendAndReceiveOk) {
     CustomSetUp(GetParam());
 
     // Act
-    ASSERT_TRUE(Protocol::SendOk(_senderChannel->GetWriter()));
+    AssertOk(Protocol::SendOk(_senderChannel->GetWriter()));
 
     // Assert
     AssertFrame(FrameKind::Ok);
@@ -92,13 +95,13 @@ TEST_P(TestProtocol, SendAndReceiveError) {
     std::string sendErrorMessage = GenerateString("Errorメッセージ");
 
     // Act
-    ASSERT_TRUE(Protocol::SendError(_senderChannel->GetWriter(), sendErrorMessage));
+    AssertOk(Protocol::SendError(_senderChannel->GetWriter(), sendErrorMessage));
 
     // Assert
     AssertFrame(FrameKind::Error);
 
     std::string receiveErrorMessage;
-    ASSERT_TRUE(Protocol::ReadError(_receiverChannel->GetReader(), receiveErrorMessage));
+    AssertOk(Protocol::ReadError(_receiverChannel->GetReader(), receiveErrorMessage));
     AssertEq(sendErrorMessage, receiveErrorMessage);
 }
 
@@ -107,7 +110,7 @@ TEST_P(TestProtocol, SendAndReceivePing) {
     CustomSetUp(GetParam());
 
     // Act
-    ASSERT_TRUE(Protocol::SendPing(_senderChannel->GetWriter()));
+    AssertOk(Protocol::SendPing(_senderChannel->GetWriter()));
 
     // Assert
     AssertFrame(FrameKind::Ping);
@@ -120,14 +123,14 @@ TEST_P(TestProtocol, SendAndReceivePingOk) {
     auto sendCommand = static_cast<Command>(GenerateU32());
 
     // Act
-    ASSERT_TRUE(Protocol::SendPingOk(_senderChannel->GetWriter(), sendCommand));
+    AssertOk(Protocol::SendPingOk(_senderChannel->GetWriter(), sendCommand));
 
     // Assert
     AssertFrame(FrameKind::PingOk);
 
     Command receiveCommand{};
-    ASSERT_TRUE(Protocol::ReadPingOk(_receiverChannel->GetReader(), receiveCommand));
-    ASSERT_EQ(sendCommand, receiveCommand);
+    AssertOk(Protocol::ReadPingOk(_receiverChannel->GetReader(), receiveCommand));
+    AssertEq(sendCommand, receiveCommand);
 }
 
 TEST_P(TestProtocol, SendAndReceiveConnect) {
@@ -135,13 +138,12 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     CustomSetUp(GetParam());
 
     uint32_t sendVersion = GenerateU32();
-    constexpr Mode sendMode{};
+    Mode sendMode{};
     std::string sendServerName = GenerateString("Server名前");
     std::string sendClientName = GenerateString("Client名前");
 
     // Act
-    ASSERT_TRUE(
-        Protocol::SendConnect(_senderChannel->GetWriter(), sendVersion, sendMode, sendServerName, sendClientName));
+    AssertOk(Protocol::SendConnect(_senderChannel->GetWriter(), sendVersion, sendMode, sendServerName, sendClientName));
 
     // Assert
     AssertFrame(FrameKind::Connect);
@@ -150,13 +152,13 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     Mode receiveMode{};
     std::string receiveServerName;
     std::string receiveClientName;
-    ASSERT_TRUE(Protocol::ReadConnect(_receiverChannel->GetReader(),
-                                      receiveVersion,
-                                      receiveMode,
-                                      receiveServerName,
-                                      receiveClientName));
-    ASSERT_EQ(sendVersion, receiveVersion);
-    ASSERT_EQ(static_cast<int32_t>(sendMode), static_cast<int32_t>(receiveMode));
+    AssertOk(Protocol::ReadConnect(_receiverChannel->GetReader(),
+                                   receiveVersion,
+                                   receiveMode,
+                                   receiveServerName,
+                                   receiveClientName));
+    AssertEq(sendVersion, receiveVersion);
+    AssertEq(sendMode, receiveMode);
     AssertEq(sendServerName, receiveServerName);
     AssertEq(sendClientName, receiveClientName);
 }
@@ -166,7 +168,7 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     CustomSetUp(GetParam());
 
     uint32_t sendProtocolVersion = GenerateU32();
-    constexpr Mode sendMode{};
+    Mode sendMode{};
     SimulationTime sendStepSize = GenerateSimulationTime();
     constexpr SimulationState sendSimulationState{};
     std::vector<IoSignalContainer> sendIncomingSignals = CreateSignals(2);
@@ -176,16 +178,16 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     std::vector<LinControllerContainer> sendLinControllers = CreateLinControllers(6);
 
     // Act
-    ASSERT_TRUE(Protocol::SendConnectOk(_senderChannel->GetWriter(),
-                                        sendProtocolVersion,
-                                        sendMode,
-                                        sendStepSize,
-                                        sendSimulationState,
-                                        sendIncomingSignals,
-                                        sendOutgoingSignals,
-                                        sendCanControllers,
-                                        sendEthControllers,
-                                        sendLinControllers));
+    AssertOk(Protocol::SendConnectOk(_senderChannel->GetWriter(),
+                                     sendProtocolVersion,
+                                     sendMode,
+                                     sendStepSize,
+                                     sendSimulationState,
+                                     sendIncomingSignals,
+                                     sendOutgoingSignals,
+                                     sendCanControllers,
+                                     sendEthControllers,
+                                     sendLinControllers));
 
     // Assert
     AssertFrame(FrameKind::ConnectOk);
@@ -199,24 +201,24 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     std::vector<CanControllerContainer> receiveCanControllers;
     std::vector<EthControllerContainer> receiveEthControllers;
     std::vector<LinControllerContainer> receiveLinControllers;
-    ASSERT_TRUE(Protocol::ReadConnectOk(_receiverChannel->GetReader(),
-                                        receiveProtocolVersion,
-                                        receiveMode,
-                                        receiveStepSize,
-                                        receiveSimulationState,
-                                        receiveIncomingSignals,
-                                        receiveOutgoingSignals,
-                                        receiveCanControllers,
-                                        receiveEthControllers,
-                                        receiveLinControllers));
-    ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
-    ASSERT_EQ(static_cast<int32_t>(sendMode), static_cast<int32_t>(receiveMode));
-    ASSERT_EQ(sendStepSize, receiveStepSize);
-    AssertEq<IoSignal>(Convert(sendIncomingSignals), Convert(receiveIncomingSignals));
-    AssertEq<IoSignal>(Convert(sendOutgoingSignals), Convert(receiveOutgoingSignals));
-    AssertEq<CanController>(Convert(sendCanControllers), Convert(receiveCanControllers));
-    AssertEq<EthController>(Convert(sendEthControllers), Convert(receiveEthControllers));
-    AssertEq<LinController>(Convert(sendLinControllers), Convert(receiveLinControllers));
+    AssertOk(Protocol::ReadConnectOk(_receiverChannel->GetReader(),
+                                     receiveProtocolVersion,
+                                     receiveMode,
+                                     receiveStepSize,
+                                     receiveSimulationState,
+                                     receiveIncomingSignals,
+                                     receiveOutgoingSignals,
+                                     receiveCanControllers,
+                                     receiveEthControllers,
+                                     receiveLinControllers));
+    AssertEq(sendProtocolVersion, receiveProtocolVersion);
+    AssertEq(sendMode, receiveMode);
+    AssertEq(sendStepSize, receiveStepSize);
+    AssertEqHelper<IoSignal>(Convert(sendIncomingSignals), Convert(receiveIncomingSignals));
+    AssertEqHelper<IoSignal>(Convert(sendOutgoingSignals), Convert(receiveOutgoingSignals));
+    AssertEqHelper<CanController>(Convert(sendCanControllers), Convert(receiveCanControllers));
+    AssertEqHelper<EthController>(Convert(sendEthControllers), Convert(receiveEthControllers));
+    AssertEqHelper<LinController>(Convert(sendLinControllers), Convert(receiveLinControllers));
 }
 
 TEST_P(TestProtocol, SendAndReceiveStart) {
@@ -226,14 +228,14 @@ TEST_P(TestProtocol, SendAndReceiveStart) {
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
-    ASSERT_TRUE(Protocol::SendStart(_senderChannel->GetWriter(), sendSimulationTime));
+    AssertOk(Protocol::SendStart(_senderChannel->GetWriter(), sendSimulationTime));
 
     // Assert
     AssertFrame(FrameKind::Start);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(Protocol::ReadStart(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadStart(_receiverChannel->GetReader(), receiveSimulationTime));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStop) {
@@ -243,14 +245,14 @@ TEST_P(TestProtocol, SendAndReceiveStop) {
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
-    ASSERT_TRUE(Protocol::SendStop(_senderChannel->GetWriter(), sendSimulationTime));
+    AssertOk(Protocol::SendStop(_senderChannel->GetWriter(), sendSimulationTime));
 
     // Assert
     AssertFrame(FrameKind::Stop);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(Protocol::ReadStop(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadStop(_receiverChannel->GetReader(), receiveSimulationTime));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveTerminate) {
@@ -261,16 +263,16 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
     TerminateReason sendTerminateReason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
 
     // Act
-    ASSERT_TRUE(Protocol::SendTerminate(_senderChannel->GetWriter(), sendSimulationTime, sendTerminateReason));
+    AssertOk(Protocol::SendTerminate(_senderChannel->GetWriter(), sendSimulationTime, sendTerminateReason));
 
     // Assert
     AssertFrame(FrameKind::Terminate);
 
     SimulationTime receiveSimulationTime{};
     TerminateReason receiveTerminateReason{};
-    ASSERT_TRUE(Protocol::ReadTerminate(_receiverChannel->GetReader(), receiveSimulationTime, receiveTerminateReason));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
-    ASSERT_EQ(sendTerminateReason, receiveTerminateReason);
+    AssertOk(Protocol::ReadTerminate(_receiverChannel->GetReader(), receiveSimulationTime, receiveTerminateReason));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
+    AssertEq(sendTerminateReason, receiveTerminateReason);
 }
 
 TEST_P(TestProtocol, SendAndReceivePause) {
@@ -280,14 +282,14 @@ TEST_P(TestProtocol, SendAndReceivePause) {
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
-    ASSERT_TRUE(Protocol::SendPause(_senderChannel->GetWriter(), sendSimulationTime));
+    AssertOk(Protocol::SendPause(_senderChannel->GetWriter(), sendSimulationTime));
 
     // Assert
     AssertFrame(FrameKind::Pause);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(Protocol::ReadPause(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadPause(_receiverChannel->GetReader(), receiveSimulationTime));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveContinue) {
@@ -297,14 +299,14 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     // Act
-    ASSERT_TRUE(Protocol::SendContinue(_senderChannel->GetWriter(), sendSimulationTime));
+    AssertOk(Protocol::SendContinue(_senderChannel->GetWriter(), sendSimulationTime));
 
     // Assert
     AssertFrame(FrameKind::Continue);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(Protocol::ReadContinue(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadContinue(_receiverChannel->GetReader(), receiveSimulationTime));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStep) {
@@ -315,30 +317,30 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     std::string ioBufferName = GenerateString("IoBuffer名前");
-    std::unique_ptr<IoBuffer> clientIoBuffer =
-        CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    std::unique_ptr<IoBuffer> serverIoBuffer =
-        CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    std::unique_ptr<IoBuffer> clientIoBuffer;
+    ExpectOk(CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, clientIoBuffer));
+    std::unique_ptr<IoBuffer> serverIoBuffer;
+    ExpectOk(CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, serverIoBuffer));
 
     std::string busBufferName = GenerateString("BusBuffer名前");
-    std::unique_ptr<BusBuffer> clientBusBuffer =
-        CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    std::unique_ptr<BusBuffer> serverBusBuffer =
-        CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
+    std::unique_ptr<BusBuffer> clientBusBuffer;
+    ExpectOk(CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {}, clientBusBuffer));
+    std::unique_ptr<BusBuffer> serverBusBuffer;
+    ExpectOk(CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {}, serverBusBuffer));
 
     // Act
-    ASSERT_TRUE(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, *clientIoBuffer, *clientBusBuffer));
+    AssertOk(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, *clientIoBuffer, *clientBusBuffer));
 
     // Assert
     AssertFrame(FrameKind::Step);
 
     SimulationTime receiveSimulationTime{};
-    ASSERT_TRUE(Protocol::ReadStep(_receiverChannel->GetReader(),
-                                   receiveSimulationTime,
-                                   *serverIoBuffer,
-                                   *serverBusBuffer,
-                                   {}));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadStep(_receiverChannel->GetReader(),
+                                receiveSimulationTime,
+                                *serverIoBuffer,
+                                *serverBusBuffer,
+                                {}));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStepOk) {
@@ -351,36 +353,36 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     auto sendCommand = static_cast<Command>(GenerateU32());
 
     std::string ioBufferName = GenerateString("IoBuffer名前");
-    std::unique_ptr<IoBuffer> clientIoBuffer =
-        CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {});
-    std::unique_ptr<IoBuffer> serverIoBuffer =
-        CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {});
+    std::unique_ptr<IoBuffer> clientIoBuffer;
+    ExpectOk(CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, clientIoBuffer));
+    std::unique_ptr<IoBuffer> serverIoBuffer;
+    ExpectOk(CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, serverIoBuffer));
 
     std::string busBufferName = GenerateString("BusBuffer名前");
-    std::unique_ptr<BusBuffer> clientBusBuffer =
-        CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {});
-    std::unique_ptr<BusBuffer> serverBusBuffer =
-        CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {});
+    std::unique_ptr<BusBuffer> clientBusBuffer;
+    ExpectOk(CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {}, clientBusBuffer));
+    std::unique_ptr<BusBuffer> serverBusBuffer;
+    ExpectOk(CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {}, serverBusBuffer));
 
     // Act
-    ASSERT_TRUE(Protocol::SendStepOk(_senderChannel->GetWriter(),
-                                     sendSimulationTime,
-                                     sendCommand,
-                                     *clientIoBuffer,
-                                     *clientBusBuffer));
+    AssertOk(Protocol::SendStepOk(_senderChannel->GetWriter(),
+                                  sendSimulationTime,
+                                  sendCommand,
+                                  *clientIoBuffer,
+                                  *clientBusBuffer));
 
     // Assert
     AssertFrame(FrameKind::StepOk);
 
     SimulationTime receiveSimulationTime{};
     Command receiveCommand{};
-    ASSERT_TRUE(Protocol::ReadStepOk(_receiverChannel->GetReader(),
-                                     receiveSimulationTime,
-                                     receiveCommand,
-                                     *serverIoBuffer,
-                                     *serverBusBuffer,
-                                     {}));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    AssertOk(Protocol::ReadStepOk(_receiverChannel->GetReader(),
+                                  receiveSimulationTime,
+                                  receiveCommand,
+                                  *serverIoBuffer,
+                                  *serverBusBuffer,
+                                  {}));
+    AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveGetPort) {
@@ -390,13 +392,13 @@ TEST_P(TestProtocol, SendAndReceiveGetPort) {
     std::string sendServerName = GenerateString("Server名前");
 
     // Act
-    ASSERT_TRUE(Protocol::SendGetPort(_senderChannel->GetWriter(), sendServerName));
+    AssertOk(Protocol::SendGetPort(_senderChannel->GetWriter(), sendServerName));
 
     // Assert
     AssertFrame(FrameKind::GetPort);
 
     std::string receiveServerName;
-    ASSERT_TRUE(Protocol::ReadGetPort(_receiverChannel->GetReader(), receiveServerName));
+    AssertOk(Protocol::ReadGetPort(_receiverChannel->GetReader(), receiveServerName));
     AssertEq(sendServerName, receiveServerName);
 }
 
@@ -407,14 +409,14 @@ TEST_P(TestProtocol, SendAndReceiveGetPortOk) {
     uint16_t sendPort = GenerateU16();
 
     // Act
-    ASSERT_TRUE(Protocol::SendGetPortOk(_senderChannel->GetWriter(), sendPort));
+    AssertOk(Protocol::SendGetPortOk(_senderChannel->GetWriter(), sendPort));
 
     // Assert
     AssertFrame(FrameKind::GetPortOk);
 
     uint16_t receivePort{};
-    ASSERT_TRUE(Protocol::ReadGetPortOk(_receiverChannel->GetReader(), receivePort));
-    ASSERT_EQ(sendPort, receivePort);
+    AssertOk(Protocol::ReadGetPortOk(_receiverChannel->GetReader(), receivePort));
+    AssertEq(sendPort, receivePort);
 }
 
 TEST_P(TestProtocol, SendAndReceiveSetPort) {
@@ -425,16 +427,16 @@ TEST_P(TestProtocol, SendAndReceiveSetPort) {
     uint16_t sendPort = GenerateU16();
 
     // Act
-    ASSERT_TRUE(Protocol::SendSetPort(_senderChannel->GetWriter(), sendServerName, sendPort));
+    AssertOk(Protocol::SendSetPort(_senderChannel->GetWriter(), sendServerName, sendPort));
 
     // Assert
     AssertFrame(FrameKind::SetPort);
 
     std::string receiveServerName;
     uint16_t receivePort{};
-    ASSERT_TRUE(Protocol::ReadSetPort(_receiverChannel->GetReader(), receiveServerName, receivePort));
+    AssertOk(Protocol::ReadSetPort(_receiverChannel->GetReader(), receiveServerName, receivePort));
     AssertEq(sendServerName, receiveServerName);
-    ASSERT_EQ(sendPort, receivePort);
+    AssertEq(sendPort, receivePort);
 }
 
 TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
@@ -444,13 +446,13 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
     std::string sendServerName = GenerateString("Server名前");
 
     // Act
-    ASSERT_TRUE(Protocol::SendUnsetPort(_senderChannel->GetWriter(), sendServerName));
+    AssertOk(Protocol::SendUnsetPort(_senderChannel->GetWriter(), sendServerName));
 
     // Assert
     AssertFrame(FrameKind::UnsetPort);
 
     std::string receiveServerName;
-    ASSERT_TRUE(Protocol::ReadUnsetPort(_receiverChannel->GetReader(), receiveServerName));
+    AssertOk(Protocol::ReadUnsetPort(_receiverChannel->GetReader(), receiveServerName));
     AssertEq(sendServerName, receiveServerName);
 }
 

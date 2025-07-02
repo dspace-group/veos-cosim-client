@@ -3,19 +3,14 @@
 #include <cstdint>
 #include <future>
 
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Helper.h"
+#include "PerformanceTestServer.h"
 
-extern void StartUdpServer();
-extern void StartTcpServer();
-extern void StartUdsServer();
-extern void StartPipeServer();
-extern void StartEventsServer();
-extern void StartLocalCommunicationServer();
-extern void StartRemoteCommunicationServer();
-extern void StartCoSimServer();
+using namespace DsVeosCoSim;
 
 int32_t main() {
-    if (!StartUp()) {
+    if (!IsOk(StartUp())) {
         return 1;
     }
 

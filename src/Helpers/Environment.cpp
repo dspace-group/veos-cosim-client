@@ -11,11 +11,41 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool GetBoolValue(std::string_view name) {
-    char* stringValue = std::getenv(name.data());  // NOLINT(concurrency-mt-unsafe)
+[[nodiscard]] bool TryGetDecimalValue(std::string_view name, ptrdiff_t& intValue) {
+    char* stringValue = std::getenv(name.data());
     if (stringValue) {
         char* end{};
-        int32_t intValue = std::strtol(stringValue, &end, 10);
+        if constexpr (sizeof(void*) == 8) {
+            intValue = std::strtoll(stringValue, &end, 10);
+        } else {
+            intValue = std::strtol(stringValue, &end, 10);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+[[nodiscard]] bool TryGetHexValue(std::string_view name, size_t& hexValue) {
+    char* stringValue = std::getenv(name.data());
+    if (stringValue) {
+        char* end{};
+        if constexpr (sizeof(void*) == 8) {
+            hexValue = std::strtoull(stringValue, &end, 16);
+        } else {
+            hexValue = std::strtoul(stringValue, &end, 16);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+[[nodiscard]] bool GetBoolValue(std::string_view name) {
+    ptrdiff_t intValue{};
+    if (TryGetDecimalValue(name, intValue)) {
         return intValue != 0;
     }
 
@@ -26,34 +56,25 @@ namespace {
     constexpr uint16_t defaultPort = 27027;
     constexpr int32_t maxPort = 65535;
 
-    char* portString = std::getenv("VEOS_COSIM_PORTMAPPER_PORT");  // NOLINT(concurrency-mt-unsafe)
-    if (portString) {
-        char* end{};
-        int32_t port = std::strtol(portString, &end, 10);
-        if ((port > 0) && (port <= maxPort)) {
-            return static_cast<uint16_t>(port);
+    ptrdiff_t intValue{};
+    if (TryGetDecimalValue("VEOS_COSIM_PORTMAPPER_PORT", intValue)) {
+        if ((intValue > 0) && (intValue <= maxPort)) {
+            return static_cast<uint16_t>(intValue);
         }
     }
 
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetAffinityMaskInitial(std::string_view environmentVariableName, size_t& mask) {
-    constexpr size_t defaultMask = SIZE_MAX;
-
-    char* maskString = std::getenv(environmentVariableName.data());  // NOLINT(concurrency-mt-unsafe)
-    if (maskString) {
-        char* end{};
-        if constexpr (sizeof(void*) == 8) {
-            mask = std::strtoull(maskString, &end, 16);
-        } else {
-            mask = std::strtoul(maskString, &end, 16);
+[[nodiscard]] bool TryGetSpinCount(std::string_view name, uint32_t& spinCount) {
+    ptrdiff_t intValue{};
+    if (TryGetDecimalValue(name, intValue)) {
+        if ((intValue >= 0) && (intValue <= UINT32_MAX)) {
+            spinCount = static_cast<uint32_t>(intValue);
+            return true;
         }
-
-        return true;
     }
 
-    mask = defaultMask;
     return false;
 }
 
@@ -89,17 +110,37 @@ namespace {
     return Port;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
-    std::string environmentVariableName = "VEOS_COSIM_AFFINITY_MASK";
+[[nodiscard]] uint32_t GetSpinCount(std::string_view name) {
+    constexpr uint32_t defaultSpinCount = 0;
+    std::string_view environmentVariableName = "VEOS_COSIM_SPIN_COUNT";
 
-    std::string fullName = environmentVariableName;
+    uint32_t spinCount{};
+
+    std::string fullName(environmentVariableName);
     fullName.append("_");
     fullName.append(name);
-    if (TryGetAffinityMaskInitial(fullName, mask)) {
+    if (TryGetSpinCount(fullName, spinCount)) {
+        return spinCount;
+    }
+
+    if (TryGetSpinCount(environmentVariableName, spinCount)) {
+        return spinCount;
+    }
+
+    return defaultSpinCount;
+}
+
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
+    std::string_view environmentVariableName = "VEOS_COSIM_AFFINITY_MASK";
+
+    std::string fullName(environmentVariableName);
+    fullName.append("_");
+    fullName.append(name);
+    if (TryGetHexValue(fullName, mask)) {
         return true;
     }
 
-    return TryGetAffinityMaskInitial(environmentVariableName, mask);
+    return TryGetHexValue(environmentVariableName, mask);
 }
 
 }  // namespace DsVeosCoSim

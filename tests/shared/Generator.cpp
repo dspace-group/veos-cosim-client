@@ -41,7 +41,7 @@ namespace {
 
     int32_t diff = max + 1 - min;
 
-    return min + (rand() % diff);  // NOLINT(concurrency-mt-unsafe, cert-msc30-c, cert-msc50-cpp)
+    return min + (rand() % diff);  // NOLINT(cert-msc30-c, cert-msc50-cpp)
 }
 
 void FillWithRandom(uint8_t* data, size_t length) {
@@ -68,10 +68,6 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] uint64_t GenerateU64() {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
-}
-
-[[nodiscard]] int64_t GenerateI64() {
-    return static_cast<int64_t>(GenerateU64());
 }
 
 [[nodiscard]] std::string GenerateString(std::string_view prefix) {

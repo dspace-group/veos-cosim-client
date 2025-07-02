@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestClient.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
@@ -7,38 +9,39 @@
 #include <string_view>
 
 #include "CoSimHelper.h"
-#include "Helper.h"
-#include "LogHelper.h"
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void PipeClientRun([[maybe_unused]] std::string_view host,
-                   Event& connectedEvent,
-                   uint64_t& counter,
-                   const bool& isStopped) {
-    try {
-        Pipe pipe(PipeName);
-        pipe.Connect();
+[[nodiscard]] Result Run([[maybe_unused]] std::string_view host,
+                         Event& connectedEvent,
+                         uint64_t& counter,
+                         const bool& isStopped) {
+    Pipe pipe;
+    CheckResult(pipe.Initialize(PipeName));
+    CheckResult(pipe.Connect());
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
 
-        connectedEvent.Set();
+    connectedEvent.Set();
 
-        while (!isStopped) {
-            MUST_BE_TRUE(pipe.Write(buffer.data(), BufferSize));
+    while (!isStopped) {
+        CheckResult(pipe.Write(buffer.data(), BufferSize));
 
-            MUST_BE_TRUE(pipe.Read(buffer.data(), BufferSize));
+        CheckResult(pipe.Read(buffer.data(), BufferSize));
 
-            counter++;
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in pipe client thread: {}", e.what());
-        connectedEvent.Set();
+        counter++;
+    }
+
+    return Result::Ok;
+}
+
+void PipeClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run pipe client.");
     }
 }
 

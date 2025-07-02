@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -23,8 +22,7 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 class PortMapperServerImpl final : public PortMapperServer {
 public:
-    explicit PortMapperServerImpl(bool enableRemoteAccess)
-        : _server(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess)) {
+    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer) : _server(std::move(channelServer)) {
         _thread = std::thread([this] {
             RunPortMapperServer();
         });
@@ -48,46 +46,46 @@ private:
     void RunPortMapperServer() {
         constexpr uint32_t timeoutInMilliseconds = 100U;
         while (!_stopEvent.Wait(timeoutInMilliseconds)) {
-            try {
-                std::unique_ptr<Channel> channel = _server->TryAccept();
-                if (!channel) {
-                    continue;
-                }
+            std::unique_ptr<Channel> channel;
+            if (!IsOk(_server->TryAccept(channel))) {
+                LogError("Could not accept port mapper client.");
+                return;
+            }
 
-                if (!HandleClient(*channel)) {
-                    LogTrace("Port mapper client disconnected unexpectedly.");
-                }
-            } catch (const std::exception& e) {
-                std::string message = "The following exception occurred in port mapper thread: ";
-                message.append(e.what());
-                LogError(message);
+            if (!channel) {
+                continue;
+            }
+
+            if (!IsOk(HandleClient(*channel))) {
+                LogTrace("Port mapper client disconnected unexpectedly.");
             }
         }
     }
 
-    [[nodiscard]] bool HandleClient(Channel& channel) {
+    [[nodiscard]] Result HandleClient(Channel& channel) {
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
 
         switch (frameKind) {
             case FrameKind::GetPort:
                 CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
-                return true;
+                return Result::Ok;
             case FrameKind::SetPort:
                 CheckResultWithMessage(HandleSetPort(channel), "Could not handle set port request.");
-                return true;
+                return Result::Ok;
             case FrameKind::UnsetPort:
                 CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
-                return true;
+                return Result::Ok;
             default:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                throw std::runtime_error(message);
+                LogError(message);
+                return Result::Error;
         }
     }
 
-    [[nodiscard]] bool HandleGetPort(Channel& channel) {
+    [[nodiscard]] Result HandleGetPort(Channel& channel) {
         std::string name;
         CheckResultWithMessage(Protocol::ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
@@ -104,15 +102,15 @@ private:
             message.append(name);
             message.append("'.");
             CheckResultWithMessage(Protocol::SendError(channel.GetWriter(), message), "Could not send error frame.");
-            return true;
+            return Result::Ok;
         }
 
         CheckResultWithMessage(Protocol::SendGetPortOk(channel.GetWriter(), search->second),
                                "Could not send get port ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool HandleSetPort(Channel& channel) {
+    [[nodiscard]] Result HandleSetPort(Channel& channel) {
         std::string name;
         uint16_t port = 0;
         CheckResultWithMessage(Protocol::ReadSetPort(channel.GetReader(), name, port),
@@ -133,10 +131,10 @@ private:
         }
 
         CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
-        return true;
+        return Result::Ok;
     }
 
-    [[nodiscard]] bool HandleUnsetPort(Channel& channel) {
+    [[nodiscard]] Result HandleUnsetPort(Channel& channel) {
         std::string name;
         CheckResultWithMessage(Protocol::ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
@@ -154,7 +152,7 @@ private:
         }
 
         CheckResultWithMessage(Protocol::SendOk(channel.GetWriter()), "Could not send ok frame.");
-        return true;
+        return Result::Ok;
     }
 
     void DumpEntries() {
@@ -182,13 +180,17 @@ private:
 
 }  // namespace
 
-[[nodiscard]] std::unique_ptr<PortMapperServer> CreatePortMapperServer(bool enableRemoteAccess) {
-    return std::make_unique<PortMapperServerImpl>(enableRemoteAccess);
+[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
+                                            std::unique_ptr<PortMapperServer>& portMapperServer) {
+    std::unique_ptr<ChannelServer> channelServer;
+    CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
+    portMapperServer = std::make_unique<PortMapperServerImpl>(std::move(channelServer));
+    return Result::Ok;
 }
 
-[[nodiscard]] bool PortMapper_GetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
+[[nodiscard]] Result PortMapperGetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        std::string message = "PortMapper_GetPort(ipAddress: '";
+        std::string message = "PortMapperGetPort(ipAddress: '";
         message.append(ipAddress);
         message.append("', serverName: '");
         message.append(serverName);
@@ -196,9 +198,9 @@ private:
         LogTrace(message);
     }
 
-    std::unique_ptr<Channel> channel =
-        TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
-    CheckResultWithMessage(channel, "Could not connect to port mapper.");
+    std::unique_ptr<Channel> channel;
+    CheckResult(TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
+    CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     CheckResultWithMessage(Protocol::SendGetPort(channel->GetWriter(), serverName), "Could not send get port frame.");
 
@@ -209,26 +211,28 @@ private:
         case FrameKind::GetPortOk: {
             CheckResultWithMessage(Protocol::ReadGetPortOk(channel->GetReader(), port),
                                    "Could not receive port ok frame.");
-            return true;
+            return Result::Ok;
         }
         case FrameKind::Error: {
             std::string errorMessage;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorMessage),
                                    "Could not read error frame.");
-            throw std::runtime_error(errorMessage);
+            LogError(errorMessage);
+            return Result::Error;
         }
         default:
-            std::string message = "PortMapper_GetPort: Received unexpected frame '";
+            std::string message = "PortMapperGetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            throw std::runtime_error(message);
+            LogError(message);
+            return Result::Error;
     }
 }
 
-[[nodiscard]] bool PortMapper_SetPort(std::string_view name, uint16_t port) {
-    std::unique_ptr<Channel> channel =
-        TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
-    CheckResultWithMessage(channel, "Could not connect to port mapper.");
+[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port) {
+    std::unique_ptr<Channel> channel;
+    CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
+    CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     CheckResultWithMessage(Protocol::SendSetPort(channel->GetWriter(), name, port), "Could not send set port frame.");
 
@@ -237,25 +241,27 @@ private:
 
     switch (frameKind) {
         case FrameKind::Ok:
-            return true;
+            return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorString),
                                    "Could not read error frame.");
-            throw std::runtime_error(errorString);
+            LogError(errorString);
+            return Result::Error;
         }
         default:
-            std::string message = "PortMapper_SetPort: Received unexpected frame '";
+            std::string message = "PortMapperSetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            throw std::runtime_error(message);
+            LogError(message);
+            return Result::Error;
     }
 }
 
-[[nodiscard]] bool PortMapper_UnsetPort(std::string_view name) {
-    std::unique_ptr<Channel> channel =
-        TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds);
-    CheckResultWithMessage(channel, "Could not connect to port mapper.");
+[[nodiscard]] Result PortMapperUnsetPort(std::string_view name) {
+    std::unique_ptr<Channel> channel;
+    CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
+    CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     CheckResultWithMessage(Protocol::SendUnsetPort(channel->GetWriter(), name), "Could not send unset port frame.");
 
@@ -264,18 +270,20 @@ private:
 
     switch (frameKind) {
         case FrameKind::Ok:
-            return true;
+            return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(Protocol::ReadError(channel->GetReader(), errorString),
                                    "Could not read error frame.");
-            throw std::runtime_error(errorString);
+            LogError(errorString);
+            return Result::Error;
         }
         default:
-            std::string message = "PortMapper_UnsetPort: Received unexpected frame '";
+            std::string message = "PortMapperUnsetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            throw std::runtime_error(message);
+            LogError(message);
+            return Result::Error;
     }
 }
 

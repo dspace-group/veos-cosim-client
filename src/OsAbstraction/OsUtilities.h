@@ -9,14 +9,16 @@
 #include <string>
 #include <string_view>
 
+#include "DsVeosCoSim/CoSimTypes.h"
+
 namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
 class Handle final {
 public:
-    Handle() noexcept = default;
-    Handle(void* handle) noexcept;  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
+    Handle() = default;
+    Handle(void* handle);
     ~Handle() noexcept;
 
     Handle(const Handle&) = delete;
@@ -25,17 +27,17 @@ public:
     Handle(Handle&&) noexcept;
     Handle& operator=(Handle&&) noexcept;
 
-    operator void*() const noexcept;  // NOLINT(google-explicit-constructor, hicpp-explicit-conversions)
+    operator void*() const;
 
-    void Wait() const;
-    [[nodiscard]] bool Wait(uint32_t milliseconds) const;
+    [[nodiscard]] Result Wait() const;
+    [[nodiscard]] Result Wait(uint32_t milliseconds, bool& success) const;
 
 private:
     void* _handle{};
 };
 
 class NamedEvent final {
-    NamedEvent(Handle handle, std::string_view name);
+    explicit NamedEvent(Handle handle);
 
 public:
     NamedEvent() = default;
@@ -44,50 +46,48 @@ public:
     NamedEvent(const NamedEvent&) = delete;
     NamedEvent& operator=(const NamedEvent&) = delete;
 
-    NamedEvent(NamedEvent&&) noexcept = default;
-    NamedEvent& operator=(NamedEvent&&) noexcept = default;
+    NamedEvent(NamedEvent&&) = default;
+    NamedEvent& operator=(NamedEvent&&) = default;
 
-    [[nodiscard]] static NamedEvent CreateOrOpen(std::string_view name);
+    [[nodiscard]] static Result CreateOrOpen(std::string_view name, NamedEvent& namedEvent);
 
-    void Set() const;
-    void Wait() const;
-    [[nodiscard]] bool Wait(uint32_t milliseconds) const;
+    [[nodiscard]] Result Set() const;
+    [[nodiscard]] Result Wait() const;
+    [[nodiscard]] Result Wait(uint32_t milliseconds, bool& success) const;
 
 private:
     Handle _handle;
-    std::string _name;
 };
 
 class NamedMutex final {
     explicit NamedMutex(Handle handle);
 
 public:
-    NamedMutex() noexcept = default;
-    ~NamedMutex() noexcept = default;
+    NamedMutex() = default;
+    ~NamedMutex() noexcept;
 
     NamedMutex(const NamedMutex&) = delete;
     NamedMutex& operator=(const NamedMutex&) = delete;
 
-    NamedMutex(NamedMutex&&) noexcept = default;
-    NamedMutex& operator=(NamedMutex&&) noexcept = default;
+    NamedMutex(NamedMutex&&) = default;
+    NamedMutex& operator=(NamedMutex&&) = default;
 
-    [[nodiscard]] static NamedMutex CreateOrOpen(std::string_view name);
+    [[nodiscard]] static Result CreateOrOpen(std::string_view name, NamedMutex& namedMutex);
 
-    // Small case, so this mutex can directly be used in std::lock_guard
-    void lock() const;                                     // NOLINT(readability-identifier-naming)
-    [[nodiscard]] bool lock(uint32_t milliseconds) const;  // NOLINT(readability-identifier-naming)
-    void unlock() const;                                   // NOLINT(readability-identifier-naming)
+    [[nodiscard]] Result Lock();
+    void Unlock();
 
 private:
     Handle _handle;
+    bool _isLocked{};
 };
 
 class SharedMemory final {
-    SharedMemory(std::string_view name, size_t size, Handle handle);
+    SharedMemory(Handle handle, size_t size, void* data);
 
 public:
     SharedMemory() = default;
-    ~SharedMemory() noexcept = default;
+    ~SharedMemory() = default;
 
     SharedMemory(const SharedMemory&) = delete;
     SharedMemory& operator=(const SharedMemory&) = delete;
@@ -95,15 +95,17 @@ public:
     SharedMemory(SharedMemory&&) noexcept;
     SharedMemory& operator=(SharedMemory&&) noexcept;
 
-    [[nodiscard]] static SharedMemory CreateOrOpen(std::string_view name, size_t size);
-    [[nodiscard]] static std::optional<SharedMemory> TryOpenExisting(std::string_view name, size_t size);
+    [[nodiscard]] static Result CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory);
+    [[nodiscard]] static Result TryOpenExisting(std::string_view name,
+                                                size_t size,
+                                                std::optional<SharedMemory>& sharedMemory);
 
-    [[nodiscard]] void* data() const noexcept;   // NOLINT(readability-identifier-naming)
-    [[nodiscard]] size_t size() const noexcept;  // NOLINT(readability-identifier-naming)
+    [[nodiscard]] void* GetData() const;
+    [[nodiscard]] size_t GetSize() const;
 
 private:
-    size_t _size{};
     Handle _handle;
+    size_t _size{};
     void* _data{};
 };
 

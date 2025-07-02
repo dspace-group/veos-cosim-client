@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestServer.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
@@ -9,42 +11,49 @@
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
 
+using namespace DsVeosCoSim;
+
 namespace {
 
-void PipeServerRun() {
-    try {
-        LogTrace("Pipe server is listening on pipe {} ...", PipeName);
+[[nodiscard]] Result Run() {
+    LogTrace("Pipe server is listening on pipe {} ...", PipeName);
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
+
+    while (true) {
+        Pipe pipe;
+        CheckResult(pipe.Initialize(PipeName));
+        CheckResult(pipe.Accept());
 
         while (true) {
-            Pipe pipe(PipeName);
-            pipe.Accept();
+            if (!IsOk(pipe.Read(buffer.data(), BufferSize))) {
+                break;
+            }
 
-            while (true) {
-                if (!pipe.Read(buffer.data(), BufferSize)) {
-                    break;
-                }
-
-                if (!pipe.Write(buffer.data(), BufferSize)) {
-                    break;
-                }
+            if (!IsOk(pipe.Write(buffer.data(), BufferSize))) {
+                break;
             }
         }
-    } catch (const std::exception& e) {
-        LogError("Exception in pipe server thread: {}", e.what());
+    }
+
+    return Result::Ok;
+}
+
+void PipeServerRun() {
+    if (!IsOk(Run())) {
+        LogError("Could not run pipe server.");
     }
 }
 
 }  // namespace
 
-void StartPipeServer() {  // NOLINT(misc-use-internal-linkage)
+void StartPipeServer() {
     std::thread(PipeServerRun).detach();
 }
 
 #else
 
-void StartPipeServer() {  // NOLINT(misc-use-internal-linkage)
+void StartPipeServer() {
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

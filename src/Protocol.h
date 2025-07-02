@@ -40,102 +40,102 @@ enum class FrameKind {
     UnsetPort
 };
 
-[[nodiscard]] std::string_view ToString(FrameKind frameKind) noexcept;
+[[nodiscard]] std::string_view ToString(FrameKind frameKind);
 
 namespace Protocol {
 
-[[nodiscard]] bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind);
+[[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind);
 
-[[nodiscard]] bool SendOk(ChannelWriter& writer);
+[[nodiscard]] Result SendOk(ChannelWriter& writer);
 
-[[nodiscard]] bool SendError(ChannelWriter& writer, std::string_view errorMessage);
-[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorMessage);
+[[nodiscard]] Result SendError(ChannelWriter& writer, std::string_view errorMessage);
+[[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage);
 
-[[nodiscard]] bool SendPing(ChannelWriter& writer);
+[[nodiscard]] Result SendPing(ChannelWriter& writer);
 
-[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command);
-[[nodiscard]] bool ReadPingOk(ChannelReader& reader, Command& command);
+[[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command);
+[[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command);
 
-[[nodiscard]] bool SendConnect(ChannelWriter& writer,
-                               uint32_t protocolVersion,
-                               Mode clientMode,
-                               std::string_view serverName,
-                               std::string_view clientName);
-[[nodiscard]] bool ReadConnect(ChannelReader& reader,
-                               uint32_t& protocolVersion,
-                               Mode& clientMode,
-                               std::string& serverName,
-                               std::string& clientName);
-
-[[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
+[[nodiscard]] Result SendConnect(ChannelWriter& writer,
                                  uint32_t protocolVersion,
                                  Mode clientMode,
-                                 SimulationTime stepSize,
-                                 SimulationState simulationState,
-                                 const std::vector<IoSignalContainer>& incomingSignals,
-                                 const std::vector<IoSignalContainer>& outgoingSignals,
-                                 const std::vector<CanControllerContainer>& canControllers,
-                                 const std::vector<EthControllerContainer>& ethControllers,
-                                 const std::vector<LinControllerContainer>& linControllers);
-[[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
+                                 std::string_view serverName,
+                                 std::string_view clientName);
+[[nodiscard]] Result ReadConnect(ChannelReader& reader,
                                  uint32_t& protocolVersion,
                                  Mode& clientMode,
-                                 SimulationTime& stepSize,
-                                 SimulationState& simulationState,
-                                 std::vector<IoSignalContainer>& incomingSignals,
-                                 std::vector<IoSignalContainer>& outgoingSignals,
-                                 std::vector<CanControllerContainer>& canControllers,
-                                 std::vector<EthControllerContainer>& ethControllers,
-                                 std::vector<LinControllerContainer>& linControllers);
+                                 std::string& serverName,
+                                 std::string& clientName);
 
-[[nodiscard]] bool SendStart(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
+                                   uint32_t protocolVersion,
+                                   Mode clientMode,
+                                   SimulationTime stepSize,
+                                   SimulationState simulationState,
+                                   const std::vector<IoSignalContainer>& incomingSignals,
+                                   const std::vector<IoSignalContainer>& outgoingSignals,
+                                   const std::vector<CanControllerContainer>& canControllers,
+                                   const std::vector<EthControllerContainer>& ethControllers,
+                                   const std::vector<LinControllerContainer>& linControllers);
+[[nodiscard]] Result ReadConnectOk(ChannelReader& reader,
+                                   uint32_t& protocolVersion,
+                                   Mode& clientMode,
+                                   SimulationTime& stepSize,
+                                   SimulationState& simulationState,
+                                   std::vector<IoSignalContainer>& incomingSignals,
+                                   std::vector<IoSignalContainer>& outgoingSignals,
+                                   std::vector<CanControllerContainer>& canControllers,
+                                   std::vector<EthControllerContainer>& ethControllers,
+                                   std::vector<LinControllerContainer>& linControllers);
 
-[[nodiscard]] bool SendStop(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason);
-[[nodiscard]] bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason);
+[[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendPause(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason);
+[[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason);
 
-[[nodiscard]] bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime);
-[[nodiscard]] bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime);
+[[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendStep(ChannelWriter& writer,
-                            SimulationTime simulationTime,
-                            const IoBuffer& ioBuffer,
-                            const BusBuffer& busBuffer);
-[[nodiscard]] bool ReadStep(ChannelReader& reader,
-                            SimulationTime& simulationTime,
-                            const IoBuffer& ioBuffer,
-                            const BusBuffer& busBuffer,
-                            const Callbacks& callbacks);
+[[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime);
+[[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime);
 
-[[nodiscard]] bool SendStepOk(ChannelWriter& writer,
-                              SimulationTime nextSimulationTime,
-                              Command command,
+[[nodiscard]] Result SendStep(ChannelWriter& writer,
+                              SimulationTime simulationTime,
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer);
-[[nodiscard]] bool ReadStepOk(ChannelReader& reader,
-                              SimulationTime& nextSimulationTime,
-                              Command& command,
+[[nodiscard]] Result ReadStep(ChannelReader& reader,
+                              SimulationTime& simulationTime,
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer,
                               const Callbacks& callbacks);
 
-[[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName);
-[[nodiscard]] bool ReadGetPort(ChannelReader& reader, std::string& serverName);
+[[nodiscard]] Result SendStepOk(ChannelWriter& writer,
+                                SimulationTime nextSimulationTime,
+                                Command command,
+                                const IoBuffer& ioBuffer,
+                                const BusBuffer& busBuffer);
+[[nodiscard]] Result ReadStepOk(ChannelReader& reader,
+                                SimulationTime& nextSimulationTime,
+                                Command& command,
+                                const IoBuffer& ioBuffer,
+                                const BusBuffer& busBuffer,
+                                const Callbacks& callbacks);
 
-[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port);
-[[nodiscard]] bool ReadGetPortOk(ChannelReader& reader, uint16_t& port);
+[[nodiscard]] Result SendGetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName);
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port);
-[[nodiscard]] bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port);
+[[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port);
+[[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port);
 
-[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName);
-[[nodiscard]] bool ReadUnsetPort(ChannelReader& reader, std::string& serverName);
+[[nodiscard]] Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port);
+[[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port);
+
+[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName);
 
 }  // namespace Protocol
 

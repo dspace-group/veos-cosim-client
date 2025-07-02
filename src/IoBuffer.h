@@ -14,10 +14,10 @@ namespace DsVeosCoSim {
 
 class IoBuffer {
 protected:
-    IoBuffer() noexcept = default;
+    IoBuffer() = default;
 
 public:
-    virtual ~IoBuffer() noexcept = default;
+    virtual ~IoBuffer() = default;
 
     IoBuffer(const IoBuffer&) = delete;
     IoBuffer& operator=(const IoBuffer&) = delete;
@@ -27,20 +27,21 @@ public:
 
     virtual void ClearData() const = 0;
 
-    virtual void Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
-    virtual void Read(IoSignalId signalId, uint32_t& length, void* value) const = 0;
-    virtual void Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
+    [[nodiscard]] virtual Result Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
+    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, void* value) const = 0;
+    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
 
-    [[nodiscard]] virtual bool Serialize(ChannelWriter& writer) const = 0;
-    [[nodiscard]] virtual bool Deserialize(ChannelReader& reader,
-                                           SimulationTime simulationTime,
-                                           const Callbacks& callbacks) const = 0;
+    [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) const = 0;
+    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader,
+                                             SimulationTime simulationTime,
+                                             const Callbacks& callbacks) const = 0;
 };
 
-[[nodiscard]] std::unique_ptr<IoBuffer> CreateIoBuffer(CoSimType coSimType,
-                                                       ConnectionKind connectionKind,
-                                                       std::string_view name,
-                                                       const std::vector<IoSignal>& incomingSignals,
-                                                       const std::vector<IoSignal>& outgoingSignals);
+[[nodiscard]] Result CreateIoBuffer(CoSimType coSimType,
+                                    ConnectionKind connectionKind,
+                                    std::string_view name,
+                                    const std::vector<IoSignal>& incomingSignals,
+                                    const std::vector<IoSignal>& outgoingSignals,
+                                    std::unique_ptr<IoBuffer>& ioBuffer);
 
 }  // namespace DsVeosCoSim

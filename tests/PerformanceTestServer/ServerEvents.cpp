@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestServer.h"
+
 #if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
 
 #include <array>
@@ -13,37 +15,44 @@ using namespace DsVeosCoSim;
 
 namespace {
 
+[[nodiscard]] Result Run() {
+    LogTrace("Events server listening on SHM {} ...", ShmName);
+
+    std::array<char, BufferSize> buffer{};
+
+    NamedEvent beginEvent;
+    CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
+    NamedEvent endEvent;
+    CheckResult(NamedEvent::CreateOrOpen(EndEventName, endEvent));
+    SharedMemory sharedMemory;
+    CheckResult(SharedMemory::CreateOrOpen(ShmName, BufferSize, sharedMemory));
+
+    while (true) {
+        CheckResult(beginEvent.Wait());
+        (void)memcpy(buffer.data(), sharedMemory.GetData(), BufferSize);
+        buffer[0]++;
+        (void)memcpy(sharedMemory.GetData(), buffer.data(), BufferSize);
+        CheckResult(endEvent.Set());
+    }
+
+    return Result::Ok;
+}
+
 void EventsServerRun() {
-    try {
-        LogTrace("Events server listening on SHM {} ...", ShmName);
-
-        std::array<char, BufferSize> buffer{};
-
-        NamedEvent beginEvent = NamedEvent::CreateOrOpen(BeginEventName);
-        NamedEvent endEvent = NamedEvent::CreateOrOpen(EndEventName);
-        SharedMemory sharedMemory = SharedMemory::CreateOrOpen(ShmName, BufferSize);
-
-        while (true) {
-            beginEvent.Wait();
-            (void)memcpy(buffer.data(), sharedMemory.data(), BufferSize);
-            buffer[0]++;
-            (void)memcpy(sharedMemory.data(), buffer.data(), BufferSize);
-            endEvent.Set();
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in event server thread: {}", e.what());
+    if (!IsOk(Run())) {
+        LogError("Could not run events server.");
     }
 }
 
 }  // namespace
 
-void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
+void StartEventsServer() {
     std::thread(EventsServerRun).detach();
 }
 
 #else
 
-void StartEventsServer() {  // NOLINT(misc-use-internal-linkage)
+void StartEventsServer() {
 }
 
 #endif

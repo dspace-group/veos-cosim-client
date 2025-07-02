@@ -5,7 +5,6 @@
 #include <string>
 #include <string_view>
 
-#include "CoSimHelper.h"
 #include "LogHelper.h"
 #include "Socket.h"
 
@@ -23,10 +22,11 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] uint16_t GetNextFreeDynamicPort() {
-    Socket socket(AddressFamily::Ipv4);
-    socket.Bind(0, false);
-    return socket.GetLocalPort();
+[[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& port) {
+    Socket socket;
+    CheckResult(Socket::Create(AddressFamily::Ipv4, socket));
+    CheckResult(socket.Bind(0, false));
+    return socket.GetLocalPort(port);
 }
 
 }  // namespace
@@ -49,31 +49,27 @@ namespace {
 #endif
 }
 
-[[nodiscard]] bool StartUp() {
+[[nodiscard]] Result StartUp() {
     InitializeOutput();
 
-    try {
-        StartupNetwork();
-    } catch (const std::exception& e) {
-        LogError(e.what());
-        return false;
-    }
+    CheckResult(StartupNetwork());
 
-    try {
-        uint16_t portMapperPort = GetNextFreeDynamicPort();
-        std::string portMapperPortString = std::to_string(portMapperPort);
+    uint16_t portMapperPort{};
+    CheckResult(GetNextFreeDynamicPort(portMapperPort));
+    std::string portMapperPortString = std::to_string(portMapperPort);
+    SetEnvVariable("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString);
+    return Result::Ok;
+}
+
+void SetEnvVariable(std::string_view name, std::string_view value) {
 #ifdef _WIN32
-        std::string environmentString = "VEOS_COSIM_PORTMAPPER_PORT=" + portMapperPortString;
-        (void)_putenv(environmentString.c_str());
+    std::string environmentString(name);
+    environmentString.append("=");
+    environmentString.append(value);
+    (void)_putenv(environmentString.c_str());
 #else
-        (void)setenv("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString.c_str(), 1);
+    (void)setenv(name.data(), value.data(), 1);
 #endif
-    } catch (const std::exception& e) {
-        LogError(e.what());
-        return false;
-    }
-
-    return true;
 }
 
 [[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
@@ -84,7 +80,7 @@ namespace {
     return "::1";
 }
 
-[[nodiscard]] bool SendComplete(const Socket& socket, const void* buffer, size_t length) {
+[[nodiscard]] Result SendComplete(const Socket& socket, const void* buffer, size_t length) {
     const auto* bufferPointer = static_cast<const uint8_t*>(buffer);
     while (length > 0) {
         int32_t sentSize{};
@@ -94,10 +90,10 @@ namespace {
         bufferPointer += sentSize;
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
+[[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
         int32_t receivedSize{};
@@ -107,5 +103,29 @@ namespace {
         bufferPointer += receivedSize;
     }
 
-    return true;
+    return Result::Ok;
+}
+
+[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
+                                     ConnectionKind connectionKind,
+                                     std::string_view name,
+                                     const std::vector<CanController>& controllers,
+                                     std::unique_ptr<BusBuffer>& busBuffer) {
+    return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, busBuffer);
+}
+
+[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
+                                     ConnectionKind connectionKind,
+                                     std::string_view name,
+                                     const std::vector<EthController>& controllers,
+                                     std::unique_ptr<BusBuffer>& busBuffer) {
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, busBuffer);
+}
+
+[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
+                                     ConnectionKind connectionKind,
+                                     std::string_view name,
+                                     const std::vector<LinController>& controllers,
+                                     std::unique_ptr<BusBuffer>& busBuffer) {
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, busBuffer);
 }

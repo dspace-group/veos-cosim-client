@@ -4,43 +4,44 @@
 
 #include "DsVeosCoSim/CoSimClient.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
 #include "LogHelper.h"
+#include "PerformanceTestClient.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    try {
-        std::unique_ptr<CoSimClient> coSimClient = CreateClient();
-        ConnectConfig connectConfig{};
-        connectConfig.clientName = "PerformanceTestClient";
-        connectConfig.serverName = CoSimServerName;
-        connectConfig.remoteIpAddress = host;
-        if (!host.empty()) {
-            connectConfig.remotePort = CoSimPort;
+[[nodiscard]] Result Run(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    std::unique_ptr<CoSimClient> coSimClient;
+    CheckResult(CreateClient(coSimClient));
+    ConnectConfig connectConfig{};
+    connectConfig.clientName = "PerformanceTestClient";
+    connectConfig.serverName = CoSimServerName;
+    connectConfig.remoteIpAddress = host;
+    if (!host.empty()) {
+        connectConfig.remotePort = CoSimPort;
+    }
+
+    CheckResult(coSimClient->Connect(connectConfig));
+
+    connectedEvent.Set();
+
+    Callbacks callbacks{};
+    callbacks.simulationEndStepCallback = [&](SimulationTime) {
+        if (isStopped) {
+            coSimClient->Disconnect();
         }
 
-        MUST_BE_TRUE(coSimClient->Connect(connectConfig));
+        counter++;
+    };
 
-        connectedEvent.Set();
+    return coSimClient->RunCallbackBasedCoSimulation(callbacks);
+}
 
-        Callbacks callbacks{};
-        callbacks.simulationEndStepCallback = [&](SimulationTime) {
-            if (isStopped) {
-                coSimClient->Disconnect();
-            }
-
-            counter++;
-        };
-
-        MUST_BE_TRUE(coSimClient->RunCallbackBasedCoSimulation(callbacks));
-    } catch (const std::exception& e) {
-        LogError("Exception in CoSim callback client thread: {}", e.what());
-        connectedEvent.Set();
+void CoSimClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsDisconnected(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run CoSim callback client.");
     }
 }
 

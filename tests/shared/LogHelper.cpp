@@ -18,11 +18,6 @@ namespace {
 
 std::string LastMessage;
 
-const fmt::text_style Red = fg(fmt::color::red);
-const fmt::text_style Yellow = fg(fmt::color::yellow);
-const fmt::text_style White = fg(fmt::color::white);
-const fmt::text_style Gray = fg(fmt::color::light_gray);
-
 }  // namespace
 
 void InitializeOutput() {
@@ -47,40 +42,33 @@ void OnLogCallback(Severity severity, std::string_view message) {
     LastMessage = message;
     switch (severity) {
         case Severity::Error:
-            print(Red, "{}\n", message);
+            print(fg(fmt::color::red), "{}\n", message);
             break;
         case Severity::Warning:
-            print(Yellow, "{}\n", message);
+            print(fg(fmt::color::yellow), "{}\n", message);
             break;
         case Severity::Info:
-            print(White, "{}\n", message);
+            print(fg(fmt::color::white), "{}\n", message);
             break;
         case Severity::Trace:
-            print(Gray, "{}\n", message);
+            print(fg(fmt::color::light_gray), "{}\n", message);
             break;
     }
 }
 
-void LogCanMessage([[maybe_unused]] SimulationTime simulationTime,
-                   [[maybe_unused]] const CanController& controller,
-                   const CanMessage& message) {
+void LogCanMessage(const CanMessage& message) {
     print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
 }
 
-void LogEthMessage([[maybe_unused]] SimulationTime simulationTime,
-                   [[maybe_unused]] const EthController& controller,
-                   const EthMessage& message) {
+void LogEthMessage(const EthMessage& message) {
     print(fg(fmt::color::cyan), "{}\n", ToString(message));
 }
 
-void LogLinMessage([[maybe_unused]] SimulationTime simulationTime,
-                   [[maybe_unused]] const LinController& controller,
-                   const LinMessage& message) {
+void LogLinMessage(const LinMessage& message) {
     print(fg(fmt::color::lime), "{}\n", ToString(message));
 }
 
-void LogIoData([[maybe_unused]] SimulationTime simulationTime,
-               const IoSignal& ioSignal,
+void LogIoData(const IoSignal& ioSignal,
                uint32_t length,
                const void* value) {
     print(fg(fmt::color::fuchsia), "{}\n", IoDataToString(ioSignal, length, value));

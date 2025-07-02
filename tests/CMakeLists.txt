@@ -1,5 +1,6 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
+add_subdirectory(benchmark)
 add_subdirectory(PerformanceTestClient)
 add_subdirectory(PerformanceTestServer)
 add_subdirectory(shared)

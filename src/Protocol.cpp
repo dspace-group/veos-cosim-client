@@ -18,45 +18,45 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
+[[nodiscard]] Result WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
     CheckResultWithMessage(writer.Write(frameKind), "Could not write frame header.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadString(ChannelReader& reader, std::string& string) {
+[[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string) {
     uint32_t size = 0;
     CheckResultWithMessage(reader.Read(size), "Could not read string size.");
     string.resize(size);
     CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteString(ChannelWriter& writer, std::string_view string) {
+[[nodiscard]] Result WriteString(ChannelWriter& writer, std::string_view string) {
     auto size = static_cast<uint32_t>(string.size());
     CheckResultWithMessage(writer.Write(size), "Could not write string size.");
     CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
+[[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
     CheckResultWithMessage(reader.Read(signal.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(signal.length), "Could not read length.");
     CheckResultWithMessage(reader.Read(signal.dataType), "Could not read data type.");
     CheckResultWithMessage(reader.Read(signal.sizeKind), "Could not read size kind.");
     CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
+[[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
     CheckResultWithMessage(writer.Write(signal.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(signal.length), "Could not write length.");
     CheckResultWithMessage(writer.Write(signal.dataType), "Could not write data type.");
     CheckResultWithMessage(writer.Write(signal.sizeKind), "Could not write size kind.");
     CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
+[[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
     uint32_t signalsCount = 0;
     CheckResultWithMessage(reader.Read(signalsCount), "Could not read signals count.");
     signals.resize(signalsCount);
@@ -65,20 +65,20 @@ namespace {
         CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
+[[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
     auto size = static_cast<uint32_t>(signals.size());
     CheckResultWithMessage(writer.Write(size), "Could not write signals count.");
     for (const auto& signal : signals) {
         CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -87,10 +87,10 @@ namespace {
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
     CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -99,10 +99,10 @@ namespace {
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
     CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -111,20 +111,21 @@ namespace {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers) {
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<CanControllerContainer>& controllers) {
     auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -132,10 +133,10 @@ namespace {
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
     CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -143,10 +144,10 @@ namespace {
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
     CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -155,20 +156,21 @@ namespace {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers) {
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<EthControllerContainer>& controllers) {
     auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
@@ -176,10 +178,10 @@ namespace {
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
     CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
@@ -187,10 +189,10 @@ namespace {
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
     CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
     uint32_t controllersCount = 0;
     CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
     controllers.resize(controllersCount);
@@ -199,22 +201,23 @@ namespace {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers) {
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<LinControllerContainer>& controllers) {
     auto size = static_cast<uint32_t>(controllers.size());
     CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
-    return true;
+    return Result::Ok;
 }
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(FrameKind frameKind) noexcept {
+[[nodiscard]] std::string_view ToString(FrameKind frameKind) {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";
@@ -257,7 +260,7 @@ namespace {
 
 namespace Protocol {
 
-[[nodiscard]] bool ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
+[[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
     if (IsProtocolHeaderTracingEnabled()) {
         LogProtocolBeginTrace("ReceiveHeader()");
     }
@@ -271,10 +274,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendOk(ChannelWriter& writer) {
+[[nodiscard]] Result SendOk(ChannelWriter& writer) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("SendOk()");
     }
@@ -286,10 +289,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendOk()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendError(ChannelWriter& writer, std::string_view errorMessage) {
+[[nodiscard]] Result SendError(ChannelWriter& writer, std::string_view errorMessage) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendError(ErrorMessage: \"";
         str.append(errorMessage);
@@ -305,10 +308,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendError()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadError(ChannelReader& reader, std::string& errorMessage) {
+[[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadError()");
     }
@@ -322,10 +325,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendPing(ChannelWriter& writer) {
+[[nodiscard]] Result SendPing(ChannelWriter& writer) {
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolBeginTrace("SendPing()");
     }
@@ -337,10 +340,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendPing()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendPingOk(ChannelWriter& writer, Command command) {
+[[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command) {
     if (IsProtocolPingTracingEnabled()) {
         std::string str = "SendPingOk(Command: ";
         str.append(ToString(command));
@@ -356,10 +359,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendPingOk()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadPingOk(ChannelReader& reader, Command& command) {
+[[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command) {
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolBeginTrace("ReadPingOk()");
     }
@@ -373,14 +376,14 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendConnect(ChannelWriter& writer,
-                               uint32_t protocolVersion,
-                               Mode clientMode,
-                               std::string_view serverName,
-                               std::string_view clientName) {
+[[nodiscard]] Result SendConnect(ChannelWriter& writer,
+                                 uint32_t protocolVersion,
+                                 Mode clientMode,
+                                 std::string_view serverName,
+                                 std::string_view clientName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendConnect(ProtocolVersion: ";
         str.append(std::to_string(protocolVersion));
@@ -405,14 +408,14 @@ namespace Protocol {
         LogProtocolEndTrace("SendConnect()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadConnect(ChannelReader& reader,
-                               uint32_t& protocolVersion,
-                               Mode& clientMode,
-                               std::string& serverName,
-                               std::string& clientName) {
+[[nodiscard]] Result ReadConnect(ChannelReader& reader,
+                                 uint32_t& protocolVersion,
+                                 Mode& clientMode,
+                                 std::string& serverName,
+                                 std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadConnect()");
     }
@@ -435,19 +438,19 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendConnectOk(ChannelWriter& writer,
-                                 uint32_t protocolVersion,
-                                 Mode clientMode,
-                                 SimulationTime stepSize,
-                                 SimulationState simulationState,
-                                 const std::vector<IoSignalContainer>& incomingSignals,
-                                 const std::vector<IoSignalContainer>& outgoingSignals,
-                                 const std::vector<CanControllerContainer>& canControllers,
-                                 const std::vector<EthControllerContainer>& ethControllers,
-                                 const std::vector<LinControllerContainer>& linControllers) {
+[[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
+                                   uint32_t protocolVersion,
+                                   Mode clientMode,
+                                   SimulationTime stepSize,
+                                   SimulationState simulationState,
+                                   const std::vector<IoSignalContainer>& incomingSignals,
+                                   const std::vector<IoSignalContainer>& outgoingSignals,
+                                   const std::vector<CanControllerContainer>& canControllers,
+                                   const std::vector<EthControllerContainer>& ethControllers,
+                                   const std::vector<LinControllerContainer>& linControllers) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendConnectOk(ProtocolVersion: ";
         str.append(std::to_string(protocolVersion));
@@ -487,19 +490,19 @@ namespace Protocol {
         LogProtocolEndTrace("SendConnectOk()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadConnectOk(ChannelReader& reader,
-                                 uint32_t& protocolVersion,
-                                 Mode& clientMode,
-                                 SimulationTime& stepSize,
-                                 SimulationState& simulationState,
-                                 std::vector<IoSignalContainer>& incomingSignals,
-                                 std::vector<IoSignalContainer>& outgoingSignals,
-                                 std::vector<CanControllerContainer>& canControllers,
-                                 std::vector<EthControllerContainer>& ethControllers,
-                                 std::vector<LinControllerContainer>& linControllers) {
+[[nodiscard]] Result ReadConnectOk(ChannelReader& reader,
+                                   uint32_t& protocolVersion,
+                                   Mode& clientMode,
+                                   SimulationTime& stepSize,
+                                   SimulationState& simulationState,
+                                   std::vector<IoSignalContainer>& incomingSignals,
+                                   std::vector<IoSignalContainer>& outgoingSignals,
+                                   std::vector<CanControllerContainer>& canControllers,
+                                   std::vector<EthControllerContainer>& ethControllers,
+                                   std::vector<LinControllerContainer>& linControllers) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadConnectOk()");
     }
@@ -537,10 +540,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStart(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -556,10 +559,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendStart()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadStart()");
     }
@@ -573,10 +576,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStop(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -592,10 +595,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendStop()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadStop()");
     }
@@ -609,10 +612,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
+[[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendTerminate(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -631,10 +634,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendTerminate()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
+[[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadTerminate()");
     }
@@ -651,10 +654,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendPause(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -670,10 +673,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendPause()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadPause()");
     }
@@ -687,10 +690,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendContinue(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -706,10 +709,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendContinue()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadContinue()");
     }
@@ -723,13 +726,13 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendStep(ChannelWriter& writer,
-                            SimulationTime simulationTime,
-                            const IoBuffer& ioBuffer,
-                            const BusBuffer& busBuffer) {
+[[nodiscard]] Result SendStep(ChannelWriter& writer,
+                              SimulationTime simulationTime,
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStep(SimulationTime: ";
         str.append(SimulationTimeToString(simulationTime));
@@ -747,14 +750,14 @@ namespace Protocol {
         LogProtocolEndTrace("SendStep()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadStep(ChannelReader& reader,
-                            SimulationTime& simulationTime,
-                            const IoBuffer& ioBuffer,
-                            const BusBuffer& busBuffer,
-                            const Callbacks& callbacks) {
+[[nodiscard]] Result ReadStep(ChannelReader& reader,
+                              SimulationTime& simulationTime,
+                              const IoBuffer& ioBuffer,
+                              const BusBuffer& busBuffer,
+                              const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadStep()");
     }
@@ -775,14 +778,14 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendStepOk(ChannelWriter& writer,
-                              SimulationTime nextSimulationTime,
-                              Command command,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer) {
+[[nodiscard]] Result SendStepOk(ChannelWriter& writer,
+                                SimulationTime nextSimulationTime,
+                                Command command,
+                                const IoBuffer& ioBuffer,
+                                const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendStepOk(NextSimulationTime: ";
         str.append(SimulationTimeToString(nextSimulationTime));
@@ -803,15 +806,15 @@ namespace Protocol {
         LogProtocolEndTrace("SendStepOk()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadStepOk(ChannelReader& reader,
-                              SimulationTime& nextSimulationTime,
-                              Command& command,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer,
-                              const Callbacks& callbacks) {
+[[nodiscard]] Result ReadStepOk(ChannelReader& reader,
+                                SimulationTime& nextSimulationTime,
+                                Command& command,
+                                const IoBuffer& ioBuffer,
+                                const BusBuffer& busBuffer,
+                                const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadStepOk()");
     }
@@ -837,10 +840,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
+[[nodiscard]] Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendSetPort(ServerName: \"";
         str.append(serverName);
@@ -859,10 +862,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendSetPort()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
+[[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadSetPort()");
     }
@@ -879,10 +882,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendUnsetPort(ServerName: \"";
         str.append(serverName);
@@ -898,10 +901,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendUnsetPort()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadUnsetPort()");
     }
@@ -915,10 +918,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendGetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] Result SendGetPort(ChannelWriter& writer, std::string_view serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendGetPort(ServerName: \"";
         str.append(serverName);
@@ -934,10 +937,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendGetPort()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadGetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadGetPort()");
     }
@@ -951,10 +954,10 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+[[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendGetPortOk(Port: ";
         str.append(std::to_string(port));
@@ -970,10 +973,10 @@ namespace Protocol {
         LogProtocolEndTrace("SendGetPortOk()");
     }
 
-    return true;
+    return Result::Ok;
 }
 
-[[nodiscard]] bool ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
+[[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTrace("ReadGetPortOk()");
     }
@@ -987,7 +990,7 @@ namespace Protocol {
         LogProtocolEndTrace(str);
     }
 
-    return true;
+    return Result::Ok;
 }
 
 }  // namespace Protocol

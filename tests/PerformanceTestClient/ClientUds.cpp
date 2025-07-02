@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "PerformanceTestClient.h"
+
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
@@ -8,36 +10,38 @@
 
 #include "CoSimHelper.h"
 #include "Helper.h"
-#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
-#include "RunPerformanceTest.h"
 #include "Socket.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void UdsClientRun([[maybe_unused]] std::string_view host,
-                  Event& connectedEvent,
-                  uint64_t& counter,
-                  const bool& isStopped) {
-    try {
-        std::optional<Socket> clientSocket = Socket::TryConnect(UdsName);
-        MUST_BE_TRUE(clientSocket);
+[[nodiscard]] Result Run([[maybe_unused]] std::string_view host,
+                         Event& connectedEvent,
+                         uint64_t& counter,
+                         const bool& isStopped) {
+    std::optional<Socket> clientSocket;
+    CheckResult(Socket::TryConnect(UdsName, clientSocket));
+    CheckBoolResult(clientSocket);
 
-        std::array<char, BufferSize> buffer{};
+    std::array<char, BufferSize> buffer{};
 
-        connectedEvent.Set();
+    connectedEvent.Set();
 
-        while (!isStopped) {
-            MUST_BE_TRUE(SendComplete(*clientSocket, buffer.data(), BufferSize));
-            MUST_BE_TRUE(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
+    while (!isStopped) {
+        CheckResult(SendComplete(*clientSocket, buffer.data(), BufferSize));
+        CheckResult(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
 
-            counter++;
-        }
-    } catch (const std::exception& e) {
-        LogError("Exception in unix domain socket client thread: {}", e.what());
-        connectedEvent.Set();
+        counter++;
+    }
+
+    return Result::Ok;
+}
+
+void UdsClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run Unix Domain Socket client.");
     }
 }
 

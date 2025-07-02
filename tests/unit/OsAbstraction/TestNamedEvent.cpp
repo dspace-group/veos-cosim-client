@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "TestHelper.h"
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
@@ -18,169 +19,171 @@ namespace {
     return GenerateString("Event名前\xF0\x9F\x98\x80");
 }
 
-void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
-    NamedEvent event1 = NamedEvent::CreateOrOpen(eventName1);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(eventName2);
-
-    event1.Wait();
-    event2.Set();
-}
-
 class TestNamedEvent : public testing::Test {};
 
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    NamedEvent event;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event));
 
     // Act and assert
-    ASSERT_NO_THROW(event.Set());
-    ASSERT_NO_THROW(event.Wait());
+    AssertOk(event.Set());
+    AssertOk(event.Wait());
 }
 
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEventWithTimeout) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    NamedEvent event;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event));
+    ExpectOk(event.Set());
+
+    bool waitSignaled{};
 
     // Act
-    ASSERT_NO_THROW(event.Set());
-    bool result = event.Wait(1);
+    AssertOk(event.Wait(1, waitSignaled));
 
     // Assert
-    ASSERT_TRUE(result);
+    AssertTrue(waitSignaled);
 }
 
 TEST_F(TestNamedEvent, WaitTwiceOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    NamedEvent event;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event));
+
+    bool waitSignaled1{};
+    bool waitSignaled2{};
 
     // Act
-    ASSERT_NO_THROW(event.Set());
-    bool result1 = event.Wait(1);
-    bool result2 = event.Wait(1);
+    AssertOk(event.Set());
+    AssertOk(event.Wait(1, waitSignaled1));
+    AssertOk(event.Wait(1, waitSignaled2));
 
     // Assert
-    ASSERT_TRUE(result1);
-    ASSERT_FALSE(result2);
+    AssertTrue(waitSignaled1);
+    AssertFalse(waitSignaled2);
 }
 
 TEST_F(TestNamedEvent, SetTwiceOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    NamedEvent event;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event));
+
+    bool waitSignaled1{};
+    bool waitSignaled2{};
 
     // Act
-    ASSERT_NO_THROW(event.Set());
-    ASSERT_NO_THROW(event.Set());
-    bool result1 = event.Wait(1);
-    bool result2 = event.Wait(1);
+    AssertOk(event.Set());
+    AssertOk(event.Set());
+    AssertOk(event.Wait(1, waitSignaled1));
+    AssertOk(event.Wait(1, waitSignaled2));
 
     // Assert
-    ASSERT_TRUE(result1);
-    ASSERT_FALSE(result2);
-}
-
-TEST_F(TestNamedEvent, WaitResetAndWaitOnNamedEvent) {
-    // Arrange
-    std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
-
-    // Act
-    ASSERT_NO_THROW(event.Set());
-    bool result1 = event.Wait(1);
-    bool result2 = event.Wait(1);
-
-    // Assert
-    ASSERT_TRUE(result1);
-    ASSERT_FALSE(result2);
+    AssertTrue(waitSignaled1);
+    AssertFalse(waitSignaled2);
 }
 
 TEST_F(TestNamedEvent, WaitWithoutSetOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event = NamedEvent::CreateOrOpen(name);
+    NamedEvent event;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event));
+
+    bool waitSignaled{};
 
     // Act
-    bool result = event.Wait(1);
+    AssertOk(event.Wait(1, waitSignaled));
 
     // Assert
-    ASSERT_FALSE(result);
+    AssertFalse(waitSignaled);
 }
 
 TEST_F(TestNamedEvent, SetAndWaitOnDifferentNamedEvents) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event1 = NamedEvent::CreateOrOpen(name);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(name);
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
 
-    // Act
-    ASSERT_NO_THROW(event1.Set());
-    ASSERT_NO_THROW(event2.Wait());
-
-    // Assert
+    // Act and assert
+    AssertOk(event1.Set());
+    AssertOk(event2.Wait());
 }
 
 TEST_F(TestNamedEvent, ResetOnSettingNamedEvents) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event1 = NamedEvent::CreateOrOpen(name);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(name);
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
 
-    // Act
+    // Act and assert
     for (int32_t i = 0; i < 10; i++) {
-        ASSERT_NO_THROW(event1.Set());
-        ASSERT_NO_THROW(event2.Wait());
+        AssertOk(event1.Set());
+        AssertOk(event2.Wait());
     }
-
-    // Assert
 }
 
 TEST_F(TestNamedEvent, ResetOnWaitingNamedEvents) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event1 = NamedEvent::CreateOrOpen(name);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(name);
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
 
-    // Act
+    // Act and assert
     for (int32_t i = 0; i < 10; i++) {
-        ASSERT_NO_THROW(event1.Set());
-        ASSERT_NO_THROW(event2.Wait());
+        AssertOk(event1.Set());
+        AssertOk(event2.Wait());
     }
-
-    // Assert
 }
 
 TEST_F(TestNamedEvent, NoResetOnNamedEvents) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event1 = NamedEvent::CreateOrOpen(name);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(name);
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
 
-    // Act
+    // Act and assert
     for (int32_t i = 0; i < 10; i++) {
-        ASSERT_NO_THROW(event1.Set());
-        ASSERT_NO_THROW(event2.Wait());
+        AssertOk(event1.Set());
+        AssertOk(event2.Wait());
     }
+}
 
-    // Assert
+void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(eventName1, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(eventName2, event2));
+
+    ExpectOk(event1.Wait());
+    ExpectOk(event2.Set());
 }
 
 TEST_F(TestNamedEvent, SetAndWaitInDifferentThreads) {
     // Arrange
     std::string firstName = GenerateName();
     std::string secondName = GenerateName();
-    NamedEvent event1 = NamedEvent::CreateOrOpen(firstName);
-    NamedEvent event2 = NamedEvent::CreateOrOpen(secondName);
+    NamedEvent event1;
+    ExpectOk(NamedEvent::CreateOrOpen(firstName, event1));
+    NamedEvent event2;
+    ExpectOk(NamedEvent::CreateOrOpen(secondName, event2));
 
     std::thread thread(WaitAndSet, firstName, secondName);
 
-    // Act
-    ASSERT_NO_THROW(event1.Set());
-    ASSERT_NO_THROW(event2.Wait());
-
-    // Assert
+    // Act and assert
+    AssertOk(event1.Set());
+    AssertOk(event2.Wait());
 
     // Cleanup
     thread.join();

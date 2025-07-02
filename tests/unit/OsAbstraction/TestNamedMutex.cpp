@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include "TestHelper.h"
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
@@ -18,47 +19,52 @@ namespace {
     return GenerateString("Mutex名前\xF0\x9F\x98\x80");
 }
 
-void DifferentThread(std::string_view name, int32_t& counter) {
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
-
-    for (int32_t i = 0; i < 10000; i++) {
-        ASSERT_NO_THROW(mutex.lock());
-        counter++;
-        ASSERT_NO_THROW(mutex.unlock());
-    }
-}
-
 class TestNamedMutex : public testing::Test {};
 
 TEST_F(TestNamedMutex, LockAndUnlockOnSameMutex) {
     // Arrange
     std::string name = GenerateName();
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    NamedMutex mutex;
+    ExpectOk(NamedMutex::CreateOrOpen(name, mutex));
 
     // Act and assert
-    ASSERT_NO_THROW(mutex.lock());
-    ASSERT_NO_THROW(mutex.unlock());
+    AssertOk(mutex.Lock());
+
+    // Cleanup
+    mutex.Unlock();
+}
+
+void DifferentThread(std::string_view name, int32_t& counter) {
+    NamedMutex mutex;
+    ExpectOk(NamedMutex::CreateOrOpen(name, mutex));
+
+    for (int32_t i = 0; i < 10000; i++) {
+        ExpectOk(mutex.Lock());
+        counter++;
+        mutex.Unlock();
+    }
 }
 
 TEST_F(TestNamedMutex, LockAndUnlockOnDifferentMutexes) {
     // Arrange
     std::string name = GenerateName();
-    NamedMutex mutex = NamedMutex::CreateOrOpen(name);
+    NamedMutex mutex;
+    ExpectOk(NamedMutex::CreateOrOpen(name, mutex));
     int32_t counter{};
 
     auto thread = std::thread(DifferentThread, name, std::ref(counter));
 
     // Act
     for (int32_t i = 0; i < 10000; i++) {
-        ASSERT_NO_THROW(mutex.lock());
+        ExpectOk(mutex.Lock());
         counter++;
-        ASSERT_NO_THROW(mutex.unlock());
+        mutex.Unlock();
     }
 
     thread.join();
 
     // Assert
-    ASSERT_EQ(counter, 20000);
+    AssertEq(counter, 20000);
 }
 
 }  // namespace
