@@ -10,8 +10,6 @@ option(DSVEOSCOSIM_BUILD_TESTS "Create tests for dSPACE VEOS CoSim" OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-
 set(DSVEOSCOSIM_TYPE STATIC)
 
 if(MSVC)
@@ -41,9 +39,9 @@ if(MSVC)
 else()
   set(
     DSVEOSCOSIM_WARNINGS
-    "-Wall
+    -Wall
     -Wextra
-    -Wpedantic"
+    -Wpedantic
   )
 endif()
 
