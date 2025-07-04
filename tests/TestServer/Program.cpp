@@ -76,19 +76,19 @@ public:
         return _server->Write(signalId, length, value.data());
     }
 
-    [[nodiscard]] Result Transmit(const CanMessage& message) {
+    [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) {
         std::lock_guard lock(_mutex);
-        return _server->Transmit(message);
+        return _server->Transmit(messageContainer);
     }
 
-    [[nodiscard]] Result Transmit(const EthMessage& message) {
+    [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) {
         std::lock_guard lock(_mutex);
-        return _server->Transmit(message);
+        return _server->Transmit(messageContainer);
     }
 
-    [[nodiscard]] Result Transmit(const LinMessage& message) {
+    [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) {
         std::lock_guard lock(_mutex);
-        return _server->Transmit(message);
+        return _server->Transmit(messageContainer);
     }
 
     void StartBackgroundThread() {
@@ -193,24 +193,24 @@ void SwitchSendingLinMessages() {
 }
 
 [[nodiscard]] Result TransmitCanMessage(const CanControllerContainer& controller) {
-    CanMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    CanMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Server->Transmit(Convert(message));
+    return Server->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result TransmitEthMessage(const EthControllerContainer& controller) {
-    EthMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    EthMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Server->Transmit(Convert(message));
+    return Server->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result TransmitLinMessage(const LinControllerContainer& controller) {
-    LinMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    LinMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Server->Transmit(Convert(message));
+    return Server->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
@@ -432,22 +432,22 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
     std::thread(TerminateSimulation).detach();
 }
 
-void OnCanMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const CanController& controller,
-                          const CanMessage& message) {
-    LogCanMessage(message);
+void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const CanController& controller,
+                                   const CanMessageContainer& messageContainer) {
+    LogCanMessageContainer(messageContainer);
 }
 
-void OnEthMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const EthController& controller,
-                          const EthMessage& message) {
-    LogEthMessage(message);
+void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const EthController& controller,
+                                   const EthMessageContainer& messageContainer) {
+    LogEthMessageContainer(messageContainer);
 }
 
-void OnLinMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const LinController& controller,
-                          const LinMessage& message) {
-    LogLinMessage(message);
+void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const LinController& controller,
+                                   const LinMessageContainer& messageContainer) {
+    LogLinMessageContainer(messageContainer);
 }
 
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, std::string_view name) {
@@ -468,9 +468,9 @@ void OnLinMessageReceived([[maybe_unused]] SimulationTime simulationTime,
     config.simulationPausedCallback = OnSimulationPausedCallback;
     config.simulationContinuedCallback = OnSimulationContinuedCallback;
     config.simulationTerminatedCallback = OnSimulationTerminatedCallback;
-    config.canMessageReceivedCallback = OnCanMessageReceived;
-    config.ethMessageReceivedCallback = OnEthMessageReceived;
-    config.linMessageReceivedCallback = OnLinMessageReceived;
+    config.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
+    config.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
+    config.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
     config.canControllers = CreateCanControllers(2);
     config.ethControllers = CreateEthControllers(2);
     config.linControllers = CreateLinControllers(2);

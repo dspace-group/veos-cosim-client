@@ -32,6 +32,12 @@ target_compile_options(
   ${DSVEOSCOSIM_WARNINGS}
 )
 
+target_compile_definitions(
+  PerformanceTestClient
+  PRIVATE
+  ALL_COMMUNICATION_TESTS
+)
+
 target_link_libraries(
   PerformanceTestClient
   PRIVATE

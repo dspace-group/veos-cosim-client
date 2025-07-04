@@ -13,6 +13,7 @@
 #include "Event.h"
 #include "Generator.h"
 #include "Helper.h"
+#include "OsUtilities.h"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -47,8 +48,7 @@ void RunTest(benchmark::State& state,
              Channel& senderChannel,
              Channel& receiverChannel) {
     using TController = std::tuple_element_t<0, TypeParam>;
-    using TMessage = std::tuple_element_t<2, TypeParam>;
-    using TMessageExtern = std::tuple_element_t<3, TypeParam>;
+    using TMessageContainer = std::tuple_element_t<2, TypeParam>;
 
     TController controller{};
     FillWithRandom(controller);
@@ -72,14 +72,12 @@ void RunTest(benchmark::State& state,
                        std::ref(stopThread),
                        std::ref(endEvent));
 
-    TMessage sendMessage{};
+    TMessageContainer sendMessage{};
     FillWithRandom(sendMessage, controller.id);
-
-    TMessageExtern message = Convert(sendMessage);
 
     for (auto _ : state) {
         for (size_t i = 0; i < count; i++) {
-            MustBeOk(transmitterBusBuffer->Transmit(message));
+            MustBeOk(transmitterBusBuffer->Transmit(sendMessage));
         }
 
         MustBeOk(transmitterBusBuffer->Serialize(senderChannel.GetWriter()));
@@ -93,7 +91,7 @@ void RunTest(benchmark::State& state,
     // The receiver thread is probably in receive function which is blocking. So we wake it up by sending everything one
     // last time
     for (size_t i = 0; i < count; i++) {
-        MustBeOk(transmitterBusBuffer->Transmit(Convert(sendMessage)));
+        MustBeOk(transmitterBusBuffer->Transmit(sendMessage));
     }
 
     MustBeOk(transmitterBusBuffer->Serialize(senderChannel.GetWriter()));

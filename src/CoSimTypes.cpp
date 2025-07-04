@@ -283,16 +283,6 @@ namespace {
     return std::to_string(static_cast<uint32_t>(signalId));
 }
 
-[[nodiscard]] IoSignalContainer::operator IoSignal() const {
-    IoSignal signal{};
-    signal.id = id;
-    signal.length = length;
-    signal.dataType = dataType;
-    signal.sizeKind = sizeKind;
-    signal.name = name.c_str();
-    return signal;
-}
-
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
     std::string str = "IO Data { Id: ";
     str.append(ToString(ioSignal.id));
@@ -353,12 +343,22 @@ namespace {
     return str;
 }
 
+[[nodiscard]] IoSignal Convert(const IoSignalContainer& signal) {
+    IoSignal ioSignal{};
+    ioSignal.id = signal.id;
+    ioSignal.length = signal.length;
+    ioSignal.dataType = signal.dataType;
+    ioSignal.sizeKind = signal.sizeKind;
+    ioSignal.name = signal.name.c_str();
+    return ioSignal;
+}
+
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signals) {
     std::vector<IoSignal> ioSignals;
     ioSignals.reserve(signals.size());
 
     for (const auto& signal : signals) {
-        ioSignals.push_back(static_cast<IoSignal>(signal));
+        ioSignals.push_back(Convert(signal));
     }
 
     return ioSignals;
@@ -520,28 +520,6 @@ namespace {
     return canControllers;
 }
 
-[[nodiscard]] CanMessageContainer Convert(const CanMessage& message) {
-    CanMessageContainer canMessage{};
-    canMessage.timestamp = message.timestamp;
-    canMessage.controllerId = message.controllerId;
-    canMessage.id = message.id;
-    canMessage.flags = message.flags;
-    canMessage.length = message.length;
-    (void)memcpy(canMessage.data.data(), message.data, message.length);
-    return canMessage;
-}
-
-[[nodiscard]] CanMessage Convert(const CanMessageContainer& message) {
-    CanMessage canMessage{};
-    canMessage.timestamp = message.timestamp;
-    canMessage.controllerId = message.controllerId;
-    canMessage.id = message.id;
-    canMessage.flags = message.flags;
-    canMessage.length = message.length;
-    canMessage.data = message.data.data();
-    return canMessage;
-}
-
 [[nodiscard]] std::string ToString(const EthMessageFlags flags) {
     std::string str;
 
@@ -672,26 +650,6 @@ namespace {
     }
 
     return ethControllers;
-}
-
-[[nodiscard]] EthMessageContainer Convert(const EthMessage& message) {
-    EthMessageContainer ethMessage{};
-    ethMessage.timestamp = message.timestamp;
-    ethMessage.controllerId = message.controllerId;
-    ethMessage.flags = message.flags;
-    ethMessage.length = message.length;
-    (void)memcpy(ethMessage.data.data(), message.data, message.length);
-    return ethMessage;
-}
-
-[[nodiscard]] EthMessage Convert(const EthMessageContainer& message) {
-    EthMessage ethMessage{};
-    ethMessage.timestamp = message.timestamp;
-    ethMessage.controllerId = message.controllerId;
-    ethMessage.flags = message.flags;
-    ethMessage.length = message.length;
-    ethMessage.data = message.data.data();
-    return ethMessage;
 }
 
 [[nodiscard]] std::string_view ToString(LinControllerType type) {
@@ -875,28 +833,6 @@ namespace {
     }
 
     return linControllers;
-}
-
-[[nodiscard]] LinMessageContainer Convert(const LinMessage& message) {
-    LinMessageContainer linMessage{};
-    linMessage.timestamp = message.timestamp;
-    linMessage.controllerId = message.controllerId;
-    linMessage.id = message.id;
-    linMessage.flags = message.flags;
-    linMessage.length = message.length;
-    (void)memcpy(linMessage.data.data(), message.data, message.length);
-    return linMessage;
-}
-
-[[nodiscard]] LinMessage Convert(const LinMessageContainer& message) {
-    LinMessage linMessage{};
-    linMessage.timestamp = message.timestamp;
-    linMessage.controllerId = message.controllerId;
-    linMessage.id = message.id;
-    linMessage.flags = message.flags;
-    linMessage.length = message.length;
-    linMessage.data = message.data.data();
-    return linMessage;
 }
 
 }  // namespace DsVeosCoSim

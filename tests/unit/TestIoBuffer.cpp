@@ -196,8 +196,8 @@ TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {
     AssertOk(CreateIoBuffer(coSimType,
                             connectionKind,
                             name,
-                            {static_cast<IoSignal>(incomingSignal)},
-                            {static_cast<IoSignal>(outgoingSignal)},
+                            {Convert(incomingSignal)},
+                            {Convert(outgoingSignal)},
                             ioBuffer));
 
     // Assert
@@ -221,8 +221,8 @@ TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
     AssertOk(CreateIoBuffer(coSimType,
                             connectionKind,
                             name,
-                            {static_cast<IoSignal>(incomingSignal1), static_cast<IoSignal>(incomingSignal2)},
-                            {static_cast<IoSignal>(outgoingSignal1), static_cast<IoSignal>(outgoingSignal2)},
+                            {Convert(incomingSignal1), Convert(incomingSignal2)},
+                            {Convert(outgoingSignal1), Convert(outgoingSignal2)},
                             ioBuffer));
 
     // Assert
@@ -237,7 +237,7 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
-    std::vector incomingSignals = {static_cast<IoSignal>(signal)};
+    std::vector incomingSignals = {Convert(signal)};
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
@@ -265,7 +265,7 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
-    std::vector incomingSignals = {static_cast<IoSignal>(signal)};
+    std::vector incomingSignals = {Convert(signal)};
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
@@ -291,7 +291,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedData) {
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> ioBuffer;
@@ -313,7 +313,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
     IoSignalContainer signal1 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal1), static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal1), Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -353,7 +353,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
     IoSignalContainer signal1 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal), static_cast<IoSignal>(signal1)};
+    std::vector outgoingSignals = {Convert(signal), Convert(signal1)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -398,9 +398,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
     IoSignalContainer signal2 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal),
-                                   static_cast<IoSignal>(signal1),
-                                   static_cast<IoSignal>(signal2)};
+    std::vector outgoingSignals = {Convert(signal), Convert(signal1), Convert(signal2)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -433,9 +431,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     IoSignalContainer signal2 = CreateSignal();
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal1),
-                                   static_cast<IoSignal>(signal2),
-                                   static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal1), Convert(signal2), Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -473,7 +469,7 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     signal.length = GenerateRandom(2U, 10U);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -508,7 +504,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -541,7 +537,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveE
     signal.length = GenerateRandom(2U, 10U);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -578,7 +574,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
     signal.length = GenerateRandom(2U, 10U);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
@@ -612,7 +608,7 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     signal.length = GenerateRandom(2U, 10U);
 
     std::vector<IoSignal> incomingSignals;
-    std::vector outgoingSignals = {static_cast<IoSignal>(signal)};
+    std::vector outgoingSignals = {Convert(signal)};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;

@@ -56,21 +56,19 @@ void OnLogCallback(Severity severity, std::string_view message) {
     }
 }
 
-void LogCanMessage(const CanMessage& message) {
-    print(fg(fmt::color::dodger_blue), "{}\n", ToString(message));
+void LogCanMessageContainer(const CanMessageContainer& messageContainer) {
+    print(fg(fmt::color::dodger_blue), "{}\n", ToString(messageContainer));
 }
 
-void LogEthMessage(const EthMessage& message) {
-    print(fg(fmt::color::cyan), "{}\n", ToString(message));
+void LogEthMessageContainer(const EthMessageContainer& messageContainer) {
+    print(fg(fmt::color::cyan), "{}\n", ToString(messageContainer));
 }
 
-void LogLinMessage(const LinMessage& message) {
-    print(fg(fmt::color::lime), "{}\n", ToString(message));
+void LogLinMessageContainer(const LinMessageContainer& messageContainer) {
+    print(fg(fmt::color::lime), "{}\n", ToString(messageContainer));
 }
 
-void LogIoData(const IoSignal& ioSignal,
-               uint32_t length,
-               const void* value) {
+void LogIoData(const IoSignal& ioSignal, uint32_t length, const void* value) {
     print(fg(fmt::color::fuchsia), "{}\n", IoDataToString(ioSignal, length, value));
 }
 

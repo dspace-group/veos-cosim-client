@@ -11,6 +11,7 @@
 #include "Generator.h"
 #include "Helper.h"
 #include "IoBuffer.h"
+#include "OsUtilities.h"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -43,19 +44,9 @@ void RunTest(benchmark::State& state,
     signal.length = static_cast<uint32_t>(state.range(0));
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server,
-                            connectionKind,
-                            writerName,
-                            {static_cast<IoSignal>(signal)},
-                            {},
-                            writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {Convert(signal)}, {}, writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client,
-                            connectionKind,
-                            readerName,
-                            {static_cast<IoSignal>(signal)},
-                            {},
-                            readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {Convert(signal)}, {}, readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 

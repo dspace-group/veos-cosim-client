@@ -470,6 +470,42 @@ typedef struct DsVeosCoSim_CanMessage {
 } DsVeosCoSim_CanMessage;
 
 /**
+ * \brief Represents a CAN message container.
+ */
+typedef struct DsVeosCoSim_CanMessageContainer {
+    /**
+     * \brief The simulation time when the CAN message was received.
+     *        For received messages only.
+     */
+    DsVeosCoSim_SimulationTime timestamp;
+
+    /**
+     * \brief Unique id of the CAN controller.
+     */
+    DsVeosCoSim_BusControllerId controllerId;
+
+    /**
+     * \brief CAN message ID.
+     */
+    uint32_t id;
+
+    /**
+     * \brief CAN message flags.
+     */
+    DsVeosCoSim_CanMessageFlags flags;
+
+    /**
+     * \brief Payload length.
+     */
+    uint32_t length;
+
+    /**
+     * \brief Payload.
+     */
+    uint8_t data[DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH];
+} DsVeosCoSim_CanMessageContainer;
+
+/**
  * \brief Represents an ethernet controller.
  */
 typedef struct DsVeosCoSim_EthController {
@@ -572,6 +608,42 @@ typedef struct DsVeosCoSim_EthMessage {
      */
     const uint8_t* data;
 } DsVeosCoSim_EthMessage;
+
+/**
+ * \brief Represents an ethernet message container.
+ */
+typedef struct DsVeosCoSim_EthMessageContainer {
+    /**
+     * \brief The simulation time when the ethernet message was received.
+     *        For received messages only.
+     */
+    DsVeosCoSim_SimulationTime timestamp;
+
+    /**
+     * \brief Unique id of the ethernet controller.
+     */
+    DsVeosCoSim_BusControllerId controllerId;
+
+    /**
+     * \brief Reserved for future use.
+     */
+    uint32_t reserved;
+
+    /**
+     * \brief Ethernet message flags.
+     */
+    DsVeosCoSim_EthMessageFlags flags;
+
+    /**
+     * \brief Payload length.
+     */
+    uint32_t length;
+
+    /**
+     * \brief Payload.
+     */
+    uint8_t data[DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH];
+} DsVeosCoSim_EthMessageContainer;
 
 /**
  * \brief Represents the type of the LIN controller.
@@ -749,6 +821,42 @@ typedef struct DsVeosCoSim_LinMessage {
 } DsVeosCoSim_LinMessage;
 
 /**
+ * \brief Represents a LIN message container.
+ */
+typedef struct DsVeosCoSim_LinMessageContainer {
+    /**
+     * \brief The simulation time when the LIN message was received.
+     *        For received messages only.
+     */
+    DsVeosCoSim_SimulationTime timestamp;
+
+    /**
+     * \brief Unique id of the bus controller.
+     */
+    DsVeosCoSim_BusControllerId controllerId;
+
+    /**
+     * \brief LIN message ID.
+     */
+    uint32_t id;
+
+    /**
+     * \brief LIN message flags.
+     */
+    DsVeosCoSim_LinMessageFlags flags;
+
+    /**
+     * \brief Payload length.
+     */
+    uint32_t length;
+
+    /**
+     * \brief Payload.
+     */
+    uint8_t data[DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH];
+} DsVeosCoSim_LinMessageContainer;
+
+/**
  * \brief Represents the log callback function pointer.
  * \param severity      The severity of the message.
  * \param logMessage    The log message.
@@ -799,6 +907,18 @@ typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTim
                                                        void* userData);
 
 /**
+ * \brief Represents a CAN message container received callback function pointer.
+ * \param simulationTime    The current simulation time.
+ * \param canController     The CAN controller transmitting the message.
+ * \param message           The received message.
+ * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ */
+typedef void (*DsVeosCoSim_CanMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+                                                                const DsVeosCoSim_CanController* canController,
+                                                                const DsVeosCoSim_CanMessageContainer* messageContainer,
+                                                                void* userData);
+
+/**
  * \brief Represents an ethernet message received callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param ethController     The ethernet controller transmitting the message.
@@ -811,6 +931,18 @@ typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTim
                                                        void* userData);
 
 /**
+ * \brief Represents an ethernet message container received callback function pointer.
+ * \param simulationTime    The current simulation time.
+ * \param ethController     The ethernet controller transmitting the message.
+ * \param message           The received message.
+ * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ */
+typedef void (*DsVeosCoSim_EthMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+                                                                const DsVeosCoSim_EthController* ethController,
+                                                                const DsVeosCoSim_EthMessageContainer* messageContainer,
+                                                                void* userData);
+
+/**
  * \brief Represents a LIN message received callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param linController     The LIN controller transmitting the message.
@@ -821,6 +953,18 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
                                                        const DsVeosCoSim_LinController* linController,
                                                        const DsVeosCoSim_LinMessage* message,
                                                        void* userData);
+
+/**
+ * \brief Represents a LIN message container received callback function pointer.
+ * \param simulationTime    The current simulation time.
+ * \param linController     The LIN controller transmitting the message.
+ * \param message           The received message.
+ * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ */
+typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
+                                                                const DsVeosCoSim_LinController* linController,
+                                                                const DsVeosCoSim_LinMessageContainer* messageContainer,
+                                                                void* userData);
 
 /**
  * \brief Represents the callbacks that will be fired during the co-simulation.
@@ -891,6 +1035,27 @@ typedef struct DsVeosCoSim_Callbacks {
      * \brief An arbitrary object that will be passed to every callback.
      */
     void* userData;
+
+    /**
+     * \brief Will be called when a CAN message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
+    DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
+
+    /**
+     * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
+    DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
+
+    /**
+     * \brief Will be called when a LIN message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
+    DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
 } DsVeosCoSim_Callbacks;
 
 /**
@@ -1078,12 +1243,29 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Ha
                                                                   DsVeosCoSim_CanMessage* message);
 
 /**
+ * \brief Receives a CAN message container from the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The received CAN message container.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessageContainer* messageContainer);
+
+/**
  * \brief Transmits the given message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle,
                                                                    const DsVeosCoSim_CanMessage* message);
+
+/**
+ * \brief Transmits the given message container to the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The message container to transmit.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle handle,
+                                        const DsVeosCoSim_CanMessageContainer* messageContainer);
 
 /**
  * \brief Gets all available ethernet controllers.
@@ -1104,12 +1286,29 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Ha
                                                                   DsVeosCoSim_EthMessage* message);
 
 /**
+ * \brief Receives an ethernet message container from the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The received ethernet message container.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessageContainer* messageContainer);
+
+/**
  * \brief Transmits the given ethernet message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle,
                                                                    const DsVeosCoSim_EthMessage* message);
+
+/**
+ * \brief Transmits the given ethernet message container to the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The message container to transmit.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle handle,
+                                        const DsVeosCoSim_EthMessageContainer* messageContainer);
 
 /**
  * \brief Gets all available LIN controllers.
@@ -1130,12 +1329,29 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Ha
                                                                   DsVeosCoSim_LinMessage* message);
 
 /**
+ * \brief Receives a LIN message container from the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The received LIN message.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessageContainer* messageContainer);
+
+/**
  * \brief Transmits the given LIN message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle,
                                                                    const DsVeosCoSim_LinMessage* message);
+
+/**
+ * \brief Transmits the given LIN message container to the dSPACE VEOS CoSim server identified by the given handle.
+ * \param handle            The handle.
+ * \param messageContainer  The message container to transmit.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle,
+                                        const DsVeosCoSim_LinMessageContainer* messageContainer);
 
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle handle);
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle handle);
@@ -1173,6 +1389,12 @@ extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage& message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage& message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage& message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageContainerToString(
+    const DsVeosCoSim_CanMessageContainer& messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageContainerToString(
+    const DsVeosCoSim_EthMessageContainer& messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageContainerToString(
+    const DsVeosCoSim_LinMessageContainer& messageContainer);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags);

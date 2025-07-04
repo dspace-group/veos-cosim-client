@@ -24,9 +24,9 @@ struct CoSimServerConfig {
     SimulationTerminatedCallback simulationTerminatedCallback;
     SimulationCallback simulationPausedCallback;
     SimulationCallback simulationContinuedCallback;
-    CanMessageReceivedCallback canMessageReceivedCallback;
-    LinMessageReceivedCallback linMessageReceivedCallback;
-    EthMessageReceivedCallback ethMessageReceivedCallback;
+    CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
+    LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
+    EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
     std::vector<IoSignalContainer> incomingSignals;
     std::vector<IoSignalContainer> outgoingSignals;
     std::vector<CanControllerContainer> canControllers;
@@ -67,6 +67,10 @@ public:
     [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
+
+    [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
 
     [[nodiscard]] virtual Result BackgroundService() = 0;
 

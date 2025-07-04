@@ -68,9 +68,17 @@ public:
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
 
+    [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
+
     [[nodiscard]] virtual Result Receive(CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(LinMessage& message) const = 0;
+
+    [[nodiscard]] virtual Result Receive(CanMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Receive(EthMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Receive(LinMessageContainer& messageContainer) const = 0;
 };
 
 [[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client);

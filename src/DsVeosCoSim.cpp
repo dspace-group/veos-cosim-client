@@ -26,8 +26,14 @@ namespace {
 
 void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& callbacks) {
     DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback = callbacks.canMessageReceivedCallback;
+    DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback =
+        callbacks.canMessageContainerReceivedCallback;
     DsVeosCoSim_EthMessageReceivedCallback ethMessageReceivedCallback = callbacks.ethMessageReceivedCallback;
+    DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback =
+        callbacks.ethMessageContainerReceivedCallback;
     DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback = callbacks.linMessageReceivedCallback;
+    DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback =
+        callbacks.linMessageContainerReceivedCallback;
     DsVeosCoSim_IncomingSignalChangedCallback incomingSignalChangedCallback = callbacks.incomingSignalChangedCallback;
     DsVeosCoSim_SimulationCallback simulationStartedCallback = callbacks.simulationStartedCallback;
     DsVeosCoSim_SimulationCallback simulationStoppedCallback = callbacks.simulationStoppedCallback;
@@ -48,6 +54,18 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
             };
     }
 
+    if (canMessageContainerReceivedCallback) {
+        newCallbacks.canMessageContainerReceivedCallback = [=](SimulationTime simulationTime,
+                                                               const CanController& canController,
+                                                               const CanMessageContainer& messageContainer) {
+            canMessageContainerReceivedCallback(
+                simulationTime.count(),
+                reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
+                reinterpret_cast<const DsVeosCoSim_CanMessageContainer*>(&messageContainer),
+                userData);
+        };
+    }
+
     if (ethMessageReceivedCallback) {
         newCallbacks.ethMessageReceivedCallback =
             [=](SimulationTime simulationTime, const EthController& ethController, const EthMessage& message) {
@@ -58,6 +76,18 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
             };
     }
 
+    if (ethMessageContainerReceivedCallback) {
+        newCallbacks.ethMessageContainerReceivedCallback = [=](SimulationTime simulationTime,
+                                                               const EthController& ethController,
+                                                               const EthMessageContainer& messageContainer) {
+            ethMessageContainerReceivedCallback(
+                simulationTime.count(),
+                reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
+                reinterpret_cast<const DsVeosCoSim_EthMessageContainer*>(&messageContainer),
+                userData);
+        };
+    }
+
     if (linMessageReceivedCallback) {
         newCallbacks.linMessageReceivedCallback =
             [=](SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
@@ -66,6 +96,17 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
                                            reinterpret_cast<const DsVeosCoSim_LinMessage*>(&message),
                                            userData);
             };
+    }
+
+    if (linMessageContainerReceivedCallback) {
+        newCallbacks.linMessageContainerReceivedCallback = [=](SimulationTime simulationTime,
+                                                               const LinController& linController,
+                                                               const LinMessageContainer& messageContainer) {
+            linMessageReceivedCallback(simulationTime.count(),
+                                       reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
+                                       reinterpret_cast<const DsVeosCoSim_LinMessage*>(&messageContainer),
+                                       userData);
+        };
     }
 
     if (incomingSignalChangedCallback) {

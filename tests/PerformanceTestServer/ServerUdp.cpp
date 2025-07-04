@@ -22,6 +22,7 @@ namespace {
 
     while (true) {
         UdpSocket serverSocket;
+        CheckResult(serverSocket.Initialize());
         CheckResult(serverSocket.Bind("0.0.0.0", UdpPort));
 
         InternetAddress address;

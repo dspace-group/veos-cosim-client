@@ -66,24 +66,24 @@ void SwitchSendingLinMessages() {
 }
 
 [[nodiscard]] Result TransmitCanMessage(const CanController& controller) {
-    CanMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    CanMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Client->Transmit(Convert(message));
+    return Client->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result TransmitEthMessage(const EthController& controller) {
-    EthMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    EthMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Client->Transmit(Convert(message));
+    return Client->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result TransmitLinMessage(const LinController& controller) {
-    LinMessageContainer message{};
-    FillWithRandom(message, controller.id);
+    LinMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
 
-    return Client->Transmit(Convert(message));
+    return Client->Transmit(messageContainer);
 }
 
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
@@ -145,22 +145,22 @@ void OnIncomingSignalChanged([[maybe_unused]] SimulationTime simulationTime,
     LogIoData(ioSignal, length, value);
 }
 
-void OnCanMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const CanController& controller,
-                          const CanMessage& message) {
-    LogCanMessage(message);
+void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const CanController& controller,
+                                   const CanMessageContainer& messageContainer) {
+    LogCanMessageContainer(messageContainer);
 }
 
-void OnEthMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const EthController& controller,
-                          const EthMessage& message) {
-    LogEthMessage(message);
+void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const EthController& controller,
+                                   const EthMessageContainer& messageContainer) {
+    LogEthMessageContainer(messageContainer);
 }
 
-void OnLinMessageReceived([[maybe_unused]] SimulationTime simulationTime,
-                          [[maybe_unused]] const LinController& controller,
-                          const LinMessage& message) {
-    LogLinMessage(message);
+void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const LinController& controller,
+                                   const LinMessageContainer& messageContainer) {
+    LogLinMessageContainer(messageContainer);
 }
 
 void StartSimulationThread(const std::function<void()>& function) {
@@ -289,9 +289,9 @@ void Disconnect() {
     callbacks.simulationContinuedCallback = OnSimulationContinuedCallback;
     callbacks.simulationEndStepCallback = OnSimulationPostStepCallback;
     callbacks.incomingSignalChangedCallback = OnIncomingSignalChanged;
-    callbacks.canMessageReceivedCallback = OnCanMessageReceived;
-    callbacks.ethMessageReceivedCallback = OnEthMessageReceived;
-    callbacks.linMessageReceivedCallback = OnLinMessageReceived;
+    callbacks.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
+    callbacks.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
+    callbacks.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
 
     LogInfo("Running callback-based co-simulation ...");
     if (!IsDisconnected(Client->RunCallbackBasedCoSimulation(callbacks))) {

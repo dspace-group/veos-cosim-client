@@ -6,6 +6,7 @@ Checks: '
   -boost-*,
   -bugprone-easily-swappable-parameters,
   -bugprone-suspicious-stringview-data-usage,
+  -cert-err58-cpp,
   -concurrency-mt-unsafe,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-avoid-do-while,
@@ -38,8 +39,8 @@ Checks: '
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
   -readability-magic-numbers,
-  -readability-redundant-member-init,
-  -readability-qualified-auto
+  -readability-qualified-auto,
+  -readability-redundant-member-init
   '
 
 CheckOptions:

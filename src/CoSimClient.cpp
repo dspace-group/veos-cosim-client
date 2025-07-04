@@ -334,6 +334,24 @@ public:
         return _busBuffer->Transmit(message);
     }
 
+    [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
+    [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
+    [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
     [[nodiscard]] Result Receive(CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
@@ -350,6 +368,24 @@ public:
         CheckResult(EnsureIsConnected());
 
         return _busBuffer->Receive(message);
+    }
+
+    [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Receive(messageContainer);
+    }
+
+    [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Receive(messageContainer);
+    }
+
+    [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Receive(messageContainer);
     }
 
 private:

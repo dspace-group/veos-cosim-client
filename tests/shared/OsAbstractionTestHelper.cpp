@@ -92,52 +92,6 @@ UdpSocket::~UdpSocket() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result UdpSocket::Connect(std::string_view ipAddress, uint16_t port) const {
-    sockaddr_in address{};
-    CheckResult(Socket_InitializeAddress(address, ipAddress, port));
-    int32_t result = connect(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
-    if (result < 0) {
-        LogError("Could not connect.");
-        return Result::Error;
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result UdpSocket::SetNoDelay(bool value) const {
-    int32_t flags = value ? 1 : 0;
-    constexpr auto flagsLength = static_cast<socklen_t>(sizeof flags);
-    int32_t result = setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&flags), flagsLength);
-    if (result < 0) {
-        LogError("Could not set no delay.");
-        return Result::Error;
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result UdpSocket::SetReuseAddress(bool value) const {
-    int32_t flags = value ? 1 : 0;
-    constexpr auto flagsLength = static_cast<socklen_t>(sizeof(flags));
-    int32_t result = setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&flags), flagsLength);
-    if (result < 0) {
-        LogError("Could not set reuse address.");
-        return Result::Error;
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result UdpSocket::Listen() const {
-    int32_t result = listen(_socket, SOMAXCONN);
-    if (result < 0) {
-        LogError("Could not listen.");
-        return Result::Error;
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] Result UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
     const auto* sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
@@ -265,10 +219,10 @@ Pipe::~Pipe() {
 #ifdef _WIN32
     DWORD processedSize = 0;
     BOOL success = WriteFile(_pipe, source, size, &processedSize, nullptr);
-    return (success != 0) && (size == processedSize) ? Result::Error : Result::Ok;
+    return (success != 0) && (size == processedSize) ? Result::Ok : Result::Error;
 #else
     ssize_t length = write(_writePipe, source, size);
-    return length == static_cast<ssize_t>(size) ? Result::Error : Result::Ok;
+    return length == static_cast<ssize_t>(size) ? Result::Ok : Result::Error;
 #endif
 }
 
@@ -276,9 +230,9 @@ Pipe::~Pipe() {
 #ifdef _WIN32
     DWORD processedSize = 0;
     BOOL success = ReadFile(_pipe, destination, size, &processedSize, nullptr);
-    return (success != 0) && (size == processedSize) ? Result::Error : Result::Ok;
+    return (success != 0) && (size == processedSize) ? Result::Ok : Result::Error;
 #else
     ssize_t length = read(_readPipe, destination, size);
-    return length == static_cast<ssize_t>(size) ? Result::Error : Result::Ok;
+    return length == static_cast<ssize_t>(size) ? Result::Ok : Result::Error;
 #endif
 }
