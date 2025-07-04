@@ -110,15 +110,26 @@ namespace {
     return Port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount(std::string_view name) {
+[[nodiscard]] uint32_t GetSpinCount(std::string_view name, std::string_view part, std::string_view direction) {
     constexpr uint32_t defaultSpinCount = 0;
     std::string_view environmentVariableName = "VEOS_COSIM_SPIN_COUNT";
 
     uint32_t spinCount{};
 
+    std::string directionFullName(environmentVariableName);
+    directionFullName.append("_").append(name).append(".").append(part).append(".").append(direction);
+    if (TryGetSpinCount(directionFullName, spinCount)) {
+        return spinCount;
+    }
+
+    std::string partFullName(environmentVariableName);
+    partFullName.append("_").append(name).append(".").append(part);
+    if (TryGetSpinCount(partFullName, spinCount)) {
+        return spinCount;
+    }
+
     std::string fullName(environmentVariableName);
-    fullName.append("_");
-    fullName.append(name);
+    fullName.append("_").append(name);
     if (TryGetSpinCount(fullName, spinCount)) {
         return spinCount;
     }

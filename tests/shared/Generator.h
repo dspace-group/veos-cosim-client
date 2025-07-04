@@ -8,20 +8,19 @@
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
-[[nodiscard]] int32_t Random(int32_t min, int32_t max);
+[[nodiscard]] uint8_t GenerateU8();
+[[nodiscard]] uint16_t GenerateU16();
+[[nodiscard]] uint32_t GenerateU32();
+[[nodiscard]] uint64_t GenerateU64();
 
 void FillWithRandom(uint8_t* data, size_t length);
 
 template <typename T>
 [[nodiscard]] T GenerateRandom(T min, T max) {
-    return static_cast<T>(Random(static_cast<int32_t>(min), static_cast<int32_t>(max)));
+    uint32_t diff = static_cast<uint32_t>(max) + 1 - static_cast<uint32_t>(min);
+    return static_cast<T>(static_cast<uint32_t>(min) + (GenerateU32() % diff));
 }
 
-[[nodiscard]] uint8_t GenerateU8();
-[[nodiscard]] uint16_t GenerateU16();
-[[nodiscard]] uint32_t GenerateU32();
-[[nodiscard]] uint32_t GenerateU32(uint32_t min, uint32_t max);
-[[nodiscard]] uint64_t GenerateU64();
 [[nodiscard]] std::string GenerateString(std::string_view prefix);
 [[nodiscard]] DsVeosCoSim::SimulationTime GenerateSimulationTime();
 [[nodiscard]] DsVeosCoSim::BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);

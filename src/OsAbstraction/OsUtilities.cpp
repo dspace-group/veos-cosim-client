@@ -1,8 +1,8 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "OsUtilities.h"
-
 #ifdef _WIN32
+
+#include "OsUtilities.h"
 
 #include <cstdint>
 #include <string>
@@ -271,8 +271,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 }
 
 [[nodiscard]] bool IsProcessRunning(uint32_t processId) {
-    void* processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
-    if (processHandle == nullptr) {
+    Handle processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, processId);
+    if (!processHandle) {
         return false;
     }
 

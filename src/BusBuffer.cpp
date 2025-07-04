@@ -564,7 +564,7 @@ protected:
         _totalReceiveCount = 0;
 
         for (size_t i = 0; i < Base::_controllers.size(); i++) {
-            _messageCountPerController[i].store(0);
+            _messageCountPerController[i].store(0, std::memory_order_release);
         }
 
         if (_messageBuffer) {
@@ -577,7 +577,7 @@ protected:
         CheckResult(Base::FindController(messageExtern.controllerId, extension));
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
 
-        if (messageCount.load() == extension->info.queueSize) {
+        if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
                 std::string message = "Transmit buffer for controller '";
                 message.append(extension->info.name);
