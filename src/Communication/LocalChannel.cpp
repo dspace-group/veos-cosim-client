@@ -1,6 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "Environment.h"
 #ifdef _WIN32
 
 #include <algorithm>
@@ -9,9 +8,12 @@
 #include <memory>
 #include <string>
 
+#include <emmintrin.h>
+
 #include "Channel.h"
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Environment.h"
 #include "OsUtilities.h"
 
 namespace DsVeosCoSim {
@@ -22,8 +24,8 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-const auto ServerToClientPostFix = ".ServerToClient";
-const auto ClientToServerPostFix = ".ClientToServer";
+const auto ServerToClientPostFix = "ServerToClient";
+const auto ClientToServerPostFix = "ClientToServer";
 
 [[nodiscard]] constexpr uint32_t MaskIndex(uint32_t index) {
     return index & (BufferSize - 1);
@@ -72,8 +74,8 @@ public:
         if (initShm) {
             _header->serverPid = 0;
             _header->clientPid = 0;
-            _header->writeIndex.store(0);
-            _header->readIndex.store(0);
+            _header->writeIndex.store(0, std::memory_order_release);
+            _header->readIndex.store(0, std::memory_order_release);
         }
 
         if (isServer) {
@@ -164,14 +166,10 @@ public:
     [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
         const auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
         std::string writerName(name);
-        writerName.append(".");
-        writerName.append(std::to_string(counter));
-        writerName.append(postFix);
+        writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(writerName, isServer));
 
-        std::string writerNameForSpinCount(name);
-        writerNameForSpinCount.append(postFix);
-        _spinCount = GetSpinCount(writerNameForSpinCount);
+        _spinCount = GetSpinCount(name, postFix, "Write");
         return Result::Ok;
     }
 
@@ -181,7 +179,7 @@ public:
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            uint32_t readIndex = _header->readIndex.load();
+            uint32_t readIndex = _header->readIndex.load(std::memory_order_acquire);
             uint32_t currentSize = _writeIndex - readIndex;
             if (currentSize == BufferSize) {
                 CheckResult(WaitForFreeSpace(currentSize));
@@ -202,7 +200,7 @@ public:
 
             _writeIndex += sizeToCopy;
             _maskedWriteIndex = MaskIndex(_writeIndex);
-            _header->writeIndex.store(_writeIndex);
+            _header->writeIndex.store(_writeIndex, std::memory_order_release);
             totalSizeToCopy -= sizeToCopy;
         }
 
@@ -220,14 +218,16 @@ private:
         std::atomic<uint32_t>& readIndex = _header->readIndex;
 
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = _writeIndex - readIndex.load();
+            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
             if (currentSize < BufferSize) {
                 return Result::Ok;
             }
+
+            _mm_pause();
         }
 
         while (true) {
-            currentSize = _writeIndex - readIndex.load();
+            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
             if (currentSize < BufferSize) {
                 return Result::Ok;
             }
@@ -241,7 +241,7 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = _writeIndex - readIndex.load();
+        currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
         return Result::Ok;
     }
 
@@ -265,14 +265,10 @@ public:
     [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
         const auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
         std::string readerName(name);
-        readerName.append(".");
-        readerName.append(std::to_string(counter));
-        readerName.append(postFix);
+        readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(readerName, isServer));
 
-        std::string readerNameForSpinCount(name);
-        readerNameForSpinCount.append(postFix);
-        _spinCount = GetSpinCount(readerNameForSpinCount);
+        _spinCount = GetSpinCount(name, postFix, "Read");
         return Result::Ok;
     }
 
@@ -282,7 +278,7 @@ public:
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            uint32_t writeIndex = _header->writeIndex.load();
+            uint32_t writeIndex = _header->writeIndex.load(std::memory_order_acquire);
             uint32_t currentSize = writeIndex - _readIndex;
             if (currentSize == 0) {
                 CheckResult(BeginRead(currentSize));
@@ -302,7 +298,7 @@ public:
 
             _readIndex += sizeToCopy;
             _maskedReadIndex = MaskIndex(_readIndex);
-            _header->readIndex.store(_readIndex);
+            _header->readIndex.store(_readIndex, std::memory_order_release);
             if (currentSize == BufferSize) {
                 CheckResult(_newSpaceEvent.Set());
             }
@@ -318,14 +314,16 @@ private:
         std::atomic<uint32_t>& writeIndex = _header->writeIndex;
 
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = writeIndex.load() - _readIndex;
+            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
             if (currentSize > 0) {
                 return Result::Ok;
             }
+
+            _mm_pause();
         }
 
         while (true) {
-            currentSize = writeIndex.load() - _readIndex;
+            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
             if (currentSize > 0) {
                 return Result::Ok;
             }
@@ -339,7 +337,7 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = writeIndex.load() - _readIndex;
+        currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
         return Result::Ok;
     }
 
@@ -406,7 +404,7 @@ public:
 
         CheckResult(SharedMemory::CreateOrOpen(name, ServerSharedMemorySize, _sharedMemory));
         _counter = static_cast<std::atomic<uint32_t>*>(_sharedMemory.GetData());
-        _counter->store(0);
+        _counter->store(0, std::memory_order_release);
         return Result::Ok;
     }
 
@@ -415,7 +413,7 @@ public:
     }
 
     [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) override {
-        uint32_t currentCounter = _counter->load();
+        uint32_t currentCounter = _counter->load(std::memory_order_acquire);
         if (currentCounter > _lastCounter) {
             uint32_t counterToUse = _lastCounter;
             _lastCounter++;

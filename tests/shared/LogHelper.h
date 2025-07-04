@@ -33,11 +33,11 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {
     OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
-void LogCanMessage(const DsVeosCoSim::CanMessage& message);
+void LogCanMessageContainer(const DsVeosCoSim::CanMessageContainer& messageContainer);
 
-void LogEthMessage(const DsVeosCoSim::EthMessage& message);
+void LogEthMessageContainer(const DsVeosCoSim::EthMessageContainer& messageContainer);
 
-void LogLinMessage(const DsVeosCoSim::LinMessage& message);
+void LogLinMessageContainer(const DsVeosCoSim::LinMessageContainer& messageContainer);
 
 void LogIoData(const DsVeosCoSim::IoSignal& ioSignal, uint32_t length, const void* value);
 

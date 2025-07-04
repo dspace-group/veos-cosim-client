@@ -56,9 +56,9 @@ public:
         _callbacks.simulationPausedCallback = config.simulationPausedCallback;
         _callbacks.simulationContinuedCallback = config.simulationContinuedCallback;
         _callbacks.simulationTerminatedCallback = config.simulationTerminatedCallback;
-        _callbacks.canMessageReceivedCallback = config.canMessageReceivedCallback;
-        _callbacks.linMessageReceivedCallback = config.linMessageReceivedCallback;
-        _callbacks.ethMessageReceivedCallback = config.ethMessageReceivedCallback;
+        _callbacks.canMessageContainerReceivedCallback = config.canMessageContainerReceivedCallback;
+        _callbacks.linMessageContainerReceivedCallback = config.linMessageContainerReceivedCallback;
+        _callbacks.ethMessageContainerReceivedCallback = config.ethMessageContainerReceivedCallback;
 
         if (config.startPortMapper) {
             CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
@@ -211,6 +211,30 @@ public:
         }
 
         return _busBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
+        if (!_channel) {
+            return Result::Ok;
+        }
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
+    [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
+        if (!_channel) {
+            return Result::Ok;
+        }
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
+    [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
+        if (!_channel) {
+            return Result::Ok;
+        }
+
+        return _busBuffer->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result BackgroundService() override {

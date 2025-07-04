@@ -35,28 +35,6 @@ void AssertByteArray(const void* expected, const void* actual, size_t size);
 
 void AssertLastMessage(std::string_view message);
 
-namespace DsVeosCoSim {
-
-[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& signal);
-
-[[nodiscard]] bool operator==(const CanController& first, const CanController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanController& controller);
-[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessage& message);
-
-[[nodiscard]] bool operator==(const EthController& first, const EthController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthController& controller);
-[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessage& message);
-
-[[nodiscard]] bool operator==(const LinController& first, const LinController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinController& controller);
-[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessage& message);
-
-}  // namespace DsVeosCoSim
-
 void AssertEqHelper(std::string_view expected, std::string_view actual);
 void AssertNotEqHelper(std::string_view expected, std::string_view actual);
 

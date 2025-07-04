@@ -40,10 +40,6 @@ public:
     [[nodiscard]] DsVeosCoSim::Result Initialize();
 
     [[nodiscard]] DsVeosCoSim::Result Bind(std::string_view ipAddress, uint16_t port) const;
-    [[nodiscard]] DsVeosCoSim::Result Connect(std::string_view ipAddress, uint16_t port) const;
-    [[nodiscard]] DsVeosCoSim::Result SetNoDelay(bool value) const;
-    [[nodiscard]] DsVeosCoSim::Result SetReuseAddress(bool value) const;
-    [[nodiscard]] DsVeosCoSim::Result Listen() const;
 
     [[nodiscard]] DsVeosCoSim::Result SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
     [[nodiscard]] DsVeosCoSim::Result ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;

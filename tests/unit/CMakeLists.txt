@@ -7,7 +7,6 @@ add_executable(
 target_sources(
   DsVeosCoSimTest
   PRIVATE
-
   Communication/TestLocalChannel.cpp
   Communication/TestTcpChannel.cpp
   Communication/TestUdsChannel.cpp
@@ -19,10 +18,8 @@ target_sources(
   Helpers/TestHelper.cpp
   Program.cpp
   TestBusBuffer.cpp
-
   TestCoSim.cpp
   TestIoBuffer.cpp
-
   TestPortMapper.cpp
   TestProtocol.cpp
 )

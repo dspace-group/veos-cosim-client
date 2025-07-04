@@ -196,8 +196,6 @@ struct IoSignalContainer {
     DataType dataType{};
     SizeKind sizeKind{};
     std::string name;
-
-    [[nodiscard]] explicit operator IoSignal() const;
 };
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
@@ -205,6 +203,7 @@ struct IoSignalContainer {
 [[nodiscard]] std::string ToString(const IoSignalContainer& signal);
 [[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& signals);
 
+[[nodiscard]] IoSignal Convert(const IoSignalContainer& signal);
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signals);
 
 enum class BusControllerId : uint32_t {
@@ -278,9 +277,6 @@ struct CanMessageContainer {
 [[nodiscard]] CanController Convert(const CanControllerContainer& controller);
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers);
 
-[[nodiscard]] CanMessageContainer Convert(const CanMessage& message);
-[[nodiscard]] CanMessage Convert(const CanMessageContainer& message);
-
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
@@ -337,9 +333,6 @@ struct EthMessageContainer {
 
 [[nodiscard]] EthController Convert(const EthControllerContainer& controller);
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers);
-
-[[nodiscard]] EthMessageContainer Convert(const EthMessage& message);
-[[nodiscard]] EthMessage Convert(const EthMessageContainer& message);
 
 enum class LinControllerType : uint32_t {
     Responder = 1,
@@ -415,9 +408,6 @@ struct LinMessageContainer {
 [[nodiscard]] LinController Convert(const LinControllerContainer& controller);
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers);
 
-[[nodiscard]] LinMessageContainer Convert(const LinMessage& message);
-[[nodiscard]] LinMessage Convert(const LinMessageContainer& message);
-
 using LogCallback = std::function<void(Severity, std::string_view)>;
 
 void SetLogCallback(LogCallback logCallback);
@@ -432,6 +422,12 @@ using EthMessageReceivedCallback =
     std::function<void(SimulationTime simulationTime, const EthController& controller, const EthMessage& message)>;
 using LinMessageReceivedCallback =
     std::function<void(SimulationTime simulationTime, const LinController& controller, const LinMessage& message)>;
+using CanMessageContainerReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const CanController& controller, const CanMessageContainer& messageContainer)>;
+using EthMessageContainerReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer)>;
+using LinMessageContainerReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer)>;
 
 struct Callbacks {
     SimulationCallback simulationStartedCallback;
@@ -445,6 +441,9 @@ struct Callbacks {
     CanMessageReceivedCallback canMessageReceivedCallback;
     LinMessageReceivedCallback linMessageReceivedCallback;
     EthMessageReceivedCallback ethMessageReceivedCallback;
+    CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
+    LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
+    EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
 };
 
 struct ConnectConfig {

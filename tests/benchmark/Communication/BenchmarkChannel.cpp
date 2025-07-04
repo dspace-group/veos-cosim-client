@@ -81,7 +81,7 @@ void UdsChannelRoundtrip(benchmark::State& state) {
 #ifdef _WIN32
 void LocalChannelRoundtrip(benchmark::State& state) {
     std::string serverName = GenerateString("Server名前");
-    SetEnvVariable("VEOS_COSIM_SPIN_COUNT", "100000");
+    SetEnvVariable("VEOS_COSIM_SPIN_COUNT", "1280");
 
     std::unique_ptr<ChannelServer> server;
     MustBeOk(CreateLocalChannelServer(serverName, server));

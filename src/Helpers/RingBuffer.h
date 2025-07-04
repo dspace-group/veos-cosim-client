@@ -42,6 +42,19 @@ public:
         return _size == _items.size();
     }
 
+    [[nodiscard]] Result PushBack(const T& item) {
+        if (IsFull()) {
+            LogError("Ring buffer is full.");
+            return Result::Error;
+        }
+
+        size_t currentWriteIndex = _writeIndex;
+        _items[currentWriteIndex] = item;
+        _writeIndex = (_writeIndex + 1) % _items.size();
+        ++_size;
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result PushBack(T&& item) {
         if (IsFull()) {
             LogError("Ring buffer is full.");
@@ -50,41 +63,34 @@ public:
 
         size_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(item);
-
         _writeIndex = (_writeIndex + 1) % _items.size();
-
         ++_size;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result PopFront(const T*& item) {
-        if (IsEmpty()) {
-            LogError("Ring buffer is empty.");
-            return Result::Error;
+    [[nodiscard]] T* EmplaceBack() {
+        if (IsFull()) {
+            LogError("Ring buffer is full.");
+            return nullptr;
         }
 
-        --_size;
-
-        item = &_items[_readIndex];
-
-        _readIndex = (_readIndex + 1) % _items.size();
-
-        return Result::Ok;
+        size_t currentWriteIndex = _writeIndex;
+        T* item = &_items[currentWriteIndex];
+        _writeIndex = (_writeIndex + 1) % _items.size();
+        ++_size;
+        return item;
     }
 
-    [[nodiscard]] Result PopFront(T& item) {
+    [[nodiscard]] T* PopFront() {
         if (IsEmpty()) {
             LogError("Ring buffer is empty.");
-            return Result::Error;
+            return nullptr;
         }
 
         --_size;
-
-        item = _items[_readIndex];
-
+        T* item = &_items[_readIndex];
         _readIndex = (_readIndex + 1) % _items.size();
-
-        return Result::Ok;
+        return item;
     }
 
 private:

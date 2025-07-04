@@ -16,7 +16,7 @@ namespace DsVeosCoSim {
 
 [[nodiscard]] uint16_t GetPortMapperPort();
 
-[[nodiscard]] uint32_t GetSpinCount(std::string_view name);
+[[nodiscard]] uint32_t GetSpinCount(std::string_view name, std::string_view part, std::string_view direction);
 
 [[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask);
 

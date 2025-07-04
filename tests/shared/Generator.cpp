@@ -32,16 +32,14 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] int32_t Random(int32_t min, int32_t max) {
+[[nodiscard]] uint32_t GenerateU32() {
     static bool first = true;
     if (first) {
-        srand(static_cast<uint32_t>(std::time({})));  // NOLINT(cert-msc51-cpp, cert-msc32-c)
+        srand(static_cast<uint32_t>(std::time({})));  // NOLINT
         first = false;
     }
 
-    int32_t diff = max + 1 - min;
-
-    return min + (rand() % diff);  // NOLINT(cert-msc30-c, cert-msc50-cpp)
+    return static_cast<uint32_t>(rand());  // NOLINT
 }
 
 void FillWithRandom(uint8_t* data, size_t length) {
@@ -51,19 +49,11 @@ void FillWithRandom(uint8_t* data, size_t length) {
 }
 
 [[nodiscard]] uint8_t GenerateU8() {
-    return GenerateRandom(static_cast<uint8_t>(0U), static_cast<uint8_t>(255U));
+    return static_cast<uint8_t>(GenerateU32() % 256);
 }
 
 [[nodiscard]] uint16_t GenerateU16() {
-    return GenerateRandom(static_cast<uint16_t>(0U), static_cast<uint16_t>(65535U));
-}
-
-[[nodiscard]] uint32_t GenerateU32() {
-    return GenerateRandom(0U, 123456789U);
-}
-
-[[nodiscard]] uint32_t GenerateU32(uint32_t min, uint32_t max) {
-    return static_cast<uint32_t>(Random(static_cast<int32_t>(min), static_cast<int32_t>(max)));
+    return static_cast<uint16_t>(GenerateU32() % 65536);
 }
 
 [[nodiscard]] uint64_t GenerateU64() {
@@ -79,7 +69,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
 }
 
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max) {
-    return static_cast<BusMessageId>(GenerateU32(min, max));
+    return static_cast<BusMessageId>(GenerateRandom(min, max));
 }
 
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length) {

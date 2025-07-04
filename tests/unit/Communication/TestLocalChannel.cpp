@@ -1,6 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include "TestHelper.h"
 #ifdef _WIN32
 
 #include <gtest/gtest.h>
@@ -14,6 +13,7 @@
 
 #include "Channel.h"
 #include "Generator.h"
+#include "TestHelper.h"
 
 using namespace DsVeosCoSim;
 
