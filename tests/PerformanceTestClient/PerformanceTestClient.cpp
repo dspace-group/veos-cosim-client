@@ -8,7 +8,7 @@
 #include <thread>
 
 #include "Event.h"
-#include "LogHelper.h"
+#include "Helper.h"
 
 using namespace DsVeosCoSim;
 

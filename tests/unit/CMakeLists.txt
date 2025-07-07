@@ -22,6 +22,7 @@ target_sources(
   TestIoBuffer.cpp
   TestPortMapper.cpp
   TestProtocol.cpp
+  TestTypes.cpp
 )
 
 target_include_directories(

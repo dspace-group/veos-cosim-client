@@ -26,28 +26,6 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] Result Check(const CanMessageContainer& messageContainer) {
-    if (messageContainer.length > CanMessageMaxLength) {
-        LogError("CAN message data exceeds maximum length.");
-        return Result::Error;
-    }
-
-    if (!HasFlag(messageContainer.flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (messageContainer.length > 8) {
-            LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
-            return Result::Error;
-        }
-
-        if (HasFlag(messageContainer.flags, CanMessageFlags::BitRateSwitch)) {
-            LogError(
-                "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
-            return Result::Error;
-        }
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] Result SerializeTo(const CanMessageContainer& messageContainer, ChannelWriter& writer) {
     CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
@@ -65,35 +43,8 @@ namespace {
     CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length");
-    CheckResult(Check(messageContainer));
+    CheckResult(messageContainer.Check());
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-void WriteTo(const CanMessageContainer& messageContainer, CanMessage& message) {
-    message.timestamp = messageContainer.timestamp;
-    message.controllerId = messageContainer.controllerId;
-    message.id = messageContainer.id;
-    message.flags = messageContainer.flags;
-    message.length = messageContainer.length;
-    message.data = messageContainer.data.data();
-}
-
-void WriteTo(const CanMessage& message, CanMessageContainer& messageContainer) {
-    messageContainer.timestamp = message.timestamp;
-    messageContainer.controllerId = message.controllerId;
-    messageContainer.id = message.id;
-    messageContainer.flags = message.flags;
-    messageContainer.length = message.length;
-    (void)memcpy(messageContainer.data.data(), message.data, message.length);
-}
-
-[[nodiscard]] Result Check(const EthMessageContainer& messageContainer) {
-    if (messageContainer.length > EthMessageMaxLength) {
-        LogError("Ethernet message data exceeds maximum length.");
-        return Result::Error;
-    }
-
     return Result::Ok;
 }
 
@@ -112,33 +63,8 @@ void WriteTo(const CanMessage& message, CanMessageContainer& messageContainer) {
     CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(Check(messageContainer));
+    CheckResult(messageContainer.Check());
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-void WriteTo(const EthMessageContainer& messageContainer, EthMessage& message) {
-    message.timestamp = messageContainer.timestamp;
-    message.controllerId = messageContainer.controllerId;
-    message.flags = messageContainer.flags;
-    message.length = messageContainer.length;
-    message.data = messageContainer.data.data();
-}
-
-void WriteTo(const EthMessage& message, EthMessageContainer& messageContainer) {
-    messageContainer.timestamp = message.timestamp;
-    messageContainer.controllerId = message.controllerId;
-    messageContainer.flags = message.flags;
-    messageContainer.length = message.length;
-    (void)memcpy(messageContainer.data.data(), message.data, message.length);
-}
-
-[[nodiscard]] Result Check(const LinMessageContainer& messageContainer) {
-    if (messageContainer.length > LinMessageMaxLength) {
-        LogError("LIN message data exceeds maximum length.");
-        return Result::Error;
-    }
-
     return Result::Ok;
 }
 
@@ -159,27 +85,9 @@ void WriteTo(const EthMessage& message, EthMessageContainer& messageContainer) {
     CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(Check(messageContainer));
+    CheckResult(messageContainer.Check());
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
     return Result::Ok;
-}
-
-void WriteTo(const LinMessageContainer& messageContainer, LinMessage& message) {
-    message.timestamp = messageContainer.timestamp;
-    message.controllerId = messageContainer.controllerId;
-    message.id = messageContainer.id;
-    message.flags = messageContainer.flags;
-    message.length = messageContainer.length;
-    message.data = messageContainer.data.data();
-}
-
-void WriteTo(const LinMessage& message, LinMessageContainer& messageContainer) {
-    messageContainer.timestamp = message.timestamp;
-    messageContainer.controllerId = message.controllerId;
-    messageContainer.id = message.id;
-    messageContainer.flags = message.flags;
-    messageContainer.length = message.length;
-    (void)memcpy(messageContainer.data.data(), message.data, message.length);
 }
 
 template <typename TMessage, typename TMessageContainer, typename TController>
@@ -377,10 +285,7 @@ protected:
         _messageBuffer.Clear();
     }
 
-    [[nodiscard]] Result TransmitInternal(const TMessage& message) override {
-        ExtensionPtr extension{};
-        CheckResult(Base::FindController(message.controllerId, extension));
-
+    [[nodiscard]] Result CheckForSpace(ExtensionPtr extension) {
         if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
             if (!extension->warningSent) {
                 std::string warningMessage = "Transmit buffer for controller '";
@@ -392,36 +297,34 @@ protected:
 
             return Result::Full;
         }
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result TransmitInternal(const TMessage& message) override {
+        CheckResult(message.Check());
+
+        ExtensionPtr extension{};
+        CheckResult(Base::FindController(message.controllerId, extension));
+        CheckResult(CheckForSpace(extension));
 
         TMessageContainer* messageContainer = _messageBuffer.EmplaceBack();
         if (!messageContainer) {
             return Result::Error;
         }
 
-        WriteTo(message, *messageContainer);
-        CheckResult(Check(*messageContainer));
+        message.WriteTo(*messageContainer);
 
         ++_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
     }
 
     [[nodiscard]] Result TransmitInternal(const TMessageContainer& messageContainer) override {
+        CheckResult(messageContainer.Check());
+
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
-
-        if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
-            if (!extension->warningSent) {
-                std::string warningMessage = "Transmit buffer for controller '";
-                warningMessage.append(extension->info.name);
-                warningMessage.append("' is full. Messages are dropped.");
-                LogWarning(warningMessage);
-                extension->warningSent = true;
-            }
-
-            return Result::Full;
-        }
-
-        CheckResult(Check(messageContainer));
+        CheckResult(CheckForSpace(extension));
 
         CheckResult(_messageBuffer.PushBack(messageContainer));
         ++_messageCountPerController[extension->controllerIndex];
@@ -438,7 +341,7 @@ protected:
             return Result::Error;
         }
 
-        WriteTo(*messageContainer, message);
+        messageContainer->WriteTo(message);
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer->controllerId, extension));
@@ -469,16 +372,16 @@ protected:
         CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
 
         for (uint32_t i = 0; i < count; i++) {
-            TMessageContainer* message = _messageBuffer.PopFront();
-            if (!message) {
+            TMessageContainer* messageContainer = _messageBuffer.PopFront();
+            if (!messageContainer) {
                 return Result::Error;
             }
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(ToString(*message));
+                LogProtocolDataTrace(messageContainer->ToString());
             }
 
-            CheckResultWithMessage(SerializeTo(*message, writer), "Could not serialize message.");
+            CheckResultWithMessage(SerializeTo(*messageContainer, writer), "Could not serialize message.");
         }
 
         for (auto& [id, extension] : Base::_controllers) {
@@ -501,7 +404,7 @@ protected:
             CheckResultWithMessage(DeserializeFrom(messageContainer, reader), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(ToString(messageContainer));
+                LogProtocolDataTrace(messageContainer.ToString());
             }
 
             ExtensionPtr extension{};
@@ -514,7 +417,7 @@ protected:
 
             if (messageCallback) {
                 TMessage message{};
-                WriteTo(messageContainer, message);
+                messageContainer.WriteTo(message);
                 messageCallback(simulationTime, extension->info, message);
                 continue;
             }
@@ -703,11 +606,7 @@ protected:
         }
     }
 
-    [[nodiscard]] Result TransmitInternal(const TMessage& message) override {
-        ExtensionPtr extension{};
-        CheckResult(Base::FindController(message.controllerId, extension));
-        std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
-
+    [[nodiscard]] Result CheckForSpace(std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
         if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
                 std::string warningMessage = "Transmit buffer for controller '";
@@ -720,35 +619,34 @@ protected:
             return Result::Full;
         }
 
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result TransmitInternal(const TMessage& message) override {
+        CheckResult(message.Check());
+
+        ExtensionPtr extension{};
+        CheckResult(Base::FindController(message.controllerId, extension));
+        std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
+        CheckResult(CheckForSpace(messageCount, extension));
+
         TMessageContainer* messageContainer = _messageBuffer->EmplaceBack();
         if (!messageContainer) {
             return Result::Error;
         }
 
-        WriteTo(message, *messageContainer);
-        CheckResult(Check(*messageContainer));
+        message.WriteTo(*messageContainer);
         messageCount.fetch_add(1);
         return Result::Ok;
     }
 
     [[nodiscard]] Result TransmitInternal(const TMessageContainer& messageContainer) override {
+        CheckResult(messageContainer.Check());
+
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
-
-        if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
-            if (!extension->warningSent) {
-                std::string message = "Transmit buffer for controller '";
-                message.append(extension->info.name);
-                message.append("' is full. Messages are dropped.");
-                LogWarning(message);
-                extension->warningSent = true;
-            }
-
-            return Result::Full;
-        }
-
-        CheckResult(Check(messageContainer));
+        CheckResult(CheckForSpace(messageCount, extension));
 
         CheckResult(_messageBuffer->PushBack(messageContainer));
         messageCount.fetch_add(1);
@@ -765,7 +663,7 @@ protected:
             return Result::Error;
         }
 
-        WriteTo(*messageContainer, message);
+        messageContainer->WriteTo(message);
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(message.controllerId, extension));
@@ -820,7 +718,7 @@ protected:
             }
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(ToString(*messageContainer));
+                LogProtocolDataTrace(messageContainer->ToString());
             }
 
             ExtensionPtr extension{};
@@ -836,7 +734,7 @@ protected:
 
             if (messageCallback) {
                 TMessage message{};
-                WriteTo(*messageContainer, message);
+                messageContainer->WriteTo(message);
                 messageCallback(simulationTime, extension->info, message);
                 continue;
             }

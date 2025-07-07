@@ -8,7 +8,6 @@
 #include <thread>
 
 #include "Helper.h"
-#include "LogHelper.h"
 #include "PerformanceTestHelper.h"
 #include "Socket.h"
 

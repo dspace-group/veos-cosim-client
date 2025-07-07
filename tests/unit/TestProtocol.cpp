@@ -7,7 +7,6 @@
 #include "BusBuffer.h"
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Generator.h"
 #include "Helper.h"
 #include "IoBuffer.h"
 #include "Protocol.h"

@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-#include "LogHelper.h"
+#include "Helper.h"
 
 using namespace DsVeosCoSim;
 

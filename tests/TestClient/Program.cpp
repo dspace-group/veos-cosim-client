@@ -12,9 +12,7 @@
 
 #include "DsVeosCoSim/CoSimClient.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Generator.h"
 #include "Helper.h"
-#include "LogHelper.h"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;
@@ -220,7 +218,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     if (!canControllers.empty()) {
         LogTrace("Found the following CAN controllers:");
         for (const CanController& controller : canControllers) {
-            LogTrace("  {}", ToString(controller));
+            LogTrace("  {}", controller.ToString());
         }
 
         LogTrace("");
@@ -231,7 +229,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     if (!ethControllers.empty()) {
         LogTrace("Found the following ETH controllers:");
         for (const EthController& controller : ethControllers) {
-            LogTrace("  {}", ToString(controller));
+            LogTrace("  {}", controller.ToString());
         }
 
         LogTrace("");
@@ -242,7 +240,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     if (!linControllers.empty()) {
         LogTrace("Found the following LIN controllers:");
         for (const LinController& controller : linControllers) {
-            LogTrace("  {}", ToString(controller));
+            LogTrace("  {}", controller.ToString());
         }
 
         LogTrace("");
@@ -253,7 +251,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     if (!incomingSignals.empty()) {
         LogTrace("Found the following incoming signals:");
         for (const IoSignal& signal : incomingSignals) {
-            LogTrace("  {}", ToString(signal));
+            LogTrace("  {}", signal.ToString());
         }
 
         LogTrace("");
@@ -264,7 +262,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     if (!incomingSignals.empty()) {
         LogTrace("Found the following outgoing signals:");
         for (const IoSignal& signal : outgoingSignals) {
-            LogTrace("  {}", ToString(signal));
+            LogTrace("  {}", signal.ToString());
         }
 
         LogTrace("");

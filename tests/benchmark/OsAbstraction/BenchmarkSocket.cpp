@@ -8,7 +8,6 @@
 #include <thread>
 #include <vector>
 
-#include "Generator.h"
 #include "Helper.h"
 #include "Socket.h"
 

@@ -175,8 +175,6 @@ enum class Mode {
 
 [[nodiscard]] std::string_view ToString(Mode mode);
 
-[[nodiscard]] std::string DataToString(uint8_t* data, size_t dataLength, char separator);
-
 enum class IoSignalId : uint32_t {
 };
 
@@ -188,6 +186,8 @@ struct IoSignal {
     DataType dataType{};
     SizeKind sizeKind{};
     const char* name{};
+
+    [[nodiscard]] std::string ToString() const;
 };
 
 struct IoSignalContainer {
@@ -196,15 +196,15 @@ struct IoSignalContainer {
     DataType dataType{};
     SizeKind sizeKind{};
     std::string name;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] IoSignal Convert() const;
 };
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
-[[nodiscard]] std::string ToString(const IoSignal& signal);
-[[nodiscard]] std::string ToString(const IoSignalContainer& signal);
-[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& signals);
+[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& signalContainers);
 
-[[nodiscard]] IoSignal Convert(const IoSignalContainer& signal);
-[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signals);
+[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signalContainers);
 
 enum class BusControllerId : uint32_t {
 };
@@ -237,6 +237,8 @@ struct CanController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
 };
 
 struct CanControllerContainer {
@@ -247,7 +249,16 @@ struct CanControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] CanController Convert() const;
 };
+
+[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& controllerContainers);
+
+[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllerContainers);
+
+struct CanMessageContainer;
 
 struct CanMessage {
     SimulationTime timestamp{};
@@ -256,26 +267,24 @@ struct CanMessage {
     CanMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(CanMessageContainer& messageContainer) const;
 };
 
 struct CanMessageContainer {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
-    uint32_t controllerIndex{};
     BusMessageId id{};
     CanMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(CanMessage& message) const;
 };
-
-[[nodiscard]] std::string ToString(const CanController& controller);
-[[nodiscard]] std::string ToString(const CanControllerContainer& controller);
-[[nodiscard]] std::string ToString(const CanMessage& message);
-[[nodiscard]] std::string ToString(const CanMessageContainer& message);
-[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& controllers);
-
-[[nodiscard]] CanController Convert(const CanControllerContainer& controller);
-[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllers);
 
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
@@ -295,6 +304,8 @@ struct EthController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
 };
 
 struct EthControllerContainer {
@@ -305,7 +316,16 @@ struct EthControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] EthController Convert() const;
 };
+
+[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& controllerContainers);
+
+[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllerContainers);
+
+struct EthMessageContainer;
 
 struct EthMessage {
     SimulationTime timestamp{};
@@ -314,25 +334,24 @@ struct EthMessage {
     EthMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(EthMessageContainer& messageContainer) const;
 };
 
 struct EthMessageContainer {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
-    uint32_t controllerIndex{};
+    uint32_t reserved{};
     EthMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(EthMessage& message) const;
 };
-
-[[nodiscard]] std::string ToString(const EthController& controller);
-[[nodiscard]] std::string ToString(const EthControllerContainer& controller);
-[[nodiscard]] std::string ToString(const EthMessage& message);
-[[nodiscard]] std::string ToString(const EthMessageContainer& message);
-[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& controllers);
-
-[[nodiscard]] EthController Convert(const EthControllerContainer& controller);
-[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllers);
 
 enum class LinControllerType : uint32_t {
     Responder = 1,
@@ -368,6 +387,8 @@ struct LinController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
 };
 
 struct LinControllerContainer {
@@ -378,7 +399,16 @@ struct LinControllerContainer {
     std::string name;
     std::string channelName;
     std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] LinController Convert() const;
 };
+
+[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& controllerContainers);
+
+[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllerContainers);
+
+struct LinMessageContainer;
 
 struct LinMessage {
     SimulationTime timestamp{};
@@ -387,26 +417,24 @@ struct LinMessage {
     LinMessageFlags flags{};
     uint32_t length{};
     const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(LinMessageContainer& messageContainer) const;
 };
 
 struct LinMessageContainer {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
-    uint32_t controllerIndex{};
     BusMessageId id{};
     LinMessageFlags flags{};
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(LinMessage& message) const;
 };
-
-[[nodiscard]] std::string ToString(const LinController& controller);
-[[nodiscard]] std::string ToString(const LinControllerContainer& controller);
-[[nodiscard]] std::string ToString(const LinMessage& message);
-[[nodiscard]] std::string ToString(const LinMessageContainer& message);
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& controllers);
-
-[[nodiscard]] LinController Convert(const LinControllerContainer& controller);
-[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllers);
 
 using LogCallback = std::function<void(Severity, std::string_view)>;
 
@@ -415,7 +443,7 @@ void SetLogCallback(LogCallback logCallback);
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
 using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason reason)>;
 using IncomingSignalChangedCallback =
-    std::function<void(SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value)>;
+    std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
 using CanMessageReceivedCallback =
     std::function<void(SimulationTime simulationTime, const CanController& controller, const CanMessage& message)>;
 using EthMessageReceivedCallback =

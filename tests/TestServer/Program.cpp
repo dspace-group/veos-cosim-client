@@ -11,9 +11,7 @@
 
 #include "DsVeosCoSim/CoSimServer.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Generator.h"
 #include "Helper.h"
-#include "LogHelper.h"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;

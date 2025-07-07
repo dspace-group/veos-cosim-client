@@ -2,9 +2,9 @@
 
 #include <string_view>
 
+#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimClient.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "LogHelper.h"
 #include "PerformanceTestClient.h"
 #include "PerformanceTestHelper.h"
 

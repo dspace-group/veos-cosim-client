@@ -7,7 +7,7 @@
 #include <optional>
 #include <string>
 
-#include "Generator.h"
+#include "Helper.h"
 #include "OsUtilities.h"
 #include "TestHelper.h"
 
