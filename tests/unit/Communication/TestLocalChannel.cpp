@@ -12,7 +12,7 @@
 #include <thread>
 
 #include "Channel.h"
-#include "Generator.h"
+#include "Helper.h"
 #include "TestHelper.h"
 
 using namespace DsVeosCoSim;

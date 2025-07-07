@@ -8,7 +8,6 @@
 #include <thread>
 
 #include "Event.h"
-#include "Generator.h"
 #include "Helper.h"
 #include "IoBuffer.h"
 #include "OsUtilities.h"
@@ -44,9 +43,9 @@ void RunTest(benchmark::State& state,
     signal.length = static_cast<uint32_t>(state.range(0));
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {Convert(signal)}, {}, writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {Convert(signal)}, {}, readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 

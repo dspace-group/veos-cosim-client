@@ -8,9 +8,7 @@ add_library(
 target_sources(
   shared
   PRIVATE
-  Generator.cpp
   Helper.cpp
-  LogHelper.cpp
   OsAbstractionTestHelper.cpp
 )
 

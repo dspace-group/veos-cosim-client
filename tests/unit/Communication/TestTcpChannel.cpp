@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "Channel.h"
-#include "Generator.h"
 #include "Helper.h"
 #include "Socket.h"
 #include "TestHelper.h"

@@ -9,8 +9,7 @@
 #include "DsVeosCoSim/CoSimServer.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Event.h"
-#include "Generator.h"
-#include "LogHelper.h"
+#include "Helper.h"
 #include "TestHelper.h"
 
 using namespace std::chrono;

@@ -11,7 +11,6 @@
 #include "BusBuffer.h"
 #include "Channel.h"
 #include "Event.h"
-#include "Generator.h"
 #include "Helper.h"
 #include "OsUtilities.h"
 
@@ -55,10 +54,10 @@ void RunTest(benchmark::State& state,
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
     MustBeOk(
-        CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {Convert(controller)}, transmitterBusBuffer));
+        CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {controller.Convert()}, transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     MustBeOk(
-        CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {Convert(controller)}, receiverBusBuffer));
+        CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller.Convert()}, receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
 

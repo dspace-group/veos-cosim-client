@@ -7,7 +7,7 @@
 #include <array>
 #include <thread>
 
-#include "LogHelper.h"
+#include "Helper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 

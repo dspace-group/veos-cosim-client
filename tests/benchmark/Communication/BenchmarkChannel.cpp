@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "Channel.h"
-#include "Generator.h"
 #include "Helper.h"
 
 using namespace DsVeosCoSim;

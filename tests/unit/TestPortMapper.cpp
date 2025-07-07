@@ -7,8 +7,7 @@
 #include <memory>
 #include <string>
 
-#include "Generator.h"
-#include "LogHelper.h"
+#include "Helper.h"
 #include "PortMapper.h"
 #include "TestHelper.h"
 
