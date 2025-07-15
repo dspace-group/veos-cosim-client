@@ -24,8 +24,8 @@ constexpr uint32_t LockFreeCacheLineBytes = 64;
 constexpr uint32_t ServerSharedMemorySize = 4;
 constexpr uint32_t BufferSize = 64 * 1024;
 
-const auto ServerToClientPostFix = "ServerToClient";
-const auto ClientToServerPostFix = "ClientToServer";
+constexpr char ServerToClientPostFix[] = "ServerToClient";
+constexpr char ClientToServerPostFix[] = "ClientToServer";
 
 [[nodiscard]] constexpr uint32_t MaskIndex(uint32_t index) {
     return index & (BufferSize - 1);
@@ -40,7 +40,7 @@ public:
         Disconnect();
     }
 
-    [[nodiscard]] Result InitializeBase(std::string_view name, bool isServer) {
+    [[nodiscard]] Result InitializeBase(const std::string& name, bool isServer) {
         NamedMutex mutex;
         CheckResult(NamedMutex::CreateOrOpen(name, mutex));
 
@@ -163,8 +163,8 @@ public:
     LocalChannelWriter(LocalChannelWriter&&) = delete;
     LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
-        const auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
+        auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
         std::string writerName(name);
         writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(writerName, isServer));
@@ -174,7 +174,7 @@ public:
     }
 
     [[nodiscard]] Result Write(const void* source, size_t size) override {
-        const auto* bufferPointer = static_cast<const uint8_t*>(source);
+        auto bufferPointer = static_cast<const uint8_t*>(source);
 
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
@@ -262,8 +262,8 @@ public:
     LocalChannelReader(LocalChannelReader&&) = delete;
     LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
-        const auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
+        auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
         std::string readerName(name);
         readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(readerName, isServer));
@@ -357,7 +357,7 @@ public:
     LocalChannel(LocalChannel&&) = delete;
     LocalChannel& operator=(LocalChannel&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         CheckResult(_writer.Initialize(name, counter, isServer));
         return _reader.Initialize(name, counter, isServer);
     }
@@ -396,7 +396,7 @@ public:
     LocalChannelServer(LocalChannelServer&&) = delete;
     LocalChannelServer& operator=(LocalChannelServer&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name) {
+    [[nodiscard]] Result Initialize(const std::string& name) {
         _name = name;
         NamedMutex mutex;
         CheckResult(NamedMutex::CreateOrOpen(name, mutex));
@@ -435,7 +435,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result TryConnectToLocalChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel) {
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
     NamedMutex mutex;
     CheckResult(NamedMutex::CreateOrOpen(name, mutex));
     CheckResult(mutex.Lock());
@@ -455,7 +455,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(std::string_view name,
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name,
                                               std::unique_ptr<ChannelServer>& localChannelServer) {
     std::unique_ptr<LocalChannelServer> server = std::make_unique<LocalChannelServer>();
     CheckResult(server->Initialize(name));

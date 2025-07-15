@@ -3,18 +3,17 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 namespace DsVeosCoSim {
 
-void LogError(std::string_view message);
-void LogSystemError(std::string_view message, int32_t errorCode);
-void LogWarning(std::string_view message);
-void LogInfo(std::string_view message);
-void LogTrace(std::string_view message);
-void LogProtocolBeginTrace(std::string_view message);
-void LogProtocolEndTrace(std::string_view message);
-void LogProtocolDataTrace(std::string_view message);
+void LogError(const std::string& message);
+void LogWarning(const std::string& message);
+void LogInfo(const std::string& message);
+void LogTrace(const std::string& message);
+void LogSystemError(const std::string& message, int32_t errorCode);
+void LogProtocolBeginTrace(const std::string& message);
+void LogProtocolEndTrace(const std::string& message);
+void LogProtocolDataTrace(const std::string& message);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \

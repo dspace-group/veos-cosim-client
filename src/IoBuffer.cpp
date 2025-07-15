@@ -25,7 +25,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] Result CheckSizeKind(SizeKind sizeKind, std::string_view name) {
+[[nodiscard]] Result CheckSizeKind(SizeKind sizeKind, const std::string& name) {
     switch (sizeKind) {
         case SizeKind::Fixed:
         case SizeKind::Variable:
@@ -62,7 +62,7 @@ public:
     IoPartBufferBase& operator=(IoPartBufferBase&&) = delete;
 
     [[nodiscard]] virtual Result Initialize(CoSimType coSimType,
-                                            [[maybe_unused]] std::string_view name,
+                                            [[maybe_unused]] const std::string& name,
                                             const std::vector<IoSignal>& signals) {
         _coSimType = coSimType;
         _changedSignalsQueue = RingBuffer<MetaData*>(signals.size());
@@ -217,7 +217,7 @@ public:
     RemoteIoPartBuffer& operator=(RemoteIoPartBuffer&&) = delete;
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<IoSignal>& signals) override {
         CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
 
@@ -443,7 +443,7 @@ public:
     LocalIoPartBuffer& operator=(LocalIoPartBuffer&&) = delete;
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<IoSignal>& signals) override {
         CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
         _dataVector.resize(_metaDataLookup.size());
@@ -682,7 +682,7 @@ public:
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
                                     [[maybe_unused]] ConnectionKind connectionKind,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals) {
         std::string outgoingName(name);
@@ -753,7 +753,7 @@ private:
 
 [[nodiscard]] Result CreateIoBuffer(CoSimType coSimType,
                                     ConnectionKind connectionKind,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
                                     std::unique_ptr<IoBuffer>& ioBuffer) {

@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdint>
-#include <string_view>
+#include <string>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] std::string_view host,
+[[nodiscard]] Result Run([[maybe_unused]] const std::string& host,
                          Event& connectedEvent,
                          uint64_t& counter,
                          const bool& isStopped) {
@@ -45,7 +45,7 @@ namespace {
     return Result::Ok;
 }
 
-void LocalCommunicationClientRun(std::string_view host,
+void LocalCommunicationClientRun(const std::string& host,
                                  Event& connectedEvent,
                                  uint64_t& counter,
                                  const bool& isStopped) {

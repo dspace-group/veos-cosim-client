@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <string_view>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -76,7 +76,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     uint16_t port{};
 
@@ -100,7 +100,7 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
 TEST_P(TestTcpChannel, Connect) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -134,7 +134,7 @@ TEST_P(TestTcpChannel, AcceptWithoutConnect) {
 TEST_P(TestTcpChannel, Accept) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -157,7 +157,7 @@ TEST_P(TestTcpChannel, Accept) {
 TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -221,7 +221,7 @@ TEST_F(TestTcpChannel, AcceptClientWithHostName) {
 TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -247,7 +247,7 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
 TEST_P(TestTcpChannel, WriteToChannel) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -271,7 +271,7 @@ TEST_P(TestTcpChannel, WriteToChannel) {
 TEST_P(TestTcpChannel, ReadFromChannel) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -302,7 +302,7 @@ TEST_P(TestTcpChannel, ReadFromChannel) {
 TEST_P(TestTcpChannel, PingPong) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -339,7 +339,7 @@ TEST_P(TestTcpChannel, PingPong) {
 TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -385,7 +385,7 @@ void StreamClient(Channel& channel) {
 TEST_P(TestTcpChannel, Stream) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));
@@ -425,7 +425,7 @@ void ReceiveBigElement(Channel& channel) {
 TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     // Arrange
     Param param = GetParam();
-    std::string_view ipAddress = GetLoopBackAddress(param.addressFamily);
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
     ExpectOk(CreateTcpChannelServer(0, true, server));

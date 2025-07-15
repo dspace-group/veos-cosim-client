@@ -7,7 +7,6 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include <string_view>
 
 #include "Helper.h"
 
@@ -19,8 +18,8 @@ namespace {}  // namespace
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-[[nodiscard]] std::string GetCounterPart(std::string_view name, ConnectionKind connectionKind) {
-    return connectionKind == ConnectionKind::Local ? std::string(name) : fmt::format("Other{}", name);
+[[nodiscard]] std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
+    return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 
 void AssertByteArray(const void* expected, const void* actual, size_t size) {
@@ -31,14 +30,14 @@ void AssertByteArray(const void* expected, const void* actual, size_t size) {
     }
 }
 
-void AssertLastMessage(std::string_view message) {
+void AssertLastMessage(const std::string& message) {
     AssertEqHelper(message, GetLastMessage());
 }
 
-void AssertEqHelper(std::string_view expected, std::string_view actual) {
-    ASSERT_STREQ(expected.data(), actual.data());
+void AssertEqHelper(const std::string& expected, const std::string& actual) {
+    ASSERT_STREQ(expected.c_str(), actual.c_str());
 }
 
-void AssertNotEqHelper(std::string_view expected, std::string_view actual) {
-    ASSERT_STRNE(expected.data(), actual.data());
+void AssertNotEqHelper(const std::string& expected, const std::string& actual) {
+    ASSERT_STRNE(expected.c_str(), actual.c_str());
 }

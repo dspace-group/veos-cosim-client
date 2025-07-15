@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "BusBuffer.h"
@@ -31,7 +30,7 @@ namespace {
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteString(ChannelWriter& writer, std::string_view string) {
+[[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
     auto size = static_cast<uint32_t>(string.size());
     CheckResultWithMessage(writer.Write(size), "Could not write string size.");
     CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
@@ -217,7 +216,7 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(FrameKind frameKind) {
+[[nodiscard]] const char* ToString(FrameKind frameKind) {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";
@@ -292,7 +291,7 @@ namespace Protocol {
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendError(ChannelWriter& writer, std::string_view errorMessage) {
+[[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendError(ErrorMessage: \"";
         str.append(errorMessage);
@@ -382,8 +381,8 @@ namespace Protocol {
 [[nodiscard]] Result SendConnect(ChannelWriter& writer,
                                  uint32_t protocolVersion,
                                  Mode clientMode,
-                                 std::string_view serverName,
-                                 std::string_view clientName) {
+                                 const std::string& serverName,
+                                 const std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendConnect(ProtocolVersion: ";
         str.append(std::to_string(protocolVersion));
@@ -843,7 +842,7 @@ namespace Protocol {
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) {
+[[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendSetPort(ServerName: \"";
         str.append(serverName);
@@ -885,7 +884,7 @@ namespace Protocol {
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendUnsetPort(ServerName: \"";
         str.append(serverName);
@@ -921,7 +920,7 @@ namespace Protocol {
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendGetPort(ChannelWriter& writer, std::string_view serverName) {
+[[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         std::string str = "SendGetPort(ServerName: \"";
         str.append(serverName);

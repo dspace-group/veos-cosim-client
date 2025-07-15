@@ -3,7 +3,6 @@
 #include "Helper.h"
 
 #include <string>
-#include <string_view>
 
 #include <fmt/color.h>
 
@@ -32,12 +31,12 @@ std::string LastMessage;
     return socket.GetLocalPort(port);
 }
 
-[[nodiscard]] bool Equals(std::string_view first, std::string_view second) {
+[[nodiscard]] bool Equals(const std::string& first, const std::string& second) {
     if (first.length() != second.length()) {
         return false;
     }
 
-    return strcmp(first.data(), second.data()) == 0;
+    return strcmp(first.c_str(), second.c_str()) == 0;
 }
 
 [[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) {
@@ -99,7 +98,7 @@ void InitializeOutput() {
     SetLogCallback(OnLogCallback);
 }
 
-void OnLogCallback(Severity severity, std::string_view message) {
+void OnLogCallback(Severity severity, const std::string& message) {
     LastMessage = message;
     switch (severity) {
         case Severity::Error:
@@ -479,7 +478,7 @@ void ClearLastMessage() {
     return Result::Ok;
 }
 
-void SetEnvVariable(std::string_view name, std::string_view value) {
+void SetEnvVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
     std::string environmentString(name);
     environmentString.append("=");
@@ -490,7 +489,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 #endif
 }
 
-[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
+[[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
         return "127.0.0.1";
     }
@@ -526,7 +525,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<CanController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, busBuffer);
@@ -534,7 +533,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<EthController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, busBuffer);
@@ -542,7 +541,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<LinController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, busBuffer);
@@ -576,7 +575,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
 }
 
-[[nodiscard]] std::string GenerateString(std::string_view prefix) {
+[[nodiscard]] std::string GenerateString(const std::string& prefix) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 

@@ -6,7 +6,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -28,7 +27,7 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 
-void PrintStatus(bool value, std::string_view what) {
+void PrintStatus(bool value, const std::string& what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -186,7 +185,7 @@ void OnSimulationContinuedCallback(SimulationTime simulationTime) {
     LogInfo("Simulation continued at {} s.", SimulationTimeToString(simulationTime));
 }
 
-[[nodiscard]] Result Connect(std::string_view host, std::string_view serverName) {
+[[nodiscard]] Result Connect(const std::string& host, const std::string& serverName) {
     LogInfo("Connecting ...");
 
     ConnectionState connectionState{};
@@ -301,7 +300,7 @@ void Disconnect() {
     exit(0);
 }
 
-[[nodiscard]] Result HostClient(std::string_view host, std::string_view name) {
+[[nodiscard]] Result HostClient(const std::string& host, const std::string& name) {
     CheckResult(Connect(host, name));
 
     StartSimulationThread(RunCallbackBasedCoSimulation);
@@ -349,7 +348,7 @@ void Disconnect() {
 
 }  // namespace
 
-int32_t main(int32_t argc, char** argv) {
+int main(int argc, char** argv) {
     InitializeOutput();
 
     std::string host;

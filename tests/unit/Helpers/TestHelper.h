@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -29,14 +28,14 @@
 #define AssertFalse(result) ASSERT_FALSE(!!(result))
 
 [[nodiscard]] DsVeosCoSim::CoSimType GetCounterPart(DsVeosCoSim::CoSimType coSimType);
-[[nodiscard]] std::string GetCounterPart(std::string_view name, DsVeosCoSim::ConnectionKind connectionKind);
+[[nodiscard]] std::string GetCounterPart(const std::string& name, DsVeosCoSim::ConnectionKind connectionKind);
 
 void AssertByteArray(const void* expected, const void* actual, size_t size);
 
-void AssertLastMessage(std::string_view message);
+void AssertLastMessage(const std::string& message);
 
-void AssertEqHelper(std::string_view expected, std::string_view actual);
-void AssertNotEqHelper(std::string_view expected, std::string_view actual);
+void AssertEqHelper(const std::string& expected, const std::string& actual);
+void AssertNotEqHelper(const std::string& expected, const std::string& actual);
 
 template <typename T>
 void AssertEqHelper(const std::vector<T>& expected, const std::vector<T>& actual) {

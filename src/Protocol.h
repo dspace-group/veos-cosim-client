@@ -4,7 +4,6 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 
 #include "BusBuffer.h"
 #include "Channel.h"
@@ -40,7 +39,7 @@ enum class FrameKind {
     UnsetPort
 };
 
-[[nodiscard]] std::string_view ToString(FrameKind frameKind);
+[[nodiscard]] const char* ToString(FrameKind frameKind);
 
 namespace Protocol {
 
@@ -48,7 +47,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendOk(ChannelWriter& writer);
 
-[[nodiscard]] Result SendError(ChannelWriter& writer, std::string_view errorMessage);
+[[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage);
 [[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage);
 
 [[nodiscard]] Result SendPing(ChannelWriter& writer);
@@ -59,8 +58,8 @@ namespace Protocol {
 [[nodiscard]] Result SendConnect(ChannelWriter& writer,
                                  uint32_t protocolVersion,
                                  Mode clientMode,
-                                 std::string_view serverName,
-                                 std::string_view clientName);
+                                 const std::string& serverName,
+                                 const std::string& clientName);
 [[nodiscard]] Result ReadConnect(ChannelReader& reader,
                                  uint32_t& protocolVersion,
                                  Mode& clientMode,
@@ -125,16 +124,16 @@ namespace Protocol {
                                 const BusBuffer& busBuffer,
                                 const Callbacks& callbacks);
 
-[[nodiscard]] Result SendGetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName);
 [[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName);
 
 [[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port);
 [[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port);
 
-[[nodiscard]] Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port);
+[[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port);
 [[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port);
 
-[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName);
+[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName);
 [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName);
 
 }  // namespace Protocol

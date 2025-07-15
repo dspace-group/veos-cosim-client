@@ -1,6 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <optional>
+#include <string>
 
 #include <gtest/gtest.h>
 

@@ -6,7 +6,6 @@
 #include <chrono>
 #include <functional>
 #include <string>
-#include <string_view>
 
 namespace DsVeosCoSim {
 
@@ -80,21 +79,21 @@ enum class Result {
     Disconnected
 };
 
-[[nodiscard]] std::string_view ToString(Result result);
+[[nodiscard]] const char* ToString(Result result);
 
 enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
-[[nodiscard]] std::string_view ToString(CoSimType coSimType);
+[[nodiscard]] const char* ToString(CoSimType coSimType);
 
 enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
 
-[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind);
+[[nodiscard]] const char* ToString(ConnectionKind connectionKind);
 
 enum class Command : uint32_t {
     None,
@@ -108,7 +107,7 @@ enum class Command : uint32_t {
     Ping
 };
 
-[[nodiscard]] std::string_view ToString(Command command);
+[[nodiscard]] const char* ToString(Command command);
 
 enum class Severity : uint32_t {
     Error,
@@ -117,21 +116,21 @@ enum class Severity : uint32_t {
     Trace
 };
 
-[[nodiscard]] std::string_view ToString(Severity severity);
+[[nodiscard]] const char* ToString(Severity severity);
 
 enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
 
-[[nodiscard]] std::string_view ToString(TerminateReason terminateReason);
+[[nodiscard]] const char* ToString(TerminateReason terminateReason);
 
 enum class ConnectionState : uint32_t {
     Disconnected,
     Connected
 };
 
-[[nodiscard]] std::string_view ToString(ConnectionState connectionState);
+[[nodiscard]] const char* ToString(ConnectionState connectionState);
 
 enum class DataType : uint32_t {
     Bool = 1,
@@ -149,14 +148,14 @@ enum class DataType : uint32_t {
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 
-[[nodiscard]] std::string_view ToString(DataType dataType);
+[[nodiscard]] const char* ToString(DataType dataType);
 
 enum class SizeKind : uint32_t {
     Fixed = 1,
     Variable
 };
 
-[[nodiscard]] std::string_view ToString(SizeKind sizeKind);
+[[nodiscard]] const char* ToString(SizeKind sizeKind);
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
 
@@ -168,12 +167,12 @@ enum class SimulationState {
     Terminated
 };
 
-[[nodiscard]] std::string_view ToString(SimulationState simulationState);
+[[nodiscard]] const char* ToString(SimulationState simulationState);
 
 enum class Mode {
 };
 
-[[nodiscard]] std::string_view ToString(Mode mode);
+[[nodiscard]] const char* ToString(Mode mode);
 
 enum class IoSignalId : uint32_t {
 };
@@ -358,7 +357,7 @@ enum class LinControllerType : uint32_t {
     Commander
 };
 
-[[nodiscard]] std::string_view ToString(LinControllerType type);
+[[nodiscard]] const char* ToString(LinControllerType type);
 
 enum class LinMessageFlags : uint32_t {
     Loopback = 1,
@@ -436,7 +435,7 @@ struct LinMessageContainer {
     void WriteTo(LinMessage& message) const;
 };
 
-using LogCallback = std::function<void(Severity, std::string_view)>;
+using LogCallback = std::function<void(Severity, const std::string&)>;
 
 void SetLogCallback(LogCallback logCallback);
 

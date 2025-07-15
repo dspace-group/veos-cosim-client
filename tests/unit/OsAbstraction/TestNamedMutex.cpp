@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include <string_view>
 
 #include "Helper.h"
 #include "OsUtilities.h"
@@ -34,7 +33,7 @@ TEST_F(TestNamedMutex, LockAndUnlockOnSameMutex) {
     mutex.Unlock();
 }
 
-void DifferentThread(std::string_view name, int32_t& counter) {
+void DifferentThread(const std::string& name, int32_t& counter) {
     NamedMutex mutex;
     ExpectOk(NamedMutex::CreateOrOpen(name, mutex));
 

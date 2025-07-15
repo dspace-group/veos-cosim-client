@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <string_view>
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimClient.h"
@@ -168,9 +167,9 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 }  // namespace
 
 void DsVeosCoSim_SetLogCallback(DsVeosCoSim_LogCallback logCallback) {
-    SetLogCallback([=](Severity severity, std::string_view message) {
+    SetLogCallback([=](Severity severity, const std::string& message) {
         if (logCallback) {
-            logCallback(static_cast<DsVeosCoSim_Severity>(severity), message.data());
+            logCallback(static_cast<DsVeosCoSim_Severity>(severity), message.c_str());
         }
     });
 }
@@ -502,35 +501,35 @@ DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handl
 }
 
 const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) {
-    return ToString(static_cast<Result>(result)).data();
+    return ToString(static_cast<Result>(result));
 }
 
 const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command) {
-    return ToString(static_cast<Command>(command)).data();
+    return ToString(static_cast<Command>(command));
 }
 
 const char* DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity) {
-    return ToString(static_cast<Severity>(severity)).data();
+    return ToString(static_cast<Severity>(severity));
 }
 
 const char* DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason) {
-    return ToString(static_cast<TerminateReason>(terminateReason)).data();
+    return ToString(static_cast<TerminateReason>(terminateReason));
 }
 
 const char* DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState) {
-    return ToString(static_cast<ConnectionState>(connectionState)).data();
+    return ToString(static_cast<ConnectionState>(connectionState));
 }
 
 const char* DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType) {
-    return ToString(static_cast<DataType>(dataType)).data();
+    return ToString(static_cast<DataType>(dataType));
 }
 
 const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind) {
-    return ToString(static_cast<SizeKind>(sizeKind)).data();
+    return ToString(static_cast<SizeKind>(sizeKind));
 }
 
 const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType) {
-    return ToString(static_cast<LinControllerType>(linControllerType)).data();
+    return ToString(static_cast<LinControllerType>(linControllerType));
 }
 
 size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType) {

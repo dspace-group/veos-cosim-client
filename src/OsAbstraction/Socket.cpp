@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <optional>
 #include <string>
-#include <string_view>
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -63,7 +62,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 using AddressInfoPtr = addrinfo*;
 
-[[nodiscard]] std::string GetUdsPath(std::string_view name) {
+[[nodiscard]] std::string GetUdsPath(const std::string& name) {
     std::string fileName = "dSPACE.VEOS.CoSim.";
     fileName.append(name);
 #ifdef _WIN32
@@ -83,7 +82,9 @@ using AddressInfoPtr = addrinfo*;
 #endif
 }
 
-[[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, AddressInfoPtr& addressInfo) {
+[[nodiscard]] Result ConvertToInternetAddress(const std::string& ipAddress,
+                                              uint16_t port,
+                                              AddressInfoPtr& addressInfo) {
     std::string portString = std::to_string(port);
 
     addrinfo hints{};
@@ -91,7 +92,7 @@ using AddressInfoPtr = addrinfo*;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
+    int32_t errorCode = getaddrinfo(ipAddress.c_str(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
         LogSystemError("Could not get address information.", errorCode);
         return Result::Error;
@@ -257,7 +258,7 @@ void CloseSocket(SocketHandle socket) {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(AddressFamily addressFamily) {
+[[nodiscard]] const char* ToString(AddressFamily addressFamily) {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";
@@ -289,7 +290,7 @@ void CloseSocket(SocketHandle socket) {
     return Result::Ok;
 }
 
-Socket::Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path)
+Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path)
     : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
@@ -450,7 +451,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::TryConnect(std::string_view ipAddress,
+[[nodiscard]] Result Socket::TryConnect(const std::string& ipAddress,
                                         uint16_t remotePort,
                                         uint16_t localPort,
                                         uint32_t timeoutInMilliseconds,
@@ -504,7 +505,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::TryConnect(std::string_view name, std::optional<Socket>& connectedSocket) {
+[[nodiscard]] Result Socket::TryConnect(const std::string& name, std::optional<Socket>& connectedSocket) {
     if (name.empty()) {
         LogError("Empty name is not valid.");
         return Result::Error;
@@ -582,7 +583,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::Bind(std::string_view name) {
+[[nodiscard]] Result Socket::Bind(const std::string& name) {
     if (_addressFamily != AddressFamily::Uds) {
         LogError("Not supported for address family.");
         return Result::Error;

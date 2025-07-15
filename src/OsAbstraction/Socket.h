@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -19,7 +18,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] std::string_view ToString(AddressFamily addressFamily);
+[[nodiscard]] const char* ToString(AddressFamily addressFamily);
 
 #ifdef _WIN32
 using SocketHandle = uintptr_t;
@@ -39,7 +38,7 @@ public:
     Socket() = default;
 
 private:
-    Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path);
+    Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path);
 
 public:
     ~Socket() noexcept;
@@ -61,16 +60,16 @@ public:
 
     [[nodiscard]] static Result Create(AddressFamily addressFamily, Socket& socket);
 
-    [[nodiscard]] static Result TryConnect(std::string_view ipAddress,
+    [[nodiscard]] static Result TryConnect(const std::string& ipAddress,
                                            uint16_t remotePort,
                                            uint16_t localPort,
                                            uint32_t timeoutInMilliseconds,
                                            std::optional<Socket>& connectedSocket);
 
-    [[nodiscard]] static Result TryConnect(std::string_view name, std::optional<Socket>& connectedSocket);
+    [[nodiscard]] static Result TryConnect(const std::string& name, std::optional<Socket>& connectedSocket);
     [[nodiscard]] Result EnableIpv6Only() const;
     [[nodiscard]] Result Bind(uint16_t port, bool enableRemoteAccess) const;
-    [[nodiscard]] Result Bind(std::string_view name);
+    [[nodiscard]] Result Bind(const std::string& name);
     [[nodiscard]] Result EnableReuseAddress() const;
     [[nodiscard]] Result EnableNoDelay() const;
     [[nodiscard]] Result Listen() const;

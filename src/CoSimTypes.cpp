@@ -12,7 +12,7 @@
 
 namespace DsVeosCoSim {
 
-extern void LogError(std::string_view message);
+extern void LogError(const std::string& message);
 
 namespace {
 
@@ -49,7 +49,7 @@ namespace {
                                            uint32_t length,
                                            DataType dataType,
                                            SizeKind sizeKind,
-                                           std::string_view name) {
+                                           const std::string& name) {
     std::string str = "IO Signal { Id: ";
     str.append(ToString(id));
     str.append(", Length: ");
@@ -68,9 +68,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 uint64_t flexibleDataRateBitsPerSecond,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "CAN Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -137,9 +137,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 std::array<uint8_t, EthAddressLength> macAddress,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "ETH Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -190,9 +190,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 LinControllerType type,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "LIN Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -279,7 +279,7 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(Result result) {
+[[nodiscard]] const char* ToString(Result result) {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -298,7 +298,7 @@ namespace {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] std::string_view ToString(CoSimType coSimType) {
+[[nodiscard]] const char* ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -309,7 +309,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) {
+[[nodiscard]] const char* ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -320,7 +320,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string_view ToString(Command command) {
+[[nodiscard]] const char* ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -345,7 +345,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string_view ToString(Severity severity) {
+[[nodiscard]] const char* ToString(Severity severity) {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -360,7 +360,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) {
+[[nodiscard]] const char* ToString(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -371,7 +371,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionState connectionState) {
+[[nodiscard]] const char* ToString(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -404,7 +404,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string_view ToString(DataType dataType) {
+[[nodiscard]] const char* ToString(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -433,7 +433,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string_view ToString(SizeKind sizeKind) {
+[[nodiscard]] const char* ToString(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -457,7 +457,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string_view ToString(SimulationState simulationState) {
+[[nodiscard]] const char* ToString(SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -474,7 +474,7 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string_view ToString([[maybe_unused]] Mode mode) {
+[[nodiscard]] const char* ToString([[maybe_unused]] Mode mode) {
     return "<Unused>";
 }
 
@@ -783,7 +783,7 @@ void EthMessageContainer::WriteTo(EthMessage& message) const {
     message.data = data.data();
 }
 
-[[nodiscard]] std::string_view ToString(LinControllerType type) {
+[[nodiscard]] const char* ToString(LinControllerType type) {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";

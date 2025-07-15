@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <string_view>
+#include <string>
 
 #include <fmt/format.h>
 
@@ -70,7 +70,7 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {
 
 void InitializeOutput();
 
-void OnLogCallback(Severity severity, std::string_view message);
+void OnLogCallback(Severity severity, const std::string& message);
 
 void LogIoData(const IoSignal& ioSignal, uint32_t length, const void* value);
 
@@ -83,7 +83,7 @@ void ClearLastMessage();
 
 [[nodiscard]] int32_t GetChar();
 
-void SetEnvVariable(std::string_view name, std::string_view value);
+void SetEnvVariable(const std::string& name, const std::string& value);
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
 [[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& signal);
@@ -111,7 +111,7 @@ void SetEnvVariable(std::string_view name, std::string_view value);
 
 [[nodiscard]] Result StartUp();
 
-[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily);
+[[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily);
 
 [[nodiscard]] Result SendComplete(const Socket& socket, const void* buffer, size_t length);
 
@@ -119,19 +119,19 @@ void SetEnvVariable(std::string_view name, std::string_view value);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<CanController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<EthController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<LinController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
@@ -148,7 +148,7 @@ template <typename T>
     return static_cast<T>(static_cast<uint32_t>(min) + (GenerateU32() % diff));
 }
 
-[[nodiscard]] std::string GenerateString(std::string_view prefix);
+[[nodiscard]] std::string GenerateString(const std::string& prefix);
 [[nodiscard]] SimulationTime GenerateSimulationTime();
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length);

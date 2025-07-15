@@ -117,7 +117,7 @@ public:
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<TController>& controllers) {
         _coSimType = coSimType;
 
@@ -211,7 +211,7 @@ public:
     }
 
 protected:
-    [[nodiscard]] virtual Result InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) = 0;
+    [[nodiscard]] virtual Result InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) = 0;
 
     virtual void ClearDataInternal() = 0;
 
@@ -266,7 +266,7 @@ public:
     RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
 
 protected:
-    [[nodiscard]] Result InitializeInternal([[maybe_unused]] std::string_view name,
+    [[nodiscard]] Result InitializeInternal([[maybe_unused]] const std::string& name,
                                             size_t totalQueueItemsCountPerBuffer) override {
         _messageCountPerController.resize(this->_controllers.size());
         _messageBuffer = RingBuffer<TMessageContainer>(totalQueueItemsCountPerBuffer);
@@ -563,7 +563,7 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    [[nodiscard]] Result InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
+    [[nodiscard]] Result InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
@@ -772,7 +772,7 @@ public:
     BusBufferImpl() = default;
     [[nodiscard]] Result Initialize(CoSimType coSimType,
                                     [[maybe_unused]] ConnectionKind connectionKind,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<CanController>& canControllers,
                                     const std::vector<EthController>& ethControllers,
                                     const std::vector<LinController>& linControllers) {
@@ -798,8 +798,8 @@ public:
         }
 #endif
 
-        std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-        std::string_view suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+        const char* suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+        const char* suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
         std::string canTransmitBufferName(name);
         canTransmitBufferName.append(".Can.");
@@ -938,7 +938,7 @@ private:
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<CanController>& canControllers,
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,

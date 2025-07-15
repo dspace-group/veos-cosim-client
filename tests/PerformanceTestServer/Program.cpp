@@ -1,6 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <cstdint>
 #include <future>
 
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -9,7 +8,7 @@
 
 using namespace DsVeosCoSim;
 
-int32_t main() {
+int main() {
     if (!IsOk(StartUp())) {
         return 1;
     }

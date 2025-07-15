@@ -188,7 +188,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result PortMapperGetPort(std::string_view ipAddress, std::string_view serverName, uint16_t& port) {
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
         std::string message = "PortMapperGetPort(ipAddress: '";
         message.append(ipAddress);
@@ -229,7 +229,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port) {
+[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
@@ -258,7 +258,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(std::string_view name) {
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");

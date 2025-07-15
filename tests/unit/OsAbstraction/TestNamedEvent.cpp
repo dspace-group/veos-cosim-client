@@ -160,7 +160,7 @@ TEST_F(TestNamedEvent, NoResetOnNamedEvents) {
     }
 }
 
-void WaitAndSet(std::string_view eventName1, std::string_view eventName2) {
+void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
     NamedEvent event1;
     ExpectOk(NamedEvent::CreateOrOpen(eventName1, event1));
     NamedEvent event2;

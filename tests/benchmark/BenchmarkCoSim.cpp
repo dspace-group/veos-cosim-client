@@ -4,7 +4,6 @@
 
 #include <benchmark/benchmark.h>
 
-#include <string>
 #include <thread>
 
 #include "DsVeosCoSim/CoSimClient.h"

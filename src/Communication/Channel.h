@@ -97,22 +97,22 @@ public:
     [[nodiscard]] virtual Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) = 0;
 };
 
-[[nodiscard]] Result TryConnectToLocalChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel);
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] Result TryConnectToTcpChannel(std::string_view remoteIpAddress,
+[[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
                                             std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] Result TryConnectToUdsChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel);
+[[nodiscard]] Result TryConnectToUdsChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] Result CreateLocalChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer);
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
 
 [[nodiscard]] Result CreateTcpChannelServer(uint16_t port,
                                             bool enableRemoteAccess,
                                             std::unique_ptr<ChannelServer>& channelServer);
 
-[[nodiscard]] Result CreateUdsChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer);
+[[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
 
 }  // namespace DsVeosCoSim

@@ -5,7 +5,6 @@
 #include <array>
 #include <chrono>
 #include <string>
-#include <string_view>
 
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Helper.h"
@@ -51,7 +50,7 @@ TEST_F(TestTypes, ResultToString) {
     Result result = Result::Disconnected;
 
     // Act
-    std::string_view string = ToString(result);
+    const char* string = ToString(result);
 
     // Assert
     AssertEqHelper("Disconnected", string);
@@ -62,7 +61,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
     CoSimType coSimType = CoSimType::Server;
 
     // Act
-    std::string_view string = ToString(coSimType);
+    const char* string = ToString(coSimType);
 
     // Assert
     AssertEqHelper("Server", string);
@@ -73,7 +72,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
     ConnectionKind connectionKind = ConnectionKind::Remote;
 
     // Act
-    std::string_view string = ToString(connectionKind);
+    const char* string = ToString(connectionKind);
 
     // Assert
     AssertEqHelper("Remote", string);
@@ -84,7 +83,7 @@ TEST_F(TestTypes, CommandToString) {
     Command command = Command::Start;
 
     // Act
-    std::string_view string = ToString(command);
+    const char* string = ToString(command);
 
     // Assert
     AssertEqHelper("Start", string);
@@ -95,7 +94,7 @@ TEST_F(TestTypes, SeverityToString) {
     Severity severity = Severity::Warning;
 
     // Act
-    std::string_view string = ToString(severity);
+    const char* string = ToString(severity);
 
     // Assert
     AssertEqHelper("Warning", string);
@@ -106,7 +105,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
     TerminateReason terminateReason = TerminateReason::Finished;
 
     // Act
-    std::string_view string = ToString(terminateReason);
+    const char* string = ToString(terminateReason);
 
     // Assert
     AssertEqHelper("Finished", string);
@@ -117,7 +116,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
     ConnectionState connectionState = ConnectionState::Disconnected;
 
     // Act
-    std::string_view string = ToString(connectionState);
+    const char* string = ToString(connectionState);
 
     // Assert
     AssertEqHelper("Disconnected", string);
@@ -139,7 +138,7 @@ TEST_F(TestTypes, DataTypeToString) {
     DataType dataType = DataType::Float64;
 
     // Act
-    std::string_view string = ToString(dataType);
+    const char* string = ToString(dataType);
 
     // Assert
     AssertEqHelper("Float64", string);
@@ -150,7 +149,7 @@ TEST_F(TestTypes, SizeKindToString) {
     SizeKind sizeKind = SizeKind::Variable;
 
     // Act
-    std::string_view string = ToString(sizeKind);
+    const char* string = ToString(sizeKind);
 
     // Assert
     AssertEqHelper("Variable", string);
@@ -174,7 +173,7 @@ TEST_F(TestTypes, SimulationStateToString) {
     SimulationState simulationState = SimulationState::Stopped;
 
     // Act
-    std::string_view string = ToString(simulationState);
+    const char* string = ToString(simulationState);
 
     // Assert
     AssertEqHelper("Stopped", string);
@@ -185,7 +184,7 @@ TEST_F(TestTypes, ModeToString) {
     Mode mode{};
 
     // Act
-    std::string_view string = ToString(mode);
+    const char* string = ToString(mode);
 
     // Assert
     AssertEqHelper("<Unused>", string);

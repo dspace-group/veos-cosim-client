@@ -7,7 +7,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include "Channel.h"
@@ -299,7 +298,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result TryConnectToTcpChannel(std::string_view remoteIpAddress,
+[[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
@@ -316,7 +315,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result TryConnectToUdsChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel) {
+[[nodiscard]] Result TryConnectToUdsChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsUdsSupported()) {
@@ -360,7 +359,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateUdsChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsUdsSupported()) {
