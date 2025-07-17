@@ -25,22 +25,6 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] Result CheckSizeKind(SizeKind sizeKind, const std::string& name) {
-    switch (sizeKind) {
-        case SizeKind::Fixed:
-        case SizeKind::Variable:
-            return Result::Ok;
-    }
-
-    std::string message = "Unknown size kind '";
-    message.append(ToString(sizeKind));
-    message.append("' for IO signal '");
-    message.append(name);
-    message.append("'.");
-    LogError(message);
-    return Result::Error;
-}
-
 class IoPartBufferBase {
 protected:
     struct MetaData {
@@ -52,7 +36,6 @@ protected:
 
 public:
     IoPartBufferBase() = default;
-
     virtual ~IoPartBufferBase() = default;
 
     IoPartBufferBase(const IoPartBufferBase&) = delete;
@@ -75,8 +58,6 @@ public:
                 LogError(message);
                 return Result::Error;
             }
-
-            CheckResult(CheckSizeKind(signal.sizeKind, signal.name));
 
             size_t dataTypeSize = GetDataTypeSize(signal.dataType);
             if (dataTypeSize == 0) {
