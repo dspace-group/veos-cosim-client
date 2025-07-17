@@ -30,7 +30,7 @@ namespace {
     connectedEvent.Set();
 
     while (!isStopped) {
-        CheckResult(SendComplete(*clientSocket, buffer.data(), BufferSize));
+        CheckResult(clientSocket->Send(buffer.data(), BufferSize));
         CheckResult(ReceiveComplete(*clientSocket, buffer.data(), BufferSize));
 
         counter++;

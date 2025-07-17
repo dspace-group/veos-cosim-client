@@ -497,19 +497,6 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
     return "::1";
 }
 
-[[nodiscard]] Result SendComplete(const Socket& socket, const void* buffer, size_t length) {
-    const auto* bufferPointer = static_cast<const uint8_t*>(buffer);
-    while (length > 0) {
-        int32_t sentSize{};
-        CheckResult(socket.Send(bufferPointer, static_cast<int32_t>(length), sentSize));
-
-        length -= sentSize;
-        bufferPointer += sentSize;
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {

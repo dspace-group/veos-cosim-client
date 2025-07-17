@@ -113,8 +113,6 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 
 [[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily);
 
-[[nodiscard]] Result SendComplete(const Socket& socket, const void* buffer, size_t length);
-
 [[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,

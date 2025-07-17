@@ -22,7 +22,7 @@ void CounterPart(const Socket& socket, const bool& stopThread, size_t size) {
     MustBeOk(ReceiveComplete(socket, buffer.data(), buffer.size()));
 
     while (!stopThread) {
-        MustBeOk(SendComplete(socket, buffer.data(), buffer.size()));
+        MustBeOk(socket.Send(buffer.data(), static_cast<int32_t>(buffer.size())));
         MustBeOk(ReceiveComplete(socket, buffer.data(), buffer.size()));
     }
 }
@@ -37,12 +37,12 @@ void RunTest(benchmark::State& state, Socket& socket1, const Socket& socket2) {
     std::thread thread(CounterPart, std::ref(socket1), std::ref(stopThread), size);
 
     for (auto _ : state) {
-        MustBeOk(SendComplete(socket2, buffer.data(), buffer.size()));
+        MustBeOk(socket2.Send(buffer.data(), static_cast<int32_t>(buffer.size())));
         MustBeOk(ReceiveComplete(socket2, buffer.data(), buffer.size()));
     }
 
     stopThread = true;
-    MustBeOk(SendComplete(socket2, buffer.data(), buffer.size()));
+    MustBeOk(socket2.Send(buffer.data(), static_cast<int32_t>(buffer.size())));
 
     thread.join();
 }

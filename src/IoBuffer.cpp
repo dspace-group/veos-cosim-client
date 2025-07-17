@@ -267,7 +267,7 @@ protected:
             if (currentLength != length) {
                 if (!isChanged) {
                     isChanged = true;
-                    CheckResult(_changedSignalsQueue.PushBack(&*metaData));
+                    _changedSignalsQueue.PushBack(&*metaData);
                 }
             }
 
@@ -297,7 +297,7 @@ protected:
 
         if (!isChanged) {
             isChanged = true;
-            CheckResult(_changedSignalsQueue.PushBack(&*metaData));
+            _changedSignalsQueue.PushBack(&*metaData);
         }
 
         return Result::Ok;
@@ -332,27 +332,27 @@ protected:
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            MetaData** metaData = _changedSignalsQueue.PopFront();
-            auto& [currentLength, isChanged, buffer] = _dataVector[(*metaData)->signalIndex];
+            MetaData*& metaData = _changedSignalsQueue.PopFront();
+            auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
-            CheckResultWithMessage(writer.Write((*metaData)->info.id), "Could not write signal id.");
+            CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
 
-            if ((*metaData)->info.sizeKind == SizeKind::Variable) {
+            if (metaData->info.sizeKind == SizeKind::Variable) {
                 CheckResultWithMessage(writer.Write(currentLength), "Could not write current signal length.");
             }
 
-            size_t totalSize = (*metaData)->dataTypeSize * currentLength;
+            size_t totalSize = metaData->dataTypeSize * currentLength;
             CheckResultWithMessage(writer.Write(buffer.data(), static_cast<uint32_t>(totalSize)),
                                    "Could not write signal data.");
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
                 std::string message = "Signal { Id: ";
-                message.append(ToString((*metaData)->info.id));
+                message.append(ToString(metaData->info.id));
                 message.append(", Length: ");
                 message.append(std::to_string(currentLength));
                 message.append(", Data: ");
-                message.append(ValueToString((*metaData)->info.dataType, currentLength, buffer.data()));
+                message.append(ValueToString(metaData->info.dataType, currentLength, buffer.data()));
                 message.append(" }");
                 LogProtocolDataTrace(message);
             }
@@ -544,7 +544,7 @@ protected:
 
         if (!data.isChanged) {
             data.isChanged = true;
-            CheckResult(_changedSignalsQueue.PushBack(&*metaData));
+            _changedSignalsQueue.PushBack(&*metaData);
             FlipBuffers(data);
             dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
         }
@@ -590,23 +590,23 @@ protected:
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            MetaData** metaData = _changedSignalsQueue.PopFront();
-            Data& data = _dataVector[(*metaData)->signalIndex];
+            MetaData*& metaData = _changedSignalsQueue.PopFront();
+            Data& data = _dataVector[metaData->signalIndex];
 
             if (IsProtocolTracingEnabled()) {
                 DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
                 std::string message = "Signal { Id: ";
-                message.append(ToString((*metaData)->info.id));
+                message.append(ToString(metaData->info.id));
                 message.append(", Length: ");
                 message.append(std::to_string(dataBuffer->currentLength));
                 message.append(", Data: ");
-                message.append(ValueToString((*metaData)->info.dataType, dataBuffer->currentLength, dataBuffer->data));
+                message.append(ValueToString(metaData->info.dataType, dataBuffer->currentLength, dataBuffer->data));
                 message.append(" }");
                 LogProtocolDataTrace(message);
             }
 
-            CheckResultWithMessage(writer.Write((*metaData)->info.id), "Could not write signal id.");
+            CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
 
             data.isChanged = false;
         }

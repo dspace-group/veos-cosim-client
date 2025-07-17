@@ -138,7 +138,7 @@ TEST_F(TestUdsSocket, SendAndReceive) {
     uint32_t receiveValue = 0;
 
     // Act
-    AssertOk(SendComplete(*clientSocket, &sendValue, sizeof(sendValue)));
+    AssertOk(clientSocket->Send(&sendValue, sizeof(sendValue)));
     AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert

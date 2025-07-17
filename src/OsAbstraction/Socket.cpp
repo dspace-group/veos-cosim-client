@@ -793,35 +793,43 @@ void Socket::Close() {
     return Result::Error;
 }
 
-[[nodiscard]] Result Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
+[[nodiscard]] Result Socket::Send(const void* source, int32_t size) const {
+    const char* buffer = static_cast<const char*>(source);
+
+    while (size > 0) {
 #ifdef _WIN32
-    sentSize = send(_socket, static_cast<const char*>(source), size, 0);
+        int32_t sentSize = send(_socket, buffer, size, 0);
 #else
-    sentSize = static_cast<int32_t>(send(_socket, source, size, MSG_NOSIGNAL));
+        int32_t sentSize = static_cast<int32_t>(send(_socket, buffer, size, MSG_NOSIGNAL));
 #endif
 
-    if (sentSize > 0) {
-        return Result::Ok;
-    }
+        if (sentSize > 0) {
+            size -= sentSize;
+            buffer += sentSize;
+            continue;
+        }
 
-    if (sentSize == 0) {
-        LogTrace("Remote endpoint disconnected.");
-        return Result::Disconnected;
-    }
+        if (sentSize == 0) {
+            LogTrace("Remote endpoint disconnected.");
+            return Result::Disconnected;
+        }
 
-    int32_t errorCode = GetLastNetworkError();
+        int32_t errorCode = GetLastNetworkError();
 
-    if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
+        if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32
-        || (errorCode == ErrorCodeBrokenPipe)
+            || (errorCode == ErrorCodeBrokenPipe)
 #endif
-    ) {
-        LogTrace("Remote endpoint disconnected.");
-        return Result::Disconnected;
+        ) {
+            LogTrace("Remote endpoint disconnected.");
+            return Result::Disconnected;
+        }
+
+        LogSystemError("Could not send to remote endpoint.", errorCode);
+        return Result::Error;
     }
 
-    LogSystemError("Could not send to remote endpoint.", errorCode);
-    return Result::Error;
+    return Result::Ok;
 }
 
 }  // namespace DsVeosCoSim

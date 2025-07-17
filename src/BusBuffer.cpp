@@ -308,12 +308,8 @@ protected:
         CheckResult(Base::FindController(message.controllerId, extension));
         CheckResult(CheckForSpace(extension));
 
-        TMessageContainer* messageContainer = _messageBuffer.EmplaceBack();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        message.WriteTo(*messageContainer);
+        TMessageContainer& messageContainer = _messageBuffer.EmplaceBack();
+        message.WriteTo(messageContainer);
 
         ++_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
@@ -326,7 +322,7 @@ protected:
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
         CheckResult(CheckForSpace(extension));
 
-        CheckResult(_messageBuffer.PushBack(messageContainer));
+        _messageBuffer.PushBack(messageContainer);
         ++_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
     }
@@ -336,15 +332,11 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* messageContainer = _messageBuffer.PopFront();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer->WriteTo(message);
+        TMessageContainer& messageContainer = _messageBuffer.PopFront();
+        messageContainer.WriteTo(message);
 
         ExtensionPtr extension{};
-        CheckResult(Base::FindController(messageContainer->controllerId, extension));
+        CheckResult(Base::FindController(messageContainer.controllerId, extension));
         --_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
     }
@@ -354,12 +346,7 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* tmpMessageContainer = _messageBuffer.PopFront();
-        if (!tmpMessageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer = *tmpMessageContainer;
+        messageContainer = _messageBuffer.PopFront();
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
@@ -372,16 +359,13 @@ protected:
         CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
 
         for (uint32_t i = 0; i < count; i++) {
-            TMessageContainer* messageContainer = _messageBuffer.PopFront();
-            if (!messageContainer) {
-                return Result::Error;
-            }
+            TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer->ToString());
+                LogProtocolDataTrace(messageContainer.ToString());
             }
 
-            CheckResultWithMessage(SerializeTo(*messageContainer, writer), "Could not serialize message.");
+            CheckResultWithMessage(SerializeTo(messageContainer, writer), "Could not serialize message.");
         }
 
         for (auto& [id, extension] : Base::_controllers) {
@@ -435,7 +419,7 @@ protected:
             }
 
             ++_messageCountPerController[extension->controllerIndex];
-            CheckResult(_messageBuffer.PushBack(std::move(messageContainer)));
+            _messageBuffer.PushBack(std::move(messageContainer));
         }
 
         return Result::Ok;
@@ -483,53 +467,47 @@ public:
         return _size == _capacity;
     }
 
-    [[nodiscard]] Result PushBack(const T& item) {
+    void PushBack(const T& item) {
         if (IsFull()) {
-            LogError("SHM ring buffer is full.");
-            return Result::Ok;
+            throw std::runtime_error("SHM ring buffer is full.");
         }
 
         uint32_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = item;
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] Result PushBack(T&& item) {
+    void PushBack(T&& item) {
         if (IsFull()) {
-            LogError("SHM ring buffer is full.");
-            return Result::Ok;
+            throw std::runtime_error("SHM ring buffer is full.");
         }
 
         uint32_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(item);
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] T* EmplaceBack() {
+    [[nodiscard]] T& EmplaceBack() {
         if (IsFull()) {
-            LogError("SHM Ring buffer is full.");
-            return nullptr;
+            throw std::runtime_error("SHM Ring buffer is full.");
         }
 
         size_t currentWriteIndex = _writeIndex;
-        T* item = &_items[currentWriteIndex];
+        T& item = _items[currentWriteIndex];
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
         return item;
     }
 
-    [[nodiscard]] T* PopFront() {
+    [[nodiscard]] T& PopFront() {
         if (IsEmpty()) {
-            LogError("SHM ring buffer is empty.");
-            return nullptr;
+            throw std::runtime_error("SHM ring buffer is empty.");
         }
 
         --_size;
-        T* item = &_items[_readIndex];
+        T& item = _items[_readIndex];
         _readIndex = (_readIndex + 1) % _capacity;
         return item;
     }
@@ -630,12 +608,9 @@ protected:
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
         CheckResult(CheckForSpace(messageCount, extension));
 
-        TMessageContainer* messageContainer = _messageBuffer->EmplaceBack();
-        if (!messageContainer) {
-            return Result::Error;
-        }
+        TMessageContainer& messageContainer = _messageBuffer->EmplaceBack();
 
-        message.WriteTo(*messageContainer);
+        message.WriteTo(messageContainer);
         messageCount.fetch_add(1);
         return Result::Ok;
     }
@@ -648,7 +623,7 @@ protected:
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
         CheckResult(CheckForSpace(messageCount, extension));
 
-        CheckResult(_messageBuffer->PushBack(messageContainer));
+        _messageBuffer->PushBack(messageContainer);
         messageCount.fetch_add(1);
         return Result::Ok;
     }
@@ -658,12 +633,8 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* messageContainer = _messageBuffer->PopFront();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer->WriteTo(message);
+        TMessageContainer& messageContainer = _messageBuffer->PopFront();
+        messageContainer.WriteTo(message);
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(message.controllerId, extension));
@@ -678,12 +649,7 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* tmpMessageContainer = _messageBuffer->PopFront();
-        if (!tmpMessageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer = *tmpMessageContainer;
+        messageContainer = _messageBuffer->PopFront();
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
@@ -712,29 +678,26 @@ protected:
         }
 
         while (_totalReceiveCount > 0) {
-            TMessageContainer* messageContainer = _messageBuffer->PopFront();
-            if (!messageContainer) {
-                return Result::Error;
-            }
+            TMessageContainer& messageContainer = _messageBuffer->PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer->ToString());
+                LogProtocolDataTrace(messageContainer.ToString());
             }
 
             ExtensionPtr extension{};
-            CheckResult(Base::FindController(messageContainer->controllerId, extension));
+            CheckResult(Base::FindController(messageContainer.controllerId, extension));
             std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension->controllerIndex];
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;
 
             if (messageContainerCallback) {
-                messageContainerCallback(simulationTime, extension->info, *messageContainer);
+                messageContainerCallback(simulationTime, extension->info, messageContainer);
                 continue;
             }
 
             if (messageCallback) {
                 TMessage message{};
-                messageContainer->WriteTo(message);
+                messageContainer.WriteTo(message);
                 messageCallback(simulationTime, extension->info, message);
                 continue;
             }

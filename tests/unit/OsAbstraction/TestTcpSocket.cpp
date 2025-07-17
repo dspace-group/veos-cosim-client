@@ -245,7 +245,7 @@ TEST_P(TestTcpSocket, SendAndReceive) {
     uint32_t receiveValue = 0;
 
     // Act
-    AssertOk(SendComplete(*connectedSocket, &sendValue, sizeof(sendValue)));
+    AssertOk(connectedSocket->Send(&sendValue, sizeof(sendValue)));
     AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert

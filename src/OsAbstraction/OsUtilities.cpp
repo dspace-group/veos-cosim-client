@@ -37,12 +37,16 @@ namespace {
     }
 
     utf16String.resize(static_cast<size_t>(sizeNeeded));
-    (void)MultiByteToWideChar(CP_UTF8,
-                              0,
-                              utf8String.data(),
-                              static_cast<int32_t>(utf8String.size()),
-                              utf16String.data(),
-                              sizeNeeded);
+    sizeNeeded = MultiByteToWideChar(CP_UTF8,
+                                     0,
+                                     utf8String.data(),
+                                     static_cast<int32_t>(utf8String.size()),
+                                     utf16String.data(),
+                                     sizeNeeded);
+    if (sizeNeeded <= 0) {
+        LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        return Result::Error;
+    }
 
     return Result::Ok;
 }
@@ -122,13 +126,13 @@ NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
 [[nodiscard]] Result NamedEvent::CreateOrOpen(const std::string& name, NamedEvent& namedEvent) {
     std::wstring fullName{};
     CheckResult(GetFullNamedEventName(name, fullName));
-    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
+    Handle handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open event.", GetLastWindowsError());
         return Result::Error;
     }
 
-    namedEvent = NamedEvent(handle);
+    namedEvent = NamedEvent(std::move(handle));
     return Result::Ok;
 }
 
@@ -163,13 +167,13 @@ NamedMutex::~NamedMutex() noexcept {
 [[nodiscard]] Result NamedMutex::CreateOrOpen(const std::string& name, NamedMutex& namedMutex) {
     std::wstring fullName{};
     CheckResult(GetFullNamedMutexName(name, fullName));
-    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
+    Handle handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open mutex.", GetLastWindowsError());
         return Result::Error;
     }
 
-    namedMutex = NamedMutex(handle);
+    namedMutex = NamedMutex(std::move(handle));
     return Result::Ok;
 }
 
@@ -212,7 +216,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     CheckResult(GetFullSharedMemoryName(name, fullName));
     DWORD sizeHigh{};
     auto sizeLow = static_cast<DWORD>(size);
-    void* handle =
+    Handle handle =
         CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
@@ -221,12 +225,11 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        (void)CloseHandle(handle);
         LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
-    sharedMemory = SharedMemory(handle, size, data);
+    sharedMemory = SharedMemory(std::move(handle), size, data);
     return Result::Ok;
 }
 
@@ -235,7 +238,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
                                                    std::optional<SharedMemory>& sharedMemory) {
     std::wstring fullName{};
     CheckResult(GetFullSharedMemoryName(name, fullName));
-    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
+    Handle handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         sharedMemory = std::nullopt;
         return Result::Ok;
@@ -243,12 +246,11 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        (void)CloseHandle(handle);
         LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
-    sharedMemory = SharedMemory(handle, size, data);
+    sharedMemory = SharedMemory(std::move(handle), size, data);
     return Result::Ok;
 }
 

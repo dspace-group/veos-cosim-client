@@ -62,13 +62,7 @@ public:
         // Write header
         *reinterpret_cast<int32_t*>(sourcePtr) = _writeIndex;
 
-        while (_writeIndex > 0) {
-            int32_t sentSize{};
-            CheckResult(_socket.Send(sourcePtr, _writeIndex, sentSize));
-
-            sourcePtr += sentSize;
-            _writeIndex -= sentSize;
-        }
+        CheckResult(_socket.Send(sourcePtr, _writeIndex));
 
         _writeIndex = HeaderSize;
         return Result::Ok;
