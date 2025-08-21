@@ -427,7 +427,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle,
     auto* client = static_cast<CoSimClient*>(handle);
 
     return static_cast<DsVeosCoSim_Result>(
-        client->GetEthControllers(*linControllersCount, *reinterpret_cast<const EthController**>(linControllers)));
+        client->GetLinControllers(*linControllersCount, *reinterpret_cast<const LinController**>(linControllers)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessage* message) {
