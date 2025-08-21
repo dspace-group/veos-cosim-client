@@ -15,6 +15,7 @@
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
+#include "Protocol.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -306,8 +307,8 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
-        CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
+        CheckResultWithMessage(Protocol::WriteSize(writer, _changedSignalsQueue.Size()),
+                               "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
@@ -316,26 +317,18 @@ protected:
             MetaData*& metaData = _changedSignalsQueue.PopFront();
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
-            CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
+            CheckResultWithMessage(Protocol::WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
 
             if (metaData->info.sizeKind == SizeKind::Variable) {
-                CheckResultWithMessage(writer.Write(currentLength), "Could not write current signal length.");
+                CheckResultWithMessage(Protocol::WriteLength(writer, currentLength), "Could not write signal length.");
             }
 
             size_t totalSize = metaData->dataTypeSize * currentLength;
-            CheckResultWithMessage(writer.Write(buffer.data(), static_cast<uint32_t>(totalSize)),
-                                   "Could not write signal data.");
+            CheckResultWithMessage(writer.Write(buffer.data(), totalSize), "Could not write signal data.");
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
-                std::string message = "Signal { Id: ";
-                message.append(ToString(metaData->info.id));
-                message.append(", Length: ");
-                message.append(std::to_string(currentLength));
-                message.append(", Data: ");
-                message.append(ValueToString(metaData->info.dataType, currentLength, buffer.data()));
-                message.append(" }");
-                LogProtocolDataTrace(message);
+                LogProtocolDataTraceSignal(metaData->info.id, currentLength, metaData->info.dataType, buffer.data());
             }
         }
 
@@ -345,12 +338,13 @@ protected:
     [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
                                              SimulationTime simulationTime,
                                              const Callbacks& callbacks) override {
-        uint32_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
+        size_t ioSignalChangedCount = 0;
+        CheckResultWithMessage(Protocol::ReadSize(reader, ioSignalChangedCount),
+                               "Could not read count of changed signals.");
 
-        for (uint32_t i = 0; i < ioSignalChangedCount; i++) {
+        for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
-            CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
+            CheckResultWithMessage(Protocol::ReadSignalId(reader, signalId), "Could not read signal id.");
 
             MetaData* metaData{};
             CheckResult(FindMetaData(signalId, metaData));
@@ -358,7 +352,7 @@ protected:
 
             if (metaData->info.sizeKind == SizeKind::Variable) {
                 uint32_t length = 0;
-                CheckResultWithMessage(reader.Read(length), "Could not read current signal length.");
+                CheckResultWithMessage(Protocol::ReadLength(reader, length), "Could not read signal length.");
                 if (length > metaData->info.length) {
                     std::string message = "Length of variable sized IO signal '";
                     message.append(metaData->info.name);
@@ -374,14 +368,10 @@ protected:
             CheckResultWithMessage(reader.Read(data.buffer.data(), totalSize), "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
-                std::string message = "Signal { Id: ";
-                message.append(ToString(metaData->info.id));
-                message.append(", Length: ");
-                message.append(std::to_string(data.currentLength));
-                message.append(", Data: ");
-                message.append(ValueToString(metaData->info.dataType, data.currentLength, data.buffer.data()));
-                message.append(" }");
-                LogProtocolDataTrace(message);
+                LogProtocolDataTraceSignal(metaData->info.id,
+                                           data.currentLength,
+                                           metaData->info.dataType,
+                                           data.buffer.data());
             }
 
             if (callbacks.incomingSignalChangedCallback) {
@@ -564,8 +554,8 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        auto size = static_cast<uint32_t>(_changedSignalsQueue.Size());
-        CheckResultWithMessage(writer.Write(size), "Could not write count of changed signals.");
+        CheckResultWithMessage(Protocol::WriteSize(writer, _changedSignalsQueue.Size()),
+                               "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
@@ -576,18 +566,13 @@ protected:
 
             if (IsProtocolTracingEnabled()) {
                 DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
-
-                std::string message = "Signal { Id: ";
-                message.append(ToString(metaData->info.id));
-                message.append(", Length: ");
-                message.append(std::to_string(dataBuffer->currentLength));
-                message.append(", Data: ");
-                message.append(ValueToString(metaData->info.dataType, dataBuffer->currentLength, dataBuffer->data));
-                message.append(" }");
-                LogProtocolDataTrace(message);
+                LogProtocolDataTraceSignal(metaData->info.id,
+                                           dataBuffer->currentLength,
+                                           metaData->info.dataType,
+                                           dataBuffer->data);
             }
 
-            CheckResultWithMessage(writer.Write(metaData->info.id), "Could not write signal id.");
+            CheckResultWithMessage(Protocol::WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
 
             data.isChanged = false;
         }
@@ -598,12 +583,13 @@ protected:
     [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
                                              SimulationTime simulationTime,
                                              const Callbacks& callbacks) override {
-        uint32_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(reader.Read(ioSignalChangedCount), "Could not read count of changed signals.");
+        size_t ioSignalChangedCount = 0;
+        CheckResultWithMessage(Protocol::ReadSize(reader, ioSignalChangedCount),
+                               "Could not read count of changed signals.");
 
-        for (uint32_t i = 0; i < ioSignalChangedCount; i++) {
+        for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
-            CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
+            CheckResultWithMessage(Protocol::ReadSignalId(reader, signalId), "Could not read signal id.");
 
             MetaData* metaData{};
             CheckResult(FindMetaData(signalId, metaData));
@@ -614,14 +600,10 @@ protected:
             DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
             if (IsProtocolTracingEnabled()) {
-                std::string message = "Signal { Id: ";
-                message.append(ToString(metaData->info.id));
-                message.append(", Length: ");
-                message.append(std::to_string(dataBuffer->currentLength));
-                message.append(", Data: ");
-                message.append(ValueToString(metaData->info.dataType, dataBuffer->currentLength, dataBuffer->data));
-                message.append(" }");
-                LogProtocolDataTrace(message);
+                LogProtocolDataTraceSignal(metaData->info.id,
+                                           dataBuffer->currentLength,
+                                           metaData->info.dataType,
+                                           dataBuffer->data);
             }
 
             if (callbacks.incomingSignalChangedCallback) {

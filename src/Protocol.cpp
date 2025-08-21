@@ -216,61 +216,114 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] const char* ToString(FrameKind frameKind) {
-    switch (frameKind) {
-        case FrameKind::Ping:
-            return "Ping";
-        case FrameKind::PingOk:
-            return "PingOk";
-        case FrameKind::Ok:
-            return "Ok";
-        case FrameKind::Error:
-            return "Error";
-        case FrameKind::Start:
-            return "Start";
-        case FrameKind::Stop:
-            return "Stop";
-        case FrameKind::Terminate:
-            return "Terminate";
-        case FrameKind::Pause:
-            return "Pause";
-        case FrameKind::Continue:
-            return "Continue";
-        case FrameKind::Step:
-            return "Step";
-        case FrameKind::StepOk:
-            return "StepOk";
-        case FrameKind::Connect:
-            return "Connect";
-        case FrameKind::ConnectOk:
-            return "ConnectOk";
-        case FrameKind::GetPort:
-            return "GetPort";
-        case FrameKind::GetPortOk:
-            return "GetPortOk";
-        case FrameKind::SetPort:
-            return "SetPort";
-        case FrameKind::UnsetPort:
-            return "UnsetPort";
-    }
+namespace Protocol {
 
-    return "<Invalid FrameKind>";
+[[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) {
+    uint32_t intSize{};
+    CheckResultWithMessage(reader.Read(intSize), "Could not read size.");
+    size = static_cast<size_t>(intSize);
+    return Result::Ok;
 }
 
-namespace Protocol {
+[[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) {
+    auto intSize = static_cast<uint32_t>(size);
+    CheckResultWithMessage(writer.Write(intSize), "Could not write size.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length) {
+    CheckResultWithMessage(reader.Read(length), "Could not read length.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length) {
+    CheckResultWithMessage(writer.Write(length), "Could not write length.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId) {
+    CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId) {
+    CheckResultWithMessage(writer.Write(signalId), "Could not write signal id.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer) {
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
+                           "Could not write data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer) {
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length");
+    CheckResult(messageContainer.Check());
+    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer) {
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
+                           "Could not write data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer) {
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
+    CheckResult(messageContainer.Check());
+    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer) {
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
+    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
+    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
+    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
+    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
+    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
+                           "Could not write data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer) {
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
+    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
+    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
+    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
+    CheckResult(messageContainer.Check());
+    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
+    return Result::Ok;
+}
 
 [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
     if (IsProtocolHeaderTracingEnabled()) {
-        LogProtocolBeginTrace("ReceiveHeader()");
+        LogProtocolBeginTraceReceiveHeader();
     }
 
     CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame header.");
 
     if (IsProtocolHeaderTracingEnabled()) {
-        std::string str = "ReceiveHeader(FrameKind: ";
-        str.append(ToString(frameKind));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReceiveHeader(frameKind);
     }
 
     return Result::Ok;
@@ -278,14 +331,14 @@ namespace Protocol {
 
 [[nodiscard]] Result SendOk(ChannelWriter& writer) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("SendOk()");
+        LogProtocolBeginTraceSendOk();
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Ok));
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendOk()");
+        LogProtocolEndTraceSendOk();
     }
 
     return Result::Ok;
@@ -293,10 +346,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendError(ErrorMessage: \"";
-        str.append(errorMessage);
-        str.append("\")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendError(errorMessage);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Error));
@@ -304,7 +354,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendError()");
+        LogProtocolEndTraceSendError();
     }
 
     return Result::Ok;
@@ -312,16 +362,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadError()");
+        LogProtocolBeginTraceReadError();
     }
 
     CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadError(ErrorMessage: \"";
-        str.append(errorMessage);
-        str.append("\")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadError(errorMessage);
     }
 
     return Result::Ok;
@@ -329,14 +376,14 @@ namespace Protocol {
 
 [[nodiscard]] Result SendPing(ChannelWriter& writer) {
     if (IsProtocolPingTracingEnabled()) {
-        LogProtocolBeginTrace("SendPing()");
+        LogProtocolBeginTraceSendPing();
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Ping));
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolPingTracingEnabled()) {
-        LogProtocolEndTrace("SendPing()");
+        LogProtocolEndTraceSendPing();
     }
 
     return Result::Ok;
@@ -344,10 +391,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command) {
     if (IsProtocolPingTracingEnabled()) {
-        std::string str = "SendPingOk(Command: ";
-        str.append(ToString(command));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendPingOk(command);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::PingOk));
@@ -355,7 +399,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolPingTracingEnabled()) {
-        LogProtocolEndTrace("SendPingOk()");
+        LogProtocolEndTraceSendPingOk();
     }
 
     return Result::Ok;
@@ -363,16 +407,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command) {
     if (IsProtocolPingTracingEnabled()) {
-        LogProtocolBeginTrace("ReadPingOk()");
+        LogProtocolBeginTraceReadPingOk();
     }
 
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
 
     if (IsProtocolPingTracingEnabled()) {
-        std::string str = "ReadPingOk(Command: ";
-        str.append(ToString(command));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadPingOk(command);
     }
 
     return Result::Ok;
@@ -384,16 +425,7 @@ namespace Protocol {
                                  const std::string& serverName,
                                  const std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendConnect(ProtocolVersion: ";
-        str.append(std::to_string(protocolVersion));
-        str.append(", ClientMode: ");
-        str.append(ToString(clientMode));
-        str.append(", ServerName: \"");
-        str.append(serverName);
-        str.append("\", ClientName: \"");
-        str.append(clientName);
-        str.append("\")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendConnect(protocolVersion, clientMode, serverName, clientName);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Connect));
@@ -404,7 +436,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendConnect()");
+        LogProtocolEndTraceSendConnect();
     }
 
     return Result::Ok;
@@ -416,7 +448,7 @@ namespace Protocol {
                                  std::string& serverName,
                                  std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadConnect()");
+        LogProtocolBeginTraceReadConnect();
     }
 
     CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
@@ -425,16 +457,7 @@ namespace Protocol {
     CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadConnect(ProtocolVersion: ";
-        str.append(std::to_string(protocolVersion));
-        str.append(", ClientMode: ");
-        str.append(ToString(clientMode));
-        str.append(", ServerName: \"");
-        str.append(serverName);
-        str.append("\", ClientName: \"");
-        str.append(clientName);
-        str.append("\")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadConnect(protocolVersion, clientMode, serverName, clientName);
     }
 
     return Result::Ok;
@@ -451,26 +474,15 @@ namespace Protocol {
                                    const std::vector<EthControllerContainer>& ethControllers,
                                    const std::vector<LinControllerContainer>& linControllers) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendConnectOk(ProtocolVersion: ";
-        str.append(std::to_string(protocolVersion));
-        str.append(", ClientMode: ");
-        str.append(ToString(clientMode));
-        str.append(", StepSize: ");
-        str.append(SimulationTimeToString(stepSize));
-        str.append(" s, SimulationState: ");
-        str.append(ToString(simulationState));
-        str.append(", IncomingSignals: ");
-        str.append(ToString(incomingSignals));
-        str.append(", OutgoingSignals: ");
-        str.append(ToString(outgoingSignals));
-        str.append(", CanControllers: ");
-        str.append(ToString(canControllers));
-        str.append(", EthControllers: ");
-        str.append(ToString(ethControllers));
-        str.append(", LinControllers: ");
-        str.append(ToString(linControllers));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendConnectOk(protocolVersion,
+                                           clientMode,
+                                           stepSize,
+                                           simulationState,
+                                           incomingSignals,
+                                           outgoingSignals,
+                                           canControllers,
+                                           ethControllers,
+                                           linControllers);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::ConnectOk));
@@ -486,7 +498,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendConnectOk()");
+        LogProtocolEndTraceSendConnectOk();
     }
 
     return Result::Ok;
@@ -503,7 +515,7 @@ namespace Protocol {
                                    std::vector<EthControllerContainer>& ethControllers,
                                    std::vector<LinControllerContainer>& linControllers) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadConnectOk()");
+        LogProtocolBeginTraceReadConnectOk();
     }
 
     CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
@@ -517,26 +529,15 @@ namespace Protocol {
     CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadConnectOk(ProtocolVersion: ";
-        str.append(std::to_string(protocolVersion));
-        str.append(", ClientMode: ");
-        str.append(ToString(clientMode));
-        str.append(", StepSize: ");
-        str.append(SimulationTimeToString(stepSize));
-        str.append(" s, SimulationState: ");
-        str.append(ToString(simulationState));
-        str.append(", IncomingSignals: ");
-        str.append(ToString(incomingSignals));
-        str.append(", OutgoingSignals: ");
-        str.append(ToString(outgoingSignals));
-        str.append(", CanControllers: ");
-        str.append(ToString(canControllers));
-        str.append(", EthControllers: ");
-        str.append(ToString(ethControllers));
-        str.append(", LinControllers: ");
-        str.append(ToString(linControllers));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadConnectOk(protocolVersion,
+                                         clientMode,
+                                         stepSize,
+                                         simulationState,
+                                         incomingSignals,
+                                         outgoingSignals,
+                                         canControllers,
+                                         ethControllers,
+                                         linControllers);
     }
 
     return Result::Ok;
@@ -544,10 +545,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendStart(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendStart(simulationTime);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Start));
@@ -555,7 +553,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendStart()");
+        LogProtocolEndTraceSendStart();
     }
 
     return Result::Ok;
@@ -563,16 +561,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadStart()");
+        LogProtocolBeginTraceReadStart();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadStart(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadStart(simulationTime);
     }
 
     return Result::Ok;
@@ -580,10 +575,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendStop(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendStop(simulationTime);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Stop));
@@ -591,7 +583,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendStop()");
+        LogProtocolEndTraceSendStop();
     }
 
     return Result::Ok;
@@ -599,16 +591,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadStop()");
+        LogProtocolBeginTraceReadStop();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadStop(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadStop(simulationTime);
     }
 
     return Result::Ok;
@@ -616,12 +605,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendTerminate(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s, Reason: ");
-        str.append(ToString(reason));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendTerminate(simulationTime, reason);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Terminate));
@@ -630,7 +614,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendTerminate()");
+        LogProtocolEndTraceSendTerminate();
     }
 
     return Result::Ok;
@@ -638,19 +622,14 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadTerminate()");
+        LogProtocolBeginTraceReadTerminate();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
     CheckResultWithMessage(reader.Read(reason), "Could not read reason.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadTerminate(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s, Reason: ");
-        str.append(ToString(reason));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadTerminate(simulationTime, reason);
     }
 
     return Result::Ok;
@@ -658,10 +637,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendPause(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendPause(simulationTime);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Pause));
@@ -669,7 +645,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendPause()");
+        LogProtocolEndTraceSendPause();
     }
 
     return Result::Ok;
@@ -677,16 +653,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadPause()");
+        LogProtocolBeginTraceReadPause();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadPause(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadPause(simulationTime);
     }
 
     return Result::Ok;
@@ -694,10 +667,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendContinue(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendContinue(simulationTime);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Continue));
@@ -705,7 +675,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendContinue()");
+        LogProtocolEndTraceSendContinue();
     }
 
     return Result::Ok;
@@ -713,16 +683,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadContinue()");
+        LogProtocolBeginTraceReadContinue();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadContinue(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadContinue(simulationTime);
     }
 
     return Result::Ok;
@@ -733,10 +700,7 @@ namespace Protocol {
                               const IoBuffer& ioBuffer,
                               const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendStep(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendStep(simulationTime);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::Step));
@@ -746,7 +710,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendStep()");
+        LogProtocolEndTraceSendStep();
     }
 
     return Result::Ok;
@@ -758,7 +722,7 @@ namespace Protocol {
                               const BusBuffer& busBuffer,
                               const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadStep()");
+        LogProtocolBeginTraceReadStep();
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
@@ -771,10 +735,7 @@ namespace Protocol {
     CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadStep(SimulationTime: ";
-        str.append(SimulationTimeToString(simulationTime));
-        str.append(" s)");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadStep(simulationTime);
     }
 
     return Result::Ok;
@@ -786,12 +747,7 @@ namespace Protocol {
                                 const IoBuffer& ioBuffer,
                                 const BusBuffer& busBuffer) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendStepOk(NextSimulationTime: ";
-        str.append(SimulationTimeToString(nextSimulationTime));
-        str.append(" s, Command: ");
-        str.append(ToString(command));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendStepOk(nextSimulationTime, command);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::StepOk));
@@ -802,7 +758,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendStepOk()");
+        LogProtocolEndTraceSendStepOk();
     }
 
     return Result::Ok;
@@ -815,7 +771,7 @@ namespace Protocol {
                                 const BusBuffer& busBuffer,
                                 const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadStepOk()");
+        LogProtocolBeginTraceReadStepOk();
     }
 
     CheckResultWithMessage(reader.Read(nextSimulationTime), "Could not read simulation time.");
@@ -831,12 +787,7 @@ namespace Protocol {
                            "Could not read bus buffer data.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadStepOk(NextSimulationTime: ";
-        str.append(SimulationTimeToString(nextSimulationTime));
-        str.append(" s, Command: ");
-        str.append(ToString(command));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadStepOk(nextSimulationTime, command);
     }
 
     return Result::Ok;
@@ -844,12 +795,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendSetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\", Port: ");
-        str.append(std::to_string(port));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendSetPort(serverName, port);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::SetPort));
@@ -858,7 +804,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendSetPort()");
+        LogProtocolEndTraceSendSetPort();
     }
 
     return Result::Ok;
@@ -866,19 +812,14 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadSetPort()");
+        LogProtocolBeginTraceReadSetPort();
     }
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadSetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\", Port: ");
-        str.append(std::to_string(port));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadSetPort(serverName, port);
     }
 
     return Result::Ok;
@@ -886,10 +827,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendUnsetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendUnsetPort(serverName);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::UnsetPort));
@@ -897,7 +835,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendUnsetPort()");
+        LogProtocolEndTraceSendUnsetPort();
     }
 
     return Result::Ok;
@@ -905,16 +843,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadUnsetPort()");
+        LogProtocolBeginTraceReadUnsetPort();
     }
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadUnsetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadUnsetPort(serverName);
     }
 
     return Result::Ok;
@@ -922,10 +857,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendGetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendGetPort(serverName);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::GetPort));
@@ -933,7 +865,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendGetPort()");
+        LogProtocolEndTraceSendGetPort();
     }
 
     return Result::Ok;
@@ -941,16 +873,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadGetPort()");
+        LogProtocolBeginTraceReadGetPort();
     }
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadGetPort(ServerName: \"";
-        str.append(serverName);
-        str.append("\")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadGetPort(serverName);
     }
 
     return Result::Ok;
@@ -958,10 +887,7 @@ namespace Protocol {
 
 [[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
-        std::string str = "SendGetPortOk(Port: ";
-        str.append(std::to_string(port));
-        str.append(")");
-        LogProtocolBeginTrace(str);
+        LogProtocolBeginTraceSendGetPortOk(port);
     }
 
     CheckResult(WriteHeader(writer, FrameKind::GetPortOk));
@@ -969,7 +895,7 @@ namespace Protocol {
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTrace("SendGetPortOk()");
+        LogProtocolEndTraceSendGetPortOk();
     }
 
     return Result::Ok;
@@ -977,16 +903,13 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
-        LogProtocolBeginTrace("ReadGetPortOk()");
+        LogProtocolBeginTraceReadGetPortOk();
     }
 
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
 
     if (IsProtocolTracingEnabled()) {
-        std::string str = "ReadGetPortOk(Port: ";
-        str.append(std::to_string(port));
-        str.append(")");
-        LogProtocolEndTrace(str);
+        LogProtocolEndTraceReadGetPortOk(port);
     }
 
     return Result::Ok;

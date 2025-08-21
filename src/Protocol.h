@@ -14,34 +14,28 @@ namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t CoSimProtocolVersion = 0x10000U;
 
-enum class FrameKind {
-    Ok = 1,
-    Error,
-
-    Connect,
-    ConnectOk,
-
-    Ping,
-    PingOk,
-
-    Start,
-    Stop,
-    Terminate,
-    Pause,
-    Continue,
-
-    Step,
-    StepOk,
-
-    GetPort,
-    GetPortOk,
-    SetPort,
-    UnsetPort
-};
-
-[[nodiscard]] const char* ToString(FrameKind frameKind);
-
 namespace Protocol {
+
+[[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size);
+
+[[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size);
+
+[[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length);
+
+[[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length);
+
+[[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId);
+
+[[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId);
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer);
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer);
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer);
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer);
+
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer);
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer);
 
 [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind);
 

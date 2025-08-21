@@ -481,4 +481,31 @@ struct ConnectConfig {
     uint16_t localPort{};
 };
 
+enum class FrameKind {
+    Ok = 1,
+    Error,
+
+    Connect,
+    ConnectOk,
+
+    Ping,
+    PingOk,
+
+    Start,
+    Stop,
+    Terminate,
+    Pause,
+    Continue,
+
+    Step,
+    StepOk,
+
+    GetPort,
+    GetPortOk,
+    SetPort,
+    UnsetPort
+};
+
+[[nodiscard]] const char* ToString(FrameKind frameKind);
+
 }  // namespace DsVeosCoSim

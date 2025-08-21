@@ -14,6 +14,7 @@
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
+#include "Protocol.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -25,70 +26,6 @@
 namespace DsVeosCoSim {
 
 namespace {
-
-[[nodiscard]] Result SerializeTo(const CanMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(CanMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result SerializeTo(const EthMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(EthMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result SerializeTo(const LinMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(LinMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
 
 template <typename TMessage, typename TMessageContainer, typename TController>
 class BusProtocolBufferBase {
@@ -355,17 +292,17 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        auto count = static_cast<uint32_t>(_messageBuffer.Size());
-        CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
+        size_t count = _messageBuffer.Size();
+        CheckResultWithMessage(Protocol::WriteSize(writer, count), "Could not write count of messages.");
 
-        for (uint32_t i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTrace(messageContainer.ToString());
             }
 
-            CheckResultWithMessage(SerializeTo(messageContainer, writer), "Could not serialize message.");
+            CheckResultWithMessage(Protocol::WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
         for (auto& [id, extension] : Base::_controllers) {
@@ -380,12 +317,12 @@ protected:
         SimulationTime simulationTime,
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
-        uint32_t totalCount{};
-        CheckResultWithMessage(reader.Read(totalCount), "Could not read count of messages.");
+        size_t totalCount{};
+        CheckResultWithMessage(Protocol::ReadSize(reader, totalCount), "Could not read count of messages.");
 
-        for (uint32_t i = 0; i < totalCount; i++) {
+        for (size_t i = 0; i < totalCount; i++) {
             TMessageContainer messageContainer{};
-            CheckResultWithMessage(DeserializeFrom(messageContainer, reader), "Could not deserialize message.");
+            CheckResultWithMessage(Protocol::ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTrace(messageContainer.ToString());
@@ -660,7 +597,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(writer.Write<uint32_t>(_messageBuffer->Size()), "Could not write transmit count.");
+        CheckResultWithMessage(Protocol::WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
         return Result::Ok;
     }
 
@@ -669,8 +606,8 @@ protected:
         SimulationTime simulationTime,
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
-        uint32_t receiveCount{};
-        CheckResultWithMessage(reader.Read(receiveCount), "Could not read receive count.");
+        size_t receiveCount{};
+        CheckResultWithMessage(Protocol::ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
 
         if (!messageCallback && !messageContainerCallback) {
@@ -707,7 +644,7 @@ protected:
     }
 
 private:
-    uint32_t _totalReceiveCount{};
+    size_t _totalReceiveCount{};
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessageContainer>* _messageBuffer{};
 

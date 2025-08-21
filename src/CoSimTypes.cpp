@@ -111,23 +111,10 @@ namespace {
     return str;
 }
 
-[[nodiscard]] Result CheckCanMessage(uint32_t length, CanMessageFlags flags) {
+[[nodiscard]] Result CheckCanMessage(uint32_t length) {
     if (length > CanMessageMaxLength) {
         LogError("CAN message data exceeds maximum length.");
         return Result::Error;
-    }
-
-    if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (length > 8) {
-            LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
-            return Result::Error;
-        }
-
-        if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-            LogError(
-                "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
-            return Result::Error;
-        }
     }
 
     return Result::Ok;
@@ -650,7 +637,7 @@ namespace {
 }
 
 [[nodiscard]] Result CanMessage::Check() const {
-    return CheckCanMessage(length, flags);
+    return CheckCanMessage(length);
 }
 
 void CanMessage::WriteTo(CanMessageContainer& messageContainer) const {
@@ -667,7 +654,7 @@ void CanMessage::WriteTo(CanMessageContainer& messageContainer) const {
 }
 
 [[nodiscard]] Result CanMessageContainer::Check() const {
-    return CheckCanMessage(length, flags);
+    return CheckCanMessage(length);
 }
 
 void CanMessageContainer::WriteTo(CanMessage& message) const {
@@ -934,6 +921,47 @@ void LinMessageContainer::WriteTo(LinMessage& message) const {
     message.flags = flags;
     message.length = length;
     message.data = data.data();
+}
+
+[[nodiscard]] const char* ToString(FrameKind frameKind) {
+    switch (frameKind) {
+        case FrameKind::Ping:
+            return "Ping";
+        case FrameKind::PingOk:
+            return "PingOk";
+        case FrameKind::Ok:
+            return "Ok";
+        case FrameKind::Error:
+            return "Error";
+        case FrameKind::Start:
+            return "Start";
+        case FrameKind::Stop:
+            return "Stop";
+        case FrameKind::Terminate:
+            return "Terminate";
+        case FrameKind::Pause:
+            return "Pause";
+        case FrameKind::Continue:
+            return "Continue";
+        case FrameKind::Step:
+            return "Step";
+        case FrameKind::StepOk:
+            return "StepOk";
+        case FrameKind::Connect:
+            return "Connect";
+        case FrameKind::ConnectOk:
+            return "ConnectOk";
+        case FrameKind::GetPort:
+            return "GetPort";
+        case FrameKind::GetPortOk:
+            return "GetPortOk";
+        case FrameKind::SetPort:
+            return "SetPort";
+        case FrameKind::UnsetPort:
+            return "UnsetPort";
+    }
+
+    return "<Invalid FrameKind>";
 }
 
 }  // namespace DsVeosCoSim
