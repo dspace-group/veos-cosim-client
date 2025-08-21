@@ -500,8 +500,8 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 [[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
-        int32_t receivedSize{};
-        CheckResult(socket.Receive(bufferPointer, static_cast<int32_t>(length), receivedSize));
+        size_t receivedSize{};
+        CheckResult(socket.Receive(bufferPointer, length, receivedSize));
 
         length -= receivedSize;
         bufferPointer += receivedSize;

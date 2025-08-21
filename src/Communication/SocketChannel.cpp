@@ -18,9 +18,9 @@ namespace DsVeosCoSim {
 
 namespace {
 
-constexpr int32_t HeaderSize = 4;
-constexpr int32_t BufferSize = 64 * 1024;
-constexpr int32_t ReadPacketSize = 1024;
+constexpr size_t HeaderSize = 4;
+constexpr size_t BufferSize = 65536;
+constexpr size_t ReadPacketSize = 1024;
 
 class SocketChannelWriter final : public ChannelWriter {
 public:
@@ -39,18 +39,16 @@ public:
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
 
         while (size > 0) {
-            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), BufferSize - _writeIndex);
-            if (sizeToCopy <= 0) {
+            if (BufferSize == _writeIndex) {
                 CheckResult(EndWrite());
                 continue;
             }
 
-            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
-                         bufferPointer,
-                         static_cast<size_t>(sizeToCopy));
+            size_t sizeToCopy = std::min(size, BufferSize - _writeIndex);
+            (void)memcpy(&_writeBuffer[_writeIndex], bufferPointer, sizeToCopy);
             _writeIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
-            size -= static_cast<size_t>(sizeToCopy);
+            size -= sizeToCopy;
         }
 
         return Result::Ok;
@@ -60,7 +58,7 @@ public:
         uint8_t* sourcePtr = _writeBuffer.data();
 
         // Write header
-        *reinterpret_cast<int32_t*>(sourcePtr) = _writeIndex;
+        *reinterpret_cast<uint32_t*>(sourcePtr) = static_cast<uint32_t>(_writeIndex);
 
         CheckResult(_socket.Send(sourcePtr, _writeIndex));
 
@@ -71,7 +69,7 @@ public:
 private:
     Socket& _socket;
 
-    int32_t _writeIndex = HeaderSize;
+    size_t _writeIndex = HeaderSize;
     std::array<uint8_t, BufferSize> _writeBuffer{};
 };
 
@@ -92,16 +90,16 @@ public:
         auto* bufferPointer = static_cast<uint8_t*>(destination);
 
         while (size > 0) {
-            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), _endFrameIndex - _readIndex);
-            if (sizeToCopy <= 0) {
+            if (_endFrameIndex <= _readIndex) {
                 CheckResult(BeginRead());
                 continue;
             }
 
-            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeToCopy));
+            size_t sizeToCopy = std::min(size, _endFrameIndex - _readIndex);
+            (void)memcpy(bufferPointer, &_readBuffer[_readIndex], sizeToCopy);
             _readIndex += sizeToCopy;
             bufferPointer += sizeToCopy;
-            size -= static_cast<size_t>(sizeToCopy);
+            size -= sizeToCopy;
         }
 
         return Result::Ok;
@@ -110,22 +108,20 @@ public:
 private:
     [[nodiscard]] Result BeginRead() {
         _readIndex = HeaderSize;
-        int32_t sizeToRead = ReadPacketSize;
+        size_t sizeToRead = ReadPacketSize;
         bool readHeader = true;
 
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
-            int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            (void)memcpy(_readBuffer.data(),
-                         &_readBuffer[static_cast<size_t>(_endFrameIndex)],
-                         static_cast<size_t>(bytesToMove));
+            size_t bytesToMove = _writeIndex - _endFrameIndex;
+            (void)memcpy(_readBuffer.data(), &_readBuffer[_endFrameIndex], bytesToMove);
 
-            _writeIndex -= _endFrameIndex;
+            _writeIndex = bytesToMove;
 
             // Did we read at least HeaderSize bytes more?
             if (bytesToMove >= HeaderSize) {
                 readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
+                _endFrameIndex = static_cast<size_t>(*reinterpret_cast<uint32_t*>(_readBuffer.data()));
 
                 // Did we read at least an entire second frame?
                 if (_writeIndex >= _endFrameIndex) {
@@ -139,19 +135,23 @@ private:
         }
 
         while (sizeToRead > 0) {
-            int32_t receivedSize{};
-            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], sizeToRead, receivedSize));
+            size_t receivedSize{};
+            CheckResult(_socket.Receive(&_readBuffer[_writeIndex], sizeToRead, receivedSize));
 
             sizeToRead -= receivedSize;
             _writeIndex += receivedSize;
 
             if (readHeader && (_writeIndex >= HeaderSize)) {
                 readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
+                _endFrameIndex = static_cast<size_t>(*reinterpret_cast<uint32_t*>(_readBuffer.data()));
 
                 if (_endFrameIndex > BufferSize) {
                     LogError("Protocol error. The buffer size is too small.");
                     return Result::Error;
+                }
+
+                if (_writeIndex >= _endFrameIndex) {
+                    return Result::Ok;
                 }
 
                 sizeToRead = _endFrameIndex - _writeIndex;
@@ -163,9 +163,9 @@ private:
 
     Socket& _socket;
 
-    int32_t _readIndex = HeaderSize;
-    int32_t _writeIndex{};
-    int32_t _endFrameIndex{};
+    size_t _readIndex = HeaderSize;
+    size_t _writeIndex{};
+    size_t _endFrameIndex{};
     std::array<uint8_t, BufferSize> _readBuffer{};
 };
 

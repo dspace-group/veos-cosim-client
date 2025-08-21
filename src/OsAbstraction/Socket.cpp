@@ -762,18 +762,19 @@ void Socket::Close() {
     return ConvertFromInternetAddress(address, remoteAddress);
 }
 
-[[nodiscard]] Result Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
+[[nodiscard]] Result Socket::Receive(void* destination, size_t size, size_t& receivedSize) const {
 #ifdef _WIN32
-    receivedSize = recv(_socket, static_cast<char*>(destination), size, 0);
+    int32_t receivedSizeTmp = recv(_socket, static_cast<char*>(destination), static_cast<int32_t>(size), 0);
 #else
-    receivedSize = static_cast<int32_t>(recv(_socket, destination, size, MSG_NOSIGNAL));
+    ssize_t receivedSizeTmp = recv(_socket, destination, size, MSG_NOSIGNAL);
 #endif
 
-    if (receivedSize > 0) {
+    if (receivedSizeTmp > 0) {
+        receivedSize = static_cast<size_t>(receivedSizeTmp);
         return Result::Ok;
     }
 
-    if (receivedSize == 0) {
+    if (receivedSizeTmp == 0) {
         LogTrace("Remote endpoint disconnected.");
         return Result::Disconnected;
     }
@@ -793,19 +794,19 @@ void Socket::Close() {
     return Result::Error;
 }
 
-[[nodiscard]] Result Socket::Send(const void* source, int32_t size) const {
+[[nodiscard]] Result Socket::Send(const void* source, size_t size) const {
     const char* buffer = static_cast<const char*>(source);
 
     while (size > 0) {
 #ifdef _WIN32
-        int32_t sentSize = send(_socket, buffer, size, 0);
+        int32_t sentSize = send(_socket, buffer, static_cast<int32_t>(size), 0);
 #else
-        int32_t sentSize = static_cast<int32_t>(send(_socket, buffer, size, MSG_NOSIGNAL));
+        ssize_t sentSize = send(_socket, buffer, size, MSG_NOSIGNAL);
 #endif
 
         if (sentSize > 0) {
-            size -= sentSize;
-            buffer += sentSize;
+            size -= static_cast<size_t>(sentSize);
+            buffer += static_cast<size_t>(sentSize);
             continue;
         }
 

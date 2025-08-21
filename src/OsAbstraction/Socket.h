@@ -76,8 +76,8 @@ public:
     [[nodiscard]] Result TryAccept(std::optional<Socket>& acceptedSocket) const;
     [[nodiscard]] Result GetLocalPort(uint16_t& localPort) const;
     [[nodiscard]] Result GetRemoteAddress(SocketAddress& remoteAddress) const;
-    [[nodiscard]] Result Receive(void* destination, int32_t size, int32_t& receivedSize) const;
-    [[nodiscard]] Result Send(const void* source, int32_t size) const;
+    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) const;
+    [[nodiscard]] Result Send(const void* source, size_t size) const;
 
 private:
     [[nodiscard]] Result BindForIpv4(uint16_t port, bool enableRemoteAccess) const;
