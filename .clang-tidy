@@ -32,6 +32,7 @@ Checks: '
   -readability-magic-numbers,
   -readability-qualified-auto,
   -readability-redundant-member-init,
+  -readability-suspicious-call-argument
   '
 
 CheckOptions:

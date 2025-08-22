@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
 #include <memory>
@@ -34,6 +35,48 @@ public:
 
     SocketChannelWriter(SocketChannelWriter&&) = delete;
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
+
+    [[nodiscard]] Result Write(uint16_t value) override {
+        size_t writeSize = sizeof(value);
+        if (BufferSize - _writeIndex < writeSize) {
+            CheckResult(EndWrite());
+
+            assert(BufferSize - _writeIndex >= writeSize);
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
+        _writeIndex += writeSize;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint32_t value) override {
+        size_t writeSize = sizeof(value);
+        if (BufferSize - _writeIndex < writeSize) {
+            CheckResult(EndWrite());
+
+            assert(BufferSize - _writeIndex >= writeSize);
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
+        _writeIndex += writeSize;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint64_t value) override {
+        size_t writeSize = sizeof(value);
+        if (BufferSize - _writeIndex < writeSize) {
+            CheckResult(EndWrite());
+
+            assert(BufferSize - _writeIndex >= writeSize);
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
+        _writeIndex += writeSize;
+
+        return Result::Ok;
+    }
 
     [[nodiscard]] Result Write(const void* source, size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
@@ -85,6 +128,39 @@ public:
 
     SocketChannelReader(SocketChannelReader&&) = delete;
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
+
+    [[nodiscard]] Result Read(uint16_t& value) override {
+        size_t readSize = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+            CheckResult(BeginRead());
+        }
+
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
+        _readIndex += readSize;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint32_t& value) override {
+        size_t readSize = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+            CheckResult(BeginRead());
+        }
+
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
+        _readIndex += readSize;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint64_t& value) override {
+        size_t readSize = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+            CheckResult(BeginRead());
+        }
+
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
+        _readIndex += readSize;
+        return Result::Ok;
+    }
 
     [[nodiscard]] Result Read(void* destination, size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);

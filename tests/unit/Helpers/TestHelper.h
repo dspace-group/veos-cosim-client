@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 
 #define AssertEq(expected, actual) ASSERT_EQ(expected, actual)
@@ -44,3 +45,32 @@ void AssertEqHelper(const std::vector<T>& expected, const std::vector<T>& actual
         ASSERT_EQ(expected[i], actual[i]);
     }
 }
+
+[[nodiscard]] std::unique_ptr<DsVeosCoSim::Channel> AcceptFromServer(
+    std::unique_ptr<DsVeosCoSim::ChannelServer>& server);
+
+void TestWriteUInt16ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteUInt32ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteUInt64ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteBufferToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+
+void TestReadUInt16FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadUInt32FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadUInt64FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadBufferFromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+
+void TestPingPong(std::unique_ptr<DsVeosCoSim::Channel>& firstChannel,
+                  std::unique_ptr<DsVeosCoSim::Channel>& secondChannel);
+
+void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                             std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+
+void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+
+void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
+                    std::unique_ptr<DsVeosCoSim::Channel>& readChannel);

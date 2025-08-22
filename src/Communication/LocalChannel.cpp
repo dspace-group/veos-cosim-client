@@ -173,6 +173,18 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result Write(uint16_t value) override {
+        return Write(&value, sizeof(value));
+    }
+
+    [[nodiscard]] Result Write(uint32_t value) override {
+        return Write(&value, sizeof(value));
+    }
+
+    [[nodiscard]] Result Write(uint64_t value) override {
+        return Write(&value, sizeof(value));
+    }
+
     [[nodiscard]] Result Write(const void* source, size_t size) override {
         auto bufferPointer = static_cast<const uint8_t*>(source);
 
@@ -270,6 +282,18 @@ public:
 
         _spinCount = GetSpinCount(name, postFix, "Read");
         return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint16_t& value) override {
+        return Read(&value, sizeof(value));
+    }
+
+    [[nodiscard]] Result Read(uint32_t& value) override {
+        return Read(&value, sizeof(value));
+    }
+
+    [[nodiscard]] Result Read(uint64_t& value) override {
+        return Read(&value, sizeof(value));
     }
 
     [[nodiscard]] Result Read(void* destination, size_t size) override {

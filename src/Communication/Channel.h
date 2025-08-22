@@ -23,11 +23,14 @@ public:
     ChannelWriter(ChannelWriter&&) = delete;
     ChannelWriter& operator=(ChannelWriter&&) = delete;
 
-    template <typename T>
-    [[nodiscard]] Result Write(const T& value) {
-        static_assert(std::is_trivially_copyable_v<T>);
+    [[nodiscard]] virtual Result Write(uint16_t value) = 0;
+    [[nodiscard]] virtual Result Write(uint32_t value) = 0;
+    [[nodiscard]] virtual Result Write(uint64_t value) = 0;
 
-        return Write(&value, sizeof(T));
+    template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+    [[nodiscard]] Result Write(TEnum value) {
+        using TUnderlying = std::underlying_type_t<TEnum>;
+        return Write(static_cast<TUnderlying>(value));
     }
 
     [[nodiscard]] virtual Result Write(const void* source, size_t size) = 0;
@@ -48,11 +51,14 @@ public:
     ChannelReader(ChannelReader&&) = delete;
     ChannelReader& operator=(ChannelReader&&) = delete;
 
-    template <typename T>
-    [[nodiscard]] Result Read(T& value) {
-        static_assert(std::is_trivially_copyable_v<T>);
+    [[nodiscard]] virtual Result Read(uint16_t& value) = 0;
+    [[nodiscard]] virtual Result Read(uint32_t& value) = 0;
+    [[nodiscard]] virtual Result Read(uint64_t& value) = 0;
 
-        return Read(&value, sizeof(T));
+    template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
+    [[nodiscard]] Result Read(TEnum& value) {
+        using TUnderlying = std::underlying_type_t<TEnum>;
+        return Read(reinterpret_cast<TUnderlying&>(value));
     }
 
     [[nodiscard]] virtual Result Read(void* destination, size_t size) = 0;

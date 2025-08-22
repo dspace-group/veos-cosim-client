@@ -70,7 +70,7 @@ using SimulationTime = std::chrono::nanoseconds;
 
 [[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime);
 
-enum class Result {
+enum class Result : uint32_t {
     Ok,
     Error,
     Empty,
@@ -159,7 +159,7 @@ enum class SizeKind : uint32_t {
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
 
-enum class SimulationState {
+enum class SimulationState : uint32_t {
     Unloaded,
     Stopped,
     Running,
@@ -169,7 +169,7 @@ enum class SimulationState {
 
 [[nodiscard]] const char* ToString(SimulationState simulationState);
 
-enum class Mode {
+enum class Mode : uint32_t {
 };
 
 [[nodiscard]] const char* ToString(Mode mode);
@@ -481,7 +481,7 @@ struct ConnectConfig {
     uint16_t localPort{};
 };
 
-enum class FrameKind {
+enum class FrameKind : uint32_t {
     Ok = 1,
     Error,
 
