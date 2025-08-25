@@ -26,14 +26,17 @@ public:
     [[nodiscard]] virtual Result Write(uint16_t value) = 0;
     [[nodiscard]] virtual Result Write(uint32_t value) = 0;
     [[nodiscard]] virtual Result Write(uint64_t value) = 0;
+    [[nodiscard]] virtual Result Write(const void* source, size_t size) = 0;
+
+    [[nodiscard]] Result Write(std::chrono::nanoseconds nanoseconds) {
+        return Write(static_cast<uint64_t>(nanoseconds.count()));
+    }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
     [[nodiscard]] Result Write(TEnum value) {
         using TUnderlying = std::underlying_type_t<TEnum>;
         return Write(static_cast<TUnderlying>(value));
     }
-
-    [[nodiscard]] virtual Result Write(const void* source, size_t size) = 0;
 
     [[nodiscard]] virtual Result EndWrite() = 0;
 };
@@ -54,14 +57,17 @@ public:
     [[nodiscard]] virtual Result Read(uint16_t& value) = 0;
     [[nodiscard]] virtual Result Read(uint32_t& value) = 0;
     [[nodiscard]] virtual Result Read(uint64_t& value) = 0;
+    [[nodiscard]] virtual Result Read(void* destination, size_t size) = 0;
+
+    [[nodiscard]] Result Read(SimulationTime& simulationTime) {
+        return Read(reinterpret_cast<uint64_t&>(simulationTime));
+    }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
     [[nodiscard]] Result Read(TEnum& value) {
         using TUnderlying = std::underlying_type_t<TEnum>;
         return Read(reinterpret_cast<TUnderlying&>(value));
     }
-
-    [[nodiscard]] virtual Result Read(void* destination, size_t size) = 0;
 };
 
 class Channel {

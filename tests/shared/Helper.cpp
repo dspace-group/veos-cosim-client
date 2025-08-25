@@ -70,10 +70,6 @@ template <typename T, size_t TSize>
     return GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
 }
 
-[[nodiscard]] BusControllerId GenerateBusControllerId() {
-    return static_cast<BusControllerId>(GenerateU32());
-}
-
 [[nodiscard]] BusMessageId GenerateBusMessageId() {
     return static_cast<BusMessageId>(GenerateU32());
 }
@@ -574,6 +570,14 @@ void FillWithRandom(uint8_t* data, size_t length) {
     return static_cast<BusMessageId>(GenerateRandom(min, max));
 }
 
+[[nodiscard]] BusControllerId GenerateBusControllerId() {
+    return static_cast<BusControllerId>(GenerateU32());
+}
+
+[[nodiscard]] IoSignalId GenerateIoSignalId() {
+    return static_cast<IoSignalId>(GenerateU32());
+}
+
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length) {
     std::vector<uint8_t> data;
     data.resize(length);
@@ -594,7 +598,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] IoSignalContainer CreateSignal(DataType dataType, SizeKind sizeKind) {
     IoSignalContainer signal{};
-    signal.id = static_cast<IoSignalId>(GenerateU32());
+    signal.id = GenerateIoSignalId();
     signal.length = GenerateRandom(1U, 4U);
     signal.dataType = dataType;
     signal.sizeKind = sizeKind;

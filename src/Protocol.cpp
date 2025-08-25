@@ -13,37 +13,23 @@
 #include "Environment.h"
 #include "IoBuffer.h"
 
-namespace DsVeosCoSim {
+namespace DsVeosCoSim::Protocol {
 
 namespace {
 
-[[nodiscard]] Result WriteHeader(ChannelWriter& writer, FrameKind frameKind) {
-    CheckResultWithMessage(writer.Write(frameKind), "Could not write frame header.");
-    return Result::Ok;
-}
-
 [[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string) {
-    uint32_t size = 0;
-    CheckResultWithMessage(reader.Read(size), "Could not read string size.");
+    size_t size{};
+    CheckResult(ReadSize(reader, size));
+
     string.resize(size);
+
     CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
     return Result::Ok;
 }
 
 [[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
-    auto size = static_cast<uint32_t>(string.size());
-    CheckResultWithMessage(writer.Write(size), "Could not write string size.");
-    CheckResultWithMessage(writer.Write(string.data(), size), "Could not write string data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadSimulationTime(ChannelReader& reader, SimulationTime& simulationTime) {
-    CheckResultWithMessage(reader.Read(reinterpret_cast<uint64_t&>(simulationTime)), "Could not read simnulation time.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteSimulationTime(ChannelWriter& writer, SimulationTime simulationTime) {
-    CheckResultWithMessage(writer.Write(static_cast<uint64_t>(simulationTime.count())), "Could not write simulation time.");
+    CheckResult(WriteSize(writer, string.size()));
+    CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
     return Result::Ok;
 }
 
@@ -66,11 +52,12 @@ namespace {
 }
 
 [[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
-    uint32_t signalsCount = 0;
-    CheckResultWithMessage(reader.Read(signalsCount), "Could not read signals count.");
-    signals.resize(signalsCount);
+    size_t size{};
+    CheckResult(ReadSize(reader, size));
 
-    for (uint32_t i = 0; i < signalsCount; i++) {
+    signals.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
         CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
     }
 
@@ -78,8 +65,8 @@ namespace {
 }
 
 [[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
-    auto size = static_cast<uint32_t>(signals.size());
-    CheckResultWithMessage(writer.Write(size), "Could not write signals count.");
+    CheckResult(WriteSize(writer, signals.size()));
+
     for (const auto& signal : signals) {
         CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
     }
@@ -88,7 +75,7 @@ namespace {
 }
 
 [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
-    CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
+    CheckResultWithMessage(reader.Read(controller.id), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
     CheckResultWithMessage(reader.Read(controller.flexibleDataRateBitsPerSecond),
@@ -112,11 +99,12 @@ namespace {
 }
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
-    uint32_t controllersCount = 0;
-    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
-    controllers.resize(controllersCount);
+    size_t size{};
+    CheckResult(ReadSize(reader, size));
 
-    for (uint32_t i = 0; i < controllersCount; i++) {
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
@@ -125,8 +113,8 @@ namespace {
 
 [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
                                           const std::vector<CanControllerContainer>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
-    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
+    CheckResult(WriteSize(writer, controllers.size()));
+
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
@@ -138,7 +126,8 @@ namespace {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
-    CheckResultWithMessage(reader.Read(controller.macAddress.data(), sizeof(controller.macAddress)), "Could not read MAC address.");
+    CheckResultWithMessage(reader.Read(controller.macAddress.data(), sizeof(controller.macAddress)),
+                           "Could not read mac address.");
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
     CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
@@ -149,7 +138,8 @@ namespace {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
-    CheckResultWithMessage(writer.Write(controller.macAddress.data(), sizeof(controller.macAddress)), "Could not write MAC address.");
+    CheckResultWithMessage(writer.Write(controller.macAddress.data(), sizeof(controller.macAddress)),
+                           "Could not write mac address.");
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
     CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
@@ -157,11 +147,12 @@ namespace {
 }
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
-    uint32_t controllersCount = 0;
-    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
-    controllers.resize(controllersCount);
+    size_t size{};
+    CheckResult(ReadSize(reader, size));
 
-    for (uint32_t i = 0; i < controllersCount; i++) {
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
@@ -170,8 +161,8 @@ namespace {
 
 [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
                                           const std::vector<EthControllerContainer>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
-    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
+    CheckResult(WriteSize(writer, controllers.size()));
+
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
@@ -202,11 +193,12 @@ namespace {
 }
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
-    uint32_t controllersCount = 0;
-    CheckResultWithMessage(reader.Read(controllersCount), "Could not read controllers count.");
-    controllers.resize(controllersCount);
+    size_t size{};
+    CheckResult(ReadSize(reader, size));
 
-    for (uint32_t i = 0; i < controllersCount; i++) {
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
         CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
     }
 
@@ -215,8 +207,8 @@ namespace {
 
 [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
                                           const std::vector<LinControllerContainer>& controllers) {
-    auto size = static_cast<uint32_t>(controllers.size());
-    CheckResultWithMessage(writer.Write(size), "Could not write controllers count.");
+    CheckResult(WriteSize(writer, controllers.size()));
+
     for (const auto& controller : controllers) {
         CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
@@ -225,8 +217,6 @@ namespace {
 }
 
 }  // namespace
-
-namespace Protocol {
 
 [[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) {
     uint32_t intSize{};
@@ -262,7 +252,7 @@ namespace Protocol {
 }
 
 [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer) {
-    CheckResult(WriteSimulationTime(writer, messageContainer.timestamp));
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
@@ -273,18 +263,20 @@ namespace Protocol {
 }
 
 [[nodiscard]] Result ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer) {
-    CheckResult(ReadSimulationTime(reader, messageContainer.timestamp));
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length");
+    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
+
     CheckResult(messageContainer.Check());
+
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
     return Result::Ok;
 }
 
 [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer) {
-    CheckResult(WriteSimulationTime(writer, messageContainer.timestamp));
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
     CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
@@ -294,17 +286,19 @@ namespace Protocol {
 }
 
 [[nodiscard]] Result ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer) {
-    CheckResult(ReadSimulationTime(reader, messageContainer.timestamp));
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
+
     CheckResult(messageContainer.Check());
+
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
     return Result::Ok;
 }
 
 [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer) {
-    CheckResult(WriteSimulationTime(writer, messageContainer.timestamp));
+    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
     CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
     CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
@@ -315,12 +309,14 @@ namespace Protocol {
 }
 
 [[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer) {
-    CheckResult(ReadSimulationTime(reader, messageContainer.timestamp));
+    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
     CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
     CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
     CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
+
     CheckResult(messageContainer.Check());
+
     CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
     return Result::Ok;
 }
@@ -330,7 +326,7 @@ namespace Protocol {
         LogProtocolBeginTraceReceiveHeader();
     }
 
-    CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame header.");
+    CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame kind.");
 
     if (IsProtocolHeaderTracingEnabled()) {
         LogProtocolEndTraceReceiveHeader(frameKind);
@@ -344,7 +340,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendOk();
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Ok));
+    CheckResultWithMessage(writer.Write(FrameKind::Ok), "Could not write frame kind.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -359,7 +355,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendError(errorMessage);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Error));
+    CheckResultWithMessage(writer.Write(FrameKind::Error), "Could not write frame kind.");
     CheckResultWithMessage(WriteString(writer, errorMessage), "Could not write error message.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -389,7 +385,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendPing();
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Ping));
+    CheckResultWithMessage(writer.Write(FrameKind::Ping), "Could not write frame kind.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolPingTracingEnabled()) {
@@ -404,7 +400,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendPingOk(command);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::PingOk));
+    CheckResultWithMessage(writer.Write(FrameKind::PingOk), "Could not write frame kind.");
     CheckResultWithMessage(writer.Write(command), "Could not write command.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -438,7 +434,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendConnect(protocolVersion, clientMode, serverName, clientName);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Connect));
+    CheckResultWithMessage(writer.Write(FrameKind::Connect), "Could not write frame kind.");
     CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
     CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
@@ -495,10 +491,10 @@ namespace Protocol {
                                            linControllers);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::ConnectOk));
+    CheckResultWithMessage(writer.Write(FrameKind::ConnectOk), "Could not write frame kind.");
     CheckResultWithMessage(writer.Write(protocolVersion), "Could not write protocol version.");
     CheckResultWithMessage(writer.Write(clientMode), "Could not write client mode.");
-    CheckResult(WriteSimulationTime(writer, stepSize));
+    CheckResultWithMessage(writer.Write(stepSize), "Could not write step size.");
     CheckResultWithMessage(writer.Write(simulationState), "Could not write simulation state.");
     CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
     CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
@@ -530,7 +526,7 @@ namespace Protocol {
 
     CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocol version.");
     CheckResultWithMessage(reader.Read(clientMode), "Could not read client mode.");
-    CheckResult(ReadSimulationTime(reader, stepSize));
+    CheckResultWithMessage(reader.Read(stepSize), "Could not read step size.");
     CheckResultWithMessage(reader.Read(simulationState), "Could not read simulation state.");
     CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
     CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
@@ -558,8 +554,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendStart(simulationTime);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Start));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::Start), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -574,7 +570,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadStart();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
+    CheckResult(reader.Read(simulationTime));
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStart(simulationTime);
@@ -588,8 +584,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendStop(simulationTime);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Stop));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::Stop), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -604,7 +600,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadStop();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStop(simulationTime);
@@ -618,9 +614,9 @@ namespace Protocol {
         LogProtocolBeginTraceSendTerminate(simulationTime, reason);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Terminate));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
-    CheckResultWithMessage(writer.Write(reason), "Could not write reason.");
+    CheckResultWithMessage(writer.Write(FrameKind::Terminate), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
+    CheckResultWithMessage(writer.Write(reason), "Could not write terminate reason.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -635,8 +631,8 @@ namespace Protocol {
         LogProtocolBeginTraceReadTerminate();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
-    CheckResultWithMessage(reader.Read(reason), "Could not read reason.");
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    CheckResultWithMessage(reader.Read(reason), "Could not read terminate reason.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadTerminate(simulationTime, reason);
@@ -650,8 +646,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendPause(simulationTime);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Pause));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::Pause), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -666,7 +662,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadPause();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadPause(simulationTime);
@@ -680,8 +676,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendContinue(simulationTime);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Continue));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::Continue), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -696,7 +692,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadContinue();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadContinue(simulationTime);
@@ -713,8 +709,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendStep(simulationTime);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::Step));
-    CheckResult(WriteSimulationTime(writer, simulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::Step), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(simulationTime), "Could not write simulation time.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -735,7 +731,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadStep();
     }
 
-    CheckResult(ReadSimulationTime(reader, simulationTime));
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (callbacks.simulationBeginStepCallback) {
         callbacks.simulationBeginStepCallback(simulationTime);
@@ -760,8 +756,8 @@ namespace Protocol {
         LogProtocolBeginTraceSendStepOk(nextSimulationTime, command);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::StepOk));
-    CheckResult(WriteSimulationTime(writer, nextSimulationTime));
+    CheckResultWithMessage(writer.Write(FrameKind::StepOk), "Could not write frame kind.");
+    CheckResultWithMessage(writer.Write(nextSimulationTime), "Could not write next simulation time.");
     CheckResultWithMessage(writer.Write(command), "Could not write command.");
     CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
@@ -784,7 +780,7 @@ namespace Protocol {
         LogProtocolBeginTraceReadStepOk();
     }
 
-    CheckResult(ReadSimulationTime(reader, nextSimulationTime));
+    CheckResultWithMessage(reader.Read(nextSimulationTime), "Could not read next simulation time.");
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
 
     if (callbacks.simulationBeginStepCallback) {
@@ -808,7 +804,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendSetPort(serverName, port);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::SetPort));
+    CheckResultWithMessage(writer.Write(FrameKind::SetPort), "Could not write frame kind.");
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.Write(port), "Could not write port.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -840,7 +836,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendUnsetPort(serverName);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::UnsetPort));
+    CheckResultWithMessage(writer.Write(FrameKind::UnsetPort), "Could not write frame kind.");
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -870,7 +866,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendGetPort(serverName);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::GetPort));
+    CheckResultWithMessage(writer.Write(FrameKind::GetPort), "Could not write frame kind.");
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -900,7 +896,7 @@ namespace Protocol {
         LogProtocolBeginTraceSendGetPortOk(port);
     }
 
-    CheckResult(WriteHeader(writer, FrameKind::GetPortOk));
+    CheckResultWithMessage(writer.Write(FrameKind::GetPortOk), "Could not write frame kind.");
     CheckResultWithMessage(writer.Write(port), "Could not write port.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -925,6 +921,4 @@ namespace Protocol {
     return Result::Ok;
 }
 
-}  // namespace Protocol
-
-}  // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim::Protocol

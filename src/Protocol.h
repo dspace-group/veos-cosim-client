@@ -17,15 +17,12 @@ namespace DsVeosCoSim {
 namespace Protocol {
 
 [[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size);
-
 [[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size);
 
 [[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length);
-
 [[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length);
 
 [[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId);
-
 [[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId);
 
 [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer);

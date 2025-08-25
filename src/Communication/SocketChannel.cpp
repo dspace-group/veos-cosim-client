@@ -37,43 +37,43 @@ public:
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
     [[nodiscard]] Result Write(uint16_t value) override {
-        size_t writeSize = sizeof(value);
-        if (BufferSize - _writeIndex < writeSize) {
+        size_t size = sizeof(value);
+        if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= writeSize);
+            assert(BufferSize - _writeIndex >= size);
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
-        _writeIndex += writeSize;
+        _writeIndex += size;
 
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(uint32_t value) override {
-        size_t writeSize = sizeof(value);
-        if (BufferSize - _writeIndex < writeSize) {
+        size_t size = sizeof(value);
+        if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= writeSize);
+            assert(BufferSize - _writeIndex >= size);
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
-        _writeIndex += writeSize;
+        _writeIndex += size;
 
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(uint64_t value) override {
-        size_t writeSize = sizeof(value);
-        if (BufferSize - _writeIndex < writeSize) {
+        size_t size = sizeof(value);
+        if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= writeSize);
+            assert(BufferSize - _writeIndex >= size);
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[_writeIndex])) = value;
-        _writeIndex += writeSize;
+        _writeIndex += size;
 
         return Result::Ok;
     }
@@ -130,35 +130,35 @@ public:
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
 
     [[nodiscard]] Result Read(uint16_t& value) override {
-        size_t readSize = sizeof(value);
-        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+        size_t size = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < size)) {
             CheckResult(BeginRead());
         }
 
         value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
-        _readIndex += readSize;
+        _readIndex += size;
         return Result::Ok;
     }
 
     [[nodiscard]] Result Read(uint32_t& value) override {
-        size_t readSize = sizeof(value);
-        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+        size_t size = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < size)) {
             CheckResult(BeginRead());
         }
 
         value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
-        _readIndex += readSize;
+        _readIndex += size;
         return Result::Ok;
     }
 
     [[nodiscard]] Result Read(uint64_t& value) override {
-        size_t readSize = sizeof(value);
-        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < readSize)) {
+        size_t size = sizeof(value);
+        while ((_endFrameIndex <= _readIndex) || (_endFrameIndex - _readIndex < size)) {
             CheckResult(BeginRead());
         }
 
         value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[_readIndex]);
-        _readIndex += readSize;
+        _readIndex += size;
         return Result::Ok;
     }
 

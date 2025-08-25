@@ -191,8 +191,7 @@ public:
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            uint32_t readIndex = _header->readIndex.load(std::memory_order_acquire);
-            uint32_t currentSize = _writeIndex - readIndex;
+            uint32_t currentSize = _writeIndex - GetReadIndex();
             if (currentSize == BufferSize) {
                 CheckResult(WaitForFreeSpace(currentSize));
             }
@@ -212,7 +211,7 @@ public:
 
             _writeIndex += sizeToCopy;
             _maskedWriteIndex = MaskIndex(_writeIndex);
-            _header->writeIndex.store(_writeIndex, std::memory_order_release);
+            SetWriteIndex(_writeIndex);
             totalSizeToCopy -= sizeToCopy;
         }
 
@@ -227,10 +226,8 @@ private:
     [[nodiscard]] Result WaitForFreeSpace(uint32_t& currentSize) {
         CheckResult(_newDataEvent.Set());
 
-        std::atomic<uint32_t>& readIndex = _header->readIndex;
-
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
+            currentSize = _writeIndex - GetReadIndex();
             if (currentSize < BufferSize) {
                 return Result::Ok;
             }
@@ -239,7 +236,7 @@ private:
         }
 
         while (true) {
-            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
+            currentSize = _writeIndex - GetReadIndex();
             if (currentSize < BufferSize) {
                 return Result::Ok;
             }
@@ -253,8 +250,16 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
+        currentSize = _writeIndex - GetReadIndex();
         return Result::Ok;
+    }
+
+    [[nodiscard]] uint32_t GetReadIndex() {
+        return _header->readIndex.load(std::memory_order_acquire);
+    }
+
+    void SetWriteIndex(uint32_t writeIndex) {
+        _header->writeIndex.store(writeIndex, std::memory_order_release);
     }
 
     uint32_t _writeIndex{};
@@ -302,8 +307,7 @@ public:
         auto totalSizeToCopy = static_cast<uint32_t>(size);
 
         while (totalSizeToCopy > 0) {
-            uint32_t writeIndex = _header->writeIndex.load(std::memory_order_acquire);
-            uint32_t currentSize = writeIndex - _readIndex;
+            uint32_t currentSize = GetWriteIndex() - _readIndex;
             if (currentSize == 0) {
                 CheckResult(BeginRead(currentSize));
             }
@@ -322,7 +326,7 @@ public:
 
             _readIndex += sizeToCopy;
             _maskedReadIndex = MaskIndex(_readIndex);
-            _header->readIndex.store(_readIndex, std::memory_order_release);
+            SetReadIndex(_readIndex);
             if (currentSize == BufferSize) {
                 CheckResult(_newSpaceEvent.Set());
             }
@@ -335,10 +339,8 @@ public:
 
 private:
     [[nodiscard]] Result BeginRead(uint32_t& currentSize) {
-        std::atomic<uint32_t>& writeIndex = _header->writeIndex;
-
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
+            currentSize = GetWriteIndex() - _readIndex;
             if (currentSize > 0) {
                 return Result::Ok;
             }
@@ -347,7 +349,7 @@ private:
         }
 
         while (true) {
-            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
+            currentSize = GetWriteIndex() - _readIndex;
             if (currentSize > 0) {
                 return Result::Ok;
             }
@@ -361,8 +363,16 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
+        currentSize = GetWriteIndex() - _readIndex;
         return Result::Ok;
+    }
+
+    [[nodiscard]] uint32_t GetWriteIndex() {
+        return _header->writeIndex.load(std::memory_order_acquire);
+    }
+
+    void SetReadIndex(uint32_t readIndex) {
+        _header->readIndex.store(readIndex, std::memory_order_release);
     }
 
     uint32_t _readIndex{};

@@ -49,22 +49,22 @@ namespace DsVeosCoSim {
 #endif
 
 template <typename... T>
-void LogError(fmt::format_string<T...> format, T&&... args) {
+void LogError(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
     OnLogCallback(DsVeosCoSim::Severity::Error, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogWarning(fmt::format_string<T...> format, T&&... args) {
+void LogWarning(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
     OnLogCallback(DsVeosCoSim::Severity::Warning, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogInfo(fmt::format_string<T...> format, T&&... args) {
+void LogInfo(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
     OnLogCallback(DsVeosCoSim::Severity::Info, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
 template <typename... T>
-void LogTrace(fmt::format_string<T...> format, T&&... args) {
+void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
     OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
@@ -149,6 +149,8 @@ template <typename T>
 [[nodiscard]] std::string GenerateString(const std::string& prefix);
 [[nodiscard]] SimulationTime GenerateSimulationTime();
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);
+[[nodiscard]] BusControllerId GenerateBusControllerId();
+[[nodiscard]] IoSignalId GenerateIoSignalId();
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length);
 
 [[nodiscard]] IoSignalContainer CreateSignal();
