@@ -59,7 +59,7 @@ public:
     [[nodiscard]] virtual Result Read(uint64_t& value) = 0;
     [[nodiscard]] virtual Result Read(void* destination, size_t size) = 0;
 
-    [[nodiscard]] Result Read(SimulationTime& simulationTime) {
+    [[nodiscard]] Result Read(std::chrono::nanoseconds& simulationTime) {
         return Read(reinterpret_cast<uint64_t&>(simulationTime));
     }
 

@@ -795,7 +795,7 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::Send(const void* source, size_t size) const {
-    const char* buffer = static_cast<const char*>(source);
+    auto buffer = static_cast<const char*>(source);
 
     while (size > 0) {
 #ifdef _WIN32
