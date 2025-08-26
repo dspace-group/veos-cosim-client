@@ -126,7 +126,7 @@ namespace {
     CheckResultWithMessage(reader.Read(controller.id), "Could not read id.");
     CheckResultWithMessage(reader.Read(controller.queueSize), "Could not read queue size.");
     CheckResultWithMessage(reader.Read(controller.bitsPerSecond), "Could not read bits per second.");
-    CheckResultWithMessage(reader.Read(controller.macAddress.data(), sizeof(controller.macAddress)),
+    CheckResultWithMessage(reader.Read(controller.macAddress.data(), controller.macAddress.size()),
                            "Could not read mac address.");
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
@@ -138,7 +138,7 @@ namespace {
     CheckResultWithMessage(writer.Write(controller.id), "Could not write id.");
     CheckResultWithMessage(writer.Write(controller.queueSize), "Could not write queue size.");
     CheckResultWithMessage(writer.Write(controller.bitsPerSecond), "Could not write bits per second.");
-    CheckResultWithMessage(writer.Write(controller.macAddress.data(), sizeof(controller.macAddress)),
+    CheckResultWithMessage(writer.Write(controller.macAddress.data(), controller.macAddress.size()),
                            "Could not write mac address.");
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
