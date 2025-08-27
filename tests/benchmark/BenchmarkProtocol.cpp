@@ -23,28 +23,26 @@ public:
 
     [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
         blockWriter = BlockWriter(reinterpret_cast<uint8_t*>(_sharedMemory.GetData()), size);
-
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(uint16_t value) override {
-        *(reinterpret_cast<uint16_t*>(_sharedMemory.GetData())) = value;
+        *(reinterpret_cast<decltype(value)*>(_sharedMemory.GetData())) = value;
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(uint32_t value) override {
-        *(reinterpret_cast<uint32_t*>(_sharedMemory.GetData())) = value;
+        *(reinterpret_cast<decltype(value)*>(_sharedMemory.GetData())) = value;
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(uint64_t value) override {
-        *(reinterpret_cast<uint64_t*>(_sharedMemory.GetData())) = value;
+        *(reinterpret_cast<decltype(value)*>(_sharedMemory.GetData())) = value;
         return Result::Ok;
     }
 
     [[nodiscard]] Result Write(const void* source, size_t size) override {
         (void)memcpy(_sharedMemory.GetData(), source, size);
-
         return Result::Ok;
     }
 
