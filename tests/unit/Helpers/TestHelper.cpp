@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-constexpr uint64_t BigNumber = 0x100000;
+constexpr uint64_t BigNumber = 0x800000;
 
 }  // namespace
 
@@ -200,7 +200,7 @@ void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     std::thread thread([&] {
         uint16_t firstValue{};
         ExpectOk(readChannel->GetReader().Read(firstValue));
-        EXPECT_EQ(uint16_t(42), firstValue);
+        EXPECT_EQ(static_cast<uint16_t>(42), firstValue);
 
         for (uint64_t i = 0; i < BigNumber; i++) {
             uint64_t receiveValue{};
@@ -211,7 +211,8 @@ void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     });
 
     // Act and assert
-    AssertOk(writeChannel->GetWriter().Write(uint16_t(42)));  // Forcing the following elements to be unaligned
+    AssertOk(
+        writeChannel->GetWriter().Write(static_cast<uint16_t>(42)));  // Forcing the following elements to be unaligned
     for (uint64_t i = 0; i < BigNumber; i++) {
         AssertOk(writeChannel->GetWriter().Write(i));
     }

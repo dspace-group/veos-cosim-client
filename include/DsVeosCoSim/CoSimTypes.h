@@ -10,34 +10,34 @@
 namespace DsVeosCoSim {
 
 // NOLINTBEGIN
-#define ENUM_BITMASK_OPS(TEnum)                                   \
-    constexpr TEnum operator&(TEnum lhs, TEnum rhs) {             \
-        return static_cast<TEnum>(uint32_t(lhs) & uint32_t(rhs)); \
-    }                                                             \
-                                                                  \
-    constexpr TEnum operator|(TEnum lhs, TEnum rhs) {             \
-        return static_cast<TEnum>(uint32_t(lhs) | uint32_t(rhs)); \
-    }                                                             \
-                                                                  \
-    constexpr TEnum operator^(TEnum lhs, TEnum rhs) {             \
-        return static_cast<TEnum>(uint32_t(lhs) ^ uint32_t(rhs)); \
-    }                                                             \
-                                                                  \
-    constexpr TEnum operator~(TEnum lhs) {                        \
-        return static_cast<TEnum>(~uint32_t(lhs));                \
-    }                                                             \
-                                                                  \
-    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs) {          \
-        lhs = lhs | rhs;                                          \
-        return lhs;                                               \
-    }                                                             \
-                                                                  \
-    constexpr bool HasFlag(TEnum flags, TEnum testFlag) {         \
-        return (flags & testFlag) == testFlag;                    \
-    }                                                             \
-                                                                  \
-    constexpr TEnum ClearFlag(TEnum flags, TEnum clearFlag) {     \
-        return flags & ~clearFlag;                                \
+#define ENUM_BITMASK_OPS(TEnum)                                                             \
+    constexpr TEnum operator&(TEnum lhs, TEnum rhs) {                                       \
+        return static_cast<TEnum>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs)); \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum operator|(TEnum lhs, TEnum rhs) {                                       \
+        return static_cast<TEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs)); \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum operator^(TEnum lhs, TEnum rhs) {                                       \
+        return static_cast<TEnum>(static_cast<uint32_t>(lhs) ^ static_cast<uint32_t>(rhs)); \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum operator~(TEnum lhs) {                                                  \
+        return static_cast<TEnum>(~static_cast<uint32_t>(lhs));                             \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs) {                                    \
+        lhs = lhs | rhs;                                                                    \
+        return lhs;                                                                         \
+    }                                                                                       \
+                                                                                            \
+    constexpr bool HasFlag(TEnum flags, TEnum testFlag) {                                   \
+        return (flags & testFlag) == testFlag;                                              \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum ClearFlag(TEnum flags, TEnum clearFlag) {                               \
+        return flags & ~clearFlag;                                                          \
     }
 // NOLINTEND
 

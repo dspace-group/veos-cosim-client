@@ -78,7 +78,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
     uint16_t port = server->GetLocalPort();
 
     // Assert
-    AssertNotEq(uint16_t(0), port);
+    AssertNotEq(static_cast<uint16_t>(0), port);
 }
 
 #ifdef _WIN32
