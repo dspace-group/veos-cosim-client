@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-constexpr uint64_t BigNumber = 0x800000;
+constexpr uint64_t BigNumber = 0x1000000;
 
 }  // namespace
 

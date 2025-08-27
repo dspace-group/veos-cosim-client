@@ -136,6 +136,10 @@ void ClearLastMessage() {
     return LastMessage;
 }
 
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result) {
+    return stream << ToString(result);
+}
+
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) {
     if (first.id != second.id) {
         return false;

@@ -2,11 +2,11 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -36,12 +36,30 @@ public:
     SocketChannelWriter(SocketChannelWriter&&) = delete;
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
+        auto sizeToReserve = static_cast<int32_t>(size);
+        if (BufferSize - _writeIndex < sizeToReserve) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < sizeToReserve) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
+        _writeIndex += sizeToReserve;
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Write(uint16_t value) override {
         auto size = static_cast<int32_t>(sizeof(value));
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -55,7 +73,9 @@ public:
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -69,7 +89,9 @@ public:
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -131,6 +153,17 @@ public:
 
     SocketChannelReader(SocketChannelReader&&) = delete;
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
+
+    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) override {
+        auto blockSize = static_cast<int32_t>(size);
+        while (_endFrameIndex - _readIndex < blockSize) {
+            CheckResult(BeginRead());
+        }
+
+        blockReader = BlockReader(&_readBuffer[static_cast<size_t>(_readIndex)], size);
+        _readIndex += blockSize;
+        return Result::Ok;
+    }
 
     [[nodiscard]] Result Read(uint16_t& value) override {
         auto size = static_cast<int32_t>(sizeof(value));

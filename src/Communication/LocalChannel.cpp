@@ -1,6 +1,5 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <cassert>
 #ifdef _WIN32
 
 #include <algorithm>
@@ -174,12 +173,30 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
+        auto sizeToReserve = static_cast<int32_t>(size);
+        if (BufferSize - _writeIndex < sizeToReserve) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < sizeToReserve) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
+        _writeIndex += sizeToReserve;
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Write(uint16_t value) override {
         auto size = static_cast<int32_t>(sizeof(value));
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -193,7 +210,9 @@ public:
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -207,7 +226,9 @@ public:
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
 
-            assert(BufferSize - _writeIndex >= size);
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
         }
 
         *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
@@ -329,6 +350,17 @@ public:
         CheckResult(InitializeBase(readerName, isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Read");
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) override {
+        auto blockSize = static_cast<int32_t>(size);
+        while (_writeIndex - _readIndex < blockSize) {
+            CheckResult(BeginRead());
+        }
+
+        blockReader = BlockReader(&_readBuffer[static_cast<size_t>(_readIndex)], size);
+        _readIndex += blockSize;
         return Result::Ok;
     }
 

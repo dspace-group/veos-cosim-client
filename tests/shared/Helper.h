@@ -85,6 +85,8 @@ void ClearLastMessage();
 
 void SetEnvVariable(const std::string& name, const std::string& value);
 
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result);
+
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
 [[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& signal);
 

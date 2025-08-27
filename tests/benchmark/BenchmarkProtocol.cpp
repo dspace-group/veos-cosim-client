@@ -21,6 +21,12 @@ public:
         MustBeOk(SharedMemory::CreateOrOpen("My Test", 65536, _sharedMemory));
     }
 
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
+        blockWriter = BlockWriter(reinterpret_cast<uint8_t*>(_sharedMemory.GetData()), size);
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Write(uint16_t value) override {
         *(reinterpret_cast<uint16_t*>(_sharedMemory.GetData())) = value;
         return Result::Ok;
