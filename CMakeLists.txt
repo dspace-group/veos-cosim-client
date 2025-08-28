@@ -15,6 +15,7 @@ set(DSVEOSCOSIM_TYPE STATIC)
 if(MSVC)
   set(
     DSVEOSCOSIM_WARNINGS
+    /permissive-
     /Wall
     /wd4061
     /wd4324

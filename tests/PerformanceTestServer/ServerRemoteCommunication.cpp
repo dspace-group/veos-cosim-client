@@ -1,7 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
 #include <array>
-#include <string>
 #include <thread>
 
 #include "Channel.h"

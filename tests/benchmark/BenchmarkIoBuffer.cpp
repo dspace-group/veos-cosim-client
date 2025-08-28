@@ -35,8 +35,8 @@ void Receive(const IoSignalContainer& signal,
 
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             std::string_view writerName,
-             std::string_view readerName,
+             const std::string& writerName,
+             const std::string& readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     IoSignalContainer signal = CreateSignal(DataType::Int8, SizeKind::Fixed);

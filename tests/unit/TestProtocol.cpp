@@ -76,6 +76,105 @@ INSTANTIATE_TEST_SUITE_P(,
                              return std::string(ToString(info.param));
                          });
 
+TEST_P(TestProtocol, SendAndReceiveSize) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    size_t sendSize = GenerateU32();
+
+    // Act
+    AssertOk(Protocol::WriteSize(_senderChannel->GetWriter(), sendSize));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    size_t receiveSize{};
+    AssertOk(Protocol::ReadSize(_receiverChannel->GetReader(), receiveSize));
+    AssertEq(sendSize, receiveSize);
+}
+
+TEST_P(TestProtocol, SendAndReceiveLength) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    uint32_t sendLength = GenerateU32();
+
+    // Act
+    AssertOk(Protocol::WriteLength(_senderChannel->GetWriter(), sendLength));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    uint32_t receiveLength{};
+    AssertOk(Protocol::ReadLength(_receiverChannel->GetReader(), receiveLength));
+    AssertEq(sendLength, receiveLength);
+}
+
+TEST_P(TestProtocol, SendAndReceiveSignalId) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    IoSignalId sendSignalId = GenerateIoSignalId();
+
+    // Act
+    AssertOk(Protocol::WriteSignalId(_senderChannel->GetWriter(), sendSignalId));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    IoSignalId receiveSignalId{};
+    AssertOk(Protocol::ReadSignalId(_receiverChannel->GetReader(), receiveSignalId));
+    AssertEq(sendSignalId, receiveSignalId);
+}
+
+TEST_P(TestProtocol, SendAndReceiveCanMessageContainer) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    CanMessageContainer sendCanMessageContainer;
+    FillWithRandom(sendCanMessageContainer, GenerateBusControllerId());
+
+    // Act
+    AssertOk(Protocol::WriteMessage(_senderChannel->GetWriter(), sendCanMessageContainer));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    CanMessageContainer receiveCanMessageContainer;
+    AssertOk(Protocol::ReadMessage(_receiverChannel->GetReader(), receiveCanMessageContainer));
+    AssertEq(sendCanMessageContainer, receiveCanMessageContainer);
+}
+
+TEST_P(TestProtocol, SendAndReceiveEthMessageContainer) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    EthMessageContainer sendEthMessageContainer;
+    FillWithRandom(sendEthMessageContainer, GenerateBusControllerId());
+
+    // Act
+    AssertOk(Protocol::WriteMessage(_senderChannel->GetWriter(), sendEthMessageContainer));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    EthMessageContainer receiveEthMessageContainer;
+    AssertOk(Protocol::ReadMessage(_receiverChannel->GetReader(), receiveEthMessageContainer));
+    AssertEq(sendEthMessageContainer, receiveEthMessageContainer);
+}
+
+TEST_P(TestProtocol, SendAndReceiveLinMessageContainer) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    LinMessageContainer sendLinMessageContainer;
+    FillWithRandom(sendLinMessageContainer, GenerateBusControllerId());
+
+    // Act
+    AssertOk(Protocol::WriteMessage(_senderChannel->GetWriter(), sendLinMessageContainer));
+    AssertOk(_senderChannel->GetWriter().EndWrite());
+
+    // Assert
+    LinMessageContainer receiveLinMessageContainer;
+    AssertOk(Protocol::ReadMessage(_receiverChannel->GetReader(), receiveLinMessageContainer));
+    AssertEq(sendLinMessageContainer, receiveLinMessageContainer);
+}
+
 TEST_P(TestProtocol, SendAndReceiveOk) {
     // Arrange
     CustomSetUp(GetParam());

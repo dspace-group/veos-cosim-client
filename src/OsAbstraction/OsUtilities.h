@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -49,7 +48,7 @@ public:
     NamedEvent(NamedEvent&&) = default;
     NamedEvent& operator=(NamedEvent&&) = default;
 
-    [[nodiscard]] static Result CreateOrOpen(std::string_view name, NamedEvent& namedEvent);
+    [[nodiscard]] static Result CreateOrOpen(const std::string& name, NamedEvent& namedEvent);
 
     [[nodiscard]] Result Set() const;
     [[nodiscard]] Result Wait() const;
@@ -72,7 +71,7 @@ public:
     NamedMutex(NamedMutex&&) = default;
     NamedMutex& operator=(NamedMutex&&) = default;
 
-    [[nodiscard]] static Result CreateOrOpen(std::string_view name, NamedMutex& namedMutex);
+    [[nodiscard]] static Result CreateOrOpen(const std::string& name, NamedMutex& namedMutex);
 
     [[nodiscard]] Result Lock();
     void Unlock();
@@ -95,8 +94,8 @@ public:
     SharedMemory(SharedMemory&&) noexcept;
     SharedMemory& operator=(SharedMemory&&) noexcept;
 
-    [[nodiscard]] static Result CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory);
-    [[nodiscard]] static Result TryOpenExisting(std::string_view name,
+    [[nodiscard]] static Result CreateOrOpen(const std::string& name, size_t size, SharedMemory& sharedMemory);
+    [[nodiscard]] static Result TryOpenExisting(const std::string& name,
                                                 size_t size,
                                                 std::optional<SharedMemory>& sharedMemory);
 
@@ -112,7 +111,7 @@ private:
 [[nodiscard]] uint32_t GetCurrentProcessId();
 [[nodiscard]] bool IsProcessRunning(uint32_t processId);
 
-void SetThreadAffinity(std::string_view name);
+void SetThreadAffinity(const std::string& name);
 
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode);
 
@@ -121,13 +120,13 @@ void SetThreadAffinity(std::string_view name);
 #else
 
 #include <cstdint>
-#include <string_view>
+#include <string>
 
 namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
 
-void SetThreadAffinity(std::string_view name);
+void SetThreadAffinity(const std::string& name);
 
 }  // namespace DsVeosCoSim
 

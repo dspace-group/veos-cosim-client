@@ -9,10 +9,10 @@
 [[maybe_unused]] constexpr uint16_t TcpPort = 27101;
 [[maybe_unused]] constexpr uint16_t CommunicationPort = 27102;
 [[maybe_unused]] constexpr uint16_t CoSimPort = 27103;
-[[maybe_unused]] const auto UdsName = "Uds4711";
-[[maybe_unused]] const auto PipeName = "Pipe4711";
-[[maybe_unused]] const auto BeginEventName = "BeginEvent4711";
-[[maybe_unused]] const auto EndEventName = "EndEvent4711";
-[[maybe_unused]] const auto ShmName = "Shm4711";
-[[maybe_unused]] const auto LocalName = "Local4711";
-[[maybe_unused]] const auto CoSimServerName = "TestServer";
+[[maybe_unused]] constexpr char UdsName[] = "Uds4711";
+[[maybe_unused]] constexpr char PipeName[] = "Pipe4711";
+[[maybe_unused]] constexpr char BeginEventName[] = "BeginEvent4711";
+[[maybe_unused]] constexpr char EndEventName[] = "EndEvent4711";
+[[maybe_unused]] constexpr char ShmName[] = "Shm4711";
+[[maybe_unused]] constexpr char LocalName[] = "Local4711";
+[[maybe_unused]] constexpr char CoSimServerName[] = "TestServer";

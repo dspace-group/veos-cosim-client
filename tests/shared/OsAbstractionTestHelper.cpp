@@ -3,7 +3,6 @@
 #include "OsAbstractionTestHelper.h"
 
 #include <string>
-#include <string_view>
 
 #include <fmt/format.h>
 
@@ -40,9 +39,9 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Socket_InitializeAddress(sockaddr_in& address, std::string_view ipAddress, uint16_t port) {
+[[nodiscard]] Result Socket_InitializeAddress(sockaddr_in& address, const std::string& ipAddress, uint16_t port) {
     in_addr ipAddressInt{};
-    int32_t result = inet_pton(AF_INET, ipAddress.data(), &ipAddressInt);
+    int32_t result = inet_pton(AF_INET, ipAddress.c_str(), &ipAddressInt);
     if (result <= 0) {
         LogError("Could not convert IP address string to integer.");
         return Result::Error;
@@ -56,7 +55,7 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] Result InternetAddress::Initialize(std::string_view ipAddress, uint16_t port) {
+[[nodiscard]] Result InternetAddress::Initialize(const std::string& ipAddress, uint16_t port) {
     auto* address = reinterpret_cast<sockaddr_in*>(_address.data());
     return Socket_InitializeAddress(*address, ipAddress, port);
 }
@@ -80,7 +79,7 @@ UdpSocket::~UdpSocket() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result UdpSocket::Bind(std::string_view ipAddress, uint16_t port) const {
+[[nodiscard]] Result UdpSocket::Bind(const std::string& ipAddress, uint16_t port) const {
     sockaddr_in address{};
     CheckResult(Socket_InitializeAddress(address, ipAddress, port));
     int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
@@ -121,7 +120,7 @@ constexpr uint32_t PipeBufferSize = 1024 * 16;
 #endif
 
 #ifndef _WIN32
-[[nodiscard]] Result Pipe::CreatePipe(std::string_view name, pipe_t& pipe) {
+[[nodiscard]] Result Pipe::CreatePipe(const std::string& name, pipe_t& pipe) {
     mkfifo(name.data(), 0666);
 
     pipe = open(name.data(), O_RDWR | O_CLOEXEC);
@@ -143,7 +142,7 @@ Pipe::~Pipe() {
 #endif
 }
 
-[[nodiscard]] Result Pipe::Initialize(std::string_view name) {
+[[nodiscard]] Result Pipe::Initialize(const std::string& name) {
 #ifdef _WIN32
     _name = fmt::format(R"(\\.\pipe\{})", name);
 #else

@@ -4,7 +4,7 @@
 
 #include <chrono>
 #include <cstdint>
-#include <string_view>
+#include <string>
 #include <thread>
 
 #include "Event.h"
@@ -12,7 +12,7 @@
 
 using namespace DsVeosCoSim;
 
-void RunPerformanceTest(const PerformanceTestFunc& function, std::string_view host) {
+void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& host) {
     Event connected;
     uint64_t counter = 0;
     bool isStopped{};

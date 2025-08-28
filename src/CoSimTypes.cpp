@@ -12,7 +12,7 @@
 
 namespace DsVeosCoSim {
 
-extern void LogError(std::string_view message);
+extern void LogError(const std::string& message);
 
 namespace {
 
@@ -49,7 +49,7 @@ namespace {
                                            uint32_t length,
                                            DataType dataType,
                                            SizeKind sizeKind,
-                                           std::string_view name) {
+                                           const std::string& name) {
     std::string str = "IO Signal { Id: ";
     str.append(ToString(id));
     str.append(", Length: ");
@@ -68,9 +68,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 uint64_t flexibleDataRateBitsPerSecond,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "CAN Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -111,23 +111,10 @@ namespace {
     return str;
 }
 
-[[nodiscard]] Result CheckCanMessage(uint32_t length, CanMessageFlags flags) {
+[[nodiscard]] Result CheckCanMessage(uint32_t length) {
     if (length > CanMessageMaxLength) {
         LogError("CAN message data exceeds maximum length.");
         return Result::Error;
-    }
-
-    if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
-        if (length > 8) {
-            LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
-            return Result::Error;
-        }
-
-        if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-            LogError(
-                "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
-            return Result::Error;
-        }
     }
 
     return Result::Ok;
@@ -137,9 +124,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 std::array<uint8_t, EthAddressLength> macAddress,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "ETH Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -190,9 +177,9 @@ namespace {
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 LinControllerType type,
-                                                std::string_view name,
-                                                std::string_view channelName,
-                                                std::string_view clusterName) {
+                                                const std::string& name,
+                                                const std::string& channelName,
+                                                const std::string& clusterName) {
     std::string str = "LIN Controller { Id: ";
     str.append(ToString(id));
     str.append(", QueueSize: ");
@@ -279,7 +266,7 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string_view ToString(Result result) {
+[[nodiscard]] const char* ToString(Result result) {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -298,7 +285,7 @@ namespace {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] std::string_view ToString(CoSimType coSimType) {
+[[nodiscard]] const char* ToString(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -309,7 +296,7 @@ namespace {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionKind connectionKind) {
+[[nodiscard]] const char* ToString(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -320,7 +307,7 @@ namespace {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] std::string_view ToString(Command command) {
+[[nodiscard]] const char* ToString(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -345,7 +332,7 @@ namespace {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] std::string_view ToString(Severity severity) {
+[[nodiscard]] const char* ToString(Severity severity) {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -360,7 +347,7 @@ namespace {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] std::string_view ToString(TerminateReason terminateReason) {
+[[nodiscard]] const char* ToString(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -371,7 +358,7 @@ namespace {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] std::string_view ToString(ConnectionState connectionState) {
+[[nodiscard]] const char* ToString(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -404,7 +391,7 @@ namespace {
     return 0;
 }
 
-[[nodiscard]] std::string_view ToString(DataType dataType) {
+[[nodiscard]] const char* ToString(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -433,7 +420,7 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string_view ToString(SizeKind sizeKind) {
+[[nodiscard]] const char* ToString(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -457,7 +444,7 @@ namespace {
     return oss.str();
 }
 
-[[nodiscard]] std::string_view ToString(SimulationState simulationState) {
+[[nodiscard]] const char* ToString(SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -474,7 +461,7 @@ namespace {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] std::string_view ToString([[maybe_unused]] Mode mode) {
+[[nodiscard]] const char* ToString([[maybe_unused]] Mode mode) {
     return "<Unused>";
 }
 
@@ -650,7 +637,7 @@ namespace {
 }
 
 [[nodiscard]] Result CanMessage::Check() const {
-    return CheckCanMessage(length, flags);
+    return CheckCanMessage(length);
 }
 
 void CanMessage::WriteTo(CanMessageContainer& messageContainer) const {
@@ -667,7 +654,7 @@ void CanMessage::WriteTo(CanMessageContainer& messageContainer) const {
 }
 
 [[nodiscard]] Result CanMessageContainer::Check() const {
-    return CheckCanMessage(length, flags);
+    return CheckCanMessage(length);
 }
 
 void CanMessageContainer::WriteTo(CanMessage& message) const {
@@ -783,7 +770,7 @@ void EthMessageContainer::WriteTo(EthMessage& message) const {
     message.data = data.data();
 }
 
-[[nodiscard]] std::string_view ToString(LinControllerType type) {
+[[nodiscard]] const char* ToString(LinControllerType type) {
     switch (type) {
         case LinControllerType::Responder:
             return "Responder";
@@ -934,6 +921,47 @@ void LinMessageContainer::WriteTo(LinMessage& message) const {
     message.flags = flags;
     message.length = length;
     message.data = data.data();
+}
+
+[[nodiscard]] const char* ToString(FrameKind frameKind) {
+    switch (frameKind) {
+        case FrameKind::Ping:
+            return "Ping";
+        case FrameKind::PingOk:
+            return "PingOk";
+        case FrameKind::Ok:
+            return "Ok";
+        case FrameKind::Error:
+            return "Error";
+        case FrameKind::Start:
+            return "Start";
+        case FrameKind::Stop:
+            return "Stop";
+        case FrameKind::Terminate:
+            return "Terminate";
+        case FrameKind::Pause:
+            return "Pause";
+        case FrameKind::Continue:
+            return "Continue";
+        case FrameKind::Step:
+            return "Step";
+        case FrameKind::StepOk:
+            return "StepOk";
+        case FrameKind::Connect:
+            return "Connect";
+        case FrameKind::ConnectOk:
+            return "ConnectOk";
+        case FrameKind::GetPort:
+            return "GetPort";
+        case FrameKind::GetPortOk:
+            return "GetPortOk";
+        case FrameKind::SetPort:
+            return "SetPort";
+        case FrameKind::UnsetPort:
+            return "UnsetPort";
+    }
+
+    return "<Invalid FrameKind>";
 }
 
 }  // namespace DsVeosCoSim

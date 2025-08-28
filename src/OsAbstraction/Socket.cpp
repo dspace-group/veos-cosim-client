@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <optional>
 #include <string>
-#include <string_view>
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -63,7 +62,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 using AddressInfoPtr = addrinfo*;
 
-[[nodiscard]] std::string GetUdsPath(std::string_view name) {
+[[nodiscard]] std::string GetUdsPath(const std::string& name) {
     std::string fileName = "dSPACE.VEOS.CoSim.";
     fileName.append(name);
 #ifdef _WIN32
@@ -83,7 +82,9 @@ using AddressInfoPtr = addrinfo*;
 #endif
 }
 
-[[nodiscard]] Result ConvertToInternetAddress(std::string_view ipAddress, uint16_t port, AddressInfoPtr& addressInfo) {
+[[nodiscard]] Result ConvertToInternetAddress(const std::string& ipAddress,
+                                              uint16_t port,
+                                              AddressInfoPtr& addressInfo) {
     std::string portString = std::to_string(port);
 
     addrinfo hints{};
@@ -91,7 +92,7 @@ using AddressInfoPtr = addrinfo*;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    int32_t errorCode = getaddrinfo(ipAddress.data(), portString.c_str(), &hints, &addressInfo);
+    int32_t errorCode = getaddrinfo(ipAddress.c_str(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
         LogSystemError("Could not get address information.", errorCode);
         return Result::Error;
@@ -257,7 +258,7 @@ void CloseSocket(SocketHandle socket) {
 
 }  // namespace
 
-[[nodiscard]] std::string_view ToString(AddressFamily addressFamily) {
+[[nodiscard]] const char* ToString(AddressFamily addressFamily) {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";
@@ -289,7 +290,7 @@ void CloseSocket(SocketHandle socket) {
     return Result::Ok;
 }
 
-Socket::Socket(SocketHandle socket, AddressFamily addressFamily, std::string_view path)
+Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path)
     : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
@@ -450,7 +451,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::TryConnect(std::string_view ipAddress,
+[[nodiscard]] Result Socket::TryConnect(const std::string& ipAddress,
                                         uint16_t remotePort,
                                         uint16_t localPort,
                                         uint32_t timeoutInMilliseconds,
@@ -504,7 +505,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::TryConnect(std::string_view name, std::optional<Socket>& connectedSocket) {
+[[nodiscard]] Result Socket::TryConnect(const std::string& name, std::optional<Socket>& connectedSocket) {
     if (name.empty()) {
         LogError("Empty name is not valid.");
         return Result::Error;
@@ -582,7 +583,7 @@ void Socket::Close() {
     return Result::Ok;
 }
 
-[[nodiscard]] Result Socket::Bind(std::string_view name) {
+[[nodiscard]] Result Socket::Bind(const std::string& name) {
     if (_addressFamily != AddressFamily::Uds) {
         LogError("Not supported for address family.");
         return Result::Error;
@@ -761,18 +762,19 @@ void Socket::Close() {
     return ConvertFromInternetAddress(address, remoteAddress);
 }
 
-[[nodiscard]] Result Socket::Receive(void* destination, int32_t size, int32_t& receivedSize) const {
+[[nodiscard]] Result Socket::Receive(void* destination, size_t size, size_t& receivedSize) const {
 #ifdef _WIN32
-    receivedSize = recv(_socket, static_cast<char*>(destination), size, 0);
+    int32_t receivedSizeTmp = recv(_socket, static_cast<char*>(destination), static_cast<int32_t>(size), 0);
 #else
-    receivedSize = static_cast<int32_t>(recv(_socket, destination, size, MSG_NOSIGNAL));
+    ssize_t receivedSizeTmp = recv(_socket, destination, size, MSG_NOSIGNAL);
 #endif
 
-    if (receivedSize > 0) {
+    if (receivedSizeTmp > 0) {
+        receivedSize = static_cast<size_t>(receivedSizeTmp);
         return Result::Ok;
     }
 
-    if (receivedSize == 0) {
+    if (receivedSizeTmp == 0) {
         LogTrace("Remote endpoint disconnected.");
         return Result::Disconnected;
     }
@@ -792,35 +794,43 @@ void Socket::Close() {
     return Result::Error;
 }
 
-[[nodiscard]] Result Socket::Send(const void* source, int32_t size, int32_t& sentSize) const {
+[[nodiscard]] Result Socket::Send(const void* source, size_t size) const {
+    auto buffer = static_cast<const char*>(source);
+
+    while (size > 0) {
 #ifdef _WIN32
-    sentSize = send(_socket, static_cast<const char*>(source), size, 0);
+        int32_t sentSize = send(_socket, buffer, static_cast<int32_t>(size), 0);
 #else
-    sentSize = static_cast<int32_t>(send(_socket, source, size, MSG_NOSIGNAL));
+        ssize_t sentSize = send(_socket, buffer, size, MSG_NOSIGNAL);
 #endif
 
-    if (sentSize > 0) {
-        return Result::Ok;
-    }
+        if (sentSize > 0) {
+            size -= static_cast<size_t>(sentSize);
+            buffer += static_cast<size_t>(sentSize);
+            continue;
+        }
 
-    if (sentSize == 0) {
-        LogTrace("Remote endpoint disconnected.");
-        return Result::Disconnected;
-    }
+        if (sentSize == 0) {
+            LogTrace("Remote endpoint disconnected.");
+            return Result::Disconnected;
+        }
 
-    int32_t errorCode = GetLastNetworkError();
+        int32_t errorCode = GetLastNetworkError();
 
-    if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
+        if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
 #ifndef _WIN32
-        || (errorCode == ErrorCodeBrokenPipe)
+            || (errorCode == ErrorCodeBrokenPipe)
 #endif
-    ) {
-        LogTrace("Remote endpoint disconnected.");
-        return Result::Disconnected;
+        ) {
+            LogTrace("Remote endpoint disconnected.");
+            return Result::Disconnected;
+        }
+
+        LogSystemError("Could not send to remote endpoint.", errorCode);
+        return Result::Error;
     }
 
-    LogSystemError("Could not send to remote endpoint.", errorCode);
-    return Result::Error;
+    return Result::Ok;
 }
 
 }  // namespace DsVeosCoSim

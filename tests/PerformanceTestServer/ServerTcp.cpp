@@ -44,7 +44,7 @@ namespace {
                 break;
             }
 
-            if (!IsOk(SendComplete(*acceptedSocket, buffer.data(), BufferSize))) {
+            if (!IsOk(acceptedSocket->Send(buffer.data(), BufferSize))) {
                 break;
             }
         }

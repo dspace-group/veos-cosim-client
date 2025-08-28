@@ -3,7 +3,6 @@
 #include "Helper.h"
 
 #include <string>
-#include <string_view>
 
 #include <fmt/color.h>
 
@@ -32,12 +31,12 @@ std::string LastMessage;
     return socket.GetLocalPort(port);
 }
 
-[[nodiscard]] bool Equals(std::string_view first, std::string_view second) {
+[[nodiscard]] bool Equals(const std::string& first, const std::string& second) {
     if (first.length() != second.length()) {
         return false;
     }
 
-    return strcmp(first.data(), second.data()) == 0;
+    return strcmp(first.c_str(), second.c_str()) == 0;
 }
 
 [[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) {
@@ -71,10 +70,6 @@ template <typename T, size_t TSize>
     return GenerateRandom(SizeKind::Fixed, SizeKind::Variable);
 }
 
-[[nodiscard]] BusControllerId GenerateBusControllerId() {
-    return static_cast<BusControllerId>(GenerateU32());
-}
-
 [[nodiscard]] BusMessageId GenerateBusMessageId() {
     return static_cast<BusMessageId>(GenerateU32());
 }
@@ -99,7 +94,7 @@ void InitializeOutput() {
     SetLogCallback(OnLogCallback);
 }
 
-void OnLogCallback(Severity severity, std::string_view message) {
+void OnLogCallback(Severity severity, const std::string& message) {
     LastMessage = message;
     switch (severity) {
         case Severity::Error:
@@ -139,6 +134,10 @@ void ClearLastMessage() {
 
 [[nodiscard]] std::string GetLastMessage() {
     return LastMessage;
+}
+
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result) {
+    return stream << ToString(result);
 }
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) {
@@ -479,7 +478,7 @@ void ClearLastMessage() {
     return Result::Ok;
 }
 
-void SetEnvVariable(std::string_view name, std::string_view value) {
+void SetEnvVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
     std::string environmentString(name);
     environmentString.append("=");
@@ -490,7 +489,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 #endif
 }
 
-[[nodiscard]] std::string_view GetLoopBackAddress(AddressFamily addressFamily) {
+[[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily) {
     if (addressFamily == AddressFamily::Ipv4) {
         return "127.0.0.1";
     }
@@ -498,24 +497,11 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
     return "::1";
 }
 
-[[nodiscard]] Result SendComplete(const Socket& socket, const void* buffer, size_t length) {
-    const auto* bufferPointer = static_cast<const uint8_t*>(buffer);
-    while (length > 0) {
-        int32_t sentSize{};
-        CheckResult(socket.Send(bufferPointer, static_cast<int32_t>(length), sentSize));
-
-        length -= sentSize;
-        bufferPointer += sentSize;
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
-        int32_t receivedSize{};
-        CheckResult(socket.Receive(bufferPointer, static_cast<int32_t>(length), receivedSize));
+        size_t receivedSize{};
+        CheckResult(socket.Receive(bufferPointer, length, receivedSize));
 
         length -= receivedSize;
         bufferPointer += receivedSize;
@@ -526,7 +512,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<CanController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, busBuffer);
@@ -534,7 +520,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<EthController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, busBuffer);
@@ -542,7 +528,7 @@ void SetEnvVariable(std::string_view name, std::string_view value) {
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<LinController>& controllers,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, busBuffer);
@@ -576,7 +562,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
 }
 
-[[nodiscard]] std::string GenerateString(std::string_view prefix) {
+[[nodiscard]] std::string GenerateString(const std::string& prefix) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 
@@ -586,6 +572,14 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max) {
     return static_cast<BusMessageId>(GenerateRandom(min, max));
+}
+
+[[nodiscard]] BusControllerId GenerateBusControllerId() {
+    return static_cast<BusControllerId>(GenerateU32());
+}
+
+[[nodiscard]] IoSignalId GenerateIoSignalId() {
+    return static_cast<IoSignalId>(GenerateU32());
 }
 
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length) {
@@ -608,7 +602,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] IoSignalContainer CreateSignal(DataType dataType, SizeKind sizeKind) {
     IoSignalContainer signal{};
-    signal.id = static_cast<IoSignalId>(GenerateU32());
+    signal.id = GenerateIoSignalId();
     signal.length = GenerateRandom(1U, 4U);
     signal.dataType = dataType;
     signal.sizeKind = sizeKind;

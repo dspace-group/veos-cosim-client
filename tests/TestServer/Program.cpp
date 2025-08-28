@@ -5,7 +5,6 @@
 #include <cstring>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -155,7 +154,7 @@ SimulationTime CurrentTime;
 std::unique_ptr<ServerWrapper> Server;
 SimulationState State;
 
-void PrintStatus(bool value, std::string_view what) {
+void PrintStatus(bool value, const std::string& what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -448,7 +447,7 @@ void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTim
     LogLinMessageContainer(messageContainer);
 }
 
-[[nodiscard]] Result LoadSimulation(bool isClientOptional, std::string_view name) {
+[[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
     LogInfo("Loading ...");
 
     if (State != SimulationState::Unloaded) {
@@ -497,7 +496,7 @@ void UnloadSimulation() {
     LogInfo("Unloaded.");
 }
 
-[[nodiscard]] Result HostServer(bool isClientOptional, std::string_view name) {
+[[nodiscard]] Result HostServer(bool isClientOptional, const std::string& name) {
     CheckResult(LoadSimulation(isClientOptional, name));
 
     while (true) {
@@ -548,13 +547,13 @@ void UnloadSimulation() {
 
 }  // namespace
 
-int32_t main(int32_t argc, char** argv) {
+int main(int argc, char** argv) {
     InitializeOutput();
 
     std::string name = "CoSimTest";
     bool isClientOptional = false;
 
-    for (int32_t i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--name") == 0) {
             if (++i < argc) {
                 name = argv[i];

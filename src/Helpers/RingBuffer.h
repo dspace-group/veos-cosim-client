@@ -2,9 +2,8 @@
 
 #pragma once
 
+#include <stdexcept>
 #include <vector>
-
-#include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
 
@@ -42,53 +41,47 @@ public:
         return _size == _items.size();
     }
 
-    [[nodiscard]] Result PushBack(const T& item) {
+    void PushBack(const T& item) {
         if (IsFull()) {
-            LogError("Ring buffer is full.");
-            return Result::Error;
+            throw std::runtime_error("Ring buffer is full.");
         }
 
         size_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = item;
         _writeIndex = (_writeIndex + 1) % _items.size();
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] Result PushBack(T&& item) {
+    void PushBack(T&& item) {
         if (IsFull()) {
-            LogError("Ring buffer is full.");
-            return Result::Error;
+            throw std::runtime_error("Ring buffer is full.");
         }
 
         size_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(item);
         _writeIndex = (_writeIndex + 1) % _items.size();
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] T* EmplaceBack() {
+    [[nodiscard]] T& EmplaceBack() {
         if (IsFull()) {
-            LogError("Ring buffer is full.");
-            return nullptr;
+            throw std::runtime_error("Ring buffer is full.");
         }
 
         size_t currentWriteIndex = _writeIndex;
-        T* item = &_items[currentWriteIndex];
+        T& item = _items[currentWriteIndex];
         _writeIndex = (_writeIndex + 1) % _items.size();
         ++_size;
         return item;
     }
 
-    [[nodiscard]] T* PopFront() {
+    [[nodiscard]] T& PopFront() {
         if (IsEmpty()) {
-            LogError("Ring buffer is empty.");
-            return nullptr;
+            throw std::runtime_error("Ring buffer is empty.");
         }
 
         --_size;
-        T* item = &_items[_readIndex];
+        T& item = _items[_readIndex];
         _readIndex = (_readIndex + 1) % _items.size();
         return item;
     }

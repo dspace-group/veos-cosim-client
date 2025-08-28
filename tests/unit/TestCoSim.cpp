@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <string_view>
+#include <string>
 #include <thread>
 
 #include "DsVeosCoSim/CoSimClient.h"
@@ -63,7 +63,7 @@ auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
 }
 
 [[nodiscard]] ConnectConfig CreateConnectConfig(ConnectionKind connectionKind,
-                                                std::string_view serverName,
+                                                const std::string& serverName,
                                                 uint16_t port) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;

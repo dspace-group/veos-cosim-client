@@ -318,6 +318,7 @@ public:
 
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
+        CheckResult(CheckCanMessage(message.flags, message.length));
 
         return _busBuffer->Transmit(message);
     }
@@ -336,6 +337,7 @@ public:
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
+        CheckResult(CheckCanMessage(messageContainer.flags, messageContainer.length));
 
         return _busBuffer->Transmit(messageContainer);
     }
@@ -861,6 +863,29 @@ private:
         if (_channel) {
             _channel->Disconnect();
         }
+    }
+
+    [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
+        if (length > CanMessageMaxLength) {
+            LogError("CAN message data exceeds maximum length.");
+            return Result::Error;
+        }
+
+        if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
+            if (length > 8) {
+                LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
+                return Result::Error;
+            }
+
+            if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
+                LogError(
+                    "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format "
+                    "flag.");
+                return Result::Error;
+            }
+        }
+
+        return Result::Ok;
     }
 
     std::unique_ptr<Channel> _channel;

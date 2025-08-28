@@ -5,7 +5,7 @@
 #ifdef ALL_COMMUNICATION_TESTS
 
 #include <array>
-#include <string_view>
+#include <string>
 
 #include "CoSimHelper.h"
 #include "OsAbstractionTestHelper.h"
@@ -15,7 +15,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     UdpSocket clientSocket;
     CheckResult(clientSocket.Initialize());
 
@@ -39,7 +39,7 @@ namespace {
     return Result::Ok;
 }
 
-void UdpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void UdpClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run UDP client.");
     }
@@ -47,7 +47,7 @@ void UdpClientRun(std::string_view host, Event& connectedEvent, uint64_t& counte
 
 }  // namespace
 
-void RunUdpTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunUdpTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("UDP:");
     RunPerformanceTest(UdpClientRun, host);
     LogTrace("");
@@ -55,7 +55,7 @@ void RunUdpTest(std::string_view host) {  // NOLINT(misc-use-internal-linkage)
 
 #else
 
-void RunUdpTest([[maybe_unused]] std::string_view host) {  // NOLINT(misc-use-internal-linkage)
+void RunUdpTest([[maybe_unused]] const std::string& host) {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif  // ALL_COMMUNICATION_TESTS

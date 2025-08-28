@@ -14,6 +14,7 @@
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
+#include "Protocol.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -25,70 +26,6 @@
 namespace DsVeosCoSim {
 
 namespace {
-
-[[nodiscard]] Result SerializeTo(const CanMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(CanMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result SerializeTo(const EthMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(EthMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result SerializeTo(const LinMessageContainer& messageContainer, ChannelWriter& writer) {
-    CheckResultWithMessage(writer.Write(messageContainer.timestamp), "Could not write timestamp.");
-    CheckResultWithMessage(writer.Write(messageContainer.controllerId), "Could not write controller id.");
-    CheckResultWithMessage(writer.Write(messageContainer.id), "Could not write id.");
-    CheckResultWithMessage(writer.Write(messageContainer.flags), "Could not write flags.");
-    CheckResultWithMessage(writer.Write(messageContainer.length), "Could not write length.");
-    CheckResultWithMessage(writer.Write(messageContainer.data.data(), messageContainer.length),
-                           "Could not write data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result DeserializeFrom(LinMessageContainer& messageContainer, ChannelReader& reader) {
-    CheckResultWithMessage(reader.Read(messageContainer.timestamp), "Could not read timestamp.");
-    CheckResultWithMessage(reader.Read(messageContainer.controllerId), "Could not read controller id.");
-    CheckResultWithMessage(reader.Read(messageContainer.id), "Could not read id.");
-    CheckResultWithMessage(reader.Read(messageContainer.flags), "Could not read flags.");
-    CheckResultWithMessage(reader.Read(messageContainer.length), "Could not read length.");
-    CheckResult(messageContainer.Check());
-    CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-    return Result::Ok;
-}
 
 template <typename TMessage, typename TMessageContainer, typename TController>
 class BusProtocolBufferBase {
@@ -117,7 +54,7 @@ public:
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<TController>& controllers) {
         _coSimType = coSimType;
 
@@ -211,7 +148,7 @@ public:
     }
 
 protected:
-    [[nodiscard]] virtual Result InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) = 0;
+    [[nodiscard]] virtual Result InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) = 0;
 
     virtual void ClearDataInternal() = 0;
 
@@ -266,7 +203,7 @@ public:
     RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
 
 protected:
-    [[nodiscard]] Result InitializeInternal([[maybe_unused]] std::string_view name,
+    [[nodiscard]] Result InitializeInternal([[maybe_unused]] const std::string& name,
                                             size_t totalQueueItemsCountPerBuffer) override {
         _messageCountPerController.resize(this->_controllers.size());
         _messageBuffer = RingBuffer<TMessageContainer>(totalQueueItemsCountPerBuffer);
@@ -308,12 +245,8 @@ protected:
         CheckResult(Base::FindController(message.controllerId, extension));
         CheckResult(CheckForSpace(extension));
 
-        TMessageContainer* messageContainer = _messageBuffer.EmplaceBack();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        message.WriteTo(*messageContainer);
+        TMessageContainer& messageContainer = _messageBuffer.EmplaceBack();
+        message.WriteTo(messageContainer);
 
         ++_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
@@ -326,7 +259,7 @@ protected:
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
         CheckResult(CheckForSpace(extension));
 
-        CheckResult(_messageBuffer.PushBack(messageContainer));
+        _messageBuffer.PushBack(messageContainer);
         ++_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
     }
@@ -336,15 +269,11 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* messageContainer = _messageBuffer.PopFront();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer->WriteTo(message);
+        TMessageContainer& messageContainer = _messageBuffer.PopFront();
+        messageContainer.WriteTo(message);
 
         ExtensionPtr extension{};
-        CheckResult(Base::FindController(messageContainer->controllerId, extension));
+        CheckResult(Base::FindController(messageContainer.controllerId, extension));
         --_messageCountPerController[extension->controllerIndex];
         return Result::Ok;
     }
@@ -354,12 +283,7 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* tmpMessageContainer = _messageBuffer.PopFront();
-        if (!tmpMessageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer = *tmpMessageContainer;
+        messageContainer = _messageBuffer.PopFront();
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
@@ -368,20 +292,17 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        auto count = static_cast<uint32_t>(_messageBuffer.Size());
-        CheckResultWithMessage(writer.Write(count), "Could not write count of messages.");
+        size_t count = _messageBuffer.Size();
+        CheckResultWithMessage(Protocol::WriteSize(writer, count), "Could not write count of messages.");
 
-        for (uint32_t i = 0; i < count; i++) {
-            TMessageContainer* messageContainer = _messageBuffer.PopFront();
-            if (!messageContainer) {
-                return Result::Error;
-            }
+        for (size_t i = 0; i < count; i++) {
+            TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer->ToString());
+                LogProtocolDataTrace(messageContainer.ToString());
             }
 
-            CheckResultWithMessage(SerializeTo(*messageContainer, writer), "Could not serialize message.");
+            CheckResultWithMessage(Protocol::WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
         for (auto& [id, extension] : Base::_controllers) {
@@ -396,12 +317,12 @@ protected:
         SimulationTime simulationTime,
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
-        uint32_t totalCount{};
-        CheckResultWithMessage(reader.Read(totalCount), "Could not read count of messages.");
+        size_t totalCount{};
+        CheckResultWithMessage(Protocol::ReadSize(reader, totalCount), "Could not read count of messages.");
 
-        for (uint32_t i = 0; i < totalCount; i++) {
+        for (size_t i = 0; i < totalCount; i++) {
             TMessageContainer messageContainer{};
-            CheckResultWithMessage(DeserializeFrom(messageContainer, reader), "Could not deserialize message.");
+            CheckResultWithMessage(Protocol::ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTrace(messageContainer.ToString());
@@ -435,7 +356,7 @@ protected:
             }
 
             ++_messageCountPerController[extension->controllerIndex];
-            CheckResult(_messageBuffer.PushBack(std::move(messageContainer)));
+            _messageBuffer.PushBack(std::move(messageContainer));
         }
 
         return Result::Ok;
@@ -483,53 +404,47 @@ public:
         return _size == _capacity;
     }
 
-    [[nodiscard]] Result PushBack(const T& item) {
+    void PushBack(const T& item) {
         if (IsFull()) {
-            LogError("SHM ring buffer is full.");
-            return Result::Ok;
+            throw std::runtime_error("SHM ring buffer is full.");
         }
 
         uint32_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = item;
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] Result PushBack(T&& item) {
+    void PushBack(T&& item) {
         if (IsFull()) {
-            LogError("SHM ring buffer is full.");
-            return Result::Ok;
+            throw std::runtime_error("SHM ring buffer is full.");
         }
 
         uint32_t currentWriteIndex = _writeIndex;
         _items[currentWriteIndex] = std::move(item);
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
-        return Result::Ok;
     }
 
-    [[nodiscard]] T* EmplaceBack() {
+    [[nodiscard]] T& EmplaceBack() {
         if (IsFull()) {
-            LogError("SHM Ring buffer is full.");
-            return nullptr;
+            throw std::runtime_error("SHM Ring buffer is full.");
         }
 
         size_t currentWriteIndex = _writeIndex;
-        T* item = &_items[currentWriteIndex];
+        T& item = _items[currentWriteIndex];
         _writeIndex = (_writeIndex + 1) % _capacity;
         ++_size;
         return item;
     }
 
-    [[nodiscard]] T* PopFront() {
+    [[nodiscard]] T& PopFront() {
         if (IsEmpty()) {
-            LogError("SHM ring buffer is empty.");
-            return nullptr;
+            throw std::runtime_error("SHM ring buffer is empty.");
         }
 
         --_size;
-        T* item = &_items[_readIndex];
+        T& item = _items[_readIndex];
         _readIndex = (_readIndex + 1) % _capacity;
         return item;
     }
@@ -563,7 +478,7 @@ public:
     LocalBusProtocolBuffer& operator=(LocalBusProtocolBuffer&&) = delete;
 
 protected:
-    [[nodiscard]] Result InitializeInternal(std::string_view name, size_t totalQueueItemsCountPerBuffer) override {
+    [[nodiscard]] Result InitializeInternal(const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
         // The memory layout looks like this:
         // [ list of message count per controller ]
         // [ message buffer ]
@@ -630,12 +545,9 @@ protected:
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
         CheckResult(CheckForSpace(messageCount, extension));
 
-        TMessageContainer* messageContainer = _messageBuffer->EmplaceBack();
-        if (!messageContainer) {
-            return Result::Error;
-        }
+        TMessageContainer& messageContainer = _messageBuffer->EmplaceBack();
 
-        message.WriteTo(*messageContainer);
+        message.WriteTo(messageContainer);
         messageCount.fetch_add(1);
         return Result::Ok;
     }
@@ -648,7 +560,7 @@ protected:
         std::atomic<uint32_t>& messageCount = _messageCountPerController[extension->controllerIndex];
         CheckResult(CheckForSpace(messageCount, extension));
 
-        CheckResult(_messageBuffer->PushBack(messageContainer));
+        _messageBuffer->PushBack(messageContainer);
         messageCount.fetch_add(1);
         return Result::Ok;
     }
@@ -658,12 +570,8 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* messageContainer = _messageBuffer->PopFront();
-        if (!messageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer->WriteTo(message);
+        TMessageContainer& messageContainer = _messageBuffer->PopFront();
+        messageContainer.WriteTo(message);
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(message.controllerId, extension));
@@ -678,12 +586,7 @@ protected:
             return Result::Empty;
         }
 
-        TMessageContainer* tmpMessageContainer = _messageBuffer->PopFront();
-        if (!tmpMessageContainer) {
-            return Result::Error;
-        }
-
-        messageContainer = *tmpMessageContainer;
+        messageContainer = _messageBuffer->PopFront();
 
         ExtensionPtr extension{};
         CheckResult(Base::FindController(messageContainer.controllerId, extension));
@@ -694,7 +597,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(writer.Write<uint32_t>(_messageBuffer->Size()), "Could not write transmit count.");
+        CheckResultWithMessage(Protocol::WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
         return Result::Ok;
     }
 
@@ -703,8 +606,8 @@ protected:
         SimulationTime simulationTime,
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
-        uint32_t receiveCount{};
-        CheckResultWithMessage(reader.Read(receiveCount), "Could not read receive count.");
+        size_t receiveCount{};
+        CheckResultWithMessage(Protocol::ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
 
         if (!messageCallback && !messageContainerCallback) {
@@ -712,29 +615,26 @@ protected:
         }
 
         while (_totalReceiveCount > 0) {
-            TMessageContainer* messageContainer = _messageBuffer->PopFront();
-            if (!messageContainer) {
-                return Result::Error;
-            }
+            TMessageContainer& messageContainer = _messageBuffer->PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer->ToString());
+                LogProtocolDataTrace(messageContainer.ToString());
             }
 
             ExtensionPtr extension{};
-            CheckResult(Base::FindController(messageContainer->controllerId, extension));
+            CheckResult(Base::FindController(messageContainer.controllerId, extension));
             std::atomic<uint32_t>& receiveCountPerController = _messageCountPerController[extension->controllerIndex];
             receiveCountPerController.fetch_sub(1);
             _totalReceiveCount--;
 
             if (messageContainerCallback) {
-                messageContainerCallback(simulationTime, extension->info, *messageContainer);
+                messageContainerCallback(simulationTime, extension->info, messageContainer);
                 continue;
             }
 
             if (messageCallback) {
                 TMessage message{};
-                messageContainer->WriteTo(message);
+                messageContainer.WriteTo(message);
                 messageCallback(simulationTime, extension->info, message);
                 continue;
             }
@@ -744,7 +644,7 @@ protected:
     }
 
 private:
-    uint32_t _totalReceiveCount{};
+    size_t _totalReceiveCount{};
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessageContainer>* _messageBuffer{};
 
@@ -772,7 +672,7 @@ public:
     BusBufferImpl() = default;
     [[nodiscard]] Result Initialize(CoSimType coSimType,
                                     [[maybe_unused]] ConnectionKind connectionKind,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<CanController>& canControllers,
                                     const std::vector<EthController>& ethControllers,
                                     const std::vector<LinController>& linControllers) {
@@ -798,8 +698,8 @@ public:
         }
 #endif
 
-        std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
-        std::string_view suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
+        const char* suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
+        const char* suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
         std::string canTransmitBufferName(name);
         canTransmitBufferName.append(".Can.");
@@ -938,7 +838,7 @@ private:
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
-                                     std::string_view name,
+                                     const std::string& name,
                                      const std::vector<CanController>& canControllers,
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,

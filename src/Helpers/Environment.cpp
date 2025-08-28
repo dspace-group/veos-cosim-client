@@ -5,14 +5,13 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
-#include <string_view>
 
 namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool TryGetDecimalValue(std::string_view name, ptrdiff_t& intValue) {
-    char* stringValue = std::getenv(name.data());
+[[nodiscard]] bool TryGetDecimalValue(const std::string& name, ptrdiff_t& intValue) {
+    char* stringValue = std::getenv(name.c_str());
     if (stringValue) {
         char* end{};
         if constexpr (sizeof(void*) == 8) {
@@ -27,8 +26,8 @@ namespace {
     return false;
 }
 
-[[nodiscard]] bool TryGetHexValue(std::string_view name, size_t& hexValue) {
-    char* stringValue = std::getenv(name.data());
+[[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
+    char* stringValue = std::getenv(name.c_str());
     if (stringValue) {
         char* end{};
         if constexpr (sizeof(void*) == 8) {
@@ -43,7 +42,7 @@ namespace {
     return false;
 }
 
-[[nodiscard]] bool GetBoolValue(std::string_view name) {
+[[nodiscard]] bool GetBoolValue(const std::string& name) {
     ptrdiff_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
         return intValue != 0;
@@ -66,7 +65,7 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetSpinCount(std::string_view name, uint32_t& spinCount) {
+[[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
     ptrdiff_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
         if ((intValue >= 0) && (intValue <= UINT32_MAX)) {
@@ -110,9 +109,9 @@ namespace {
     return Port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount(std::string_view name, std::string_view part, std::string_view direction) {
+[[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction) {
     constexpr uint32_t defaultSpinCount = 0;
-    std::string_view environmentVariableName = "VEOS_COSIM_SPIN_COUNT";
+    constexpr char environmentVariableName[] = "VEOS_COSIM_SPIN_COUNT";
 
     uint32_t spinCount{};
 
@@ -141,8 +140,8 @@ namespace {
     return defaultSpinCount;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
-    std::string_view environmentVariableName = "VEOS_COSIM_AFFINITY_MASK";
+[[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
+    constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
     std::string fullName(environmentVariableName);
     fullName.append("_");

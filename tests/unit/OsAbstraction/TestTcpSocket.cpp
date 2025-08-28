@@ -82,7 +82,7 @@ TEST_P(TestTcpSocket, LocalPortIsNotZeroAfterBind) {
     AssertOk(serverSocket.GetLocalPort(localPort));
 
     // Assert
-    AssertNotEq(uint16_t(0), localPort);
+    AssertNotEq(static_cast<uint16_t>(0), localPort);
 }
 
 TEST_P(TestTcpSocket, Listen) {
@@ -245,7 +245,7 @@ TEST_P(TestTcpSocket, SendAndReceive) {
     uint32_t receiveValue = 0;
 
     // Act
-    AssertOk(SendComplete(*connectedSocket, &sendValue, sizeof(sendValue)));
+    AssertOk(connectedSocket->Send(&sendValue, sizeof(sendValue)));
     AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
 
     // Assert

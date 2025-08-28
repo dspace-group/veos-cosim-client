@@ -20,12 +20,12 @@ namespace DsVeosCoSim {
 
 namespace {
 
-constexpr uint32_t LockFreeCacheLineBytes = 64;
-constexpr uint32_t ServerSharedMemorySize = 4;
-constexpr uint32_t BufferSize = 64 * 1024;
+constexpr size_t LockFreeCacheLineBytes = 64;
+constexpr size_t ServerSharedMemorySize = 4;
+constexpr int32_t BufferSize = 65536;
 
-const auto ServerToClientPostFix = "ServerToClient";
-const auto ClientToServerPostFix = "ClientToServer";
+constexpr char ServerToClientPostFix[] = "ServerToClient";
+constexpr char ClientToServerPostFix[] = "ClientToServer";
 
 [[nodiscard]] constexpr uint32_t MaskIndex(uint32_t index) {
     return index & (BufferSize - 1);
@@ -40,7 +40,7 @@ public:
         Disconnect();
     }
 
-    [[nodiscard]] Result InitializeBase(std::string_view name, bool isServer) {
+    [[nodiscard]] Result InitializeBase(const std::string& name, bool isServer) {
         NamedMutex mutex;
         CheckResult(NamedMutex::CreateOrOpen(name, mutex));
 
@@ -163,8 +163,8 @@ public:
     LocalChannelWriter(LocalChannelWriter&&) = delete;
     LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
-        const auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
+        auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
         std::string writerName(name);
         writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(writerName, isServer));
@@ -173,23 +173,108 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
+        auto sizeToReserve = static_cast<int32_t>(size);
+        if (BufferSize - _writeIndex < sizeToReserve) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < sizeToReserve) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
+        _writeIndex += sizeToReserve;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint16_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint32_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint64_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Write(const void* source, size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
+        auto sizeToCopy = static_cast<int32_t>(size);
 
-        auto totalSizeToCopy = static_cast<uint32_t>(size);
+        while (sizeToCopy > 0) {
+            if (BufferSize == _writeIndex) {
+                CheckResult(EndWrite());
+                continue;
+            }
+
+            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, BufferSize - _writeIndex);
+            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
+                         bufferPointer,
+                         static_cast<size_t>(sizeOfChunkToCopy));
+            _writeIndex += sizeOfChunkToCopy;
+            bufferPointer += sizeOfChunkToCopy;
+            sizeToCopy -= sizeOfChunkToCopy;
+        }
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result EndWrite() override {
+        auto bufferPointer = _writeBuffer.data();
+
+        auto totalSizeToCopy = static_cast<uint32_t>(_writeIndex);
 
         while (totalSizeToCopy > 0) {
-            uint32_t readIndex = _header->readIndex.load(std::memory_order_acquire);
-            uint32_t currentSize = _writeIndex - readIndex;
-            if (currentSize == BufferSize) {
-                CheckResult(WaitForFreeSpace(currentSize));
+            uint32_t currentSizeOfShm = _cachedWriteIndex - _header->readIndex.load(std::memory_order_acquire);
+            if (currentSizeOfShm == BufferSize) {
+                CheckResult(WaitForFreeSpace(currentSizeOfShm));
             }
 
             _connectionDetected = true;
-            uint32_t sizeToCopy = std::min(totalSizeToCopy, BufferSize - currentSize);
-
-            uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedWriteIndex);
-            (void)memcpy(&_data[_maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
+            uint32_t sizeToCopy = std::min(totalSizeToCopy, static_cast<uint32_t>(BufferSize) - currentSizeOfShm);
+            uint32_t maskedWriteIndex = MaskIndex(_cachedWriteIndex);
+            uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, static_cast<uint32_t>(BufferSize) - maskedWriteIndex);
+            (void)memcpy(&_data[maskedWriteIndex], bufferPointer, sizeUntilBufferEnd);
             bufferPointer += sizeUntilBufferEnd;
 
             uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
@@ -198,28 +283,22 @@ public:
                 bufferPointer += restSize;
             }
 
-            _writeIndex += sizeToCopy;
-            _maskedWriteIndex = MaskIndex(_writeIndex);
-            _header->writeIndex.store(_writeIndex, std::memory_order_release);
+            _cachedWriteIndex += sizeToCopy;
+            _header->writeIndex.store(_cachedWriteIndex, std::memory_order_release);
             totalSizeToCopy -= sizeToCopy;
         }
 
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result EndWrite() override {
+        _writeIndex = 0;
         return _newDataEvent.Set();
     }
 
 private:
-    [[nodiscard]] Result WaitForFreeSpace(uint32_t& currentSize) {
+    [[nodiscard]] Result WaitForFreeSpace(uint32_t& currentSizeOfShm) {
         CheckResult(_newDataEvent.Set());
 
-        std::atomic<uint32_t>& readIndex = _header->readIndex;
-
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
-            if (currentSize < BufferSize) {
+            currentSizeOfShm = _cachedWriteIndex - _header->readIndex.load(std::memory_order_acquire);
+            if (currentSizeOfShm < BufferSize) {
                 return Result::Ok;
             }
 
@@ -227,8 +306,8 @@ private:
         }
 
         while (true) {
-            currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
-            if (currentSize < BufferSize) {
+            currentSizeOfShm = _cachedWriteIndex - _header->readIndex.load(std::memory_order_acquire);
+            if (currentSizeOfShm < BufferSize) {
                 return Result::Ok;
             }
 
@@ -241,13 +320,15 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = _writeIndex - readIndex.load(std::memory_order_acquire);
+        currentSizeOfShm = _cachedWriteIndex - _header->readIndex.load(std::memory_order_acquire);
         return Result::Ok;
     }
 
-    uint32_t _writeIndex{};
-    uint32_t _maskedWriteIndex{};
+    uint32_t _cachedWriteIndex{};
     uint32_t _spinCount{};
+
+    int32_t _writeIndex{};
+    std::array<uint8_t, BufferSize> _writeBuffer{};
 };
 
 class LocalChannelReader final : public LocalChannelBase, public ChannelReader {
@@ -262,8 +343,8 @@ public:
     LocalChannelReader(LocalChannelReader&&) = delete;
     LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
-        const auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
+        auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
         std::string readerName(name);
         readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(readerName, isServer));
@@ -272,50 +353,120 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) override {
+        auto blockSize = static_cast<int32_t>(size);
+        while (_writeIndex - _readIndex < blockSize) {
+            CheckResult(BeginRead());
+        }
+
+        blockReader = BlockReader(&_readBuffer[static_cast<size_t>(_readIndex)], size);
+        _readIndex += blockSize;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint16_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_writeIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint32_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_writeIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint64_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_writeIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Read(void* destination, size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
+        auto sizeToCopy = static_cast<int32_t>(size);
 
-        auto totalSizeToCopy = static_cast<uint32_t>(size);
-
-        while (totalSizeToCopy > 0) {
-            uint32_t writeIndex = _header->writeIndex.load(std::memory_order_acquire);
-            uint32_t currentSize = writeIndex - _readIndex;
-            if (currentSize == 0) {
-                CheckResult(BeginRead(currentSize));
+        while (sizeToCopy > 0) {
+            if (_writeIndex <= _readIndex) {
+                CheckResult(BeginRead());
+                continue;
             }
 
-            _connectionDetected = true;
-            uint32_t sizeToCopy = std::min(totalSizeToCopy, currentSize);
-            uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, BufferSize - _maskedReadIndex);
-            (void)memcpy(bufferPointer, &_data[_maskedReadIndex], sizeUntilBufferEnd);
-            bufferPointer += sizeUntilBufferEnd;
-
-            uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
-            if (restSize > 0) {
-                (void)memcpy(bufferPointer, &_data[0], restSize);
-                bufferPointer += restSize;
-            }
-
-            _readIndex += sizeToCopy;
-            _maskedReadIndex = MaskIndex(_readIndex);
-            _header->readIndex.store(_readIndex, std::memory_order_release);
-            if (currentSize == BufferSize) {
-                CheckResult(_newSpaceEvent.Set());
-            }
-
-            totalSizeToCopy -= sizeToCopy;
+            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, _writeIndex - _readIndex);
+            (void)memcpy(bufferPointer,
+                         &_readBuffer[static_cast<size_t>(_readIndex)],
+                         static_cast<size_t>(sizeOfChunkToCopy));
+            _readIndex += sizeOfChunkToCopy;
+            bufferPointer += sizeOfChunkToCopy;
+            sizeToCopy -= sizeOfChunkToCopy;
         }
 
         return Result::Ok;
     }
 
 private:
-    [[nodiscard]] Result BeginRead(uint32_t& currentSize) {
-        std::atomic<uint32_t>& writeIndex = _header->writeIndex;
+    [[nodiscard]] Result BeginRead() {
+        int32_t unreadSize = _writeIndex - _readIndex;
+        if (unreadSize > 0) {
+            (void)memmove(_readBuffer.data(),
+                          &_readBuffer[static_cast<size_t>(_readIndex)],
+                          static_cast<size_t>(unreadSize));
+        }
 
+        _writeIndex -= _readIndex;
+        _readIndex = 0;
+
+        auto maxSizeToRead = static_cast<uint32_t>(BufferSize - unreadSize);
+
+        uint32_t currentSizeOfShm = _header->writeIndex.load(std::memory_order_acquire) - _cachedReadIndex;
+        if (currentSizeOfShm == 0) {
+            CheckResult(BeginRead(currentSizeOfShm));
+        }
+
+        _connectionDetected = true;
+
+        uint32_t sizeToCopy = std::min(maxSizeToRead, currentSizeOfShm);
+        uint32_t maskedReadIndex = MaskIndex(_cachedReadIndex);
+        uint32_t sizeUntilBufferEnd = std::min(sizeToCopy, static_cast<uint32_t>(BufferSize) - maskedReadIndex);
+
+        (void)memcpy(&_readBuffer[static_cast<size_t>(_writeIndex)], &_data[maskedReadIndex], sizeUntilBufferEnd);
+        _writeIndex += static_cast<int32_t>(sizeUntilBufferEnd);
+
+        uint32_t restSize = sizeToCopy - sizeUntilBufferEnd;
+        if (restSize > 0) {
+            (void)memcpy(&_readBuffer[static_cast<size_t>(_writeIndex)], _data, restSize);
+            _writeIndex += static_cast<int32_t>(restSize);
+        }
+
+        _cachedReadIndex += sizeToCopy;
+        _header->readIndex.store(_cachedReadIndex, std::memory_order_release);
+        CheckResult(_newSpaceEvent.Set());
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result BeginRead(uint32_t& currentSizeOfShm) {
         for (uint32_t i = 0; i < _spinCount; i++) {
-            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
-            if (currentSize > 0) {
+            currentSizeOfShm = _header->writeIndex.load(std::memory_order_acquire) - _cachedReadIndex;
+            if (currentSizeOfShm > 0) {
                 return Result::Ok;
             }
 
@@ -323,8 +474,8 @@ private:
         }
 
         while (true) {
-            currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
-            if (currentSize > 0) {
+            currentSizeOfShm = _header->writeIndex.load(std::memory_order_acquire) - _cachedReadIndex;
+            if (currentSizeOfShm > 0) {
                 return Result::Ok;
             }
 
@@ -337,13 +488,16 @@ private:
             CheckResult(CheckIfConnectionIsAlive());
         }
 
-        currentSize = writeIndex.load(std::memory_order_acquire) - _readIndex;
+        currentSizeOfShm = _header->writeIndex.load(std::memory_order_acquire) - _cachedReadIndex;
         return Result::Ok;
     }
 
-    uint32_t _readIndex{};
-    uint32_t _maskedReadIndex{};
+    uint32_t _cachedReadIndex{};
     uint32_t _spinCount{};
+
+    int32_t _readIndex{};
+    int32_t _writeIndex{};
+    std::array<uint8_t, BufferSize> _readBuffer{};
 };
 
 class LocalChannel final : public Channel {
@@ -357,7 +511,7 @@ public:
     LocalChannel(LocalChannel&&) = delete;
     LocalChannel& operator=(LocalChannel&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name, uint32_t counter, bool isServer) {
+    [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         CheckResult(_writer.Initialize(name, counter, isServer));
         return _reader.Initialize(name, counter, isServer);
     }
@@ -396,7 +550,7 @@ public:
     LocalChannelServer(LocalChannelServer&&) = delete;
     LocalChannelServer& operator=(LocalChannelServer&&) = delete;
 
-    [[nodiscard]] Result Initialize(std::string_view name) {
+    [[nodiscard]] Result Initialize(const std::string& name) {
         _name = name;
         NamedMutex mutex;
         CheckResult(NamedMutex::CreateOrOpen(name, mutex));
@@ -435,7 +589,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result TryConnectToLocalChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel) {
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
     NamedMutex mutex;
     CheckResult(NamedMutex::CreateOrOpen(name, mutex));
     CheckResult(mutex.Lock());
@@ -455,7 +609,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(std::string_view name,
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name,
                                               std::unique_ptr<ChannelServer>& localChannelServer) {
     std::unique_ptr<LocalChannelServer> server = std::make_unique<LocalChannelServer>();
     CheckResult(server->Initialize(name));

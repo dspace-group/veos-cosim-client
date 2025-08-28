@@ -5,7 +5,6 @@
 #include <array>
 #include <cstdint>
 #include <string>
-#include <string_view>
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -20,7 +19,7 @@ public:
     InternetAddress(InternetAddress&&) = delete;
     InternetAddress& operator=(InternetAddress&&) = delete;
 
-    [[nodiscard]] DsVeosCoSim::Result Initialize(std::string_view ipAddress, uint16_t port);
+    [[nodiscard]] DsVeosCoSim::Result Initialize(const std::string& ipAddress, uint16_t port);
 
 private:
     std::array<uint8_t, 16> _address{};
@@ -39,7 +38,7 @@ public:
 
     [[nodiscard]] DsVeosCoSim::Result Initialize();
 
-    [[nodiscard]] DsVeosCoSim::Result Bind(std::string_view ipAddress, uint16_t port) const;
+    [[nodiscard]] DsVeosCoSim::Result Bind(const std::string& ipAddress, uint16_t port) const;
 
     [[nodiscard]] DsVeosCoSim::Result SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
     [[nodiscard]] DsVeosCoSim::Result ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
@@ -68,7 +67,7 @@ public:
     Pipe(Pipe&&) = delete;
     Pipe& operator=(Pipe&&) = delete;
 
-    [[nodiscard]] DsVeosCoSim::Result Initialize(std::string_view name);
+    [[nodiscard]] DsVeosCoSim::Result Initialize(const std::string& name);
 
     [[nodiscard]] DsVeosCoSim::Result Accept();
     [[nodiscard]] DsVeosCoSim::Result Connect();
@@ -84,7 +83,7 @@ private:
 #endif
 
 #ifndef _WIN32
-    [[nodiscard]] DsVeosCoSim::Result CreatePipe(std::string_view name, pipe_t& pipe);
+    [[nodiscard]] DsVeosCoSim::Result CreatePipe(const std::string& name, pipe_t& pipe);
 #endif
 
 #ifdef _WIN32

@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <string_view>
+#include <string>
 #include <vector>
 
 #include "Channel.h"
@@ -39,7 +39,7 @@ public:
 
 [[nodiscard]] Result CreateIoBuffer(CoSimType coSimType,
                                     ConnectionKind connectionKind,
-                                    std::string_view name,
+                                    const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
                                     std::unique_ptr<IoBuffer>& ioBuffer);

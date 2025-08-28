@@ -6,8 +6,8 @@
 #include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include "Channel.h"
@@ -20,7 +20,7 @@ namespace DsVeosCoSim {
 namespace {
 
 constexpr int32_t HeaderSize = 4;
-constexpr int32_t BufferSize = 64 * 1024;
+constexpr int32_t BufferSize = 65536;
 constexpr int32_t ReadPacketSize = 1024;
 
 class SocketChannelWriter final : public ChannelWriter {
@@ -36,22 +36,87 @@ public:
     SocketChannelWriter(SocketChannelWriter&&) = delete;
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
+        auto sizeToReserve = static_cast<int32_t>(size);
+        if (BufferSize - _writeIndex < sizeToReserve) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < sizeToReserve) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
+        _writeIndex += sizeToReserve;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint16_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint32_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Write(uint64_t value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        if (BufferSize - _writeIndex < size) {
+            CheckResult(EndWrite());
+
+            if (BufferSize - _writeIndex < size) {
+                throw std::runtime_error("No more space available.");
+            }
+        }
+
+        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        _writeIndex += size;
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Write(const void* source, size_t size) override {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
+        auto sizeToCopy = static_cast<int32_t>(size);
 
-        while (size > 0) {
-            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), BufferSize - _writeIndex);
-            if (sizeToCopy <= 0) {
+        while (sizeToCopy > 0) {
+            if (BufferSize == _writeIndex) {
                 CheckResult(EndWrite());
                 continue;
             }
 
+            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, BufferSize - _writeIndex);
             (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
                          bufferPointer,
-                         static_cast<size_t>(sizeToCopy));
-            _writeIndex += sizeToCopy;
-            bufferPointer += sizeToCopy;
-            size -= static_cast<size_t>(sizeToCopy);
+                         static_cast<size_t>(sizeOfChunkToCopy));
+            _writeIndex += sizeOfChunkToCopy;
+            bufferPointer += sizeOfChunkToCopy;
+            sizeToCopy -= sizeOfChunkToCopy;
         }
 
         return Result::Ok;
@@ -63,13 +128,7 @@ public:
         // Write header
         *reinterpret_cast<int32_t*>(sourcePtr) = _writeIndex;
 
-        while (_writeIndex > 0) {
-            int32_t sentSize{};
-            CheckResult(_socket.Send(sourcePtr, _writeIndex, sentSize));
-
-            sourcePtr += sentSize;
-            _writeIndex -= sentSize;
-        }
+        CheckResult(_socket.Send(sourcePtr, static_cast<size_t>(_writeIndex)));
 
         _writeIndex = HeaderSize;
         return Result::Ok;
@@ -95,20 +154,70 @@ public:
     SocketChannelReader(SocketChannelReader&&) = delete;
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
 
+    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) override {
+        auto blockSize = static_cast<int32_t>(size);
+        while (_endFrameIndex - _readIndex < blockSize) {
+            CheckResult(BeginRead());
+        }
+
+        blockReader = BlockReader(&_readBuffer[static_cast<size_t>(_readIndex)], size);
+        _readIndex += blockSize;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint16_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_endFrameIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint32_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_endFrameIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result Read(uint64_t& value) override {
+        auto size = static_cast<int32_t>(sizeof(value));
+        while (_endFrameIndex - _readIndex < size) {
+            CheckResult(BeginRead());
+        }
+
+        value =
+            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        _readIndex += size;
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Read(void* destination, size_t size) override {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
+        auto sizeToCopy = static_cast<int32_t>(size);
 
-        while (size > 0) {
-            int32_t sizeToCopy = std::min(static_cast<int32_t>(size), _endFrameIndex - _readIndex);
-            if (sizeToCopy <= 0) {
+        while (sizeToCopy > 0) {
+            if (_endFrameIndex <= _readIndex) {
                 CheckResult(BeginRead());
                 continue;
             }
 
-            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeToCopy));
-            _readIndex += sizeToCopy;
-            bufferPointer += sizeToCopy;
-            size -= static_cast<size_t>(sizeToCopy);
+            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, _endFrameIndex - _readIndex);
+            (void)memcpy(bufferPointer,
+                         &_readBuffer[static_cast<size_t>(_readIndex)],
+                         static_cast<size_t>(sizeOfChunkToCopy));
+            _readIndex += sizeOfChunkToCopy;
+            bufferPointer += sizeOfChunkToCopy;
+            sizeToCopy -= sizeOfChunkToCopy;
         }
 
         return Result::Ok;
@@ -127,7 +236,7 @@ private:
                          &_readBuffer[static_cast<size_t>(_endFrameIndex)],
                          static_cast<size_t>(bytesToMove));
 
-            _writeIndex -= _endFrameIndex;
+            _writeIndex = bytesToMove;
 
             // Did we read at least HeaderSize bytes more?
             if (bytesToMove >= HeaderSize) {
@@ -146,11 +255,13 @@ private:
         }
 
         while (sizeToRead > 0) {
-            int32_t receivedSize{};
-            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], sizeToRead, receivedSize));
+            size_t receivedSize{};
+            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)],
+                                        static_cast<size_t>(sizeToRead),
+                                        receivedSize));
 
-            sizeToRead -= receivedSize;
-            _writeIndex += receivedSize;
+            sizeToRead -= static_cast<int32_t>(receivedSize);
+            _writeIndex += static_cast<int32_t>(receivedSize);
 
             if (readHeader && (_writeIndex >= HeaderSize)) {
                 readHeader = false;
@@ -159,6 +270,10 @@ private:
                 if (_endFrameIndex > BufferSize) {
                     LogError("Protocol error. The buffer size is too small.");
                     return Result::Error;
+                }
+
+                if (_writeIndex >= _endFrameIndex) {
+                    return Result::Ok;
                 }
 
                 sizeToRead = _endFrameIndex - _writeIndex;
@@ -299,7 +414,7 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result TryConnectToTcpChannel(std::string_view remoteIpAddress,
+[[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
@@ -316,7 +431,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result TryConnectToUdsChannel(std::string_view name, std::unique_ptr<Channel>& connectedChannel) {
+[[nodiscard]] Result TryConnectToUdsChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsUdsSupported()) {
@@ -360,7 +475,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateUdsChannelServer(std::string_view name, std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsUdsSupported()) {

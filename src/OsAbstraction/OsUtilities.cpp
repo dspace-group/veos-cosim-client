@@ -6,7 +6,6 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include <Windows.h>
@@ -24,7 +23,7 @@ namespace {
     return static_cast<int32_t>(GetLastError());
 }
 
-[[nodiscard]] Result Utf8ToWide(std::string_view utf8String, std::wstring& utf16String) {
+[[nodiscard]] Result Utf8ToWide(const std::string& utf8String, std::wstring& utf16String) {
     if (utf8String.empty()) {
         utf16String = L"";
         return Result::Ok;
@@ -38,29 +37,33 @@ namespace {
     }
 
     utf16String.resize(static_cast<size_t>(sizeNeeded));
-    (void)MultiByteToWideChar(CP_UTF8,
-                              0,
-                              utf8String.data(),
-                              static_cast<int32_t>(utf8String.size()),
-                              utf16String.data(),
-                              sizeNeeded);
+    sizeNeeded = MultiByteToWideChar(CP_UTF8,
+                                     0,
+                                     utf8String.data(),
+                                     static_cast<int32_t>(utf8String.size()),
+                                     utf16String.data(),
+                                     sizeNeeded);
+    if (sizeNeeded <= 0) {
+        LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        return Result::Error;
+    }
 
     return Result::Ok;
 }
 
-[[nodiscard]] Result GetFullNamedEventName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullNamedEventName(const std::string& name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name, fullName);
 }
 
-[[nodiscard]] Result GetFullNamedMutexName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullNamedMutexName(const std::string& name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name, fullName);
 }
 
-[[nodiscard]] Result GetFullSharedMemoryName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullSharedMemoryName(const std::string& name, std::wstring& fullName) {
     std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
     utf8Name.append(name);
     return Utf8ToWide(utf8Name, fullName);
@@ -120,16 +123,16 @@ Handle::operator void*() const {
 NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
 }
 
-[[nodiscard]] Result NamedEvent::CreateOrOpen(std::string_view name, NamedEvent& namedEvent) {
+[[nodiscard]] Result NamedEvent::CreateOrOpen(const std::string& name, NamedEvent& namedEvent) {
     std::wstring fullName{};
     CheckResult(GetFullNamedEventName(name, fullName));
-    void* handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
+    Handle handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open event.", GetLastWindowsError());
         return Result::Error;
     }
 
-    namedEvent = NamedEvent(handle);
+    namedEvent = NamedEvent(std::move(handle));
     return Result::Ok;
 }
 
@@ -161,16 +164,16 @@ NamedMutex::~NamedMutex() noexcept {
     }
 }
 
-[[nodiscard]] Result NamedMutex::CreateOrOpen(std::string_view name, NamedMutex& namedMutex) {
+[[nodiscard]] Result NamedMutex::CreateOrOpen(const std::string& name, NamedMutex& namedMutex) {
     std::wstring fullName{};
     CheckResult(GetFullNamedMutexName(name, fullName));
-    void* handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
+    Handle handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open mutex.", GetLastWindowsError());
         return Result::Error;
     }
 
-    namedMutex = NamedMutex(handle);
+    namedMutex = NamedMutex(std::move(handle));
     return Result::Ok;
 }
 
@@ -208,12 +211,12 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return *this;
 }
 
-[[nodiscard]] Result SharedMemory::CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory) {
+[[nodiscard]] Result SharedMemory::CreateOrOpen(const std::string& name, size_t size, SharedMemory& sharedMemory) {
     std::wstring fullName{};
     CheckResult(GetFullSharedMemoryName(name, fullName));
     DWORD sizeHigh{};
     auto sizeLow = static_cast<DWORD>(size);
-    void* handle =
+    Handle handle =
         CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
@@ -222,21 +225,20 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        (void)CloseHandle(handle);
         LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
-    sharedMemory = SharedMemory(handle, size, data);
+    sharedMemory = SharedMemory(std::move(handle), size, data);
     return Result::Ok;
 }
 
-[[nodiscard]] Result SharedMemory::TryOpenExisting(std::string_view name,
+[[nodiscard]] Result SharedMemory::TryOpenExisting(const std::string& name,
                                                    size_t size,
                                                    std::optional<SharedMemory>& sharedMemory) {
     std::wstring fullName{};
     CheckResult(GetFullSharedMemoryName(name, fullName));
-    void* handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
+    Handle handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
     if (!handle) {
         sharedMemory = std::nullopt;
         return Result::Ok;
@@ -244,12 +246,11 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        (void)CloseHandle(handle);
         LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
-    sharedMemory = SharedMemory(handle, size, data);
+    sharedMemory = SharedMemory(std::move(handle), size, data);
     return Result::Ok;
 }
 
@@ -281,7 +282,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-void SetThreadAffinity(std::string_view name) {
+void SetThreadAffinity(const std::string& name) {
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;
@@ -325,6 +326,8 @@ void SetThreadAffinity(std::string_view name) {
 #define _GNU_SOURCE
 #endif
 
+#include <string>
+
 #include <pthread.h>
 #include <sched.h>
 
@@ -332,7 +335,7 @@ void SetThreadAffinity(std::string_view name) {
 
 namespace DsVeosCoSim {
 
-void SetThreadAffinity(std::string_view name) {
+void SetThreadAffinity(const std::string& name) {
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;
