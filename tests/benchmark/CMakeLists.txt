@@ -13,7 +13,6 @@ target_sources(
   BenchmarkBusBuffer.cpp
   BenchmarkCoSim.cpp
   BenchmarkIoBuffer.cpp
-  BenchmarkProtocol.cpp
   Program.cpp
 )
 

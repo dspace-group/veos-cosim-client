@@ -22,7 +22,7 @@ namespace {
     ExpectOk(CreateUdsChannelServer(name, server));
     ExpectTrue(server);
 
-    return std::move(server);
+    return server;
 }
 
 [[nodiscard]] std::unique_ptr<Channel> ConnectToServer(const std::string& name) {
@@ -30,7 +30,7 @@ namespace {
     ExpectOk(TryConnectToUdsChannel(name, connectedChannel));
     ExpectTrue(connectedChannel);
 
-    return std::move(connectedChannel);
+    return connectedChannel;
 }
 
 class TestUdsChannel : public testing::Test {};

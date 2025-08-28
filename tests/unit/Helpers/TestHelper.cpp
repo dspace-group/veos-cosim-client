@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <thread>
 
 #include "Helper.h"
 
@@ -51,7 +52,7 @@ void AssertNotEqHelper(const std::string& expected, const std::string& actual) {
     ExpectOk(server->TryAccept(acceptedChannel));
     ExpectTrue(acceptedChannel);
 
-    return std::move(acceptedChannel);
+    return acceptedChannel;
 }
 
 void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {

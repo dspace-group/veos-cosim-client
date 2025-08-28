@@ -39,7 +39,7 @@ struct Param {
     ExpectOk(CreateTcpChannelServer(0, true, server));
     ExpectTrue(server);
 
-    return std::move(server);
+    return server;
 }
 
 [[nodiscard]] std::unique_ptr<Channel> ConnectToServer(const char* ipAddress, uint16_t port) {
@@ -47,7 +47,7 @@ struct Param {
     ExpectOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectedChannel));
     ExpectTrue(connectedChannel);
 
-    return std::move(connectedChannel);
+    return connectedChannel;
 }
 
 class TestTcpChannel : public testing::TestWithParam<Param> {};

@@ -24,7 +24,7 @@ namespace {
     ExpectOk(CreateLocalChannelServer(name, server));
     ExpectTrue(server);
 
-    return std::move(server);
+    return server;
 }
 
 [[nodiscard]] std::unique_ptr<Channel> ConnectToServer(const std::string& name) {
@@ -32,7 +32,7 @@ namespace {
     ExpectOk(TryConnectToLocalChannel(name, connectedChannel));
     ExpectTrue(connectedChannel);
 
-    return std::move(connectedChannel);
+    return connectedChannel;
 }
 
 class TestLocalChannel : public testing::Test {};
