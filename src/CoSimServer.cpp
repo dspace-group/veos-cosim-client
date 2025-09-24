@@ -64,7 +64,9 @@ public:
             CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
         }
 
-        return StartAccepting();
+        CheckResult(StartAccepting());
+        _simulationState = SimulationState::Stopped;
+        return Result::Ok;
     }
 
     void Unload() override {
@@ -77,6 +79,8 @@ public:
         if (_portMapperServer) {
             _portMapperServer.reset();
         }
+
+        _simulationState = SimulationState::Unloaded;
     }
 
     [[nodiscard]] Result Start(SimulationTime simulationTime) override {
@@ -266,37 +270,42 @@ public:
     }
 
 private:
-    [[nodiscard]] Result StartInternal(SimulationTime simulationTime) const {
+    [[nodiscard]] Result StartInternal(SimulationTime simulationTime) {
         CheckResultWithMessage(Protocol::SendStart(_channel->GetWriter(), simulationTime),
                                "Could not send start frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+        _simulationState = SimulationState::Running;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result StopInternal(SimulationTime simulationTime) const {
+    [[nodiscard]] Result StopInternal(SimulationTime simulationTime) {
         CheckResultWithMessage(Protocol::SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+        _simulationState = SimulationState::Stopped;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
+    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason) {
         CheckResultWithMessage(Protocol::SendTerminate(_channel->GetWriter(), simulationTime, reason),
                                "Could not send terminate frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+        _simulationState = SimulationState::Terminated;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime) const {
+    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime) {
         CheckResultWithMessage(Protocol::SendPause(_channel->GetWriter(), simulationTime),
                                "Could not send pause frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+        _simulationState = SimulationState::Paused;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime) const {
+    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime) {
         CheckResultWithMessage(Protocol::SendContinue(_channel->GetWriter(), simulationTime),
                                "Could not send continue frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
+        _simulationState = SimulationState::Running;
         return Result::Ok;
     }
 
@@ -417,7 +426,7 @@ private:
                                                        CoSimProtocolVersion,
                                                        {},
                                                        _stepSize,
-                                                       {},
+                                                       _simulationState,
                                                        _incomingSignals,
                                                        _outgoingSignals,
                                                        _canControllers,
@@ -481,7 +490,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::Ok:
                 return Result::Ok;
             case FrameKind::Error: {
@@ -504,7 +513,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::PingOk:
                 CheckResultWithMessage(Protocol::ReadPingOk(_channel->GetReader(), command),
                                        "Could not read ping ok frame.");
@@ -522,7 +531,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::Connect: {
                 Mode mode{};
                 std::string serverName;
@@ -544,7 +553,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::StepOk:
                 CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                             simulationTime,
@@ -611,6 +620,7 @@ private:
     Callbacks _callbacks{};
     bool _isClientOptional{};
     SimulationTime _stepSize{};
+    SimulationState _simulationState{};
     bool _registerAtPortMapper{};
 
     bool _firstStep{true};

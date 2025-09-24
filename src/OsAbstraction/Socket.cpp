@@ -4,9 +4,11 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -214,7 +216,7 @@ void CloseSocket(SocketHandle socket) {
     return Result::Ok;
 }
 
-[[nodiscard]] Result ConnectWithTimeout(SocketHandle& socket,
+[[nodiscard]] Result ConnectWithTimeout(const SocketHandle& socket,
                                         const sockaddr* socketAddress,
                                         SocketLength sizeOfSocketAddress,
                                         uint32_t timeoutInMilliseconds,
@@ -470,7 +472,7 @@ void Socket::Close() {
         int32_t addressFamily = currentAddressInfo->ai_family;
 
         SocketHandle socketHandle =
-            ::socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
+            socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (socketHandle == InvalidSocket) {
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;
@@ -795,7 +797,7 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::Send(const void* source, size_t size) const {
-    auto buffer = static_cast<const char*>(source);
+    const auto* buffer = static_cast<const char*>(source);
 
     while (size > 0) {
 #ifdef _WIN32

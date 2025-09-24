@@ -275,6 +275,7 @@ struct CanMessage {
 struct CanMessageContainer {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
+    uint32_t reserved{};
     BusMessageId id{};
     CanMessageFlags flags{};
     uint32_t length{};
@@ -425,6 +426,7 @@ struct LinMessage {
 struct LinMessageContainer {
     SimulationTime timestamp{};
     BusControllerId controllerId{};
+    uint32_t reserved{};
     BusMessageId id{};
     LinMessageFlags flags{};
     uint32_t length{};

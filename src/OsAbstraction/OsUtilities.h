@@ -17,16 +17,16 @@ namespace DsVeosCoSim {
 class Handle final {
 public:
     Handle() = default;
-    Handle(void* handle);
+    Handle(void* handle);  // NOLINT(google-explicit-constructor)
     ~Handle() noexcept;
 
     Handle(const Handle&) = delete;
     Handle& operator=(const Handle&) = delete;
 
-    Handle(Handle&&) noexcept;
-    Handle& operator=(Handle&&) noexcept;
+    Handle(Handle&& other) noexcept;
+    Handle& operator=(Handle&& other) noexcept;
 
-    operator void*() const;
+    operator void*() const;  // NOLINT(google-explicit-constructor)
 
     [[nodiscard]] Result Wait() const;
     [[nodiscard]] Result Wait(uint32_t milliseconds, bool& success) const;
@@ -91,8 +91,8 @@ public:
     SharedMemory(const SharedMemory&) = delete;
     SharedMemory& operator=(const SharedMemory&) = delete;
 
-    SharedMemory(SharedMemory&&) noexcept;
-    SharedMemory& operator=(SharedMemory&&) noexcept;
+    SharedMemory(SharedMemory&& other) noexcept;
+    SharedMemory& operator=(SharedMemory&& other) noexcept;
 
     [[nodiscard]] static Result CreateOrOpen(const std::string& name, size_t size, SharedMemory& sharedMemory);
     [[nodiscard]] static Result TryOpenExisting(const std::string& name,

@@ -1,12 +1,13 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <mutex>
-
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <fmt/color.h>
 
 #include "DsVeosCoSim/CoSimServer.h"
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -152,6 +153,8 @@ std::thread::id SimulationThreadId;
 SimulationTime CurrentTime;
 
 std::unique_ptr<ServerWrapper> Server;
+
+std::mutex LockState;
 SimulationState State;
 
 void PrintStatus(bool value, const std::string& what) {
@@ -295,156 +298,259 @@ void StartSimulationThread() {
 }
 
 [[nodiscard]] Result StartSimulation() {
-    if (State == SimulationState::Running) {
-        return Result::Ok;
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Running:
+            break;
+        case SimulationState::Stopped:
+            LogInfo("Starting ...");
+
+            CurrentTime = 0ns;
+            CheckResult(Server->Start(CurrentTime));
+            State = SimulationState::Running;
+            StartSimulationThread();
+
+            LogInfo("Started.");
+            break;
+        case SimulationState::Paused:
+            LogInfo("Continuing ...");
+
+            CheckResult(Server->Continue(CurrentTime));
+            State = SimulationState::Running;
+            StartSimulationThread();
+
+            LogInfo("Continued.");
+            break;
+        default:
+            LogError("Could not start in state {}.", ToString(state));
+            break;
     }
 
-    if (State != SimulationState::Stopped) {
-        LogError("Could not start in state {}.", ToString(State));
-        return Result::Ok;
-    }
-
-    CurrentTime = 0ns;
-    LogInfo("Starting ...");
-
-    CheckResult(Server->Start(CurrentTime));
-
-    StartSimulationThread();
-    State = SimulationState::Running;
-
-    LogInfo("Started.");
     return Result::Ok;
+}
+
+void OnSimulationStarted() {
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Stopped:
+            CurrentTime = 0ns;
+            if (!IsOk(Server->Start(CurrentTime))) {
+                LogError("Could not start.");
+                return;
+            }
+
+            State = SimulationState::Running;
+            StartSimulationThread();
+            break;
+        case SimulationState::Paused:
+            if (!IsOk(Server->Continue(CurrentTime))) {
+                LogError("Could not continue.");
+                return;
+            }
+
+            State = SimulationState::Running;
+            StartSimulationThread();
+            break;
+        default:
+            // Ignored
+            break;
+    }
 }
 
 [[nodiscard]] Result StopSimulation() {
-    if (State == SimulationState::Stopped) {
-        return Result::Ok;
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Stopped:
+            break;
+        case SimulationState::Running:
+            LogInfo("Stopping ...");
+
+            StopSimulationThread();
+            CheckResult(Server->Stop(CurrentTime));
+            State = SimulationState::Stopped;
+
+            LogInfo("Stopped.");
+            break;
+        case SimulationState::Paused:
+            LogInfo("Stopping ...");
+
+            CheckResult(Server->Stop(CurrentTime));
+            State = SimulationState::Stopped;
+
+            LogInfo("Stopped.");
+            break;
+        default:
+            LogError("Could not stop in state {}.", ToString(state));
+            break;
     }
 
-    if ((State != SimulationState::Running) && (State != SimulationState::Paused)) {
-        LogError("Could not stop in state {}.", ToString(State));
-        return Result::Ok;
-    }
-
-    LogInfo("Stopping ...");
-
-    StopSimulationThread();
-
-    CheckResult(Server->Stop(CurrentTime));
-
-    State = SimulationState::Stopped;
-
-    LogInfo("Stopped.");
     return Result::Ok;
+}
+
+void OnSimulationStopped() {
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Running:
+            StopSimulationThread();
+            if (!IsOk(Server->Stop(CurrentTime))) {
+                LogError("Could not stop.");
+            }
+
+            State = SimulationState::Stopped;
+            break;
+        case SimulationState::Paused:
+            if (!IsOk(Server->Stop(CurrentTime))) {
+                LogError("Could not stop.");
+            }
+
+            State = SimulationState::Stopped;
+            break;
+        default:
+            // Ignored
+            break;
+    }
 }
 
 [[nodiscard]] Result PauseSimulation() {
-    if (State == SimulationState::Paused) {
-        return Result::Ok;
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Paused:
+            break;
+        case SimulationState::Running:
+            LogInfo("Pausing ...");
+
+            StopSimulationThread();
+            CheckResult(Server->Pause(CurrentTime));
+            State = SimulationState::Paused;
+
+            LogInfo("Paused.");
+            break;
+        default:
+            LogError("Could not pause in state {}.", ToString(state));
+            break;
     }
 
-    if (State != SimulationState::Running) {
-        LogError("Could not pause in state {}.", ToString(State));
-        return Result::Ok;
-    }
-
-    LogInfo("Pausing ...");
-
-    StopSimulationThread();
-
-    CheckResult(Server->Pause(CurrentTime));
-
-    State = SimulationState::Paused;
-
-    LogInfo("Paused.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ContinueSimulation() {
-    if (State == SimulationState::Running) {
-        return Result::Ok;
+void OnSimulationPaused() {
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Running:
+            if (!IsOk(Server->Pause(CurrentTime))) {
+                LogError("Could not pause.");
+            }
+
+            StopSimulationThread();
+            State = SimulationState::Paused;
+            break;
+        default:
+            // Ignored
+            break;
     }
-
-    if (State != SimulationState::Paused) {
-        LogError("Could not continue in state {}.", ToString(State));
-        return Result::Ok;
-    }
-
-    LogInfo("Continuing ...");
-
-    CheckResult(Server->Continue(CurrentTime));
-
-    StartSimulationThread();
-    State = SimulationState::Running;
-
-    LogInfo("Continued.");
-    return Result::Ok;
 }
 
 [[nodiscard]] Result TerminateSimulation() {
-    if (State == SimulationState::Terminated) {
-        return Result::Ok;
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Terminated:
+            break;
+        case SimulationState::Paused:
+        case SimulationState::Stopped:
+        case SimulationState::Running:
+            LogInfo("Terminating ...");
+
+            StopSimulationThread();
+            CheckResult(Server->Terminate(CurrentTime));
+            State = SimulationState::Terminated;
+
+            LogInfo("Terminated.");
+            break;
+        default:
+            LogError("Could not terminate in state {}.", ToString(state));
+            break;
     }
 
-    if (State == SimulationState::Unloaded) {
-        LogError("Could not terminate in state {}.", ToString(State));
-        return Result::Ok;
-    }
-
-    LogInfo("Terminating ...");
-
-    StopSimulationThread();
-
-    CheckResult(Server->Terminate(CurrentTime));
-
-    State = SimulationState::Terminated;
-
-    LogInfo("Terminated.");
     return Result::Ok;
+}
+
+void OnSimulationTerminated() {
+    std::lock_guard lock(LockState);
+
+    SimulationState state = State;
+    switch (state) {
+        case SimulationState::Paused:
+        case SimulationState::Stopped:
+        case SimulationState::Running:
+            if (!IsOk(Server->Terminate(CurrentTime))) {
+                LogError("Could not terminate.");
+            }
+
+            StopSimulationThread();
+            State = SimulationState::Terminated;
+            break;
+        default:
+            // Ignored
+            break;
+    }
 }
 
 void OnSimulationStartedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation started event.");
-    std::thread(StartSimulation).detach();
+    std::thread(OnSimulationStarted).detach();
 }
 
 void OnSimulationStoppedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation stopped event.");
-    std::thread(StopSimulation).detach();
+    std::thread(OnSimulationStopped).detach();
 }
 
 void OnSimulationPausedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation paused event.");
-    std::thread(PauseSimulation).detach();
+    std::thread(OnSimulationPaused).detach();
 }
 
 void OnSimulationContinuedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation continued event.");
-    std::thread(ContinueSimulation).detach();
+    std::thread(OnSimulationStarted).detach();
 }
 
 void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime,
                                     [[maybe_unused]] TerminateReason terminateReason) {
     LogInfo("Received simulation continued event.");
-    std::thread(TerminateSimulation).detach();
+    std::thread(OnSimulationTerminated).detach();
 }
 
 void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const CanController& controller,
                                    const CanMessageContainer& messageContainer) {
-    LogCanMessageContainer(messageContainer);
+    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer.ToString());
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const EthController& controller,
                                    const EthMessageContainer& messageContainer) {
-    LogEthMessageContainer(messageContainer);
+    print(fg(fmt::color::cyan), "{}\n", messageContainer.ToString());
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const LinController& controller,
                                    const LinMessageContainer& messageContainer) {
-    LogLinMessageContainer(messageContainer);
+    print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
 }
 
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
@@ -506,23 +612,20 @@ void UnloadSimulation() {
             case 'l':
                 CheckResult(LoadSimulation(isClientOptional, name));
                 break;
+            case 'u':
+                UnloadSimulation();
+                break;
             case 's':
                 CheckResult(StartSimulation());
-                break;
-            case 'o':
-                CheckResult(StopSimulation());
                 break;
             case 'p':
                 CheckResult(PauseSimulation());
                 break;
             case 't':
+                CheckResult(StopSimulation());
+                break;
+            case CTRL('t'):
                 CheckResult(TerminateSimulation());
-                break;
-            case 'n':
-                CheckResult(ContinueSimulation());
-                break;
-            case 'u':
-                UnloadSimulation();
                 break;
             case '1':
                 SwitchSendingIoSignals();

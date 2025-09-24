@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -305,7 +306,7 @@ protected:
             CheckResultWithMessage(Protocol::WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
-        for (auto& [id, extension] : Base::_controllers) {
+        for (auto& [controllerId, extension] : Base::_controllers) {
             _messageCountPerController[extension.controllerIndex] = 0;
         }
 
@@ -521,7 +522,7 @@ protected:
         }
     }
 
-    [[nodiscard]] Result CheckForSpace(std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
+    [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
         if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
                 std::string warningMessage = "Transmit buffer for controller '";
@@ -636,7 +637,6 @@ protected:
                 TMessage message{};
                 messageContainer.WriteTo(message);
                 messageCallback(simulationTime, extension->info, message);
-                continue;
             }
         }
 

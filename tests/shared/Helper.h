@@ -16,6 +16,13 @@
 
 namespace DsVeosCoSim {
 
+[[maybe_unused]] constexpr int32_t F6 = -64;
+[[maybe_unused]] constexpr int32_t F8 = -66;
+[[maybe_unused]] constexpr int32_t F9 = -67;
+[[maybe_unused]] constexpr int32_t F10 = -68;
+[[maybe_unused]] constexpr int32_t F11 = -69;
+[[maybe_unused]] constexpr int32_t F12 = -70;
+
 [[maybe_unused]] constexpr uint32_t DefaultTimeout = 1000;
 
 #define MustBeOk(result)                                             \
@@ -72,12 +79,6 @@ void InitializeOutput();
 
 void OnLogCallback(Severity severity, const std::string& message);
 
-void LogIoData(const IoSignal& ioSignal, uint32_t length, const void* value);
-
-void LogCanMessageContainer(const CanMessageContainer& messageContainer);
-void LogEthMessageContainer(const EthMessageContainer& messageContainer);
-void LogLinMessageContainer(const LinMessageContainer& messageContainer);
-
 void ClearLastMessage();
 [[nodiscard]] std::string GetLastMessage();
 
@@ -86,6 +87,7 @@ void ClearLastMessage();
 void SetEnvVariable(const std::string& name, const std::string& value);
 
 [[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationState state);
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
 [[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& signal);
@@ -140,7 +142,9 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 [[nodiscard]] uint32_t GenerateU32();
 [[nodiscard]] uint64_t GenerateU64();
 
-void FillWithRandom(uint8_t* data, size_t length);
+[[nodiscard]] int64_t GenerateI64();
+
+void FillWithRandomData(uint8_t* data, size_t length);
 
 template <typename T>
 [[nodiscard]] T GenerateRandom(T min, T max) {

@@ -140,7 +140,7 @@ void LogProtocolEndTraceSendGetPortOk();
 void LogProtocolBeginTraceReadGetPortOk();
 void LogProtocolEndTraceReadGetPortOk(uint16_t port);
 
-void LogProtocolDataTraceSignal(IoSignalId id, uint32_t length, DataType dataType, const void* data);
+void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data);
 
 #define CheckResultWithMessage(result, message) \
     do {                                        \

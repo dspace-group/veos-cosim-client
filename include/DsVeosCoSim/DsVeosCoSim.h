@@ -238,6 +238,38 @@ typedef enum DsVeosCoSim_ConnectionState {
 } DsVeosCoSim_ConnectionState;
 
 /**
+ * \brief Represents the simulation state.
+ */
+typedef enum DsVeosCoSim_SimulationState {
+    /**
+     * \brief Unloaded.
+     */
+    DsVeosCoSim_SimulationState_Unloaded,
+
+    /**
+     * \brief Stopped.
+     */
+    DsVeosCoSim_SimulationState_Stopped,
+
+    /**
+     * \brief Running.
+     */
+    DsVeosCoSim_SimulationState_Running,
+
+    /**
+     * \brief Paused.
+     */
+    DsVeosCoSim_SimulationState_Paused,
+
+    /**
+     * \brief Terminated.
+     */
+    DsVeosCoSim_SimulationState_Terminated,
+
+    DsVeosCoSim_SimulationState_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+} DsVeosCoSim_SimulationState;
+
+/**
  * \brief Represents the data type of IO signal.
  */
 typedef enum DsVeosCoSim_DataType {
@@ -483,6 +515,11 @@ typedef struct DsVeosCoSim_CanMessageContainer {
      * \brief Unique id of the CAN controller.
      */
     DsVeosCoSim_BusControllerId controllerId;
+
+    /**
+     * \brief Reserved for future use.
+     */
+    uint32_t reserved;
 
     /**
      * \brief CAN message ID.
@@ -834,6 +871,11 @@ typedef struct DsVeosCoSim_LinMessageContainer {
      * \brief Unique id of the bus controller.
      */
     DsVeosCoSim_BusControllerId controllerId;
+
+    /**
+     * \brief Reserved for future use.
+     */
+    uint32_t reserved;
 
     /**
      * \brief LIN message ID.
@@ -1363,11 +1405,15 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle,
                                                                          DsVeosCoSim_SimulationTime* simulationTime);
 
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle,
+                                                                   DsVeosCoSim_SimulationState* simulationState);
+
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState);
+DSVEOSCOSIM_DECL const char* DsVeosCoSim_SimulationStateToString(DsVeosCoSim_SimulationState simulationState);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType);
@@ -1396,30 +1442,30 @@ DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoSim_LinMessage* mess
 
 #ifdef __cplusplus
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal& ioSignal);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController& controller);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController& controller);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController& controller);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller);
 
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType,
                                                              uint32_t length,
                                                              const void* value);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator = 0);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal& ioSignal,
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal,
                                                               uint32_t length,
                                                               const void* value);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage& message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage& message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage& message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message);
 
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageContainerToString(
-    const DsVeosCoSim_CanMessageContainer& messageContainer);
+    const DsVeosCoSim_CanMessageContainer* messageContainer);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageContainerToString(
-    const DsVeosCoSim_EthMessageContainer& messageContainer);
+    const DsVeosCoSim_EthMessageContainer* messageContainer);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageContainerToString(
-    const DsVeosCoSim_LinMessageContainer& messageContainer);
+    const DsVeosCoSim_LinMessageContainer* messageContainer);
 
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags);

@@ -112,22 +112,6 @@ void OnLogCallback(Severity severity, const std::string& message) {
     }
 }
 
-void LogCanMessageContainer(const CanMessageContainer& messageContainer) {
-    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer.ToString());
-}
-
-void LogEthMessageContainer(const EthMessageContainer& messageContainer) {
-    print(fg(fmt::color::cyan), "{}\n", messageContainer.ToString());
-}
-
-void LogLinMessageContainer(const LinMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
-}
-
-void LogIoData(const IoSignal& ioSignal, uint32_t length, const void* value) {
-    print(fg(fmt::color::fuchsia), "{}\n", IoDataToString(ioSignal, length, value));
-}
-
 void ClearLastMessage() {
     LastMessage = "";
 }
@@ -138,6 +122,10 @@ void ClearLastMessage() {
 
 [[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result) {
     return stream << ToString(result);
+}
+
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationState state) {
+    return stream << ToString(state);
 }
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) {
@@ -544,7 +532,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
     return static_cast<uint32_t>(rand());  // NOLINT
 }
 
-void FillWithRandom(uint8_t* data, size_t length) {
+void FillWithRandomData(uint8_t* data, size_t length) {
     for (size_t i = 0; i < length; i++) {
         data[i] = GenerateU8();
     }
@@ -560,6 +548,10 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] uint64_t GenerateU64() {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
+}
+
+[[nodiscard]] int64_t GenerateI64() {
+    return (static_cast<int64_t>(GenerateU32()) << sizeof(int32_t)) + static_cast<int64_t>(GenerateU32());
 }
 
 [[nodiscard]] std::string GenerateString(const std::string& prefix) {
@@ -612,7 +604,7 @@ void FillWithRandom(uint8_t* data, size_t length) {
 
 [[nodiscard]] std::vector<uint8_t> GenerateIoData(const IoSignalContainer& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
-    FillWithRandom(data.data(), data.size());
+    FillWithRandomData(data.data(), data.size());
     return data;
 }
 
@@ -636,7 +628,7 @@ void FillWithRandom(EthControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
     controller.queueSize = 100;
     controller.bitsPerSecond = GenerateU64();
-    FillWithRandom(controller.macAddress.data(), EthAddressLength);
+    FillWithRandomData(controller.macAddress.data(), EthAddressLength);
     controller.name = GenerateString("EthController名前\xF0\x9F\x98\x80");
     controller.channelName = GenerateString("EthChannel名前\xF0\x9F\x98\x80");
     controller.clusterName = GenerateString("EthCluster名前\xF0\x9F\x98\x80");
@@ -658,7 +650,7 @@ void FillWithRandom(CanMessageContainer& message, BusControllerId controllerId) 
     message.id = GenerateBusMessageId();
     message.timestamp = GenerateSimulationTime();
     message.length = length;
-    FillWithRandom(message.data.data(), length);
+    FillWithRandomData(message.data.data(), length);
 }
 
 void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId) {
@@ -666,7 +658,7 @@ void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId) 
     message.controllerId = controllerId;
     message.timestamp = GenerateSimulationTime();
     message.length = length;
-    FillWithRandom(message.data.data(), length);
+    FillWithRandomData(message.data.data(), length);
 }
 
 void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId) {
@@ -675,7 +667,7 @@ void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId) 
     message.id = GenerateBusMessageId();
     message.timestamp = GenerateSimulationTime();
     message.length = length;
-    FillWithRandom(message.data.data(), length);
+    FillWithRandomData(message.data.data(), length);
 }
 
 [[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count) {

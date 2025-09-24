@@ -2,6 +2,7 @@
 
 #include "Protocol.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -29,241 +30,6 @@ constexpr size_t EthMessageSize =
 constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(LinMessageFlags) + sizeof(uint32_t);
 
-[[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string) {
-    size_t size{};
-    CheckResult(ReadSize(reader, size));
-
-    string.resize(size);
-
-    CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
-    CheckResult(WriteSize(writer, string.size()));
-    CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
-    BlockReader blockReader;
-    CheckResultWithMessage(reader.ReadBlock(IoSignalInfoSize, blockReader),
-                           "Could not read block for IoSignalContainer.");
-
-    blockReader.Read(signal.id);
-    blockReader.Read(signal.length);
-    blockReader.Read(signal.dataType);
-    blockReader.Read(signal.sizeKind);
-
-    CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
-    BlockWriter blockWriter;
-    CheckResultWithMessage(writer.Reserve(IoSignalInfoSize, blockWriter),
-                           "Could not reserve memory for IoSignalContainer.");
-
-    blockWriter.Write(signal.id);
-    blockWriter.Write(signal.length);
-    blockWriter.Write(signal.dataType);
-    blockWriter.Write(signal.sizeKind);
-
-    CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
-    size_t size{};
-    CheckResult(ReadSize(reader, size));
-
-    signals.resize(size);
-
-    for (size_t i = 0; i < size; i++) {
-        CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
-    CheckResult(WriteSize(writer, signals.size()));
-
-    for (const auto& signal : signals) {
-        CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
-    BlockReader blockReader;
-    CheckResultWithMessage(reader.ReadBlock(CanControllerSize, blockReader),
-                           "Could not read block for CanControllerContainer.");
-
-    blockReader.Read(controller.id);
-    blockReader.Read(controller.queueSize);
-    blockReader.Read(controller.bitsPerSecond);
-    blockReader.Read(controller.flexibleDataRateBitsPerSecond);
-
-    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
-    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
-    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
-    BlockWriter blockWriter;
-    CheckResultWithMessage(writer.Reserve(CanControllerSize, blockWriter),
-                           "Could not reserve memory for CanControllerContainer.");
-
-    blockWriter.Write(controller.id);
-    blockWriter.Write(controller.queueSize);
-    blockWriter.Write(controller.bitsPerSecond);
-    blockWriter.Write(controller.flexibleDataRateBitsPerSecond);
-
-    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
-    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
-    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
-    size_t size{};
-    CheckResult(ReadSize(reader, size));
-
-    controllers.resize(size);
-
-    for (size_t i = 0; i < size; i++) {
-        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<CanControllerContainer>& controllers) {
-    CheckResult(WriteSize(writer, controllers.size()));
-
-    for (const auto& controller : controllers) {
-        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
-    BlockReader blockReader;
-    CheckResultWithMessage(reader.ReadBlock(EthControllerSize, blockReader),
-                           "Could not read block for EthControllerContainer.");
-
-    blockReader.Read(controller.id);
-    blockReader.Read(controller.queueSize);
-    blockReader.Read(controller.bitsPerSecond);
-    blockReader.Read(controller.macAddress.data(), controller.macAddress.size());
-
-    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
-    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
-    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
-    BlockWriter blockWriter;
-    CheckResultWithMessage(writer.Reserve(EthControllerSize, blockWriter),
-                           "Could not reserve memory for EthControllerContainer.");
-
-    blockWriter.Write(controller.id);
-    blockWriter.Write(controller.queueSize);
-    blockWriter.Write(controller.bitsPerSecond);
-    blockWriter.Write(controller.macAddress.data(), controller.macAddress.size());
-
-    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
-    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
-    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
-    size_t size{};
-    CheckResult(ReadSize(reader, size));
-
-    controllers.resize(size);
-
-    for (size_t i = 0; i < size; i++) {
-        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<EthControllerContainer>& controllers) {
-    CheckResult(WriteSize(writer, controllers.size()));
-
-    for (const auto& controller : controllers) {
-        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
-    BlockReader blockReader;
-    CheckResultWithMessage(reader.ReadBlock(LinControllerSize, blockReader),
-                           "Could not read block for LinControllerContainer.");
-
-    blockReader.Read(controller.id);
-    blockReader.Read(controller.queueSize);
-    blockReader.Read(controller.bitsPerSecond);
-    blockReader.Read(controller.type);
-
-    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
-    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
-    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
-    BlockWriter blockWriter;
-    CheckResultWithMessage(writer.Reserve(LinControllerSize, blockWriter),
-                           "Could not reserve memory for LinControllerContainer.");
-
-    blockWriter.Write(controller.id);
-    blockWriter.Write(controller.queueSize);
-    blockWriter.Write(controller.bitsPerSecond);
-    blockWriter.Write(controller.type);
-
-    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
-    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
-    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-    return Result::Ok;
-}
-
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
-    size_t size{};
-    CheckResult(ReadSize(reader, size));
-
-    controllers.resize(size);
-
-    for (size_t i = 0; i < size; i++) {
-        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<LinControllerContainer>& controllers) {
-    CheckResult(WriteSize(writer, controllers.size()));
-
-    for (const auto& controller : controllers) {
-        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
-    }
-
-    return Result::Ok;
-}
-
 }  // namespace
 
 [[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) {
@@ -286,6 +52,16 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 
 [[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length) {
     CheckResultWithMessage(writer.Write(length), "Could not write length.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadData(ChannelReader& reader, void* data, size_t size) {
+    CheckResultWithMessage(reader.Read(data, size), "Could not read data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteData(ChannelWriter& writer, const void* data, size_t size) {
+    CheckResultWithMessage(writer.Write(data, size), "Could not write data.");
     return Result::Ok;
 }
 
@@ -327,7 +103,6 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
-
     return Result::Ok;
 }
 
@@ -357,7 +132,6 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
-
     return Result::Ok;
 }
 
@@ -389,7 +163,6 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
-
     return Result::Ok;
 }
 
@@ -657,7 +430,7 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
         LogProtocolBeginTraceReadStart();
     }
 
-    CheckResult(reader.Read(simulationTime));
+    CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStart(simulationTime);
@@ -1077,6 +850,241 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceSendGetPortOk();
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string) {
+    size_t size{};
+    CheckResultWithMessage(ReadSize(reader, size), "Could not read string size.");
+
+    string.resize(size);
+
+    CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
+    CheckResultWithMessage(WriteSize(writer, string.size()), "Could not write string size.");
+    CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(IoSignalInfoSize, blockReader),
+                           "Could not read block for IoSignalContainer.");
+
+    blockReader.Read(signal.id);
+    blockReader.Read(signal.length);
+    blockReader.Read(signal.dataType);
+    blockReader.Read(signal.sizeKind);
+
+    CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
+    BlockWriter blockWriter;
+    CheckResultWithMessage(writer.Reserve(IoSignalInfoSize, blockWriter),
+                           "Could not reserve memory for IoSignalContainer.");
+
+    blockWriter.Write(signal.id);
+    blockWriter.Write(signal.length);
+    blockWriter.Write(signal.dataType);
+    blockWriter.Write(signal.sizeKind);
+
+    CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
+    size_t size{};
+    CheckResultWithMessage(ReadSize(reader, size), "Could not read signals count.");
+
+    signals.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
+        CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
+    CheckResultWithMessage(WriteSize(writer, signals.size()), "Could not write signals count.");
+
+    for (const auto& signal : signals) {
+        CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(CanControllerSize, blockReader),
+                           "Could not read block for CanControllerContainer.");
+
+    blockReader.Read(controller.id);
+    blockReader.Read(controller.queueSize);
+    blockReader.Read(controller.bitsPerSecond);
+    blockReader.Read(controller.flexibleDataRateBitsPerSecond);
+
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
+    BlockWriter blockWriter;
+    CheckResultWithMessage(writer.Reserve(CanControllerSize, blockWriter),
+                           "Could not reserve memory for CanControllerContainer.");
+
+    blockWriter.Write(controller.id);
+    blockWriter.Write(controller.queueSize);
+    blockWriter.Write(controller.bitsPerSecond);
+    blockWriter.Write(controller.flexibleDataRateBitsPerSecond);
+
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
+    size_t size{};
+    CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
+
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<CanControllerContainer>& controllers) {
+    CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
+
+    for (const auto& controller : controllers) {
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(EthControllerSize, blockReader),
+                           "Could not read block for EthControllerContainer.");
+
+    blockReader.Read(controller.id);
+    blockReader.Read(controller.queueSize);
+    blockReader.Read(controller.bitsPerSecond);
+    blockReader.Read(controller.macAddress.data(), controller.macAddress.size());
+
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
+    BlockWriter blockWriter;
+    CheckResultWithMessage(writer.Reserve(EthControllerSize, blockWriter),
+                           "Could not reserve memory for EthControllerContainer.");
+
+    blockWriter.Write(controller.id);
+    blockWriter.Write(controller.queueSize);
+    blockWriter.Write(controller.bitsPerSecond);
+    blockWriter.Write(controller.macAddress.data(), controller.macAddress.size());
+
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
+    size_t size{};
+    CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
+
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<EthControllerContainer>& controllers) {
+    CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
+
+    for (const auto& controller : controllers) {
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(LinControllerSize, blockReader),
+                           "Could not read block for LinControllerContainer.");
+
+    blockReader.Read(controller.id);
+    blockReader.Read(controller.queueSize);
+    blockReader.Read(controller.bitsPerSecond);
+    blockReader.Read(controller.type);
+
+    CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
+    CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
+    CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
+    BlockWriter blockWriter;
+    CheckResultWithMessage(writer.Reserve(LinControllerSize, blockWriter),
+                           "Could not reserve memory for LinControllerContainer.");
+
+    blockWriter.Write(controller.id);
+    blockWriter.Write(controller.queueSize);
+    blockWriter.Write(controller.bitsPerSecond);
+    blockWriter.Write(controller.type);
+
+    CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
+    CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
+    CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
+    return Result::Ok;
+}
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
+    size_t size{};
+    CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
+
+    controllers.resize(size);
+
+    for (size_t i = 0; i < size; i++) {
+        CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<LinControllerContainer>& controllers) {
+    CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
+
+    for (const auto& controller : controllers) {
+        CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
     }
 
     return Result::Ok;

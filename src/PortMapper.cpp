@@ -7,9 +7,11 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 
 #include "Channel.h"
 #include "CoSimHelper.h"
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Event.h"
 #include "Protocol.h"
@@ -66,7 +68,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(channel.GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::GetPort:
                 CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
                 return Result::Ok;
@@ -207,7 +209,7 @@ private:
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::GetPortOk: {
             CheckResultWithMessage(Protocol::ReadGetPortOk(channel->GetReader(), port),
                                    "Could not receive port ok frame.");
@@ -239,7 +241,7 @@ private:
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Ok:
             return Result::Ok;
         case FrameKind::Error: {
@@ -268,7 +270,7 @@ private:
     FrameKind frameKind{};
     CheckResult(Protocol::ReceiveHeader(channel->GetReader(), frameKind));
 
-    switch (frameKind) {
+    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Ok:
             return Result::Ok;
         case FrameKind::Error: {

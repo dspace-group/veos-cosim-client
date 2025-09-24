@@ -29,6 +29,7 @@ public:
 
     [[nodiscard]] virtual Result GetStepSize(SimulationTime& stepSize) const = 0;
     [[nodiscard]] virtual Result GetCurrentSimulationTime(SimulationTime& simulationTime) const = 0;
+    [[nodiscard]] virtual Result GetSimulationState(SimulationState& simulationState) const = 0;
 
     [[nodiscard]] virtual Result RunCallbackBasedCoSimulation(const Callbacks& callbacks) = 0;
     [[nodiscard]] virtual Result StartPollingBasedCoSimulation(const Callbacks& callbacks) = 0;

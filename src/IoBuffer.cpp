@@ -9,6 +9,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Channel.h"
@@ -324,7 +325,7 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * currentLength;
-            CheckResultWithMessage(writer.Write(buffer.data(), totalSize), "Could not write signal data.");
+            CheckResultWithMessage(Protocol::WriteData(writer, buffer.data(), totalSize), "Could not write signal data.");
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
@@ -365,7 +366,7 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * data.currentLength;
-            CheckResultWithMessage(reader.Read(data.buffer.data(), totalSize), "Could not read signal data.");
+            CheckResultWithMessage(Protocol::ReadData(reader, data.buffer.data(), totalSize), "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTraceSignal(metaData->info.id,
@@ -720,7 +721,7 @@ private:
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
                                     std::unique_ptr<IoBuffer>& ioBuffer) {
-    std::unique_ptr<IoBufferImpl> tmpIoBuffer = std::make_unique<IoBufferImpl>();
+    auto tmpIoBuffer = std::make_unique<IoBufferImpl>();
     CheckResult(tmpIoBuffer->Initialize(coSimType, connectionKind, name, incomingSignals, outgoingSignals));
     ioBuffer = std::move(tmpIoBuffer);
     return Result::Ok;

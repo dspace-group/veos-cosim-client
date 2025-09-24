@@ -43,7 +43,7 @@ public:
     [[nodiscard]] Result Connect(const ConnectConfig& connectConfig) override {
         if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
             LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
-            return Result::Error;
+            return Result::InvalidArgument;
         }
 
         if (_isConnected) {
@@ -101,6 +101,13 @@ public:
         CheckResult(EnsureIsConnected());
 
         simulationTime = _currentSimulationTime;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result GetSimulationState(SimulationState& simulationState) const override {
+        CheckResult(EnsureIsConnected());
+
+        simulationState = _simulationState;
         return Result::Ok;
     }
 
@@ -481,12 +488,11 @@ private:
     [[nodiscard]] Result OnConnectOk() {
         uint32_t serverProtocolVersion{};
         Mode mode{};
-        SimulationState simulationState{};
         CheckResultWithMessage(Protocol::ReadConnectOk(_channel->GetReader(),
                                                        serverProtocolVersion,
                                                        mode,
                                                        _stepSize,
-                                                       simulationState,
+                                                       _simulationState,
                                                        _incomingSignals,
                                                        _outgoingSignals,
                                                        _canControllers,
@@ -555,7 +561,7 @@ private:
         FrameKind frameKind{};
         CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::ConnectOk:
                 CheckResultWithMessage(OnConnectOk(), "Could not handle connect ok.");
                 return Result::Ok;
@@ -576,7 +582,7 @@ private:
             FrameKind frameKind{};
             CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
 
-            switch (frameKind) {
+            switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
                 case FrameKind::Step: {
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     if (!_isConnected) {
@@ -657,7 +663,7 @@ private:
         while (true) {
             FrameKind frameKind{};
             CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
-            switch (frameKind) {
+            switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
                 case FrameKind::Step:
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     _currentCommand = Command::Step;
@@ -868,20 +874,20 @@ private:
     [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
         if (length > CanMessageMaxLength) {
             LogError("CAN message data exceeds maximum length.");
-            return Result::Error;
+            return Result::InvalidArgument;
         }
 
         if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
             if (length > 8) {
                 LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
-                return Result::Error;
+                return Result::InvalidArgument;
             }
 
             if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
                 LogError(
                     "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format "
                     "flag.");
-                return Result::Error;
+                return Result::InvalidArgument;
             }
         }
 
@@ -897,6 +903,8 @@ private:
     SimulationTime _nextSimulationTime{};
 
     SimulationTime _stepSize{};
+
+    SimulationState _simulationState{};
 
     std::string _remoteIpAddress;
     std::string _serverName;

@@ -2,6 +2,7 @@
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -45,13 +46,13 @@ namespace {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string IoSignalToString(IoSignalId id,
+[[nodiscard]] std::string IoSignalToString(IoSignalId signalId,
                                            uint32_t length,
                                            DataType dataType,
                                            SizeKind sizeKind,
                                            const std::string& name) {
     std::string str = "IO Signal { Id: ";
-    str.append(ToString(id));
+    str.append(ToString(signalId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", DataType: ");
@@ -64,7 +65,7 @@ namespace {
     return str;
 }
 
-[[nodiscard]] std::string CanControllerToString(BusControllerId id,
+[[nodiscard]] std::string CanControllerToString(BusControllerId controllerId,
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 uint64_t flexibleDataRateBitsPerSecond,
@@ -72,7 +73,7 @@ namespace {
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "CAN Controller { Id: ";
-    str.append(ToString(id));
+    str.append(ToString(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -91,7 +92,7 @@ namespace {
 
 [[nodiscard]] std::string CanMessageToString(SimulationTime timestamp,
                                              BusControllerId controllerId,
-                                             BusMessageId id,
+                                             BusMessageId messageId,
                                              uint32_t length,
                                              const uint8_t* data,
                                              CanMessageFlags flags) {
@@ -100,7 +101,7 @@ namespace {
     str.append(", ControllerId: ");
     str.append(ToString(controllerId));
     str.append(", Id: ");
-    str.append(ToString(id));
+    str.append(ToString(messageId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
@@ -114,13 +115,13 @@ namespace {
 [[nodiscard]] Result CheckCanMessage(uint32_t length) {
     if (length > CanMessageMaxLength) {
         LogError("CAN message data exceeds maximum length.");
-        return Result::Error;
+        return Result::InvalidArgument;
     }
 
     return Result::Ok;
 }
 
-[[nodiscard]] std::string EthControllerToString(BusControllerId id,
+[[nodiscard]] std::string EthControllerToString(BusControllerId controllerId,
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 std::array<uint8_t, EthAddressLength> macAddress,
@@ -128,7 +129,7 @@ namespace {
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "ETH Controller { Id: ";
-    str.append(ToString(id));
+    str.append(ToString(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -167,13 +168,13 @@ namespace {
 [[nodiscard]] Result EthMessageCheck(uint32_t length) {
     if (length > EthMessageMaxLength) {
         LogError("Ethernet message data exceeds maximum length.");
-        return Result::Error;
+        return Result::InvalidArgument;
     }
 
     return Result::Ok;
 }
 
-[[nodiscard]] std::string LinControllerToString(BusControllerId id,
+[[nodiscard]] std::string LinControllerToString(BusControllerId controllerId,
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
                                                 LinControllerType type,
@@ -181,7 +182,7 @@ namespace {
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "LIN Controller { Id: ";
-    str.append(ToString(id));
+    str.append(ToString(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -200,7 +201,7 @@ namespace {
 
 [[nodiscard]] std::string LinMessageToString(SimulationTime timestamp,
                                              BusControllerId controllerId,
-                                             BusMessageId id,
+                                             BusMessageId messageId,
                                              uint32_t length,
                                              const uint8_t* data,
                                              LinMessageFlags flags) {
@@ -209,7 +210,7 @@ namespace {
     str.append(", ControllerId: ");
     str.append(ToString(controllerId));
     str.append(", Id: ");
-    str.append(ToString(id));
+    str.append(ToString(messageId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
@@ -223,7 +224,7 @@ namespace {
 [[nodiscard]] Result LinMessageCheck(uint32_t length) {
     if (length > LinMessageMaxLength) {
         LogError("LIN message data exceeds maximum length.");
-        return Result::Error;
+        return Result::InvalidArgument;
     }
 
     return Result::Ok;

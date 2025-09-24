@@ -22,6 +22,9 @@ namespace Protocol {
 [[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length);
 [[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length);
 
+[[nodiscard]] Result ReadData(ChannelReader& reader, void* data, size_t size);
+[[nodiscard]] Result WriteData(ChannelWriter& writer, const void* data, size_t size);
+
 [[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId);
 [[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId);
 
@@ -126,6 +129,33 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName);
 [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName);
+
+[[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string);
+[[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string);
+
+[[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal);
+[[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal);
+
+[[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals);
+[[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals);
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller);
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller);
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers);
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller);
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller);
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers);
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller);
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller);
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers);
 
 }  // namespace Protocol
 

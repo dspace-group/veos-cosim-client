@@ -2,6 +2,7 @@
 
 #include "Environment.h"
 
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <cstdlib>
 #include <string>
@@ -11,8 +12,7 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool TryGetDecimalValue(const std::string& name, ptrdiff_t& intValue) {
-    char* stringValue = std::getenv(name.c_str());
-    if (stringValue) {
+    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             intValue = std::strtoll(stringValue, &end, 10);
@@ -27,8 +27,7 @@ namespace {
 }
 
 [[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
-    char* stringValue = std::getenv(name.c_str());
-    if (stringValue) {
+    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             hexValue = std::strtoull(stringValue, &end, 16);
@@ -68,7 +67,7 @@ namespace {
 [[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
     ptrdiff_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
-        if ((intValue >= 0) && (intValue <= UINT32_MAX)) {
+        if ((intValue >= 0) && (intValue <= static_cast<ptrdiff_t>(UINT32_MAX))) {
             spinCount = static_cast<uint32_t>(intValue);
             return true;
         }
@@ -80,33 +79,33 @@ namespace {
 }  // namespace
 
 [[nodiscard]] bool IsProtocolTracingEnabled() {
-    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
-    return Verbose;
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
+    return verbose;
 }
 
 [[nodiscard]] bool IsProtocolHeaderTracingEnabled() {
-    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
-    return Verbose;
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
+    return verbose;
 }
 
 [[nodiscard]] bool IsProtocolPingTracingEnabled() {
-    static bool Verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
-    return Verbose;
+    static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
+    return verbose;
 }
 
 [[nodiscard]] bool IsPortMapperServerVerbose() {
-    static bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
-    return Verbose;
+    static bool verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
+    return verbose;
 }
 
 [[nodiscard]] bool IsPortMapperClientVerbose() {
-    static bool Verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");
-    return Verbose;
+    static bool verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");
+    return verbose;
 }
 
 [[nodiscard]] uint16_t GetPortMapperPort() {
-    static uint16_t Port = GetPortMapperPortInitial();
-    return Port;
+    static uint16_t port = GetPortMapperPortInitial();
+    return port;
 }
 
 [[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction) {

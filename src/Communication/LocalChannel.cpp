@@ -3,12 +3,19 @@
 #ifdef _WIN32
 
 #include <algorithm>
+#include <array>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <type_traits>
 
-#include <emmintrin.h>
+#include <emmintrin.h>  // IWYU pragma: keep
 
 #include "Channel.h"
 #include "CoSimHelper.h"
@@ -164,7 +171,7 @@ public:
     LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
-        auto postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
+        const auto* postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
         std::string writerName(name);
         writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(writerName, isServer));
@@ -260,7 +267,7 @@ public:
     }
 
     [[nodiscard]] Result EndWrite() override {
-        auto bufferPointer = _writeBuffer.data();
+        auto* bufferPointer = _writeBuffer.data();
 
         auto totalSizeToCopy = static_cast<uint32_t>(_writeIndex);
 
@@ -344,7 +351,7 @@ public:
     LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
-        auto postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
+        const auto* postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
         std::string readerName(name);
         readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
         CheckResult(InitializeBase(readerName, isServer));
@@ -571,7 +578,7 @@ public:
         if (currentCounter > _lastCounter) {
             uint32_t counterToUse = _lastCounter;
             _lastCounter++;
-            std::unique_ptr<LocalChannel> tmpChannel = std::make_unique<LocalChannel>();
+            auto tmpChannel = std::make_unique<LocalChannel>();
             CheckResult(tmpChannel->Initialize(_name, counterToUse, true));
             acceptedChannel = std::move(tmpChannel);
         }
@@ -603,17 +610,17 @@ private:
     auto& counter = *static_cast<std::atomic<uint32_t>*>(sharedMemory->GetData());
     uint32_t currentCounter = counter.fetch_add(1);
 
-    std::unique_ptr<LocalChannel> tmpChannel = std::make_unique<LocalChannel>();
+    auto tmpChannel = std::make_unique<LocalChannel>();
     CheckResult(tmpChannel->Initialize(name, currentCounter, false));
     connectedChannel = std::move(tmpChannel);
     return Result::Ok;
 }
 
 [[nodiscard]] Result CreateLocalChannelServer(const std::string& name,
-                                              std::unique_ptr<ChannelServer>& localChannelServer) {
-    std::unique_ptr<LocalChannelServer> server = std::make_unique<LocalChannelServer>();
+                                              std::unique_ptr<ChannelServer>& channelServer) {
+    auto server = std::make_unique<LocalChannelServer>();
     CheckResult(server->Initialize(name));
-    localChannelServer = std::move(server);
+    channelServer = std::move(server);
     return Result::Ok;
 }
 

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <vector>
 
 #if _WIN32
 #include "OsUtilities.h"
@@ -18,7 +19,7 @@ namespace DsVeosCoSim {
 
 namespace {
 
-LogCallback LogCallbackHandler;
+LogCallback LogCallbackHandler;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 }  // namespace
 
@@ -27,36 +28,31 @@ void SetLogCallback(LogCallback logCallback) {
 }
 
 void LogError(const std::string& message) {
-    auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (auto logCallback = LogCallbackHandler; logCallback) {
         logCallback(Severity::Error, message);
     }
 }
 
 void LogWarning(const std::string& message) {
-    auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (auto logCallback = LogCallbackHandler; logCallback) {
         logCallback(Severity::Warning, message);
     }
 }
 
 void LogInfo(const std::string& message) {
-    auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (auto logCallback = LogCallbackHandler; logCallback) {
         logCallback(Severity::Info, message);
     }
 }
 
 void LogTrace(const std::string& message) {
-    auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (auto logCallback = LogCallbackHandler; logCallback) {
         logCallback(Severity::Trace, message);
     }
 }
 
 void LogSystemError(const std::string& message, int32_t errorCode) {
-    auto logCallback = LogCallbackHandler;
-    if (logCallback) {
+    if (auto logCallback = LogCallbackHandler; logCallback) {
         std::string fullMessage(message);
         fullMessage.append(" ");
         fullMessage.append(GetSystemErrorMessage(errorCode));
@@ -517,9 +513,9 @@ void LogProtocolEndTraceReadGetPortOk(uint16_t port) {
     LogProtocolEndTrace(str);
 }
 
-void LogProtocolDataTraceSignal(IoSignalId id, uint32_t length, DataType dataType, const void* data) {
+void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data) {
     std::string message = "Signal { Id: ";
-    message.append(ToString(id));
+    message.append(ToString(signalId));
     message.append(", Length: ");
     message.append(std::to_string(length));
     message.append(", Data: ");

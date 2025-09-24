@@ -5,11 +5,13 @@
 #include "OsUtilities.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include <Windows.h>
-#include <sysinfoapi.h>
+
+#include <sysinfoapi.h>  // IWYU pragma: keep
 
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
@@ -100,8 +102,7 @@ Handle::operator void*() const {
 }
 
 [[nodiscard]] Result Handle::Wait(uint32_t milliseconds, bool& success) const {
-    DWORD result = WaitForSingleObject(_handle, milliseconds);
-    switch (result) {
+    switch (DWORD result = WaitForSingleObject(_handle, milliseconds); result) {
         case WAIT_OBJECT_0:
             success = true;
             return Result::Ok;
@@ -160,7 +161,7 @@ NamedMutex::NamedMutex(Handle handle) : _handle(std::move(handle)) {
 
 NamedMutex::~NamedMutex() noexcept {
     if (_isLocked) {
-        ReleaseMutex(_handle);
+        (void)ReleaseMutex(_handle);
     }
 }
 
@@ -194,19 +195,19 @@ SharedMemory::SharedMemory(Handle handle, size_t size, void* data)
     : _handle(std::move(handle)), _size(size), _data(data) {
 }
 
-SharedMemory::SharedMemory(SharedMemory&& sharedMemory) noexcept
-    : _handle(std::move(sharedMemory._handle)), _size(sharedMemory._size), _data(sharedMemory._data) {
-    sharedMemory._size = {};
-    sharedMemory._data = {};
+SharedMemory::SharedMemory(SharedMemory&& other) noexcept
+    : _handle(std::move(other._handle)), _size(other._size), _data(other._data) {
+    other._size = {};
+    other._data = {};
 }
 
-SharedMemory& SharedMemory::operator=(SharedMemory&& sharedMemory) noexcept {
-    _size = sharedMemory._size;
-    _handle = std::move(sharedMemory._handle);
-    _data = sharedMemory._data;
+SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
+    _size = other._size;
+    _handle = std::move(other._handle);
+    _data = other._data;
 
-    sharedMemory._size = {};
-    sharedMemory._data = {};
+    other._size = {};
+    other._data = {};
 
     return *this;
 }

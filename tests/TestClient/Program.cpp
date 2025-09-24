@@ -1,16 +1,16 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
-#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <functional>
-#include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include <fmt/color.h>
+
+#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Helper.h"
 
 using namespace DsVeosCoSim;
@@ -18,9 +18,25 @@ using namespace std::chrono_literals;
 
 namespace {
 
-std::unique_ptr<CoSimClient> Client;
+#define CheckDsVeosCoSimResult(result)           \
+    do {                                         \
+        DsVeosCoSim_Result _result_ = (result);  \
+        if (_result_ != DsVeosCoSim_Result_Ok) { \
+            return _result_;                     \
+        }                                        \
+    } while (0)
+
+DsVeosCoSim_Handle Client;
+
+DsVeosCoSim_SimulationState State;
+std::mutex LockState;
 
 std::thread SimulationThread;
+
+std::vector<DsVeosCoSim_IoSignal> OutgoingSignals;
+std::vector<DsVeosCoSim_CanController> CanControllers;
+std::vector<DsVeosCoSim_EthController> EthControllers;
+std::vector<DsVeosCoSim_LinController> LinControllers;
 
 bool SendIoData;
 bool SendCanMessages;
@@ -55,230 +71,277 @@ void SwitchSendingLinMessages() {
     PrintStatus(SendLinMessages, "LIN messages");
 }
 
-[[nodiscard]] Result WriteOutGoingSignal(const IoSignal& ioSignal) {
-    size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
+[[nodiscard]] DsVeosCoSim_Result WriteOutGoingSignal(const DsVeosCoSim_IoSignal& ioSignal) {
+    size_t length = DsVeosCoSim_GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     std::vector<uint8_t> data = GenerateBytes(length);
 
-    return Client->Write(ioSignal.id, ioSignal.length, data.data());
+    return DsVeosCoSim_WriteOutgoingSignal(Client, ioSignal.id, ioSignal.length, data.data());
 }
 
-[[nodiscard]] Result TransmitCanMessage(const CanController& controller) {
-    CanMessageContainer messageContainer{};
-    FillWithRandom(messageContainer, controller.id);
+[[nodiscard]] DsVeosCoSim_Result TransmitCanMessage(const DsVeosCoSim_CanController& controller) {
+    uint32_t length = GenerateRandom(1U, 8U);
+    DsVeosCoSim_CanMessageContainer messageContainer{};
+    messageContainer.controllerId = controller.id;
+    messageContainer.id = GenerateU32();
+    messageContainer.timestamp = GenerateI64();
+    messageContainer.length = length;
+    FillWithRandomData(&messageContainer.data[0], length);
 
-    return Client->Transmit(messageContainer);
+    return DsVeosCoSim_TransmitCanMessageContainer(Client, &messageContainer);
 }
 
-[[nodiscard]] Result TransmitEthMessage(const EthController& controller) {
-    EthMessageContainer messageContainer{};
-    FillWithRandom(messageContainer, controller.id);
+[[nodiscard]] DsVeosCoSim_Result TransmitEthMessage(const DsVeosCoSim_EthController& controller) {
+    uint32_t length = GenerateRandom(1U, 8U);
+    DsVeosCoSim_EthMessageContainer messageContainer{};
+    messageContainer.controllerId = controller.id;
+    messageContainer.timestamp = GenerateI64();
+    messageContainer.length = length;
+    FillWithRandomData(messageContainer.data, length);
 
-    return Client->Transmit(messageContainer);
+    return DsVeosCoSim_TransmitEthMessageContainer(Client, &messageContainer);
 }
 
-[[nodiscard]] Result TransmitLinMessage(const LinController& controller) {
-    LinMessageContainer messageContainer{};
-    FillWithRandom(messageContainer, controller.id);
+[[nodiscard]] DsVeosCoSim_Result TransmitLinMessage(const DsVeosCoSim_LinController& controller) {
+    uint32_t length = GenerateRandom(1U, 8U);
+    DsVeosCoSim_LinMessageContainer messageContainer{};
+    messageContainer.controllerId = controller.id;
+    messageContainer.id = GenerateU32();
+    messageContainer.timestamp = GenerateI64();
+    messageContainer.length = length;
+    FillWithRandomData(messageContainer.data, length);
 
-    return Client->Transmit(messageContainer);
+    return DsVeosCoSim_TransmitLinMessageContainer(Client, &messageContainer);
 }
 
-[[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
-    static SimulationTime lastHalfSecond = -1s;
+[[nodiscard]] DsVeosCoSim_Result SendSomeData(DsVeosCoSim_SimulationTime simulationTime) {
+    static DsVeosCoSim_SimulationTime lastHalfSecond = -1;
     static int64_t counter = 0;
-    SimulationTime currentHalfSecond = simulationTime / 500000000;
+    DsVeosCoSim_SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
-        return Result::Ok;
+        return DsVeosCoSim_Result_Ok;
     }
 
     lastHalfSecond = currentHalfSecond;
     counter++;
 
     if (SendIoData && ((counter % 4) == 0)) {
-        std::vector<IoSignal> signals;
-        CheckResult(Client->GetOutgoingSignals(signals));
-        for (const IoSignal& signal : signals) {
-            CheckResult(WriteOutGoingSignal(signal));
+        for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
+            CheckDsVeosCoSimResult(WriteOutGoingSignal(signal));
         }
     }
 
     if (SendCanMessages && ((counter % 4) == 1)) {
-        std::vector<CanController> controllers;
-        CheckResult(Client->GetCanControllers(controllers));
-        for (const CanController& controller : controllers) {
-            CheckResult(TransmitCanMessage(controller));
+        for (const DsVeosCoSim_CanController& controller : CanControllers) {
+            CheckDsVeosCoSimResult(TransmitCanMessage(controller));
         }
     }
 
     if (SendEthMessages && ((counter % 4) == 2)) {
-        std::vector<EthController> controllers;
-        CheckResult(Client->GetEthControllers(controllers));
-        for (const EthController& controller : controllers) {
-            CheckResult(TransmitEthMessage(controller));
+        for (const DsVeosCoSim_EthController& controller : EthControllers) {
+            CheckDsVeosCoSimResult(TransmitEthMessage(controller));
         }
     }
 
     if (SendLinMessages && ((counter % 4) == 3)) {
-        std::vector<LinController> controllers;
-        CheckResult(Client->GetLinControllers(controllers));
-        for (const LinController& controller : controllers) {
-            CheckResult(TransmitLinMessage(controller));
+        for (const DsVeosCoSim_LinController& controller : LinControllers) {
+            CheckDsVeosCoSimResult(TransmitLinMessage(controller));
         }
     }
 
-    return Result::Ok;
+    return DsVeosCoSim_Result_Ok;
 }
 
-void OnSimulationPostStepCallback(SimulationTime simulationTime) {
-    if (!IsOk(SendSomeData(simulationTime))) {
+void OnSimulationPostStepCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
+    if (SendSomeData(simulationTime) != DsVeosCoSim_Result_Ok) {
         LogError("Could not send data.");
     }
 }
 
-void OnIncomingSignalChanged([[maybe_unused]] SimulationTime simulationTime,
-                             const IoSignal& ioSignal,
+void OnIncomingSignalChanged([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                             const DsVeosCoSim_IoSignal* ioSignal,
                              uint32_t length,
-                             const void* value) {
-    LogIoData(ioSignal, length, value);
+                             const void* value,
+                             [[maybe_unused]] void* userData) {
+    print(fg(fmt::color::fuchsia), "{}\n", DsVeosCoSim_IoDataToString(ioSignal, length, value));
 }
 
-void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
-                                   [[maybe_unused]] const CanController& controller,
-                                   const CanMessageContainer& messageContainer) {
-    LogCanMessageContainer(messageContainer);
+void OnCanMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                                   [[maybe_unused]] const DsVeosCoSim_CanController* controller,
+                                   const DsVeosCoSim_CanMessageContainer* messageContainer,
+                                   [[maybe_unused]] void* userData) {
+    print(fg(fmt::color::dodger_blue), "{}\n", DsVeosCoSim_CanMessageContainerToString(messageContainer));
 }
 
-void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
-                                   [[maybe_unused]] const EthController& controller,
-                                   const EthMessageContainer& messageContainer) {
-    LogEthMessageContainer(messageContainer);
+void OnEthMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                                   [[maybe_unused]] const DsVeosCoSim_EthController* controller,
+                                   const DsVeosCoSim_EthMessageContainer* messageContainer,
+                                   [[maybe_unused]] void* userData) {
+    print(fg(fmt::color::cyan), "{}\n", DsVeosCoSim_EthMessageContainerToString(messageContainer));
 }
 
-void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
-                                   [[maybe_unused]] const LinController& controller,
-                                   const LinMessageContainer& messageContainer) {
-    LogLinMessageContainer(messageContainer);
+void OnLinMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                                   [[maybe_unused]] const DsVeosCoSim_LinController* controller,
+                                   const DsVeosCoSim_LinMessageContainer* messageContainer,
+                                   [[maybe_unused]] void* userData) {
+    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_LinMessageContainerToString(messageContainer));
 }
 
 void StartSimulationThread(const std::function<void()>& function) {
     SimulationThread = std::thread(function);
-    SimulationThread.detach();
 }
 
-void OnSimulationStartedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation started at {} s.", SimulationTimeToString(simulationTime));
+void OnSimulationStartedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
+    std::lock_guard lock(LockState);
+    LogInfo("Simulation started at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+    State = DsVeosCoSim_SimulationState_Running;
 }
 
-void OnSimulationStoppedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation stopped at {} s.", SimulationTimeToString(simulationTime));
+void OnSimulationStoppedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
+    std::lock_guard lock(LockState);
+    LogInfo("Simulation stopped at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+    State = DsVeosCoSim_SimulationState_Stopped;
 }
 
-void OnSimulationTerminatedCallback(SimulationTime simulationTime, TerminateReason reason) {
-    LogInfo("Simulation terminated with reason {} at {} s.", ToString(reason), SimulationTimeToString(simulationTime));
+void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime,
+                                    DsVeosCoSim_TerminateReason reason,
+                                    [[maybe_unused]] void* userData) {
+    std::lock_guard lock(LockState);
+    LogInfo("Simulation terminated with reason {} at {} s.",
+            DsVeosCoSim_TerminateReasonToString(reason),
+            DsVeosCoSim_SimulationTimeToString(simulationTime));
+    State = DsVeosCoSim_SimulationState_Terminated;
 }
 
-void OnSimulationPausedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation paused at {} s.", SimulationTimeToString(simulationTime));
+void OnSimulationPausedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
+    std::lock_guard lock(LockState);
+    LogInfo("Simulation paused at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+    State = DsVeosCoSim_SimulationState_Paused;
 }
 
-void OnSimulationContinuedCallback(SimulationTime simulationTime) {
-    LogInfo("Simulation continued at {} s.", SimulationTimeToString(simulationTime));
+void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
+    std::lock_guard lock(LockState);
+    LogInfo("Simulation continued at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+    State = DsVeosCoSim_SimulationState_Running;
 }
 
-[[nodiscard]] Result Connect(const std::string& host, const std::string& serverName) {
+[[nodiscard]] DsVeosCoSim_Result Connect(const std::string& host, const std::string& serverName) {
     LogInfo("Connecting ...");
 
-    ConnectionState connectionState{};
-    CheckResult(Client->GetConnectionState(connectionState));
-    if (connectionState == ConnectionState::Connected) {
+    DsVeosCoSim_ConnectionState connectionState{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetConnectionState(Client, &connectionState));
+    if (connectionState == DsVeosCoSim_ConnectionState_Connected) {
         LogInfo("Already connected.");
-        return Result::Ok;
+        return DsVeosCoSim_Result_Ok;
     }
 
-    ConnectConfig connectConfig{};
+    DsVeosCoSim_ConnectConfig connectConfig{};
     connectConfig.clientName = "Example Test Client";
-    connectConfig.serverName = serverName;
-    connectConfig.remoteIpAddress = host;
+    connectConfig.serverName = serverName.c_str();
+    connectConfig.remoteIpAddress = host.c_str();
 
-    if (!IsOk(Client->Connect(connectConfig))) {
+    if (DsVeosCoSim_Connect(Client, connectConfig) != DsVeosCoSim_Result_Ok) {
         LogError("Could not connect.");
-        return Result::Error;
+        return DsVeosCoSim_Result_Error;
     }
 
     LogTrace("");
 
-    SimulationTime stepSize{};
-    CheckResult(Client->GetStepSize(stepSize));
-    LogTrace("Step size: {} s", SimulationTimeToString(stepSize));
+    DsVeosCoSim_SimulationTime stepSize{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetStepSize(Client, &stepSize));
+    LogTrace("Step size: {} s", DsVeosCoSim_SimulationTimeToString(stepSize));
     LogTrace("");
 
-    std::vector<CanController> canControllers;
-    CheckResult(Client->GetCanControllers(canControllers));
-    if (!canControllers.empty()) {
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetSimulationState(Client, &State));
+
+    // This can happen with old clients. In that case we assume the state stopped, so that at least the simulation start
+    // can be passed to the server
+    if (State == DsVeosCoSim_SimulationState_Unloaded) {
+        State = DsVeosCoSim_SimulationState_Stopped;
+    }
+
+    uint32_t tmpCanControllersCount{};
+    const DsVeosCoSim_CanController* tmpCanControllers{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetCanControllers(Client, &tmpCanControllersCount, &tmpCanControllers));
+    if (tmpCanControllersCount > 0) {
+        CanControllers =
+            std::vector<DsVeosCoSim_CanController>(tmpCanControllers, tmpCanControllers + tmpCanControllersCount);
         LogTrace("Found the following CAN controllers:");
-        for (const CanController& controller : canControllers) {
-            LogTrace("  {}", controller.ToString());
+        for (const DsVeosCoSim_CanController& controller : CanControllers) {
+            LogTrace("  {}", DsVeosCoSim_CanControllerToString(&controller));
         }
 
         LogTrace("");
     }
 
-    std::vector<EthController> ethControllers;
-    CheckResult(Client->GetEthControllers(ethControllers));
-    if (!ethControllers.empty()) {
+    uint32_t tmpEthControllersCount{};
+    const DsVeosCoSim_EthController* tmpEthControllers{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetEthControllers(Client, &tmpEthControllersCount, &tmpEthControllers));
+    if (tmpEthControllersCount > 0) {
+        EthControllers =
+            std::vector<DsVeosCoSim_EthController>(tmpEthControllers, tmpEthControllers + tmpEthControllersCount);
         LogTrace("Found the following ETH controllers:");
-        for (const EthController& controller : ethControllers) {
-            LogTrace("  {}", controller.ToString());
+        for (const DsVeosCoSim_EthController& controller : EthControllers) {
+            LogTrace("  {}", DsVeosCoSim_EthControllerToString(&controller));
         }
 
         LogTrace("");
     }
 
-    std::vector<LinController> linControllers;
-    CheckResult(Client->GetLinControllers(linControllers));
-    if (!linControllers.empty()) {
+    uint32_t tmpLinControllersCount{};
+    const DsVeosCoSim_LinController* tmpLinControllers{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetLinControllers(Client, &tmpLinControllersCount, &tmpLinControllers));
+    if (tmpLinControllersCount > 0) {
+        LinControllers =
+            std::vector<DsVeosCoSim_LinController>(tmpLinControllers, tmpLinControllers + tmpLinControllersCount);
         LogTrace("Found the following LIN controllers:");
-        for (const LinController& controller : linControllers) {
-            LogTrace("  {}", controller.ToString());
+        for (const DsVeosCoSim_LinController& controller : LinControllers) {
+            LogTrace("  {}", DsVeosCoSim_LinControllerToString(&controller));
         }
 
         LogTrace("");
     }
 
-    std::vector<IoSignal> incomingSignals;
-    CheckResult(Client->GetIncomingSignals(incomingSignals));
-    if (!incomingSignals.empty()) {
+    uint32_t tmpIncomingSignalsCount{};
+    const DsVeosCoSim_IoSignal* tmpIncomingSignals{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetIncomingSignals(Client, &tmpIncomingSignalsCount, &tmpIncomingSignals));
+    if (tmpIncomingSignalsCount > 0) {
         LogTrace("Found the following incoming signals:");
-        for (const IoSignal& signal : incomingSignals) {
-            LogTrace("  {}", signal.ToString());
+        for (uint32_t i = 0; i < tmpIncomingSignalsCount; i++) {
+            const DsVeosCoSim_IoSignal& signal = tmpIncomingSignals[i];
+            LogTrace("  {}", DsVeosCoSim_IoSignalToString(&signal));
         }
 
         LogTrace("");
     }
 
-    std::vector<IoSignal> outgoingSignals;
-    CheckResult(Client->GetOutgoingSignals(outgoingSignals));
-    if (!incomingSignals.empty()) {
+    uint32_t tmpOutgoingSignalsCount{};
+    const DsVeosCoSim_IoSignal* tmpOutgoingSignals{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetOutgoingSignals(Client, &tmpOutgoingSignalsCount, &tmpOutgoingSignals));
+    if (tmpOutgoingSignalsCount > 0) {
+        OutgoingSignals =
+            std::vector<DsVeosCoSim_IoSignal>(tmpOutgoingSignals, tmpOutgoingSignals + tmpOutgoingSignalsCount);
         LogTrace("Found the following outgoing signals:");
-        for (const IoSignal& signal : outgoingSignals) {
-            LogTrace("  {}", signal.ToString());
+        for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
+            LogTrace("  {}", DsVeosCoSim_IoSignalToString(&signal));
         }
 
         LogTrace("");
     }
 
     LogInfo("Connected.");
-    return Result::Ok;
+    return DsVeosCoSim_Result_Ok;
 }
 
-void Disconnect() {
+[[nodiscard]] DsVeosCoSim_Result Disconnect() {
     LogInfo("Disconnecting ...");
-    Client->Disconnect();
+    CheckDsVeosCoSimResult(DsVeosCoSim_Disconnect(Client));
     LogInfo("Disconnected.");
+
+    return DsVeosCoSim_Result_Ok;
 }
 
 [[noreturn]] void RunCallbackBasedCoSimulation() {
-    Callbacks callbacks{};
+    DsVeosCoSim_Callbacks callbacks{};
     callbacks.simulationStartedCallback = OnSimulationStartedCallback;
     callbacks.simulationStoppedCallback = OnSimulationStoppedCallback;
     callbacks.simulationTerminatedCallback = OnSimulationTerminatedCallback;
@@ -291,25 +354,110 @@ void Disconnect() {
     callbacks.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
 
     LogInfo("Running callback-based co-simulation ...");
-    if (!IsDisconnected(Client->RunCallbackBasedCoSimulation(callbacks))) {
+    if (DsVeosCoSim_RunCallbackBasedCoSimulation(Client, callbacks) != DsVeosCoSim_Result_Disconnected) {
         LogError("Callback-based co-simulation finished with an error.");
+        State = DsVeosCoSim_SimulationState_Unloaded;
+        SimulationThread.detach();
         exit(1);
     }
 
-    LogError("Callback-based co-simulation finished successfully.");
+    LogInfo("Callback-based co-simulation finished successfully.");
+    SimulationThread.detach();
     exit(0);
 }
 
-[[nodiscard]] Result HostClient(const std::string& host, const std::string& name) {
-    CheckResult(Connect(host, name));
+[[nodiscard]] DsVeosCoSim_Result Start() {
+    std::lock_guard lock(LockState);
+
+    DsVeosCoSim_SimulationState state = State;
+    switch (state) {
+        case DsVeosCoSim_SimulationState_Running:
+            break;
+        case DsVeosCoSim_SimulationState_Stopped:
+            LogInfo("Starting simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_StartSimulation(Client));
+            break;
+        case DsVeosCoSim_SimulationState_Paused:
+            LogInfo("Continuing simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_ContinueSimulation(Client));
+            break;
+        default:
+            LogError("Cannot start in state {}.", DsVeosCoSim_SimulationStateToString(State));
+            break;
+    }
+
+    return DsVeosCoSim_Result_Ok;
+}
+
+[[nodiscard]] DsVeosCoSim_Result Pause() {
+    std::lock_guard lock(LockState);
+
+    DsVeosCoSim_SimulationState state = State;
+    switch (state) {
+        case DsVeosCoSim_SimulationState_Paused:
+            break;
+        case DsVeosCoSim_SimulationState_Running:
+            LogInfo("Pausing simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_PauseSimulation(Client));
+            break;
+        default:
+            LogError("Cannot pause in state {}.", DsVeosCoSim_SimulationStateToString(State));
+            break;
+    }
+
+    return DsVeosCoSim_Result_Ok;
+}
+
+[[nodiscard]] DsVeosCoSim_Result Stop() {
+    std::lock_guard lock(LockState);
+
+    DsVeosCoSim_SimulationState state = State;
+    switch (state) {
+        case DsVeosCoSim_SimulationState_Stopped:
+            break;
+        case DsVeosCoSim_SimulationState_Running:
+        case DsVeosCoSim_SimulationState_Paused:
+            LogInfo("Stopping simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_StopSimulation(Client));
+            break;
+        default:
+            LogError("Cannot stop in state {}.", DsVeosCoSim_SimulationStateToString(State));
+            break;
+    }
+
+    return DsVeosCoSim_Result_Ok;
+}
+
+[[nodiscard]] DsVeosCoSim_Result Terminate() {
+    std::lock_guard lock(LockState);
+
+    DsVeosCoSim_SimulationState state = State;
+    switch (state) {
+        case DsVeosCoSim_SimulationState_Terminated:
+            break;
+        case DsVeosCoSim_SimulationState_Running:
+        case DsVeosCoSim_SimulationState_Paused:
+        case DsVeosCoSim_SimulationState_Stopped:
+            LogInfo("Terminating simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_TerminateSimulation(Client, DsVeosCoSim_TerminateReason_Error));
+            break;
+        default:
+            LogError("Cannot terminate in state {}.", DsVeosCoSim_SimulationStateToString(State));
+            break;
+    }
+
+    return DsVeosCoSim_Result_Ok;
+}
+
+[[nodiscard]] DsVeosCoSim_Result HostClient(const std::string& host, const std::string& name) {
+    CheckDsVeosCoSimResult(Connect(host, name));
 
     StartSimulationThread(RunCallbackBasedCoSimulation);
 
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
-                Disconnect();
-                return Result::Ok;
+                return Disconnect();
             case '1':
                 SwitchSendingIoSignals();
                 break;
@@ -323,19 +471,16 @@ void Disconnect() {
                 SwitchSendingLinMessages();
                 break;
             case 's':
-                CheckResult(Client->Start());
-                break;
-            case 'o':
-                CheckResult(Client->Stop());
+                CheckDsVeosCoSimResult(Start());
                 break;
             case 'p':
-                CheckResult(Client->Pause());
+                CheckDsVeosCoSimResult(Pause());
                 break;
             case 't':
-                CheckResult(Client->Terminate(TerminateReason::Error));
+                CheckDsVeosCoSimResult(Stop());
                 break;
-            case 'n':
-                CheckResult(Client->Continue());
+            case CTRL('t'):
+                CheckDsVeosCoSimResult(Terminate());
                 break;
             default:
                 LogError("Unknown key.");
@@ -343,7 +488,7 @@ void Disconnect() {
         }
     }
 
-    return Result::Ok;
+    return DsVeosCoSim_Result_Ok;
 }
 
 }  // namespace
@@ -374,14 +519,18 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (!IsOk(CreateClient(Client))) {
+    Client = DsVeosCoSim_Create();
+    if (!Client) {
         LogError("Could not create handle.");
         return 1;
     }
 
-    Result result = HostClient(host, name);
+    DsVeosCoSim_Result result = HostClient(host, name);
+    if (SimulationThread.joinable()) {
+        SimulationThread.join();
+    }
 
-    Client.reset();
+    DsVeosCoSim_Destroy(Client);
 
-    return IsOk(result) ? 0 : 1;
+    return (result == DsVeosCoSim_Result_Ok) ? 0 : 1;
 }
