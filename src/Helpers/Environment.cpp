@@ -11,13 +11,13 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool TryGetDecimalValue(const std::string& name, ptrdiff_t& intValue) {
+[[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
     if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
-            intValue = std::strtoll(stringValue, &end, 10);
+            intValue = std::strtoull(stringValue, &end, 10);
         } else {
-            intValue = std::strtol(stringValue, &end, 10);
+            intValue = std::strtoul(stringValue, &end, 10);
         }
 
         return true;
@@ -42,7 +42,7 @@ namespace {
 }
 
 [[nodiscard]] bool GetBoolValue(const std::string& name) {
-    ptrdiff_t intValue{};
+    size_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
         return intValue != 0;
     }
@@ -54,7 +54,7 @@ namespace {
     constexpr uint16_t defaultPort = 27027;
     constexpr int32_t maxPort = 65535;
 
-    ptrdiff_t intValue{};
+    size_t intValue{};
     if (TryGetDecimalValue("VEOS_COSIM_PORTMAPPER_PORT", intValue)) {
         if ((intValue > 0) && (intValue <= maxPort)) {
             return static_cast<uint16_t>(intValue);
@@ -65,12 +65,10 @@ namespace {
 }
 
 [[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
-    ptrdiff_t intValue{};
+    size_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
-        if ((intValue >= 0) && (intValue <= static_cast<ptrdiff_t>(UINT32_MAX))) {
-            spinCount = static_cast<uint32_t>(intValue);
-            return true;
-        }
+        spinCount = static_cast<uint32_t>(intValue);
+        return true;
     }
 
     return false;

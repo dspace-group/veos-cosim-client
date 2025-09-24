@@ -12,13 +12,13 @@
 
 namespace DsVeosCoSim {
 
-class BlockWriter {
+class BlockWriter final {
 public:
     BlockWriter() = default;
     BlockWriter(uint8_t* data, size_t size) : _data(data), _size(size) {
     }
 
-    virtual ~BlockWriter() = default;
+    ~BlockWriter() = default;
 
     BlockWriter(const BlockWriter&) = delete;
     BlockWriter& operator=(const BlockWriter&) = delete;
@@ -117,13 +117,13 @@ public:
     [[nodiscard]] virtual Result EndWrite() = 0;
 };
 
-class BlockReader {
+class BlockReader final {
 public:
     BlockReader() = default;
     BlockReader(uint8_t* data, size_t size) : _data(data), _size(size) {
     }
 
-    virtual ~BlockReader() = default;
+    ~BlockReader() = default;
 
     BlockReader(const BlockReader&) = delete;
     BlockReader& operator=(const BlockReader&) = delete;
