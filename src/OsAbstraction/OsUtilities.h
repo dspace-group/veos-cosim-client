@@ -17,7 +17,7 @@ namespace DsVeosCoSim {
 class Handle final {
 public:
     Handle() = default;
-    Handle(void* handle);  // NOLINT(google-explicit-constructor)
+    Handle(void* handle);
     ~Handle() noexcept;
 
     Handle(const Handle&) = delete;
@@ -26,7 +26,7 @@ public:
     Handle(Handle&& other) noexcept;
     Handle& operator=(Handle&& other) noexcept;
 
-    operator void*() const;  // NOLINT(google-explicit-constructor)
+    operator void*() const;
 
     [[nodiscard]] Result Wait() const;
     [[nodiscard]] Result Wait(uint32_t milliseconds, bool& success) const;
