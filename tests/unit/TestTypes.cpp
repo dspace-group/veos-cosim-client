@@ -39,7 +39,7 @@ TEST_F(TestTypes, SimulationTimeToString) {
     SimulationTime simulationTime = 42ns;
 
     // Act
-    std::string string = SimulationTimeToString(simulationTime);
+    std::string string = ToString(simulationTime);
 
     // Assert
     AssertEqHelper("0.000000042", string);

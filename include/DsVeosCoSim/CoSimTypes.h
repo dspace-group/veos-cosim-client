@@ -5,6 +5,7 @@
 #include <array>
 #include <chrono>
 #include <functional>
+#include <ostream>
 #include <string>
 
 namespace DsVeosCoSim {
@@ -64,11 +65,43 @@ constexpr uint32_t EthMessageMaxLength = 9018U;
 constexpr uint32_t LinMessageMaxLength = 8U;
 constexpr uint32_t EthAddressLength = 6U;
 
-[[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
+enum class Severity : uint32_t;
+enum class TerminateReason : uint32_t;
+
+struct IoSignal;
+struct CanController;
+struct CanMessage;
+struct CanMessageContainer;
+struct EthController;
+struct EthMessage;
+struct EthMessageContainer;
+struct LinController;
+struct LinMessage;
+struct LinMessageContainer;
 
 using SimulationTime = std::chrono::nanoseconds;
+using LogCallback = std::function<void(Severity, const std::string&)>;
 
-[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime);
+using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
+using SimulationTerminatedCallback =
+    std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
+using IncomingSignalChangedCallback =
+    std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
+using CanMessageReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const CanController& canController, const CanMessage& canMessage)>;
+using EthMessageReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const EthController& ethController, const EthMessage& ethMessage)>;
+using LinMessageReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const LinController& linController, const LinMessage& linMessage)>;
+using CanMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
+                                                               const CanController& canController,
+                                                               const CanMessageContainer& canMessageContainer)>;
+using EthMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
+                                                               const EthController& ethController,
+                                                               const EthMessageContainer& ethMessageContainer)>;
+using LinMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
+                                                               const LinController& linController,
+                                                               const LinMessageContainer& linMessageContainer)>;
 
 enum class Result : uint32_t {
     Ok,
@@ -79,21 +112,15 @@ enum class Result : uint32_t {
     Disconnected
 };
 
-[[nodiscard]] const char* ToString(Result result);
-
 enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
-[[nodiscard]] const char* ToString(CoSimType coSimType);
-
 enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
-
-[[nodiscard]] const char* ToString(ConnectionKind connectionKind);
 
 enum class Command : uint32_t {
     None,
@@ -107,8 +134,6 @@ enum class Command : uint32_t {
     Ping
 };
 
-[[nodiscard]] const char* ToString(Command command);
-
 enum class Severity : uint32_t {
     Error,
     Warning,
@@ -116,21 +141,29 @@ enum class Severity : uint32_t {
     Trace
 };
 
-[[nodiscard]] const char* ToString(Severity severity);
-
 enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
-
-[[nodiscard]] const char* ToString(TerminateReason terminateReason);
 
 enum class ConnectionState : uint32_t {
     Disconnected,
     Connected
 };
 
-[[nodiscard]] const char* ToString(ConnectionState connectionState);
+enum class SimulationState : uint32_t {
+    Unloaded,
+    Stopped,
+    Running,
+    Paused,
+    Terminated
+};
+
+enum class Mode : uint32_t {
+};
+
+enum class IoSignalId : uint32_t {
+};
 
 enum class DataType : uint32_t {
     Bool = 1,
@@ -146,74 +179,21 @@ enum class DataType : uint32_t {
     Float64
 };
 
-[[nodiscard]] size_t GetDataTypeSize(DataType dataType);
-
-[[nodiscard]] const char* ToString(DataType dataType);
-
 enum class SizeKind : uint32_t {
     Fixed = 1,
     Variable
 };
 
-[[nodiscard]] const char* ToString(SizeKind sizeKind);
-
-[[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
-
-enum class SimulationState : uint32_t {
-    Unloaded,
-    Stopped,
-    Running,
-    Paused,
-    Terminated
-};
-
-[[nodiscard]] const char* ToString(SimulationState simulationState);
-
-enum class Mode : uint32_t {
-};
-
-[[nodiscard]] const char* ToString(Mode mode);
-
-enum class IoSignalId : uint32_t {
-};
-
-[[nodiscard]] std::string ToString(IoSignalId signalId);
-
-struct IoSignal {
-    IoSignalId id{};
-    uint32_t length{};
-    DataType dataType{};
-    SizeKind sizeKind{};
-    const char* name{};
-
-    [[nodiscard]] std::string ToString() const;
-};
-
-struct IoSignalContainer {
-    IoSignalId id{};
-    uint32_t length{};
-    DataType dataType{};
-    SizeKind sizeKind{};
-    std::string name;
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] IoSignal Convert() const;
-};
-
-[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
-[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& signalContainers);
-
-[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& signalContainers);
-
 enum class BusControllerId : uint32_t {
 };
-
-[[nodiscard]] std::string ToString(BusControllerId busControllerId);
 
 enum class BusMessageId : uint32_t {
 };
 
-[[nodiscard]] std::string ToString(BusMessageId busMessageId);
+enum class LinControllerType : uint32_t {
+    Responder = 1,
+    Commander
+};
 
 enum class CanMessageFlags : uint32_t {
     Loopback = 1,
@@ -224,141 +204,11 @@ enum class CanMessageFlags : uint32_t {
     FlexibleDataRateFormat = 32
 };
 
-ENUM_BITMASK_OPS(CanMessageFlags);
-
-[[nodiscard]] std::string ToString(CanMessageFlags flags);
-
-struct CanController {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    uint64_t flexibleDataRateBitsPerSecond{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
-};
-
-struct CanControllerContainer {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    uint64_t flexibleDataRateBitsPerSecond{};
-    std::string name;
-    std::string channelName;
-    std::string clusterName;
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] CanController Convert() const;
-};
-
-[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& controllerContainers);
-
-[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& controllerContainers);
-
-struct CanMessageContainer;
-
-struct CanMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    BusMessageId id{};
-    CanMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(CanMessageContainer& messageContainer) const;
-};
-
-struct CanMessageContainer {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t reserved{};
-    BusMessageId id{};
-    CanMessageFlags flags{};
-    uint32_t length{};
-    std::array<uint8_t, CanMessageMaxLength> data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(CanMessage& message) const;
-};
-
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
     Drop = 4
 };
-
-ENUM_BITMASK_OPS(EthMessageFlags);
-
-[[nodiscard]] std::string ToString(EthMessageFlags flags);
-
-struct EthController {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    std::array<uint8_t, EthAddressLength> macAddress{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
-};
-
-struct EthControllerContainer {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    std::array<uint8_t, EthAddressLength> macAddress{};
-    std::string name;
-    std::string channelName;
-    std::string clusterName;
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] EthController Convert() const;
-};
-
-[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& controllerContainers);
-
-[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& controllerContainers);
-
-struct EthMessageContainer;
-
-struct EthMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t reserved{};
-    EthMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(EthMessageContainer& messageContainer) const;
-};
-
-struct EthMessageContainer {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t reserved{};
-    EthMessageFlags flags{};
-    uint32_t length{};
-    std::array<uint8_t, EthMessageMaxLength> data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(EthMessage& message) const;
-};
-
-enum class LinControllerType : uint32_t {
-    Responder = 1,
-    Commander
-};
-
-[[nodiscard]] const char* ToString(LinControllerType type);
 
 enum class LinMessageFlags : uint32_t {
     Loopback = 1,
@@ -373,114 +223,6 @@ enum class LinMessageFlags : uint32_t {
     ParityFailure = 512,
     Collision = 1024,
     NoResponse = 2048
-};
-
-ENUM_BITMASK_OPS(LinMessageFlags);
-
-[[nodiscard]] std::string ToString(LinMessageFlags flags);
-
-struct LinController {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    LinControllerType type{};
-    const char* name{};
-    const char* channelName{};
-    const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
-};
-
-struct LinControllerContainer {
-    BusControllerId id{};
-    uint32_t queueSize{};
-    uint64_t bitsPerSecond{};
-    LinControllerType type{};
-    std::string name;
-    std::string channelName;
-    std::string clusterName;
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] LinController Convert() const;
-};
-
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& controllerContainers);
-
-[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& controllerContainers);
-
-struct LinMessageContainer;
-
-struct LinMessage {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    BusMessageId id{};
-    LinMessageFlags flags{};
-    uint32_t length{};
-    const uint8_t* data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(LinMessageContainer& messageContainer) const;
-};
-
-struct LinMessageContainer {
-    SimulationTime timestamp{};
-    BusControllerId controllerId{};
-    uint32_t reserved{};
-    BusMessageId id{};
-    LinMessageFlags flags{};
-    uint32_t length{};
-    std::array<uint8_t, LinMessageMaxLength> data{};
-
-    [[nodiscard]] std::string ToString() const;
-    [[nodiscard]] Result Check() const;
-    void WriteTo(LinMessage& message) const;
-};
-
-using LogCallback = std::function<void(Severity, const std::string&)>;
-
-void SetLogCallback(LogCallback logCallback);
-
-using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
-using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason reason)>;
-using IncomingSignalChangedCallback =
-    std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
-using CanMessageReceivedCallback =
-    std::function<void(SimulationTime simulationTime, const CanController& controller, const CanMessage& message)>;
-using EthMessageReceivedCallback =
-    std::function<void(SimulationTime simulationTime, const EthController& controller, const EthMessage& message)>;
-using LinMessageReceivedCallback =
-    std::function<void(SimulationTime simulationTime, const LinController& controller, const LinMessage& message)>;
-using CanMessageContainerReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const CanController& controller, const CanMessageContainer& messageContainer)>;
-using EthMessageContainerReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer)>;
-using LinMessageContainerReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer)>;
-
-struct Callbacks {
-    SimulationCallback simulationStartedCallback;
-    SimulationCallback simulationStoppedCallback;
-    SimulationTerminatedCallback simulationTerminatedCallback;
-    SimulationCallback simulationPausedCallback;
-    SimulationCallback simulationContinuedCallback;
-    SimulationCallback simulationBeginStepCallback;
-    SimulationCallback simulationEndStepCallback;
-    IncomingSignalChangedCallback incomingSignalChangedCallback;
-    CanMessageReceivedCallback canMessageReceivedCallback;
-    LinMessageReceivedCallback linMessageReceivedCallback;
-    EthMessageReceivedCallback ethMessageReceivedCallback;
-    CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
-    LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
-    EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
-};
-
-struct ConnectConfig {
-    std::string remoteIpAddress;
-    std::string serverName;
-    std::string clientName;
-    uint16_t remotePort{};
-    uint16_t localPort{};
 };
 
 enum class FrameKind : uint32_t {
@@ -508,6 +250,309 @@ enum class FrameKind : uint32_t {
     UnsetPort
 };
 
+struct Callbacks {
+    SimulationCallback simulationStartedCallback;
+    SimulationCallback simulationStoppedCallback;
+    SimulationTerminatedCallback simulationTerminatedCallback;
+    SimulationCallback simulationPausedCallback;
+    SimulationCallback simulationContinuedCallback;
+    SimulationCallback simulationBeginStepCallback;
+    SimulationCallback simulationEndStepCallback;
+    IncomingSignalChangedCallback incomingSignalChangedCallback;
+    CanMessageReceivedCallback canMessageReceivedCallback;
+    LinMessageReceivedCallback linMessageReceivedCallback;
+    EthMessageReceivedCallback ethMessageReceivedCallback;
+    CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
+    LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
+    EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
+};
+
+struct ConnectConfig {
+    std::string remoteIpAddress;
+    std::string serverName;
+    std::string clientName;
+    uint16_t remotePort{};
+    uint16_t localPort{};
+};
+
+struct IoSignal {
+    IoSignalId id{};
+    uint32_t length{};
+    DataType dataType{};
+    SizeKind sizeKind{};
+    const char* name{};
+
+    [[nodiscard]] std::string ToString() const;
+};
+
+struct IoSignalContainer {
+    IoSignalId id{};
+    uint32_t length{};
+    DataType dataType{};
+    SizeKind sizeKind{};
+    std::string name;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] IoSignal Convert() const;
+};
+
+struct CanController {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    uint64_t flexibleDataRateBitsPerSecond{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
+};
+
+struct CanControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    uint64_t flexibleDataRateBitsPerSecond{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] CanController Convert() const;
+};
+
+struct CanMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    BusMessageId id{};
+    CanMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(CanMessageContainer& canMessageContainer) const;
+};
+
+struct CanMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    BusMessageId id{};
+    CanMessageFlags flags{};
+    uint32_t length{};
+    std::array<uint8_t, CanMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(CanMessage& canMessage) const;
+};
+
+struct EthController {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    std::array<uint8_t, EthAddressLength> macAddress{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
+};
+
+struct EthControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    std::array<uint8_t, EthAddressLength> macAddress{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] EthController Convert() const;
+};
+
+struct EthMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    EthMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(EthMessageContainer& ethMessageContainer) const;
+};
+
+struct EthMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    EthMessageFlags flags{};
+    uint32_t length{};
+    std::array<uint8_t, EthMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(EthMessage& ethMessage) const;
+};
+
+struct LinController {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    LinControllerType type{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
+
+    [[nodiscard]] std::string ToString() const;
+};
+
+struct LinControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    LinControllerType type{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] LinController Convert() const;
+};
+
+struct LinMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    BusMessageId id{};
+    LinMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(LinMessageContainer& linMessageContainer) const;
+};
+
+struct LinMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    BusMessageId id{};
+    LinMessageFlags flags{};
+    uint32_t length{};
+    std::array<uint8_t, LinMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(LinMessage& linMessage) const;
+};
+
+ENUM_BITMASK_OPS(CanMessageFlags);
+ENUM_BITMASK_OPS(EthMessageFlags);
+ENUM_BITMASK_OPS(LinMessageFlags);
+
+[[nodiscard]] std::string ToString(SimulationTime simulationTime);
+[[nodiscard]] const char* ToString(Result result);
+[[nodiscard]] const char* ToString(CoSimType coSimType);
+[[nodiscard]] const char* ToString(ConnectionKind connectionKind);
+[[nodiscard]] const char* ToString(Command command);
+[[nodiscard]] const char* ToString(Severity severity);
+[[nodiscard]] const char* ToString(TerminateReason terminateReason);
+[[nodiscard]] const char* ToString(ConnectionState connectionState);
+[[nodiscard]] const char* ToString(SimulationState simulationState);
+[[nodiscard]] const char* ToString(Mode mode);
+[[nodiscard]] std::string ToString(IoSignalId ioSignalId);
+[[nodiscard]] const char* ToString(DataType dataType);
+[[nodiscard]] const char* ToString(SizeKind sizeKind);
+[[nodiscard]] std::string ToString(BusControllerId busControllerId);
+[[nodiscard]] std::string ToString(BusMessageId busMessageId);
+[[nodiscard]] const char* ToString(LinControllerType linControllerType);
+[[nodiscard]] std::string ToString(CanMessageFlags canMessageFlags);
+[[nodiscard]] std::string ToString(EthMessageFlags ethMessageFlags);
+[[nodiscard]] std::string ToString(LinMessageFlags linMessageFlags);
 [[nodiscard]] const char* ToString(FrameKind frameKind);
+
+[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& ioSignalContainers);
+[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& canControllerContainers);
+[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& ethControllerContainers);
+[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainer);
+
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, CoSimType coSimType);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Command command);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Severity severity);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationState simulationState);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Mode mode);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, DataType dataType);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, FrameKind frameKind);
+
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanController& canController);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthController& ethController);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinController& linController);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& linControllerContainer);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
+
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
+                                       const std::vector<CanControllerContainer>& canControllerContainers);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
+                                       const std::vector<EthControllerContainer>& ethControllerContainers);
+[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
+                                       const std::vector<LinControllerContainer>& linControllerContainer);
+
+[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
+[[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second);
+[[nodiscard]] bool operator==(const CanController& first, const CanController& second);
+[[nodiscard]] bool operator==(const CanControllerContainer& first, const CanControllerContainer& second);
+[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second);
+[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second);
+[[nodiscard]] bool operator==(const EthController& first, const EthController& second);
+[[nodiscard]] bool operator==(const EthControllerContainer& first, const EthControllerContainer& second);
+[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second);
+[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second);
+[[nodiscard]] bool operator==(const LinController& first, const LinController& second);
+[[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second);
+[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second);
+[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second);
+
+[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers);
+[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers);
+[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers);
+[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainer);
+
+[[nodiscard]] size_t GetDataTypeSize(DataType dataType);
+
+[[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
+
+[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
+
+[[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
+
+void SetLogCallback(LogCallback logCallback);
 
 }  // namespace DsVeosCoSim

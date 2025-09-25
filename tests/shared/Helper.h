@@ -3,7 +3,6 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -85,33 +84,6 @@ void ClearLastMessage();
 [[nodiscard]] int32_t GetChar();
 
 void SetEnvVariable(const std::string& name, const std::string& value);
-
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationState state);
-
-[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& signal);
-
-[[nodiscard]] bool operator==(const CanController& first, const CanController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanController& controller);
-
-[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second);
-[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessage& message);
-
-[[nodiscard]] bool operator==(const EthController& first, const EthController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthController& controller);
-
-[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second);
-[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessage& message);
-
-[[nodiscard]] bool operator==(const LinController& first, const LinController& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinController& controller);
-
-[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second);
-[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second);
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessage& message);
 
 [[nodiscard]] Result StartUp();
 

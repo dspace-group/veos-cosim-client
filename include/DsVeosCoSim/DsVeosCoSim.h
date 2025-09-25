@@ -83,6 +83,11 @@ enum {
 typedef void* DsVeosCoSim_Handle;
 
 /**
+ * \brief Represents the simulation time in nanoseconds.
+ */
+typedef int64_t DsVeosCoSim_SimulationTime;
+
+/**
  * \brief Represents an IO signal id.
  */
 typedef uint32_t DsVeosCoSim_IoSignalId;
@@ -91,11 +96,6 @@ typedef uint32_t DsVeosCoSim_IoSignalId;
  * \brief Represents a bus controller id.
  */
 typedef uint32_t DsVeosCoSim_BusControllerId;
-
-/**
- * \brief Represents the simulation time in nanoseconds.
- */
-typedef int64_t DsVeosCoSim_SimulationTime;
 
 /**
  * \brief Represents a result of a function.
@@ -172,6 +172,16 @@ typedef enum DsVeosCoSim_Command {
      * \brief Simulation continue command.
      */
     DsVeosCoSim_Command_Continue,
+
+    /**
+     * \brief Simulation terminate finished command.
+     */
+    DsVeosCoSim_Command_TerminateFinished,
+
+    /**
+     * \brief Simulation ping command.
+     */
+    DsVeosCoSim_Command_Ping,
 
     DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
 } DsVeosCoSim_Command;
@@ -349,6 +359,179 @@ typedef enum DsVeosCoSim_SizeKind {
 } DsVeosCoSim_SizeKind;
 
 /**
+ * \brief Represents the type of the LIN controller.
+ */
+typedef enum DsVeosCoSim_LinControllerType {
+    /**
+     * \brief LIN controller is a responder.
+     */
+    DsVeosCoSim_LinControllerType_Responder = 1,
+
+    /**
+     * \brief LIN controller is a commander.
+     */
+    DsVeosCoSim_LinControllerType_Commander,
+
+    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
+} DsVeosCoSim_LinControllerType;
+
+/**
+ * \brief Underlying data type of the flags of a CAN message.
+ */
+typedef uint32_t DsVeosCoSim_CanMessageFlags;
+
+/**
+ * \brief Represents the flags of a CAN message.
+ */
+enum {
+    /**
+     * \brief CAN message will be transmitted to sender as well.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_CanMessageFlags_Loopback = 1,
+
+    /**
+     * \brief CAN message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_CanMessageFlags_Error = 2,
+
+    /**
+     * \brief CAN message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_CanMessageFlags_Drop = 4,
+
+    /**
+     * \brief CAN message id uses the extended range.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_CanMessageFlags_ExtendedId = 8,
+
+    /**
+     * \brief CAN message has a bit rate switch.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_CanMessageFlags_BitRateSwitch = 16,
+
+    /**
+     * \brief CAN message is a CANFD message.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32
+};
+
+/**
+ * \brief Underlying data type of the flags of an ethernet message.
+ */
+typedef uint32_t DsVeosCoSim_EthMessageFlags;
+
+/**
+ * \brief Represents the flags of an ethernet message.
+ */
+enum {
+    /**
+     * \brief Ethernet message will be transmitted to sender as well.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_EthMessageFlags_Loopback = 1,
+
+    /**
+     * \brief Ethernet message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_EthMessageFlags_Error = 2,
+
+    /**
+     * \brief Ethernet message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_EthMessageFlags_Drop = 4
+};
+
+/**
+ * \brief Underlying data type of the flags of a LIN message.
+ */
+typedef uint32_t DsVeosCoSim_LinMessageFlags;
+
+/**
+ * \brief Represents the flags of a LIN message.
+ */
+enum {
+    /**
+     * \brief LIN message will be transmitted to sender as well.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_Loopback = 1,
+
+    /**
+     * \brief LIN message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_Error = 2,
+
+    /**
+     * \brief LIN message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_Drop = 4,
+
+    /**
+     * \brief LIN message is a header.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_Header = 8,
+
+    /**
+     * \brief LIN message is a response.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_Response = 16,
+
+    /**
+     * \brief LIN message is a wake event.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_WakeEvent = 32,
+
+    /**
+     * \brief LIN message is a sleep event.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_SleepEvent = 64,
+
+    /**
+     * \brief LIN message uses the enhanced checksum.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_LinMessageFlags_EnhancedChecksum = 128,
+
+    /**
+     * \brief LIN message will only be used for the next header.
+     *        For transmitted messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_TransferOnce = 256,
+
+    /**
+     * \brief LIN header could not be transmitted. Another LIN header was sent at the same time.
+     *        For received messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_ParityFailure = 512,
+
+    /**
+     * \brief LIN response could not be transmitted. Another LIN response was sent at the same time.
+     *        For received messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_Collision = 1024,
+
+    /**
+     * \brief No response received for the last header.
+     *        For received messages only.
+     */
+    DsVeosCoSim_LinMessageFlags_NoResponse = 2048
+};
+
+/**
  * \brief Represents an IO signal.
  */
 typedef struct DsVeosCoSim_IoSignal {
@@ -418,52 +601,6 @@ typedef struct DsVeosCoSim_CanController {
      */
     const char* clusterName;
 } DsVeosCoSim_CanController;
-
-/**
- * \brief Underlying data type of the flags of a CAN message.
- */
-typedef uint32_t DsVeosCoSim_CanMessageFlags;
-
-/**
- * \brief Represents the flags of a CAN message.
- */
-enum {
-    /**
-     * \brief CAN message will be transmitted to sender as well.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_CanMessageFlags_Loopback = 1,
-
-    /**
-     * \brief CAN message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_CanMessageFlags_Error = 2,
-
-    /**
-     * \brief CAN message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_CanMessageFlags_Drop = 4,
-
-    /**
-     * \brief CAN message id uses the extended range.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_CanMessageFlags_ExtendedId = 8,
-
-    /**
-     * \brief CAN message has a bit rate switch.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_CanMessageFlags_BitRateSwitch = 16,
-
-    /**
-     * \brief CAN message is a CANFD message.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32
-};
 
 /**
  * \brief Represents a CAN message.
@@ -583,34 +720,6 @@ typedef struct DsVeosCoSim_EthController {
 } DsVeosCoSim_EthController;
 
 /**
- * \brief Underlying data type of the flags of an ethernet message.
- */
-typedef uint32_t DsVeosCoSim_EthMessageFlags;
-
-/**
- * \brief Represents the flags of an ethernet message.
- */
-enum {
-    /**
-     * \brief Ethernet message will be transmitted to sender as well.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_EthMessageFlags_Loopback = 1,
-
-    /**
-     * \brief Ethernet message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_EthMessageFlags_Error = 2,
-
-    /**
-     * \brief Ethernet message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_EthMessageFlags_Drop = 4
-};
-
-/**
  * \brief Represents an ethernet message.
  */
 typedef struct DsVeosCoSim_EthMessage {
@@ -683,23 +792,6 @@ typedef struct DsVeosCoSim_EthMessageContainer {
 } DsVeosCoSim_EthMessageContainer;
 
 /**
- * \brief Represents the type of the LIN controller.
- */
-typedef enum DsVeosCoSim_LinControllerType {
-    /**
-     * \brief LIN controller is a responder.
-     */
-    DsVeosCoSim_LinControllerType_Responder = 1,
-
-    /**
-     * \brief LIN controller is a commander.
-     */
-    DsVeosCoSim_LinControllerType_Commander,
-
-    DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_ = INT32_MAX
-} DsVeosCoSim_LinControllerType;
-
-/**
  * \brief Represents an LIN controller.
  */
 typedef struct DsVeosCoSim_LinController {
@@ -738,88 +830,6 @@ typedef struct DsVeosCoSim_LinController {
      */
     const char* clusterName;
 } DsVeosCoSim_LinController;
-
-/**
- * \brief Underlying data type of the flags of a LIN message.
- */
-typedef uint32_t DsVeosCoSim_LinMessageFlags;
-
-/**
- * \brief Represents the flags of a LIN message.
- */
-enum {
-    /**
-     * \brief LIN message will be transmitted to sender as well.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_Loopback = 1,
-
-    /**
-     * \brief LIN message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_Error = 2,
-
-    /**
-     * \brief LIN message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
-     *        For received messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_Drop = 4,
-
-    /**
-     * \brief LIN message is a header.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_Header = 8,
-
-    /**
-     * \brief LIN message is a response.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_Response = 16,
-
-    /**
-     * \brief LIN message is a wake event.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_WakeEvent = 32,
-
-    /**
-     * \brief LIN message is a sleep event.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_SleepEvent = 64,
-
-    /**
-     * \brief LIN message uses the enhanced checksum.
-     *        For received and transmitted messages.
-     */
-    DsVeosCoSim_LinMessageFlags_EnhancedChecksum = 128,
-
-    /**
-     * \brief LIN message will only be used for the next header.
-     *        For transmitted messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_TransferOnce = 256,
-
-    /**
-     * \brief LIN header could not be transmitted. Another LIN header was sent at the same time.
-     *        For received messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_ParityFailure = 512,
-
-    /**
-     * \brief LIN response could not be transmitted. Another LIN response was sent at the same time.
-     *        For received messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_Collision = 1024,
-
-    /**
-     * \brief No response received for the last header.
-     *        For received messages only.
-     */
-    DsVeosCoSim_LinMessageFlags_NoResponse = 2048
-};
 
 /**
  * \brief Represents a LIN message.

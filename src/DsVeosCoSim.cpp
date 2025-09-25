@@ -679,7 +679,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoS
 }
 
 std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return SimulationTimeToString(SimulationTime(simulationTime));
+    return ToString(SimulationTime(simulationTime));
 }
 
 std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal) {
@@ -745,3 +745,200 @@ std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flag
 std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags) {
     return ToString(static_cast<LinMessageFlags>(flags));
 }
+
+static_assert(CanMessageMaxLength == DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH);
+static_assert(EthMessageMaxLength == DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH);
+static_assert(LinMessageMaxLength == DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH);
+static_assert(EthAddressLength == DSVEOSCOSIM_ETH_ADDRESS_LENGTH);
+
+static_assert(sizeof(void*) == sizeof(DsVeosCoSim_Handle));
+
+static_assert(sizeof(SimulationTime) == sizeof(DsVeosCoSim_SimulationTime));
+
+static_assert(sizeof(Result) == sizeof(DsVeosCoSim_Result));
+static_assert(static_cast<int>(Result::Ok) == DsVeosCoSim_Result_Ok);
+static_assert(static_cast<int>(Result::Error) == DsVeosCoSim_Result_Error);
+static_assert(static_cast<int>(Result::Empty) == DsVeosCoSim_Result_Empty);
+static_assert(static_cast<int>(Result::Full) == DsVeosCoSim_Result_Full);
+static_assert(static_cast<int>(Result::InvalidArgument) == DsVeosCoSim_Result_InvalidArgument);
+static_assert(static_cast<int>(Result::Disconnected) == DsVeosCoSim_Result_Disconnected);
+
+static_assert(sizeof(CoSimType) == sizeof(uint32_t));
+
+static_assert(sizeof(ConnectionKind) == sizeof(uint32_t));
+
+static_assert(sizeof(Command) == sizeof(DsVeosCoSim_Command));
+static_assert(static_cast<int>(Command::None) == DsVeosCoSim_Command_None);
+static_assert(static_cast<int>(Command::Step) == DsVeosCoSim_Command_Step);
+static_assert(static_cast<int>(Command::Start) == DsVeosCoSim_Command_Start);
+static_assert(static_cast<int>(Command::Stop) == DsVeosCoSim_Command_Stop);
+static_assert(static_cast<int>(Command::Terminate) == DsVeosCoSim_Command_Terminate);
+static_assert(static_cast<int>(Command::Pause) == DsVeosCoSim_Command_Pause);
+static_assert(static_cast<int>(Command::Continue) == DsVeosCoSim_Command_Continue);
+static_assert(static_cast<int>(Command::TerminateFinished) == DsVeosCoSim_Command_TerminateFinished);
+static_assert(static_cast<int>(Command::Ping) == DsVeosCoSim_Command_Ping);
+
+static_assert(sizeof(Severity) == sizeof(DsVeosCoSim_Severity));
+static_assert(static_cast<int>(Severity::Error) == DsVeosCoSim_Severity_Error);
+static_assert(static_cast<int>(Severity::Warning) == DsVeosCoSim_Severity_Warning);
+static_assert(static_cast<int>(Severity::Info) == DsVeosCoSim_Severity_Info);
+static_assert(static_cast<int>(Severity::Trace) == DsVeosCoSim_Severity_Trace);
+
+static_assert(sizeof(TerminateReason) == sizeof(DsVeosCoSim_TerminateReason));
+static_assert(static_cast<int>(TerminateReason::Finished) == DsVeosCoSim_TerminateReason_Finished);
+static_assert(static_cast<int>(TerminateReason::Error) == DsVeosCoSim_TerminateReason_Error);
+
+static_assert(sizeof(ConnectionState) == sizeof(DsVeosCoSim_ConnectionState));
+static_assert(static_cast<int>(ConnectionState::Disconnected) == DsVeosCoSim_ConnectionState_Disconnected);
+static_assert(static_cast<int>(ConnectionState::Connected) == DsVeosCoSim_ConnectionState_Connected);
+
+static_assert(sizeof(SimulationState) == sizeof(DsVeosCoSim_SimulationState));
+static_assert(static_cast<int>(SimulationState::Unloaded) == DsVeosCoSim_SimulationState_Unloaded);
+static_assert(static_cast<int>(SimulationState::Stopped) == DsVeosCoSim_SimulationState_Stopped);
+static_assert(static_cast<int>(SimulationState::Running) == DsVeosCoSim_SimulationState_Running);
+static_assert(static_cast<int>(SimulationState::Paused) == DsVeosCoSim_SimulationState_Paused);
+static_assert(static_cast<int>(SimulationState::Terminated) == DsVeosCoSim_SimulationState_Terminated);
+
+static_assert(sizeof(Mode) == sizeof(uint32_t));
+
+static_assert(sizeof(IoSignalId) == sizeof(DsVeosCoSim_IoSignalId));
+
+static_assert(sizeof(DataType) == sizeof(DsVeosCoSim_DataType));
+static_assert(static_cast<int>(DataType::Bool) == DsVeosCoSim_DataType_Bool);
+static_assert(static_cast<int>(DataType::Int8) == DsVeosCoSim_DataType_Int8);
+static_assert(static_cast<int>(DataType::Int16) == DsVeosCoSim_DataType_Int16);
+static_assert(static_cast<int>(DataType::Int32) == DsVeosCoSim_DataType_Int32);
+static_assert(static_cast<int>(DataType::Int64) == DsVeosCoSim_DataType_Int64);
+static_assert(static_cast<int>(DataType::UInt8) == DsVeosCoSim_DataType_UInt8);
+static_assert(static_cast<int>(DataType::UInt16) == DsVeosCoSim_DataType_UInt16);
+static_assert(static_cast<int>(DataType::UInt32) == DsVeosCoSim_DataType_UInt32);
+static_assert(static_cast<int>(DataType::UInt64) == DsVeosCoSim_DataType_UInt64);
+static_assert(static_cast<int>(DataType::Float32) == DsVeosCoSim_DataType_Float32);
+static_assert(static_cast<int>(DataType::Float64) == DsVeosCoSim_DataType_Float64);
+
+static_assert(sizeof(SizeKind) == sizeof(DsVeosCoSim_SizeKind));
+static_assert(static_cast<int>(SizeKind::Fixed) == DsVeosCoSim_SizeKind_Fixed);
+static_assert(static_cast<int>(SizeKind::Variable) == DsVeosCoSim_SizeKind_Variable);
+
+static_assert(sizeof(BusControllerId) == sizeof(DsVeosCoSim_BusControllerId));
+
+static_assert(sizeof(BusMessageId) == sizeof(uint32_t));
+
+static_assert(sizeof(LinControllerType) == sizeof(DsVeosCoSim_LinControllerType));
+static_assert(static_cast<int>(LinControllerType::Responder) == DsVeosCoSim_LinControllerType_Responder);
+static_assert(static_cast<int>(LinControllerType::Commander) == DsVeosCoSim_LinControllerType_Commander);
+
+static_assert(sizeof(CanMessageFlags) == sizeof(DsVeosCoSim_CanMessageFlags));
+static_assert(static_cast<int>(CanMessageFlags::Loopback) == DsVeosCoSim_CanMessageFlags_Loopback);
+static_assert(static_cast<int>(CanMessageFlags::Error) == DsVeosCoSim_CanMessageFlags_Error);
+static_assert(static_cast<int>(CanMessageFlags::Drop) == DsVeosCoSim_CanMessageFlags_Drop);
+static_assert(static_cast<int>(CanMessageFlags::ExtendedId) == DsVeosCoSim_CanMessageFlags_ExtendedId);
+static_assert(static_cast<int>(CanMessageFlags::BitRateSwitch) == DsVeosCoSim_CanMessageFlags_BitRateSwitch);
+static_assert(static_cast<int>(CanMessageFlags::FlexibleDataRateFormat) ==
+              DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat);
+
+static_assert(sizeof(EthMessageFlags) == sizeof(DsVeosCoSim_EthMessageFlags));
+static_assert(static_cast<int>(EthMessageFlags::Loopback) == DsVeosCoSim_EthMessageFlags_Loopback);
+static_assert(static_cast<int>(EthMessageFlags::Error) == DsVeosCoSim_EthMessageFlags_Error);
+static_assert(static_cast<int>(EthMessageFlags::Drop) == DsVeosCoSim_EthMessageFlags_Drop);
+
+static_assert(sizeof(LinMessageFlags) == sizeof(DsVeosCoSim_LinMessageFlags));
+static_assert(static_cast<int>(LinMessageFlags::Loopback) == DsVeosCoSim_LinMessageFlags_Loopback);
+static_assert(static_cast<int>(LinMessageFlags::Error) == DsVeosCoSim_LinMessageFlags_Error);
+static_assert(static_cast<int>(LinMessageFlags::Drop) == DsVeosCoSim_LinMessageFlags_Drop);
+static_assert(static_cast<int>(LinMessageFlags::Header) == DsVeosCoSim_LinMessageFlags_Header);
+static_assert(static_cast<int>(LinMessageFlags::Response) == DsVeosCoSim_LinMessageFlags_Response);
+static_assert(static_cast<int>(LinMessageFlags::WakeEvent) == DsVeosCoSim_LinMessageFlags_WakeEvent);
+static_assert(static_cast<int>(LinMessageFlags::SleepEvent) == DsVeosCoSim_LinMessageFlags_SleepEvent);
+static_assert(static_cast<int>(LinMessageFlags::EnhancedChecksum) == DsVeosCoSim_LinMessageFlags_EnhancedChecksum);
+static_assert(static_cast<int>(LinMessageFlags::TransferOnce) == DsVeosCoSim_LinMessageFlags_TransferOnce);
+static_assert(static_cast<int>(LinMessageFlags::ParityFailure) == DsVeosCoSim_LinMessageFlags_ParityFailure);
+static_assert(static_cast<int>(LinMessageFlags::Collision) == DsVeosCoSim_LinMessageFlags_Collision);
+static_assert(static_cast<int>(LinMessageFlags::NoResponse) == DsVeosCoSim_LinMessageFlags_NoResponse);
+
+static_assert(sizeof(FrameKind) == sizeof(uint32_t));
+
+static_assert(sizeof(IoSignal) == sizeof(DsVeosCoSim_IoSignal));
+static_assert(offsetof(IoSignal, id) == offsetof(DsVeosCoSim_IoSignal, id));
+static_assert(offsetof(IoSignal, length) == offsetof(DsVeosCoSim_IoSignal, length));
+static_assert(offsetof(IoSignal, dataType) == offsetof(DsVeosCoSim_IoSignal, dataType));
+static_assert(offsetof(IoSignal, sizeKind) == offsetof(DsVeosCoSim_IoSignal, sizeKind));
+static_assert(offsetof(IoSignal, name) == offsetof(DsVeosCoSim_IoSignal, name));
+
+static_assert(sizeof(CanController) == sizeof(DsVeosCoSim_CanController));
+static_assert(offsetof(CanController, id) == offsetof(DsVeosCoSim_CanController, id));
+static_assert(offsetof(CanController, queueSize) == offsetof(DsVeosCoSim_CanController, queueSize));
+static_assert(offsetof(CanController, bitsPerSecond) == offsetof(DsVeosCoSim_CanController, bitsPerSecond));
+static_assert(offsetof(CanController, flexibleDataRateBitsPerSecond) ==
+              offsetof(DsVeosCoSim_CanController, flexibleDataRateBitsPerSecond));
+static_assert(offsetof(CanController, name) == offsetof(DsVeosCoSim_CanController, name));
+static_assert(offsetof(CanController, channelName) == offsetof(DsVeosCoSim_CanController, channelName));
+static_assert(offsetof(CanController, clusterName) == offsetof(DsVeosCoSim_CanController, clusterName));
+
+static_assert(sizeof(CanMessage) == sizeof(DsVeosCoSim_CanMessage));
+static_assert(offsetof(CanMessage, timestamp) == offsetof(DsVeosCoSim_CanMessage, timestamp));
+static_assert(offsetof(CanMessage, controllerId) == offsetof(DsVeosCoSim_CanMessage, controllerId));
+static_assert(offsetof(CanMessage, id) == offsetof(DsVeosCoSim_CanMessage, id));
+static_assert(offsetof(CanMessage, flags) == offsetof(DsVeosCoSim_CanMessage, flags));
+static_assert(offsetof(CanMessage, length) == offsetof(DsVeosCoSim_CanMessage, length));
+static_assert(offsetof(CanMessage, data) == offsetof(DsVeosCoSim_CanMessage, data));
+
+static_assert(sizeof(CanMessageContainer) == sizeof(DsVeosCoSim_CanMessageContainer));
+static_assert(offsetof(CanMessageContainer, timestamp) == offsetof(DsVeosCoSim_CanMessageContainer, timestamp));
+static_assert(offsetof(CanMessageContainer, controllerId) == offsetof(DsVeosCoSim_CanMessageContainer, controllerId));
+static_assert(offsetof(CanMessageContainer, reserved) == offsetof(DsVeosCoSim_CanMessageContainer, reserved));
+static_assert(offsetof(CanMessageContainer, id) == offsetof(DsVeosCoSim_CanMessageContainer, id));
+static_assert(offsetof(CanMessageContainer, flags) == offsetof(DsVeosCoSim_CanMessageContainer, flags));
+static_assert(offsetof(CanMessageContainer, length) == offsetof(DsVeosCoSim_CanMessageContainer, length));
+static_assert(offsetof(CanMessageContainer, data) == offsetof(DsVeosCoSim_CanMessageContainer, data));
+
+static_assert(sizeof(EthController) == sizeof(DsVeosCoSim_EthController));
+static_assert(offsetof(EthController, id) == offsetof(DsVeosCoSim_EthController, id));
+static_assert(offsetof(EthController, queueSize) == offsetof(DsVeosCoSim_EthController, queueSize));
+static_assert(offsetof(EthController, bitsPerSecond) == offsetof(DsVeosCoSim_EthController, bitsPerSecond));
+static_assert(offsetof(EthController, macAddress) == offsetof(DsVeosCoSim_EthController, macAddress));
+static_assert(offsetof(EthController, name) == offsetof(DsVeosCoSim_EthController, name));
+static_assert(offsetof(EthController, channelName) == offsetof(DsVeosCoSim_EthController, channelName));
+static_assert(offsetof(EthController, clusterName) == offsetof(DsVeosCoSim_EthController, clusterName));
+
+static_assert(sizeof(EthMessage) == sizeof(DsVeosCoSim_EthMessage));
+static_assert(offsetof(EthMessage, timestamp) == offsetof(DsVeosCoSim_EthMessage, timestamp));
+static_assert(offsetof(EthMessage, controllerId) == offsetof(DsVeosCoSim_EthMessage, controllerId));
+static_assert(offsetof(EthMessage, reserved) == offsetof(DsVeosCoSim_EthMessage, reserved));
+static_assert(offsetof(EthMessage, flags) == offsetof(DsVeosCoSim_EthMessage, flags));
+static_assert(offsetof(EthMessage, length) == offsetof(DsVeosCoSim_EthMessage, length));
+static_assert(offsetof(EthMessage, data) == offsetof(DsVeosCoSim_EthMessage, data));
+
+static_assert(sizeof(EthMessageContainer) == sizeof(DsVeosCoSim_EthMessageContainer));
+static_assert(offsetof(EthMessageContainer, timestamp) == offsetof(DsVeosCoSim_EthMessageContainer, timestamp));
+static_assert(offsetof(EthMessageContainer, controllerId) == offsetof(DsVeosCoSim_EthMessageContainer, controllerId));
+static_assert(offsetof(EthMessageContainer, reserved) == offsetof(DsVeosCoSim_EthMessageContainer, reserved));
+static_assert(offsetof(EthMessageContainer, flags) == offsetof(DsVeosCoSim_EthMessageContainer, flags));
+static_assert(offsetof(EthMessageContainer, length) == offsetof(DsVeosCoSim_EthMessageContainer, length));
+static_assert(offsetof(EthMessageContainer, data) == offsetof(DsVeosCoSim_EthMessageContainer, data));
+
+static_assert(sizeof(LinController) == sizeof(DsVeosCoSim_LinController));
+static_assert(offsetof(LinController, id) == offsetof(DsVeosCoSim_LinController, id));
+static_assert(offsetof(LinController, queueSize) == offsetof(DsVeosCoSim_LinController, queueSize));
+static_assert(offsetof(LinController, bitsPerSecond) == offsetof(DsVeosCoSim_LinController, bitsPerSecond));
+static_assert(offsetof(LinController, type) == offsetof(DsVeosCoSim_LinController, type));
+static_assert(offsetof(LinController, name) == offsetof(DsVeosCoSim_LinController, name));
+static_assert(offsetof(LinController, channelName) == offsetof(DsVeosCoSim_LinController, channelName));
+static_assert(offsetof(LinController, clusterName) == offsetof(DsVeosCoSim_LinController, clusterName));
+
+static_assert(sizeof(LinMessage) == sizeof(DsVeosCoSim_LinMessage));
+static_assert(offsetof(LinMessage, timestamp) == offsetof(DsVeosCoSim_LinMessage, timestamp));
+static_assert(offsetof(LinMessage, controllerId) == offsetof(DsVeosCoSim_LinMessage, controllerId));
+static_assert(offsetof(LinMessage, id) == offsetof(DsVeosCoSim_LinMessage, id));
+static_assert(offsetof(LinMessage, flags) == offsetof(DsVeosCoSim_LinMessage, flags));
+static_assert(offsetof(LinMessage, length) == offsetof(DsVeosCoSim_LinMessage, length));
+static_assert(offsetof(LinMessage, data) == offsetof(DsVeosCoSim_LinMessage, data));
+
+static_assert(sizeof(LinMessageContainer) == sizeof(DsVeosCoSim_LinMessageContainer));
+static_assert(offsetof(LinMessageContainer, timestamp) == offsetof(DsVeosCoSim_LinMessageContainer, timestamp));
+static_assert(offsetof(LinMessageContainer, controllerId) == offsetof(DsVeosCoSim_LinMessageContainer, controllerId));
+static_assert(offsetof(LinMessageContainer, reserved) == offsetof(DsVeosCoSim_LinMessageContainer, reserved));
+static_assert(offsetof(LinMessageContainer, id) == offsetof(DsVeosCoSim_LinMessageContainer, id));
+static_assert(offsetof(LinMessageContainer, flags) == offsetof(DsVeosCoSim_LinMessageContainer, flags));
+static_assert(offsetof(LinMessageContainer, length) == offsetof(DsVeosCoSim_LinMessageContainer, length));
+static_assert(offsetof(LinMessageContainer, data) == offsetof(DsVeosCoSim_LinMessageContainer, data));
