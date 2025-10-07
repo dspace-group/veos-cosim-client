@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] virtual Result RunCallbackBasedCoSimulation(const Callbacks& callbacks) = 0;
     [[nodiscard]] virtual Result StartPollingBasedCoSimulation(const Callbacks& callbacks) = 0;
-    [[nodiscard]] virtual Result PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing) = 0;
+    [[nodiscard]] virtual Result PollCommand(SimulationTime& simulationTime, Command& command) = 0;
     [[nodiscard]] virtual Result FinishCommand() = 0;
     [[nodiscard]] virtual Result SetNextSimulationTime(SimulationTime simulationTime) = 0;
 

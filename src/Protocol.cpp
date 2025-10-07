@@ -7,12 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "BusBuffer.h"
 #include "Channel.h"
 #include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
-#include "IoBuffer.h"
 
 namespace DsVeosCoSim::Protocol {
 
@@ -614,8 +612,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 
 [[nodiscard]] Result ReadStep(ChannelReader& reader,
                               SimulationTime& simulationTime,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer,
+                              const DeserializeFunction& deserializeIoData,
+                              const DeserializeFunction& deserializeBusMessages,
                               const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStep();
@@ -627,8 +625,9 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
         callbacks.simulationBeginStepCallback(simulationTime);
     }
 
-    CheckResultWithMessage(ioBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read IO buffer data.");
-    CheckResultWithMessage(busBuffer.Deserialize(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+    CheckResultWithMessage(deserializeIoData(reader, simulationTime, callbacks), "Could not read IO buffer data.");
+    CheckResultWithMessage(deserializeBusMessages(reader, simulationTime, callbacks),
+                           "Could not read bus buffer data.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStep(simulationTime);
@@ -639,8 +638,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 
 [[nodiscard]] Result SendStep(ChannelWriter& writer,
                               SimulationTime simulationTime,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer) {
+                              const SerializeFunction& serializeIoData,
+                              const SerializeFunction& serializeBusMessages) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStep(simulationTime);
     }
@@ -653,8 +652,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
     blockWriter.Write(FrameKind::Step);
     blockWriter.Write(simulationTime);
 
-    CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
-    CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
+    CheckResultWithMessage(serializeIoData(writer), "Could not write IO buffer data.");
+    CheckResultWithMessage(serializeBusMessages(writer), "Could not write bus buffer data.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {
@@ -667,8 +666,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 [[nodiscard]] Result ReadStepOk(ChannelReader& reader,
                                 SimulationTime& nextSimulationTime,
                                 Command& command,
-                                const IoBuffer& ioBuffer,
-                                const BusBuffer& busBuffer,
+                                const DeserializeFunction& deserializeIoData,
+                                const DeserializeFunction& deserializeBusMessages,
                                 const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStepOk();
@@ -686,9 +685,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
         callbacks.simulationBeginStepCallback(nextSimulationTime);
     }
 
-    CheckResultWithMessage(ioBuffer.Deserialize(reader, nextSimulationTime, callbacks),
-                           "Could not read IO buffer data.");
-    CheckResultWithMessage(busBuffer.Deserialize(reader, nextSimulationTime, callbacks),
+    CheckResultWithMessage(deserializeIoData(reader, nextSimulationTime, callbacks), "Could not read IO buffer data.");
+    CheckResultWithMessage(deserializeBusMessages(reader, nextSimulationTime, callbacks),
                            "Could not read bus buffer data.");
 
     if (IsProtocolTracingEnabled()) {
@@ -701,8 +699,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 [[nodiscard]] Result SendStepOk(ChannelWriter& writer,
                                 SimulationTime nextSimulationTime,
                                 Command command,
-                                const IoBuffer& ioBuffer,
-                                const BusBuffer& busBuffer) {
+                                const SerializeFunction& serializeIoData,
+                                const SerializeFunction& serializeBusMessages) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStepOk(nextSimulationTime, command);
     }
@@ -716,8 +714,8 @@ constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
     blockWriter.Write(nextSimulationTime);
     blockWriter.Write(command);
 
-    CheckResultWithMessage(ioBuffer.Serialize(writer), "Could not write IO buffer data.");
-    CheckResultWithMessage(busBuffer.Serialize(writer), "Could not write bus buffer data.");
+    CheckResultWithMessage(serializeIoData(writer), "Could not write IO buffer data.");
+    CheckResultWithMessage(serializeBusMessages(writer), "Could not write bus buffer data.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
     if (IsProtocolTracingEnabled()) {

@@ -545,9 +545,7 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerCo
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
-
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
-
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
 
 void SetLogCallback(LogCallback logCallback);

@@ -317,8 +317,9 @@ private:
             _firstStep = false;
         }
 
-        CheckResultWithMessage(Protocol::SendStep(_channel->GetWriter(), simulationTime, *_ioBuffer, *_busBuffer),
-                               "Could not send step frame.");
+        CheckResultWithMessage(
+            Protocol::SendStep(_channel->GetWriter(), simulationTime, _serializeIoData, _serializeBusMessages),
+            "Could not send step frame.");
         CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
         return Result::Ok;
     }
@@ -496,19 +497,10 @@ private:
         switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::Ok:
                 return Result::Ok;
-            case FrameKind::Error: {
-                std::string errorMessage;
-                CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
-                                       "Could not read error frame.");
-                LogError(errorMessage);
-                return Result::Error;
-            }
+            case FrameKind::Error:
+                return OnError();
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
-                message.append("'.");
-                LogError(message);
-                return Result::Error;
+                return OnUnexpectedFrame(frameKind);
         }
     }
 
@@ -522,11 +514,7 @@ private:
                                        "Could not read ping ok frame.");
                 return Result::Ok;
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
-                message.append("'.");
-                LogError(message);
-                return Result::Error;
+                return OnUnexpectedFrame(frameKind);
         }
     }
 
@@ -544,11 +532,7 @@ private:
                 return Result::Ok;
             }
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
-                message.append("'.");
-                LogError(message);
-                return Result::Error;
+                return OnUnexpectedFrame(frameKind);
         }
     }
 
@@ -561,25 +545,23 @@ private:
                 CheckResultWithMessage(Protocol::ReadStepOk(_channel->GetReader(),
                                                             simulationTime,
                                                             command,
-                                                            *_ioBuffer,
-                                                            *_busBuffer,
+                                                            _deserializeIoData,
+                                                            _deserializeBusMessages,
                                                             _callbacks),
                                        "Could not receive step ok frame.");
                 return Result::Ok;
-            case FrameKind::Error: {
-                std::string errorMessage;
-                CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage),
-                                       "Could not read error frame.");
-                LogError(errorMessage);
-                return Result::Error;
-            }
+            case FrameKind::Error:
+                return OnError();
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
-                message.append("'.");
-                LogError(message);
-                return Result::Error;
+                return OnUnexpectedFrame(frameKind);
         }
+    }
+
+    [[nodiscard]] Result OnError() const {
+        std::string errorMessage;
+        CheckResultWithMessage(Protocol::ReadError(_channel->GetReader(), errorMessage), "Could not read error frame.");
+        LogError(errorMessage);
+        return Result::Error;
     }
 
     void HandlePendingCommand(Command command) const {
@@ -609,6 +591,14 @@ private:
         }
     }
 
+    [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
+        std::string message = "Received unexpected frame '";
+        message.append(ToString(frameKind));
+        message.append("'.");
+        LogError(message);
+        return Result::Error;
+    }
+
     std::unique_ptr<Channel> _channel;
 
     uint16_t _localPort{};
@@ -635,6 +625,24 @@ private:
     std::vector<LinControllerContainer> _linControllers;
     std::unique_ptr<IoBuffer> _ioBuffer;
     std::unique_ptr<BusBuffer> _busBuffer;
+
+    SerializeFunction _serializeIoData = [&](ChannelWriter& writer) {
+        return _ioBuffer->Serialize(writer);
+    };
+
+    SerializeFunction _serializeBusMessages = [&](ChannelWriter& writer) {
+        return _busBuffer->Serialize(writer);
+    };
+
+    DeserializeFunction _deserializeIoData =
+        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
+
+    DeserializeFunction _deserializeBusMessages =
+        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 };
 
 }  // namespace

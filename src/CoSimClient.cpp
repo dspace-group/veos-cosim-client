@@ -137,7 +137,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command, bool returnOnPing) override {
+    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command) override {
         CheckResult(EnsureIsConnected());
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
@@ -146,7 +146,7 @@ public:
             return Result::Error;
         }
 
-        if (!IsOk(PollCommandInternal(simulationTime, command, returnOnPing))) {
+        if (!IsOk(PollCommandInternal(simulationTime, command))) {
             CloseConnection();
             return Result::Error;
         }
@@ -569,11 +569,7 @@ private:
                 CheckResultWithMessage(OnConnectError(), "Could not handle connect error.");
                 return Result::Error;
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
-                message.append("'.");
-                LogError(message);
-                return Result::Error;
+                return OnUnexpectedFrame(frameKind);
         }
     }
 
@@ -589,13 +585,7 @@ private:
                         return Result::Disconnected;
                     }
 
-                    Command nextCommand = _nextCommand.exchange({});
-                    CheckResultWithMessage(Protocol::SendStepOk(_channel->GetWriter(),
-                                                                _nextSimulationTime,
-                                                                nextCommand,
-                                                                *_ioBuffer,
-                                                                *_busBuffer),
-                                           "Could not send step ok frame.");
+                    CheckResult(FinishStep());
                     break;
                 }
                 case FrameKind::Start:
@@ -604,7 +594,7 @@ private:
                         return Result::Disconnected;
                     }
 
-                    CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                    CheckResult(FinishCurrentCommand());
                     break;
                 case FrameKind::Stop:
                     CheckResultWithMessage(OnStop(), "Could not handle stop.");
@@ -612,7 +602,7 @@ private:
                         return Result::Disconnected;
                     }
 
-                    CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                    CheckResult(FinishCurrentCommand());
                     break;
                 case FrameKind::Terminate:
                     CheckResultWithMessage(OnTerminate(), "Could not handle terminate.");
@@ -620,7 +610,7 @@ private:
                         return Result::Disconnected;
                     }
 
-                    CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                    CheckResult(FinishCurrentCommand());
                     break;
                 case FrameKind::Pause:
                     CheckResultWithMessage(OnPause(), "Could not handle pause.");
@@ -628,7 +618,7 @@ private:
                         return Result::Disconnected;
                     }
 
-                    CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                    CheckResult(FinishCurrentCommand());
                     break;
                 case FrameKind::Continue:
                     CheckResultWithMessage(OnContinue(), "Could not handle continue.");
@@ -636,37 +626,34 @@ private:
                         return Result::Disconnected;
                     }
 
-                    CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                    CheckResult(FinishCurrentCommand());
                     break;
-                case FrameKind::Ping: {
-                    Command nextCommand = _nextCommand.exchange({});
-                    CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
-                                           "Could not send ping ok frame.");
+                case FrameKind::Ping:
+                    CheckResult(FinishPing());
                     break;
-                }
                 default:
-                    std::string message = "Received unexpected frame '";
-                    message.append(ToString(frameKind));
-                    message.append("'.");
-                    LogError(message);
-                    return Result::Error;
+                    return OnUnexpectedFrame(frameKind);
             }
         }
 
         return Result::Disconnected;
     }
 
-    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command, bool returnOnPing) {
+    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command) {
         simulationTime = _currentSimulationTime;
         command = Command::Terminate;
 
-        while (true) {
+        do {
             FrameKind frameKind{};
             CheckResult(Protocol::ReceiveHeader(_channel->GetReader(), frameKind));
             switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
                 case FrameKind::Step:
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     _currentCommand = Command::Step;
+                    break;
+                case FrameKind::Ping:
+                    _currentCommand = Command::Ping;
+                    CheckResult(FinishPing());
                     break;
                 case FrameKind::Start:
                     CheckResultWithMessage(OnStart(), "Could not handle start.");
@@ -688,25 +675,10 @@ private:
                     CheckResultWithMessage(OnContinue(), "Could not handle continue.");
                     _currentCommand = Command::Continue;
                     break;
-                case FrameKind::Ping:
-                    _currentCommand = Command::Ping;
-                    break;
                 default:
-                    std::string message = "Received unexpected frame '";
-                    message.append(ToString(frameKind));
-                    message.append("'.");
-                    LogError(message);
-                    return Result::Error;
+                    return OnUnexpectedFrame(frameKind);
             }
-
-            if (returnOnPing || (_currentCommand != Command::Ping)) {
-                break;
-            }
-
-            Command nextCommand = _nextCommand.exchange({});
-            CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
-                                   "Could not send ping ok frame.");
-        }
+        } while (_currentCommand != Command::Ping);
 
         simulationTime = _currentSimulationTime;
         command = _currentCommand;
@@ -715,30 +687,20 @@ private:
 
     [[nodiscard]] Result FinishCommandInternal() {
         switch (_currentCommand) {
+            case Command::Step:
+                CheckResult(FinishStep());
+                break;
             case Command::Start:
             case Command::Stop:
             case Command::Terminate:
             case Command::TerminateFinished:
             case Command::Pause:
             case Command::Continue:
-                CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+                CheckResult(FinishCurrentCommand());
                 break;
-            case Command::Step: {
-                Command nextCommand = _nextCommand.exchange({});
-                CheckResultWithMessage(Protocol::SendStepOk(_channel->GetWriter(),
-                                                            _nextSimulationTime,
-                                                            nextCommand,
-                                                            *_ioBuffer,
-                                                            *_busBuffer),
-                                       "Could not send step ok frame.");
+            case Command::Ping:
+                CheckResult(FinishPing());
                 break;
-            }
-            case Command::Ping: {
-                Command nextCommand = _nextCommand.exchange({});
-                CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
-                                       "Could not send ping ok frame.");
-                break;
-            }
             case Command::None:
                 break;
         }
@@ -748,9 +710,12 @@ private:
     }
 
     [[nodiscard]] Result OnStep() {
-        CheckResultWithMessage(
-            Protocol::ReadStep(_channel->GetReader(), _currentSimulationTime, *_ioBuffer, *_busBuffer, _callbacks),
-            "Could not read step frame.");
+        CheckResultWithMessage(Protocol::ReadStep(_channel->GetReader(),
+                                                  _currentSimulationTime,
+                                                  _deserializeIoData,
+                                                  _deserializeBusMessages,
+                                                  _callbacks),
+                               "Could not read step frame.");
 
         if (_callbacks.simulationEndStepCallback) {
             _callbacks.simulationEndStepCallback(_currentSimulationTime);
@@ -818,6 +783,29 @@ private:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result FinishStep() {
+        Command nextCommand = _nextCommand.exchange({});
+        CheckResultWithMessage(Protocol::SendStepOk(_channel->GetWriter(),
+                                                    _nextSimulationTime,
+                                                    nextCommand,
+                                                    _serializeIoData,
+                                                    _serializeBusMessages),
+                               "Could not send step ok frame.");
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result FinishPing() {
+        Command nextCommand = _nextCommand.exchange({});
+        CheckResultWithMessage(Protocol::SendPingOk(_channel->GetWriter(), nextCommand),
+                               "Could not send ping ok frame.");
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result FinishCurrentCommand() {
+        CheckResultWithMessage(Protocol::SendOk(_channel->GetWriter()), "Could not send ok frame.");
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result EnsureIsConnected() const {
         if (!_isConnected) {
             LogError("Not connected.");
@@ -869,6 +857,14 @@ private:
         if (_channel) {
             _channel->Disconnect();
         }
+    }
+
+    [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
+        std::string message = "Received unexpected frame '";
+        message.append(ToString(frameKind));
+        message.append("'.");
+        LogError(message);
+        return Result::Error;
     }
 
     [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
@@ -930,6 +926,24 @@ private:
 
     std::unique_ptr<IoBuffer> _ioBuffer;
     std::unique_ptr<BusBuffer> _busBuffer;
+
+    SerializeFunction _serializeIoData = [&](ChannelWriter& writer) {
+        return _ioBuffer->Serialize(writer);
+    };
+
+    SerializeFunction _serializeBusMessages = [&](ChannelWriter& writer) {
+        return _busBuffer->Serialize(writer);
+    };
+
+    DeserializeFunction _deserializeIoData =
+        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
+
+    DeserializeFunction _deserializeBusMessages =
+        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 };
 
 }  // namespace

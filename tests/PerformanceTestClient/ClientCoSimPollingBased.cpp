@@ -35,7 +35,7 @@ namespace {
     while (!isStopped) {
         SimulationTime simulationTime{};
         Command command{};
-        CheckResult(coSimClient->PollCommand(simulationTime, command, false));
+        CheckResult(coSimClient->PollCommand(simulationTime, command));
 
         switch (command) {
             case Command::Step:

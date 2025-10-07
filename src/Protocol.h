@@ -5,14 +5,16 @@
 #include <cstdint>
 #include <string>
 
-#include "BusBuffer.h"
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "IoBuffer.h"
 
 namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t CoSimProtocolVersion = 0x10000U;
+
+using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
+using DeserializeFunction =
+    std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
 
 namespace Protocol {
 
@@ -98,25 +100,25 @@ namespace Protocol {
 
 [[nodiscard]] Result ReadStep(ChannelReader& reader,
                               SimulationTime& simulationTime,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer,
+                              const DeserializeFunction& deserializeIoData,
+                              const DeserializeFunction& deserializeBusMessages,
                               const Callbacks& callbacks);
 [[nodiscard]] Result SendStep(ChannelWriter& writer,
                               SimulationTime simulationTime,
-                              const IoBuffer& ioBuffer,
-                              const BusBuffer& busBuffer);
+                              const SerializeFunction& serializeIoData,
+                              const SerializeFunction& serializeBusMessages);
 
 [[nodiscard]] Result ReadStepOk(ChannelReader& reader,
                                 SimulationTime& nextSimulationTime,
                                 Command& command,
-                                const IoBuffer& ioBuffer,
-                                const BusBuffer& busBuffer,
+                                const DeserializeFunction& deserializeIoData,
+                                const DeserializeFunction& deserializeBusMessages,
                                 const Callbacks& callbacks);
 [[nodiscard]] Result SendStepOk(ChannelWriter& writer,
                                 SimulationTime nextSimulationTime,
                                 Command command,
-                                const IoBuffer& ioBuffer,
-                                const BusBuffer& busBuffer);
+                                const SerializeFunction& serializeIoData,
+                                const SerializeFunction& serializeBusMessages);
 
 [[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName);
 [[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName);
@@ -143,19 +145,22 @@ namespace Protocol {
 [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller);
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers);
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<CanControllerContainer>& controllers);
 
 [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller);
 [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller);
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers);
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<EthControllerContainer>& controllers);
 
 [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller);
 [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller);
 
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers);
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<LinControllerContainer>& controllers);
 
 }  // namespace Protocol
 

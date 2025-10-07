@@ -4,11 +4,9 @@
 #include <optional>
 #include <string>
 
-#include "BusBuffer.h"
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Helper.h"
-#include "IoBuffer.h"
 #include "Protocol.h"
 #include "TestHelper.h"
 
@@ -414,20 +412,18 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
 
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
-    std::string ioBufferName = GenerateString("IoBuffer名前");
-    std::unique_ptr<IoBuffer> clientIoBuffer;
-    ExpectOk(CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, clientIoBuffer));
-    std::unique_ptr<IoBuffer> serverIoBuffer;
-    ExpectOk(CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, serverIoBuffer));
+    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) {
+        return Result::Ok;
+    };
 
-    std::string busBufferName = GenerateString("BusBuffer名前");
-    std::unique_ptr<BusBuffer> clientBusBuffer;
-    ExpectOk(CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {}, clientBusBuffer));
-    std::unique_ptr<BusBuffer> serverBusBuffer;
-    ExpectOk(CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {}, serverBusBuffer));
+    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
+                                                  [[maybe_unused]] SimulationTime simulationTime,
+                                                  [[maybe_unused]] const Callbacks& callbacks) {
+        return Result::Ok;
+    };
 
     // Act
-    AssertOk(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, *clientIoBuffer, *clientBusBuffer));
+    AssertOk(Protocol::SendStep(_senderChannel->GetWriter(), sendSimulationTime, serializeFunction, serializeFunction));
 
     // Assert
     AssertFrame(FrameKind::Step);
@@ -435,8 +431,8 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
     SimulationTime receiveSimulationTime{};
     AssertOk(Protocol::ReadStep(_receiverChannel->GetReader(),
                                 receiveSimulationTime,
-                                *serverIoBuffer,
-                                *serverBusBuffer,
+                                deserializeFunction,
+                                deserializeFunction,
                                 {}));
     AssertEq(sendSimulationTime, receiveSimulationTime);
 }
@@ -450,24 +446,22 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
 
     auto sendCommand = static_cast<Command>(GenerateU32());
 
-    std::string ioBufferName = GenerateString("IoBuffer名前");
-    std::unique_ptr<IoBuffer> clientIoBuffer;
-    ExpectOk(CreateIoBuffer(CoSimType::Client, connectionKind, ioBufferName, {}, {}, clientIoBuffer));
-    std::unique_ptr<IoBuffer> serverIoBuffer;
-    ExpectOk(CreateIoBuffer(CoSimType::Server, connectionKind, ioBufferName, {}, {}, serverIoBuffer));
+    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) {
+        return Result::Ok;
+    };
 
-    std::string busBufferName = GenerateString("BusBuffer名前");
-    std::unique_ptr<BusBuffer> clientBusBuffer;
-    ExpectOk(CreateBusBuffer(CoSimType::Client, connectionKind, busBufferName, {}, {}, {}, clientBusBuffer));
-    std::unique_ptr<BusBuffer> serverBusBuffer;
-    ExpectOk(CreateBusBuffer(CoSimType::Server, connectionKind, busBufferName, {}, {}, {}, serverBusBuffer));
+    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
+                                                  [[maybe_unused]] SimulationTime simulationTime,
+                                                  [[maybe_unused]] const Callbacks& callbacks) {
+        return Result::Ok;
+    };
 
     // Act
     AssertOk(Protocol::SendStepOk(_senderChannel->GetWriter(),
                                   sendSimulationTime,
                                   sendCommand,
-                                  *clientIoBuffer,
-                                  *clientBusBuffer));
+                                  serializeFunction,
+                                  serializeFunction));
 
     // Assert
     AssertFrame(FrameKind::StepOk);
@@ -477,8 +471,8 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     AssertOk(Protocol::ReadStepOk(_receiverChannel->GetReader(),
                                   receiveSimulationTime,
                                   receiveCommand,
-                                  *serverIoBuffer,
-                                  *serverBusBuffer,
+                                  deserializeFunction,
+                                  deserializeFunction,
                                   {}));
     AssertEq(sendSimulationTime, receiveSimulationTime);
 }

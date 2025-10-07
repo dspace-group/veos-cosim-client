@@ -272,9 +272,8 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle,
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->PollCommand(*reinterpret_cast<SimulationTime*>(simulationTime),
-                                                               *reinterpret_cast<Command*>(command),
-                                                               false));
+    return static_cast<DsVeosCoSim_Result>(
+        client->PollCommand(*reinterpret_cast<SimulationTime*>(simulationTime), *reinterpret_cast<Command*>(command)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {
