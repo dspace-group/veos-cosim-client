@@ -771,158 +771,155 @@ template <typename T, size_t TSize>
     return str;
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
+std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
     return stream << ToString(simulationTime);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Result result) {
+std::ostream& operator<<(std::ostream& stream, Result result) {
     return stream << ToString(result);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
+std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
     return stream << ToString(coSimType);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
+std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
     return stream << ToString(connectionKind);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Command command) {
+std::ostream& operator<<(std::ostream& stream, Command command) {
     return stream << ToString(command);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Severity severity) {
+std::ostream& operator<<(std::ostream& stream, Severity severity) {
     return stream << ToString(severity);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
+std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
     return stream << ToString(terminateReason);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
+std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
     return stream << ToString(connectionState);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
+std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
     return stream << ToString(simulationState);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, Mode mode) {
+std::ostream& operator<<(std::ostream& stream, Mode mode) {
     return stream << ToString(mode);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
+std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
     return stream << ToString(ioSignalId);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, DataType dataType) {
+std::ostream& operator<<(std::ostream& stream, DataType dataType) {
     return stream << ToString(dataType);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
+std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
     return stream << ToString(sizeKind);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
+std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
     return stream << ToString(busControllerId);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
+std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
     return stream << ToString(busMessageId);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
+std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
     return stream << ToString(linControllerType);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
     return stream << ToString(canMessageFlags);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
     return stream << ToString(ethMessageFlags);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
     return stream << ToString(linMessageFlags);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
+std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
     return stream << ToString(frameKind);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
+std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
     return stream << ioSignal.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
+std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
     return stream << ioSignalContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
+std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
     return stream << canController.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
     return stream << canControllerContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
+std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
     return stream << canMessage.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
     return stream << canMessageContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
+std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
     return stream << ethController.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
     return stream << ethControllerContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
+std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
     return stream << ethMessage.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
     return stream << ethMessageContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
+std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
     return stream << linController.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& linControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& linControllerContainer) {
     return stream << linControllerContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
+std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
     return stream << linMessage.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
     return stream << linMessageContainer.ToString();
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
     return stream << ToString(ioSignalContainers);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
-                                       const std::vector<CanControllerContainer>& canControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
     return stream << ToString(canControllerContainers);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
-                                       const std::vector<EthControllerContainer>& ethControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
     return stream << ToString(ethControllerContainers);
 }
 
-[[nodiscard]] std::ostream& operator<<(std::ostream& stream,
-                                       const std::vector<LinControllerContainer>& linControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
     return stream << ToString(linControllerContainers);
 }
 
@@ -1483,13 +1480,13 @@ void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const {
     (void)memcpy(linMessageContainer.data.data(), data, length);
 }
 
-void LinMessageContainer::WriteTo(LinMessage& message) const {
-    message.timestamp = timestamp;
-    message.controllerId = controllerId;
-    message.id = id;
-    message.flags = flags;
-    message.length = length;
-    message.data = data.data();
+void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
+    linMessage.timestamp = timestamp;
+    linMessage.controllerId = controllerId;
+    linMessage.id = id;
+    linMessage.flags = flags;
+    linMessage.length = length;
+    linMessage.data = data.data();
 }
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType) {

@@ -241,7 +241,7 @@ public:
         return _busBuffer->Transmit(messageContainer);
     }
 
-    [[nodiscard]] Result BackgroundService() override {
+    [[nodiscard]] Result BackgroundService(std::chrono::nanoseconds& roundTripTime) override {
         if (!_channel) {
             if (IsOk(AcceptChannel())) {
                 if (!IsOk(OnHandleConnect())) {
@@ -253,7 +253,7 @@ public:
         }
 
         Command command{};
-        if (!IsOk(Ping(command))) {
+        if (!IsOk(Ping(command, roundTripTime))) {
             return CloseConnection();
         }
 
@@ -335,9 +335,12 @@ private:
         return StartAccepting();
     }
 
-    [[nodiscard]] Result Ping(Command& command) const {
+    [[nodiscard]] Result Ping(Command& command, std::chrono::nanoseconds& roundTripTime) const {
+        auto start = high_resolution_clock::now();
         CheckResultWithMessage(Protocol::SendPing(_channel->GetWriter()), "Could not send ping frame.");
         CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
+        auto stop = high_resolution_clock::now();
+        roundTripTime = duration_cast<nanoseconds>(stop - start);
         return Result::Ok;
     }
 

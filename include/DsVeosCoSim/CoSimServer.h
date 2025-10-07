@@ -72,7 +72,7 @@ public:
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
 
-    [[nodiscard]] virtual Result BackgroundService() = 0;
+    [[nodiscard]] virtual Result BackgroundService(std::chrono::nanoseconds& roundTripTime) = 0;
 
     [[nodiscard]] virtual Result GetLocalPort(uint16_t& port) const = 0;
 };

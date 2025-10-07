@@ -1,3 +1,4 @@
+BasedOnStyle: Chromium
 AccessModifierOffset: -4
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
@@ -5,9 +6,11 @@ AllowShortBlocksOnASingleLine: Never
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortLambdasOnASingleLine: None
-BasedOnStyle: Chromium
 BinPackArguments: false
 BinPackParameters: false
 ColumnLimit: 120
 IndentWidth: 4
 InsertBraces: true
+InsertNewlineAtEOF: true
+LineEnding: LF
+UseTab: false

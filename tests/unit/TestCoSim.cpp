@@ -22,7 +22,8 @@ public:
     explicit BackgroundThread(CoSimServer& coSimServer) : _coSimServer(coSimServer) {
         _thread = std::thread([this] {
             while (!_stopEvent.Wait(1)) {
-                if (!IsOk(_coSimServer.BackgroundService())) {
+                std::chrono::nanoseconds roundTripTime{};
+                if (!IsOk(_coSimServer.BackgroundService(roundTripTime))) {
                     LogError("Error in background service.");
                     return;
                 }

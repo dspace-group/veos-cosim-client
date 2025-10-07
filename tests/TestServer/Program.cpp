@@ -1,5 +1,6 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -14,6 +15,7 @@
 #include "Helper.h"
 
 using namespace DsVeosCoSim;
+using namespace std::chrono;
 using namespace std::chrono_literals;
 
 namespace {
@@ -93,11 +95,16 @@ public:
         _stopBackgroundThreadFlag = false;
         _backgroundThread = std::thread([&] {
             while (!_stopBackgroundThreadFlag) {
-                std::this_thread::sleep_for(1ms);
+                std::this_thread::sleep_for(1s);
                 std::lock_guard lock(_mutex);
-                if (!IsOk(_server->BackgroundService())) {
+                std::chrono::nanoseconds roundTripTime{};
+                if (!IsOk(_server->BackgroundService(roundTripTime))) {
                     LogError("Error in background task.");
                     return;
+                }
+
+                if (roundTripTime.count() > 0) {
+                    LogTrace("Round trip time: {} ns.", roundTripTime.count());
                 }
             }
         });
