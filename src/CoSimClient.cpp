@@ -678,7 +678,7 @@ private:
                 default:
                     return OnUnexpectedFrame(frameKind);
             }
-        } while (_currentCommand != Command::Ping);
+        } while (_currentCommand == Command::Ping);
 
         simulationTime = _currentSimulationTime;
         command = _currentCommand;
