@@ -60,7 +60,8 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
                                         const std::vector<IoSignalContainer>& outgoingSignals,
                                         const std::vector<CanControllerContainer>& canControllers,
                                         const std::vector<EthControllerContainer>& ethControllers,
-                                        const std::vector<LinControllerContainer>& linControllers);
+                                        const std::vector<LinControllerContainer>& linControllers,
+                                        const std::vector<FrControllerContainer>& frControllers);
 void LogProtocolEndTraceSendConnectOk();
 
 void LogProtocolBeginTraceReadConnectOk();
@@ -72,7 +73,8 @@ void LogProtocolEndTraceReadConnectOk(uint32_t protocolVersion,
                                       const std::vector<IoSignalContainer>& outgoingSignals,
                                       const std::vector<CanControllerContainer>& canControllers,
                                       const std::vector<EthControllerContainer>& ethControllers,
-                                      const std::vector<LinControllerContainer>& linControllers);
+                                      const std::vector<LinControllerContainer>& linControllers,
+                                      const std::vector<FrControllerContainer>& frControllers);
 
 void LogProtocolBeginTraceSendStart(SimulationTime simulationTime);
 void LogProtocolEndTraceSendStart();

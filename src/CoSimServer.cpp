@@ -50,6 +50,7 @@ public:
         _canControllers = config.canControllers;
         _ethControllers = config.ethControllers;
         _linControllers = config.linControllers;
+        _frControllers = config.frControllers;
 
         _callbacks.simulationStartedCallback = config.simulationStartedCallback;
         _callbacks.simulationStoppedCallback = config.simulationStoppedCallback;
@@ -58,6 +59,7 @@ public:
         _callbacks.simulationTerminatedCallback = config.simulationTerminatedCallback;
         _callbacks.canMessageContainerReceivedCallback = config.canMessageContainerReceivedCallback;
         _callbacks.linMessageContainerReceivedCallback = config.linMessageContainerReceivedCallback;
+        _callbacks.frMessageContainerReceivedCallback = config.frMessageContainerReceivedCallback;
         _callbacks.ethMessageContainerReceivedCallback = config.ethMessageContainerReceivedCallback;
 
         if (config.startPortMapper) {
@@ -217,6 +219,14 @@ public:
         return _busBuffer->Transmit(message);
     }
 
+    [[nodiscard]] Result Transmit(const FrMessage& message) const override {
+        if (!_channel) {
+            return Result::Ok;
+        }
+
+        return _busBuffer->Transmit(message);
+    }
+
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
         if (!_channel) {
             return Result::Ok;
@@ -234,6 +244,14 @@ public:
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
+        if (!_channel) {
+            return Result::Ok;
+        }
+
+        return _busBuffer->Transmit(messageContainer);
+    }
+
+    [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
         if (!_channel) {
             return Result::Ok;
         }
@@ -435,7 +453,8 @@ private:
                                                        _outgoingSignals,
                                                        _canControllers,
                                                        _ethControllers,
-                                                       _linControllers),
+                                                       _linControllers,
+                                                       _frControllers),
                                "Could not send connect ok frame.");
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
@@ -450,12 +469,14 @@ private:
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
         std::vector<LinController> linControllersExtern = Convert(_linControllers);
+        std::vector<FrController> frControllersExtern = Convert(_frControllers);
         CheckResult(CreateBusBuffer(CoSimType::Server,
                                     _connectionKind,
                                     _serverName,
                                     canControllersExtern,
                                     ethControllersExtern,
                                     linControllersExtern,
+                                    frControllersExtern,
                                     _busBuffer));
 
         StopAccepting();
@@ -623,6 +644,7 @@ private:
     std::vector<CanControllerContainer> _canControllers;
     std::vector<EthControllerContainer> _ethControllers;
     std::vector<LinControllerContainer> _linControllers;
+    std::vector<FrControllerContainer> _frControllers;
     std::unique_ptr<IoBuffer> _ioBuffer;
     std::unique_ptr<BusBuffer> _busBuffer;
 

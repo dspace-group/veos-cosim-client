@@ -63,6 +63,7 @@ namespace DsVeosCoSim {
 constexpr uint32_t CanMessageMaxLength = 64U;
 constexpr uint32_t EthMessageMaxLength = 9018U;
 constexpr uint32_t LinMessageMaxLength = 8U;
+constexpr uint32_t FrMessageMaxLength = 256U; //TODO: Leon enter right value
 constexpr uint32_t EthAddressLength = 6U;
 
 enum class Severity : uint32_t;
@@ -78,6 +79,9 @@ struct EthMessageContainer;
 struct LinController;
 struct LinMessage;
 struct LinMessageContainer;
+struct FrController;
+struct FrMessage;
+struct FrMessageContainer;
 
 using SimulationTime = std::chrono::nanoseconds;
 using LogCallback = std::function<void(Severity, const std::string&)>;
@@ -93,6 +97,8 @@ using EthMessageReceivedCallback = std::function<
     void(SimulationTime simulationTime, const EthController& ethController, const EthMessage& ethMessage)>;
 using LinMessageReceivedCallback = std::function<
     void(SimulationTime simulationTime, const LinController& linController, const LinMessage& linMessage)>;
+using FrMessageReceivedCallback = std::function<
+    void(SimulationTime simulationTime, const FrController& linController, const FrMessage& frMessage)>;
 using CanMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
                                                                const CanController& canController,
                                                                const CanMessageContainer& canMessageContainer)>;
@@ -102,6 +108,9 @@ using EthMessageContainerReceivedCallback = std::function<void(SimulationTime si
 using LinMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
                                                                const LinController& linController,
                                                                const LinMessageContainer& linMessageContainer)>;
+using FrMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
+                                                               const FrController& frController,
+                                                               const FrMessageContainer& frMessageContainer)>;
 
 enum class Result : uint32_t {
     Ok,
@@ -225,6 +234,19 @@ enum class LinMessageFlags : uint32_t {
     NoResponse = 2048
 };
 
+enum class FrMessageFlags : uint32_t {
+    Startup = 0,
+    SyncFrame = 1,
+    NullFrame = 2,
+    PayloadPreamble = 4,
+    Loopback = 8,
+    TransferOnce = 16,
+    ChannelA = 32,
+    ChannelB = 64,
+    Error = 128,
+    Drop = 256,
+};
+
 enum class FrameKind : uint32_t {
     Ok = 1,
     Error,
@@ -262,9 +284,11 @@ struct Callbacks {
     CanMessageReceivedCallback canMessageReceivedCallback;
     LinMessageReceivedCallback linMessageReceivedCallback;
     EthMessageReceivedCallback ethMessageReceivedCallback;
+    FrMessageReceivedCallback frMessageReceivedCallback;
     CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
     LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
     EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
+    FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
 };
 
 struct ConnectConfig {
@@ -451,9 +475,55 @@ struct LinMessageContainer {
     void WriteTo(LinMessage& linMessage) const;
 };
 
+struct FrController {
+    BusControllerId id{};
+
+    [[nodiscard]] std::string ToString() const;
+};
+
+struct FrControllerContainer {
+    BusControllerId id{};
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    std::string name;
+    std::string channelName;
+    std::string clusterName;
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] FrController Convert() const;
+};
+
+struct FrMessage {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    BusMessageId id{};
+    FrMessageFlags flags{};
+    uint32_t length{};
+    const uint8_t* data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(FrMessageContainer& frMessageContainer) const;
+};
+
+struct FrMessageContainer {
+    SimulationTime timestamp{};
+    BusControllerId controllerId{};
+    uint32_t reserved{};
+    BusMessageId id{};
+    FrMessageFlags flags{};
+    uint32_t length{};
+    std::array<uint8_t, FrMessageMaxLength> data{};
+
+    [[nodiscard]] std::string ToString() const;
+    [[nodiscard]] Result Check() const;
+    void WriteTo(FrMessage& frMessage) const;
+};
+
 ENUM_BITMASK_OPS(CanMessageFlags);
 ENUM_BITMASK_OPS(EthMessageFlags);
 ENUM_BITMASK_OPS(LinMessageFlags);
+ENUM_BITMASK_OPS(FrMessageFlags);
 
 [[nodiscard]] std::string ToString(SimulationTime simulationTime);
 [[nodiscard]] const char* ToString(Result result);
@@ -474,12 +544,16 @@ ENUM_BITMASK_OPS(LinMessageFlags);
 [[nodiscard]] std::string ToString(CanMessageFlags canMessageFlags);
 [[nodiscard]] std::string ToString(EthMessageFlags ethMessageFlags);
 [[nodiscard]] std::string ToString(LinMessageFlags linMessageFlags);
+[[nodiscard]] std::string ToString(FrMessageFlags frMessageFlags);
 [[nodiscard]] const char* ToString(FrameKind frameKind);
+
 
 [[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& ioSignalContainers);
 [[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& canControllerContainers);
 [[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& ethControllerContainers);
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers);
+[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers);;
+[[nodiscard]] std::string ToString(const std::vector<FrControllerContainer>& frControllerContainers);
+
 
 std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
 std::ostream& operator<<(std::ostream& stream, Result result);
@@ -500,6 +574,8 @@ std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerTy
 std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags);
 std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags);
 std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags);
+std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags);
+
 std::ostream& operator<<(std::ostream& stream, FrameKind frameKind);
 
 std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal);
@@ -516,11 +592,17 @@ std::ostream& operator<<(std::ostream& stream, const LinController& linControlle
 std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& linControllerContainer);
 std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
 std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const FrController& frController);
+std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage);
+std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer);
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers);
 std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers);
 std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers);
 std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers);
+
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
 [[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second);
@@ -536,11 +618,17 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerCo
 [[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second);
 [[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second);
 [[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second);
+[[nodiscard]] bool operator==(const FrController& first, const FrController& second);
+[[nodiscard]] bool operator==(const FrControllerContainer& first, const FrControllerContainer& second);
+[[nodiscard]] bool operator==(const FrMessage& first, const FrMessage& second);
+[[nodiscard]] bool operator==(const FrMessageContainer& first, const FrMessageContainer& second);
 
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers);
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers);
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers);
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers);
+[[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers);
+
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 

@@ -302,6 +302,15 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result GetFrControllers(uint32_t& controllersCount,
+                                           const FrController*& controllers) const override {
+        CheckResult(EnsureIsConnected());
+
+        controllersCount = static_cast<uint32_t>(_frControllersExtern.size());
+        controllers = _frControllersExtern.data();
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result GetCanControllers(std::vector<CanController>& controllers) const override {
         CheckResult(EnsureIsConnected());
 
@@ -323,6 +332,13 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result GetFrControllers(std::vector<FrController>& controllers) const override {
+        CheckResult(EnsureIsConnected());
+
+        controllers = _frControllersExtern;
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
         CheckResult(CheckCanMessage(message.flags, message.length));
@@ -337,6 +353,12 @@ public:
     }
 
     [[nodiscard]] Result Transmit(const LinMessage& message) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] Result Transmit(const FrMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
         return _busBuffer->Transmit(message);
@@ -360,6 +382,12 @@ public:
 
         return _busBuffer->Transmit(messageContainer);
     }
+    
+    [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Transmit(messageContainer);
+    }
 
     [[nodiscard]] Result Receive(CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
@@ -379,6 +407,12 @@ public:
         return _busBuffer->Receive(message);
     }
 
+    [[nodiscard]] Result Receive(FrMessage& message) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Receive(message);
+    }
+
     [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
@@ -392,6 +426,12 @@ public:
     }
 
     [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const override {
+        CheckResult(EnsureIsConnected());
+
+        return _busBuffer->Receive(messageContainer);
+    }
+
+    [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
         return _busBuffer->Receive(messageContainer);
@@ -417,9 +457,11 @@ private:
         _canControllers.clear();
         _ethControllers.clear();
         _linControllers.clear();
+        _frControllers.clear();
         _canControllersExtern.clear();
         _ethControllersExtern.clear();
         _linControllersExtern.clear();
+        _frControllersExtern.clear();
     }
 
     [[nodiscard]] Result LocalConnect() {
@@ -497,7 +539,8 @@ private:
                                                        _outgoingSignals,
                                                        _canControllers,
                                                        _ethControllers,
-                                                       _linControllers),
+                                                       _linControllers,
+                                                       _frControllers),
                                "Could not read connect ok frame.");
 
         _incomingSignalsExtern = Convert(_incomingSignals);
@@ -506,6 +549,7 @@ private:
         _canControllersExtern = Convert(_canControllers);
         _ethControllersExtern = Convert(_ethControllers);
         _linControllersExtern = Convert(_linControllers);
+        _frControllersExtern = Convert(_frControllers);
 
         if (_connectionKind == ConnectionKind::Local) {
             std::string message = "Connected to local dSPACE VEOS CoSim server '";
@@ -545,6 +589,7 @@ private:
                                     _canControllersExtern,
                                     _ethControllersExtern,
                                     _linControllersExtern,
+                                    _frControllersExtern,
                                     _busBuffer));
 
         _isConnected = true;
@@ -920,9 +965,11 @@ private:
     std::vector<CanControllerContainer> _canControllers;
     std::vector<EthControllerContainer> _ethControllers;
     std::vector<LinControllerContainer> _linControllers;
+    std::vector<FrControllerContainer> _frControllers;
     std::vector<CanController> _canControllersExtern;
     std::vector<EthController> _ethControllersExtern;
     std::vector<LinController> _linControllersExtern;
+    std::vector<FrController> _frControllersExtern;
 
     std::unique_ptr<IoBuffer> _ioBuffer;
     std::unique_ptr<BusBuffer> _busBuffer;

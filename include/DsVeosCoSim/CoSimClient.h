@@ -60,26 +60,35 @@ public:
                                                    const EthController*& controllers) const = 0;
     [[nodiscard]] virtual Result GetLinControllers(uint32_t& controllersCount,
                                                    const LinController*& controllers) const = 0;
+    [[nodiscard]] virtual Result GetFrControllers(uint32_t& controllersCount,
+                                                   const FrController*& controllers) const = 0;
 
     [[nodiscard]] virtual Result GetCanControllers(std::vector<CanController>& controllers) const = 0;
     [[nodiscard]] virtual Result GetEthControllers(std::vector<EthController>& controllers) const = 0;
     [[nodiscard]] virtual Result GetLinControllers(std::vector<LinController>& controllers) const = 0;
+    [[nodiscard]] virtual Result GetFrControllers(std::vector<FrController>& controllers) const = 0;
 
     [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
+
+
 
     [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessageContainer& messageContainer) const = 0;
 
     [[nodiscard]] virtual Result Receive(CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(LinMessage& message) const = 0;
+    [[nodiscard]] virtual Result Receive(FrMessage& message) const = 0;
 
     [[nodiscard]] virtual Result Receive(CanMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Receive(EthMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Receive(LinMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Receive(FrMessageContainer& messageContainer) const = 0;
 };
 
 [[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client);

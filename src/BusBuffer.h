@@ -29,18 +29,22 @@ public:
     [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
 
     [[nodiscard]] virtual Result Transmit(const CanMessageContainer& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessageContainer& message) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessageContainer& message) const = 0;
 
     [[nodiscard]] virtual Result Receive(CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Receive(LinMessage& message) const = 0;
+    [[nodiscard]] virtual Result Receive(FrMessage& message) const = 0;
 
     [[nodiscard]] virtual Result Receive(CanMessageContainer& message) const = 0;
     [[nodiscard]] virtual Result Receive(EthMessageContainer& message) const = 0;
     [[nodiscard]] virtual Result Receive(LinMessageContainer& message) const = 0;
+    [[nodiscard]] virtual Result Receive(FrMessageContainer& message) const = 0;
 
     [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) const = 0;
     [[nodiscard]] virtual Result Deserialize(ChannelReader& reader,
@@ -54,6 +58,7 @@ public:
                                      const std::vector<CanController>& canControllers,
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
+                                     const std::vector<FrController>& frControllers,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 }  // namespace DsVeosCoSim

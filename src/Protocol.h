@@ -39,6 +39,9 @@ namespace Protocol {
 [[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer);
 [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer);
 
+[[nodiscard]] Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer);
+[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer);
+
 [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind);
 
 [[nodiscard]] Result SendOk(ChannelWriter& writer);
@@ -71,7 +74,8 @@ namespace Protocol {
                                    std::vector<IoSignalContainer>& outgoingSignals,
                                    std::vector<CanControllerContainer>& canControllers,
                                    std::vector<EthControllerContainer>& ethControllers,
-                                   std::vector<LinControllerContainer>& linControllers);
+                                   std::vector<LinControllerContainer>& linControllers,
+                                   std::vector<FrControllerContainer>& frControllers);
 [[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
                                    uint32_t protocolVersion,
                                    Mode clientMode,
@@ -81,7 +85,8 @@ namespace Protocol {
                                    const std::vector<IoSignalContainer>& outgoingSignals,
                                    const std::vector<CanControllerContainer>& canControllers,
                                    const std::vector<EthControllerContainer>& ethControllers,
-                                   const std::vector<LinControllerContainer>& linControllers);
+                                   const std::vector<LinControllerContainer>& linController,
+                                   const std::vector<FrControllerContainer>& frControllers);
 
 [[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime);
 [[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime);
@@ -161,6 +166,13 @@ namespace Protocol {
 [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers);
 [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
                                           const std::vector<LinControllerContainer>& controllers);
+
+[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, FrControllerContainer& controller);
+[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const FrControllerContainer& controller);
+
+[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<FrControllerContainer>& controllers);
+[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
+                                          const std::vector<FrControllerContainer>& controllers);
 
 }  // namespace Protocol
 
