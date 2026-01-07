@@ -3,11 +3,10 @@
 # Copyright dSPACE GmbH. All rights reserved.
 
 scriptFile=$(readlink -f "$0")
-currentDir=$(dirname "$scriptFile")
+baseDir=$(dirname "$scriptFile")/..
 
 echo Cleaning ...
 
-rm -rf "$currentDir/obj"
-rm -rf "$currentDir/tmplin"
+rm -rf "$baseDir/tmplin"
 
 echo Cleaning finished successfully.

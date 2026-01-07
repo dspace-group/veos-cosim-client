@@ -1,0 +1,28 @@
+# Copyright dSPACE GmbH. All rights reserved.
+
+param(
+  [string]$config = "Debug"
+)
+
+$ErrorActionPreference = "Stop"
+
+switch ($config.ToLower()) {
+  'debug'   { $config = "Debug" }
+  'release' { $config = "Release" }
+  default   { $config = "Debug" }
+}
+
+$baseDir = Split-Path $PSScriptRoot
+
+Write-Host "Running test server for $config ..."
+
+$filePath = Join-Path $baseDir "tmpwin/$config/tests/TestServer/TestServer.exe"
+
+if (-not (Test-Path $filePath)) {
+  Write-Error "Could not find file '$filePath'."
+  exit 1
+}
+
+& "$filePath"
+
+Write-Host "Running test server for $config finished successfully."
