@@ -83,7 +83,7 @@ TEST_P(TestIoBufferWithCoSimType, CreateWithZeroIoSignalInfos) {
     std::unique_ptr<IoBuffer> ioBuffer;
 
     // Act
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, {}, {}, ioBuffer));
+    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, {}, {}, *GetLatestProtocol(),  ioBuffer));
 
     // Assert
     AssertTrue(ioBuffer);
@@ -196,6 +196,7 @@ TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {
                             name,
                             {incomingSignal.Convert()},
                             {outgoingSignal.Convert()},
+                            *GetLatestProtocol(),
                             ioBuffer));
 
     // Assert
@@ -221,6 +222,7 @@ TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
                             name,
                             {incomingSignal1.Convert(), incomingSignal2.Convert()},
                             {outgoingSignal1.Convert(), outgoingSignal2.Convert()},
+                            *GetLatestProtocol(),
                             ioBuffer));
 
     // Assert
@@ -240,7 +242,7 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> ioBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, ioBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), ioBuffer));
 
     std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
 
@@ -268,7 +270,7 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> ioBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, ioBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), ioBuffer));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
@@ -293,7 +295,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedData) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> ioBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, ioBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), ioBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -315,7 +317,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -323,6 +325,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
@@ -355,7 +358,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -363,6 +366,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
@@ -400,7 +404,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -408,6 +412,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     // Act and assert
@@ -433,7 +438,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -441,6 +446,7 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(), 
                             readerIoBuffer));
 
     // Act and assert
@@ -471,7 +477,7 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -479,6 +485,7 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
@@ -506,7 +513,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -514,6 +521,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     // Act and assert
@@ -539,7 +547,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveE
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -547,6 +555,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveE
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = CreateZeroedIoData(signal);
@@ -576,7 +585,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -584,6 +593,7 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     IoSignalContainer signalCopy = signal;
@@ -610,7 +620,7 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, writerIoBuffer));
+    ExpectOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *GetLatestProtocol(), writerIoBuffer));
 
     std::unique_ptr<IoBuffer> readerIoBuffer;
     ExpectOk(CreateIoBuffer(GetCounterPart(coSimType),
@@ -618,6 +628,7 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
+                            *GetLatestProtocol(),
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);

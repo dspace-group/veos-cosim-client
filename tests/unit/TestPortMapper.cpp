@@ -9,6 +9,7 @@
 
 #include "Helper.h"
 #include "PortMapper.h"
+#include "Protocol.h"
 #include "TestHelper.h"
 
 using namespace DsVeosCoSim;
@@ -28,7 +29,7 @@ TEST_F(TestPortMapper, StartOfServer) {
     std::unique_ptr<PortMapperServer> portMapperServer;
 
     // Act
-    AssertOk(CreatePortMapperServer(false, portMapperServer));
+    AssertOk(CreatePortMapperServer(false,GetLatestProtocol(), portMapperServer));
 
     // Assert
     AssertTrue(portMapperServer);
@@ -37,7 +38,7 @@ TEST_F(TestPortMapper, StartOfServer) {
 TEST_F(TestPortMapper, SetAndGet) {
     // Arrange
     std::unique_ptr<PortMapperServer> portMapperServer;
-    ExpectOk(CreatePortMapperServer(false, portMapperServer));
+    ExpectOk(CreatePortMapperServer(false, GetLatestProtocol(), portMapperServer));
     ExpectTrue(portMapperServer);
 
     std::string serverName = GenerateString("Server名前");
@@ -47,8 +48,8 @@ TEST_F(TestPortMapper, SetAndGet) {
     uint16_t port{};
 
     // Act
-    AssertOk(PortMapperSetPort(serverName, setPort));
-    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port));
+    AssertOk(PortMapperSetPort(serverName, setPort, GetLatestProtocol()));
+    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port, GetLatestProtocol()));
 
     // Assert
     AssertEq(setPort, port);
@@ -57,7 +58,7 @@ TEST_F(TestPortMapper, SetAndGet) {
 TEST_F(TestPortMapper, SetTwiceAndGet) {
     // Arrange
     std::unique_ptr<PortMapperServer> portMapperServer;
-    ExpectOk(CreatePortMapperServer(false, portMapperServer));
+    ExpectOk(CreatePortMapperServer(false, GetLatestProtocol(), portMapperServer));
     ExpectTrue(portMapperServer);
 
     std::string serverName = GenerateString("Server名前");
@@ -68,9 +69,9 @@ TEST_F(TestPortMapper, SetTwiceAndGet) {
     uint16_t port{};
 
     // Act
-    ExpectOk(PortMapperSetPort(serverName, setPort1));
-    AssertOk(PortMapperSetPort(serverName, setPort2));
-    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port));
+    ExpectOk(PortMapperSetPort(serverName, setPort1, GetLatestProtocol()));
+    AssertOk(PortMapperSetPort(serverName, setPort2, GetLatestProtocol()));
+    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port, GetLatestProtocol()));
 
     // Assert
     AssertEq(setPort2, port);

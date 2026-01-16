@@ -6,6 +6,7 @@
 
 #include <fmt/color.h>
 
+#include "Protocol.h"
 #include "Socket.h"
 
 #ifdef _WIN32
@@ -155,24 +156,36 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, busBuffer);
+    return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busBuffer);
 }
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, busBuffer);
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busBuffer);
 }
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, busBuffer);
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busBuffer);
+}
+
+[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
+                                     ConnectionKind connectionKind,
+                                     const std::string& name,
+                                     const std::vector<FrController>& controllers,
+                                     IProtocol& protocol,
+                                     std::unique_ptr<BusBuffer>& busBuffer) {
+    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
 }
 
 [[nodiscard]] uint32_t GenerateU32() {
@@ -297,6 +310,15 @@ void FillWithRandom(LinControllerContainer& controller) {
     controller.clusterName = GenerateString("LinCluster名前\xF0\x9F\x98\x80");
 }
 
+void FillWithRandom(FrControllerContainer& controller) {
+    controller.id = GenerateBusControllerId();
+    controller.queueSize = 100;
+    controller.bitsPerSecond = GenerateU64();
+    controller.name = GenerateString("FrController名前\xF0\x9F\x98\x80");
+    controller.channelName = GenerateString("FrChannel名前\xF0\x9F\x98\x80");
+    controller.clusterName = GenerateString("FrCluster名前\xF0\x9F\x98\x80");
+}
+
 void FillWithRandom(CanMessageContainer& message, BusControllerId controllerId) {
     uint32_t length = GenerateRandom(1U, 8U);
     message.controllerId = controllerId;
@@ -315,6 +337,15 @@ void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId) 
 }
 
 void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId) {
+    uint32_t length = GenerateRandom(1U, 8U);
+    message.controllerId = controllerId;
+    message.id = GenerateBusMessageId();
+    message.timestamp = GenerateSimulationTime();
+    message.length = length;
+    FillWithRandomData(message.data.data(), length);
+}
+
+void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
     uint32_t length = GenerateRandom(1U, 8U);
     message.controllerId = controllerId;
     message.id = GenerateBusMessageId();
@@ -363,6 +394,18 @@ void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId) 
 
     for (size_t i = 0; i < count; i++) {
         LinControllerContainer controller{};
+        FillWithRandom(controller);
+        controllers.push_back(controller);
+    }
+
+    return controllers;
+}
+
+[[nodiscard]] std::vector<FrControllerContainer> CreateFrControllers(size_t count) {
+    std::vector<FrControllerContainer> controllers;
+
+    for (size_t i = 0; i < count; i++) {
+        FrControllerContainer controller{};
         FillWithRandom(controller);
         controllers.push_back(controller);
     }

@@ -10,6 +10,7 @@
 
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Protocol.h"
 
 #define AssertEq(expected, actual) ASSERT_EQ(expected, actual)
 #define AssertNotEq(expected, actual) ASSERT_NE(expected, actual)
@@ -74,3 +75,5 @@ void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
 
 void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
                     std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+
+std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol();

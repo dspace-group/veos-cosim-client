@@ -91,6 +91,11 @@ public:
         return _server->Transmit(messageContainer);
     }
 
+        [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) {
+        std::lock_guard lock(_mutex);
+        return _server->Transmit(messageContainer);
+    }
+
     void StartBackgroundThread() {
         _stopBackgroundThreadFlag = false;
         _backgroundThread = std::thread([&] {
@@ -139,6 +144,10 @@ public:
         return _config.linControllers;
     }
 
+    [[nodiscard]] const std::vector<FrControllerContainer>& GetFrControllers() const {
+        return _config.frControllers;
+    }
+
 private:
     std::unique_ptr<CoSimServer> _server;
     std::mutex _mutex;
@@ -152,6 +161,8 @@ bool SendIoData;
 bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
+bool SendFrMessages;
+
 
 bool StopSimulationThreadFlag;
 std::thread SimulationThread;
@@ -192,6 +203,11 @@ void SwitchSendingLinMessages() {
     PrintStatus(SendLinMessages, "LIN messages");
 }
 
+void SwitchSendingFrMessages() {
+    SendFrMessages = !SendFrMessages;
+    PrintStatus(SendFrMessages, "FR messages");
+}
+
 [[nodiscard]] Result WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     std::vector<uint8_t> data = GenerateBytes(length);
@@ -220,6 +236,13 @@ void SwitchSendingLinMessages() {
     return Server->Transmit(messageContainer);
 }
 
+[[nodiscard]] Result TransmitFrMessage(const FrControllerContainer& controller) {
+    FrMessageContainer messageContainer{};
+    FillWithRandom(messageContainer, controller.id);
+
+    return Server->Transmit(messageContainer);
+}
+
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
     static SimulationTime lastHalfSecond = -1s;
     static int64_t counter = 0;
@@ -231,27 +254,33 @@ void SwitchSendingLinMessages() {
     lastHalfSecond = currentHalfSecond;
     counter++;
 
-    if (SendIoData && ((counter % 4) == 0)) {
+    if (SendIoData && ((counter % 5) == 0)) {
         for (const IoSignalContainer& signal : Server->GetIncomingSignals()) {
             CheckResult(WriteOutGoingSignal(signal));
         }
     }
 
-    if (SendCanMessages && ((counter % 4) == 1)) {
+    if (SendCanMessages && ((counter % 5) == 1)) {
         for (const CanControllerContainer& controller : Server->GetCanControllers()) {
             CheckResult(TransmitCanMessage(controller));
         }
     }
 
-    if (SendEthMessages && ((counter % 4) == 2)) {
+    if (SendEthMessages && ((counter % 5) == 2)) {
         for (const EthControllerContainer& controller : Server->GetEthControllers()) {
             CheckResult(TransmitEthMessage(controller));
         }
     }
 
-    if (SendLinMessages && ((counter % 4) == 3)) {
+    if (SendLinMessages && ((counter % 5) == 3)) {
         for (const LinControllerContainer& controller : Server->GetLinControllers()) {
             CheckResult(TransmitLinMessage(controller));
+        }
+    }
+
+    if (SendFrMessages && ((counter % 5) == 4)) {
+        for (const FrControllerContainer& controller : Server->GetFrControllers()) {
+            CheckResult(TransmitFrMessage(controller));
         }
     }
 
@@ -560,6 +589,12 @@ void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTim
     print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
 }
 
+void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
+                                   [[maybe_unused]] const FrController& controller,
+                                   const FrMessageContainer& messageContainer) {
+    print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
+}
+
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
     LogInfo("Loading ...");
 
@@ -581,9 +616,11 @@ void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTim
     config.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
     config.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
     config.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
+    config.frMessageContainerReceivedCallback = OnFrMessageContainerReceived;
     config.canControllers = CreateCanControllers(2);
     config.ethControllers = CreateEthControllers(2);
     config.linControllers = CreateLinControllers(2);
+    config.frControllers = CreateFrControllers(2);
     config.incomingSignals = CreateSignals(2);
     config.outgoingSignals = CreateSignals(2);
 
@@ -645,6 +682,9 @@ void UnloadSimulation() {
                 break;
             case '4':
                 SwitchSendingLinMessages();
+                break;
+            case '5':
+                SwitchSendingFrMessages();
                 break;
             default:
                 LogError("Unknown key.");

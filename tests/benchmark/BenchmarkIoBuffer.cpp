@@ -1,5 +1,7 @@
 // Copyright dSPACE GmbH. All rights reserved.
 
+#include <memory>
+#include "Protocol.h"
 #ifdef ALL_BENCHMARK_TESTS
 
 #include <benchmark/benchmark.h>
@@ -42,10 +44,16 @@ void RunTest(benchmark::State& state,
     IoSignalContainer signal = CreateSignal(DataType::Int8, SizeKind::Fixed);
     signal.length = static_cast<uint32_t>(state.range(0));
 
+    std::shared_ptr<IProtocol> protocol;
+    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
+        if (result.error == FactoryError::None && result.protocol) {
+            protocol = std::move(result.protocol);
+        }
+
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, *protocol, readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
