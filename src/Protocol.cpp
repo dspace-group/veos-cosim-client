@@ -20,7 +20,6 @@ constexpr size_t EthControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) 
 constexpr size_t LinControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(
                                          LinControllerType);
 constexpr size_t FrControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
-//TODO: Leon check if correct (MessageSize also)
 constexpr size_t CanMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(CanMessageFlags) + sizeof(uint32_t);
 constexpr size_t EthMessageSize =

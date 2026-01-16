@@ -74,7 +74,7 @@ enum {
  * \brief Defines the maximum length of a FLEXRAY message payload.
  */
 enum {
-    DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH = 254 //TODO: Leon enter right value
+    DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH = 254
 };
 
 /**
@@ -547,15 +547,64 @@ typedef uint32_t DsVeosCoSim_FrMessageFlags;
 * \brief Represents the flags of a FLEXRAY message.
 */
 enum {
+    /**
+    * \brief FLEXRAY message will be transmitted to sender as well.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_Loopback = 1,
+
+    /**
+     * \brief FLEXRAY message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
     DsVeosCoSim_FrMessageFlags_Error = 2,
+
+    /**
+     * \brief FLEXRAY message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
+     *        For received messages only.
+     */
     DsVeosCoSim_FrMessageFlags_Drop = 4,
+
+    /**
+    * \brief FLEXRAY message is a startup frame.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_Startup = 8,
+
+    /**
+    * \brief FLEXRAY message is a sync frame.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_SyncFrame = 16,
+
+    /**
+    * \brief FLEXRAY message is a null frame.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_NullFrame = 32,
+
+    /**
+    * \brief FLEXRAY message uses the payload preamble.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_PayloadPreamble = 64,
+
+    /**
+    * \brief FLEXRAY message will only be transmitted in one cycle, otherwise message will be retransmitted in every upcoming cycle.
+    *        For transmitted messages only.
+    */
     DsVeosCoSim_FrMessageFlags_TransferOnce = 128,
+
+    /**
+    * \brief FLEXRAY message is transmitted on Channel A.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_ChannelA = 256,
+
+    /**
+    * \brief FLEXRAY message is transmitted on Channel B.
+    *        For received and transmitted messages.
+    */
     DsVeosCoSim_FrMessageFlags_ChannelB = 512,
 };
 
