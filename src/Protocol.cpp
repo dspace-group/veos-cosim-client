@@ -165,12 +165,12 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result V1::Protocol::ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] FrMessageContainer& messageContainer) {
     // V1 does not have this functionality
     return Result::Ok;
 }
 
-[[nodiscard]] Result V1::Protocol::WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::WriteMessage([[maybe_unused]] ChannelWriter& writer, [[maybe_unused]] const FrMessageContainer& messageContainer) {
     // V1 does not have this functionality
     return Result::Ok;
 }
