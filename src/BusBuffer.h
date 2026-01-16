@@ -8,6 +8,7 @@
 
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Protocol.h"
 
 namespace DsVeosCoSim {
 
@@ -59,6 +60,7 @@ public:
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
                                      const std::vector<FrController>& frControllers,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 }  // namespace DsVeosCoSim

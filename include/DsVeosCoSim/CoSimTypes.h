@@ -9,7 +9,6 @@
 #include <string>
 
 namespace DsVeosCoSim {
-
 // NOLINTBEGIN
 #define ENUM_BITMASK_OPS(TEnum)                                                             \
     constexpr TEnum operator&(TEnum lhs, TEnum rhs) {                                       \
@@ -63,7 +62,7 @@ namespace DsVeosCoSim {
 constexpr uint32_t CanMessageMaxLength = 64U;
 constexpr uint32_t EthMessageMaxLength = 9018U;
 constexpr uint32_t LinMessageMaxLength = 8U;
-constexpr uint32_t FrMessageMaxLength = 256U; //TODO: Leon enter right value
+constexpr uint32_t FrMessageMaxLength = 254U;
 constexpr uint32_t EthAddressLength = 6U;
 
 enum class Severity : uint32_t;
@@ -88,9 +87,9 @@ using LogCallback = std::function<void(Severity, const std::string&)>;
 
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
 using SimulationTerminatedCallback =
-    std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
+std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
 using IncomingSignalChangedCallback =
-    std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
+std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
 using CanMessageReceivedCallback = std::function<
     void(SimulationTime simulationTime, const CanController& canController, const CanMessage& canMessage)>;
 using EthMessageReceivedCallback = std::function<
@@ -109,8 +108,8 @@ using LinMessageContainerReceivedCallback = std::function<void(SimulationTime si
                                                                const LinController& linController,
                                                                const LinMessageContainer& linMessageContainer)>;
 using FrMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
-                                                               const FrController& frController,
-                                                               const FrMessageContainer& frMessageContainer)>;
+                                                              const FrController& frController,
+                                                              const FrMessageContainer& frMessageContainer)>;
 
 enum class Result : uint32_t {
     Ok,
@@ -235,16 +234,16 @@ enum class LinMessageFlags : uint32_t {
 };
 
 enum class FrMessageFlags : uint32_t {
-    Startup = 0,
-    SyncFrame = 1,
-    NullFrame = 2,
-    PayloadPreamble = 4,
-    Loopback = 8,
-    TransferOnce = 16,
-    ChannelA = 32,
-    ChannelB = 64,
-    Error = 128,
-    Drop = 256,
+    Loopback = 1,
+    Error = 2,
+    Drop = 4,
+    Startup = 8,
+    SyncFrame = 16,
+    NullFrame = 32,
+    PayloadPreamble = 64,
+    TransferOnce = 128,
+    ChannelA = 256,
+    ChannelB = 512,
 };
 
 enum class FrameKind : uint32_t {
@@ -477,7 +476,11 @@ struct LinMessageContainer {
 
 struct FrController {
     BusControllerId id{};
-
+    uint32_t queueSize{};
+    uint64_t bitsPerSecond{};
+    const char* name{};
+    const char* channelName{};
+    const char* clusterName{};
     [[nodiscard]] std::string ToString() const;
 };
 
@@ -589,7 +592,7 @@ std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& eth
 std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage);
 std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer);
 std::ostream& operator<<(std::ostream& stream, const LinController& linController);
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& linControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer);
 std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
 std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
 std::ostream& operator<<(std::ostream& stream, const FrController& frController);
@@ -637,5 +640,4 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
 
 void SetLogCallback(LogCallback logCallback);
-
-}  // namespace DsVeosCoSim
+} // namespace DsVeosCoSim

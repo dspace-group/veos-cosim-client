@@ -12,15 +12,15 @@
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 
-namespace DsVeosCoSim::Protocol {
-
+namespace DsVeosCoSim {
 namespace {
-
 constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + sizeof(DataType) + sizeof(SizeKind);
 constexpr size_t CanControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
 constexpr size_t EthControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + EthAddressLength;
-constexpr size_t LinControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(LinControllerType);
-constexpr size_t FrControllerSize =sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t); //TODO: Leon check if correct (MessageSize also)
+constexpr size_t LinControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(
+                                         LinControllerType);
+constexpr size_t FrControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
+//TODO: Leon check if correct (MessageSize also)
 constexpr size_t CanMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(CanMessageFlags) + sizeof(uint32_t);
 constexpr size_t EthMessageSize =
@@ -28,54 +28,53 @@ constexpr size_t EthMessageSize =
 constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(LinMessageFlags) + sizeof(uint32_t);
 constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
-                                  sizeof(FrMessageFlags) + sizeof(uint32_t);
+                                 sizeof(FrMessageFlags) + sizeof(uint32_t);
+} // namespace
 
-}  // namespace
-
-[[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) {
+[[nodiscard]] Result V1::Protocol::ReadSize(ChannelReader& reader, size_t& size) {
     uint32_t intSize{};
     CheckResultWithMessage(reader.Read(intSize), "Could not read size.");
     size = static_cast<size_t>(intSize);
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) {
+[[nodiscard]] Result V1::Protocol::WriteSize(ChannelWriter& writer, size_t size) {
     auto intSize = static_cast<uint32_t>(size);
     CheckResultWithMessage(writer.Write(intSize), "Could not write size.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length) {
+[[nodiscard]] Result V1::Protocol::ReadLength(ChannelReader& reader, uint32_t& length) {
     CheckResultWithMessage(reader.Read(length), "Could not read length.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length) {
+[[nodiscard]] Result V1::Protocol::WriteLength(ChannelWriter& writer, uint32_t length) {
     CheckResultWithMessage(writer.Write(length), "Could not write length.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadData(ChannelReader& reader, void* data, size_t size) {
+[[nodiscard]] Result V1::Protocol::ReadData(ChannelReader& reader, void* data, size_t size) {
     CheckResultWithMessage(reader.Read(data, size), "Could not read data.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteData(ChannelWriter& writer, const void* data, size_t size) {
+[[nodiscard]] Result V1::Protocol::WriteData(ChannelWriter& writer, const void* data, size_t size) {
     CheckResultWithMessage(writer.Write(data, size), "Could not write data.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId) {
+[[nodiscard]] Result V1::Protocol::ReadSignalId(ChannelReader& reader, IoSignalId& signalId) {
     CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId) {
+[[nodiscard]] Result V1::Protocol::WriteSignalId(ChannelWriter& writer, IoSignalId signalId) {
     CheckResultWithMessage(writer.Write(signalId), "Could not write signal id.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(CanMessageSize, blockReader),
                            "Could not read block for CanMessageContainer.");
@@ -92,7 +91,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(CanMessageSize + messageContainer.length, blockWriter),
                            "Could not reserve memory for CanMessageContainer.");
@@ -106,7 +105,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(EthMessageSize, blockReader),
                            "Could not read block for EthMessageContainer.");
@@ -122,7 +121,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(EthMessageSize + messageContainer.length, blockWriter),
                            "Could not reserve memory for EthMessageContainer.");
@@ -135,7 +134,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(LinMessageSize, blockReader),
                            "Could not read block for LinMessageContainer.");
@@ -152,7 +151,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(LinMessageSize + messageContainer.length, blockWriter),
                            "Could not reserve memory for LinMessageContainer.");
@@ -166,7 +165,17 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) {
+    // V1 does not have this functionality
+    return Result::Ok;
+}
+
+[[nodiscard]] Result V1::Protocol::WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) {
+    // V1 does not have this functionality
+    return Result::Ok;
+}
+
+[[nodiscard]] Result V2::Protocol::ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(FrMessageSize, blockReader),
                            "Could not read block for FrMessageContainer.");
@@ -183,7 +192,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V2::Protocol::WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(FrMessageSize + messageContainer.length, blockWriter),
                            "Could not reserve memory for FrMessageContainer.");
@@ -197,7 +206,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
+[[nodiscard]] Result V1::Protocol::ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) {
     if (IsProtocolHeaderTracingEnabled()) {
         LogProtocolBeginTraceReceiveHeader();
     }
@@ -211,7 +220,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendOk(ChannelWriter& writer) {
+[[nodiscard]] Result V1::Protocol::SendOk(ChannelWriter& writer) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendOk();
     }
@@ -226,7 +235,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage) {
+[[nodiscard]] Result V1::Protocol::ReadError(ChannelReader& reader, std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadError();
     }
@@ -240,7 +249,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) {
+[[nodiscard]] Result V1::Protocol::SendError(ChannelWriter& writer, const std::string& errorMessage) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendError(errorMessage);
     }
@@ -256,7 +265,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendPing(ChannelWriter& writer) {
+[[nodiscard]] Result V1::Protocol::SendPing(ChannelWriter& writer) {
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolBeginTraceSendPing();
     }
@@ -271,7 +280,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command) {
+[[nodiscard]] Result V1::Protocol::ReadPingOk(ChannelReader& reader, Command& command) {
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolBeginTraceReadPingOk();
     }
@@ -285,7 +294,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command) {
+[[nodiscard]] Result V1::Protocol::SendPingOk(ChannelWriter& writer, Command command) {
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolBeginTraceSendPingOk(command);
     }
@@ -307,11 +316,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadConnect(ChannelReader& reader,
-                                 uint32_t& protocolVersion,
-                                 Mode& clientMode,
-                                 std::string& serverName,
-                                 std::string& clientName) {
+[[nodiscard]] Result V1::Protocol::ReadConnect(ChannelReader& reader,
+                                               uint32_t& protocolVersion,
+                                               Mode& clientMode,
+                                               std::string& serverName,
+                                               std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadConnect();
     }
@@ -334,11 +343,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendConnect(ChannelWriter& writer,
-                                 uint32_t protocolVersion,
-                                 Mode clientMode,
-                                 const std::string& serverName,
-                                 const std::string& clientName) {
+[[nodiscard]] Result V1::Protocol::SendConnect(ChannelWriter& writer,
+                                               uint32_t protocolVersion,
+                                               Mode clientMode,
+                                               const std::string& serverName,
+                                               const std::string& clientName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendConnect(protocolVersion, clientMode, serverName, clientName);
     }
@@ -363,27 +372,39 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadConnectOk(ChannelReader& reader,
-                                   uint32_t& protocolVersion,
-                                   Mode& clientMode,
-                                   SimulationTime& stepSize,
-                                   SimulationState& simulationState,
-                                   std::vector<IoSignalContainer>& incomingSignals,
-                                   std::vector<IoSignalContainer>& outgoingSignals,
-                                   std::vector<CanControllerContainer>& canControllers,
-                                   std::vector<EthControllerContainer>& ethControllers,
-                                   std::vector<LinControllerContainer>& linControllers,
-                                   std::vector<FrControllerContainer>& frControllers) {
+[[nodiscard]] Result V1::Protocol::ReadConnectOkVersion(ChannelReader& reader, uint32_t& protocolVersion) {
+    constexpr size_t size = sizeof(protocolVersion);
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(size, blockReader),
+                           "Could not read protocolVersion block for ConnectOkVersion frame.");
+    blockReader.Read(protocolVersion);
+
+    if (IsProtocolTracingEnabled()) {
+        LogProtocolEndTraceReadConnectOkVersion(protocolVersion);
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result V1::Protocol::ReadConnectOk(ChannelReader& reader,
+                                                 Mode& clientMode,
+                                                 SimulationTime& stepSize,
+                                                 SimulationState& simulationState,
+                                                 std::vector<IoSignalContainer>& incomingSignals,
+                                                 std::vector<IoSignalContainer>& outgoingSignals,
+                                                 std::vector<CanControllerContainer>& canControllers,
+                                                 std::vector<EthControllerContainer>& ethControllers,
+                                                 std::vector<LinControllerContainer>& linControllers,
+                                                 std::vector<FrControllerContainer>& frControllers) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadConnectOk();
     }
 
-    constexpr size_t size = sizeof(protocolVersion) + sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
+    constexpr size_t size = sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
 
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for ConnectOk frame.");
 
-    blockReader.Read(protocolVersion);
     blockReader.Read(clientMode);
     blockReader.Read(stepSize);
     blockReader.Read(simulationState);
@@ -393,11 +414,9 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
-    CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
 
     if (IsProtocolTracingEnabled()) {
-        LogProtocolEndTraceReadConnectOk(protocolVersion,
-                                         clientMode,
+        LogProtocolEndTraceReadConnectOk(clientMode,
                                          stepSize,
                                          simulationState,
                                          incomingSignals,
@@ -411,17 +430,114 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
-                                   uint32_t protocolVersion,
-                                   Mode clientMode,
-                                   SimulationTime stepSize,
-                                   SimulationState simulationState,
-                                   const std::vector<IoSignalContainer>& incomingSignals,
-                                   const std::vector<IoSignalContainer>& outgoingSignals,
-                                   const std::vector<CanControllerContainer>& canControllers,
-                                   const std::vector<EthControllerContainer>& ethControllers,
-                                   const std::vector<LinControllerContainer>& linControllers,
-                                   const std::vector<FrControllerContainer>& frControllers) {
+[[nodiscard]] Result V2::Protocol::ReadConnectOk(ChannelReader& reader,
+                                                 Mode& clientMode,
+                                                 SimulationTime& stepSize,
+                                                 SimulationState& simulationState,
+                                                 std::vector<IoSignalContainer>& incomingSignals,
+                                                 std::vector<IoSignalContainer>& outgoingSignals,
+                                                 std::vector<CanControllerContainer>& canControllers,
+                                                 std::vector<EthControllerContainer>& ethControllers,
+                                                 std::vector<LinControllerContainer>& linControllers,
+                                                 std::vector<FrControllerContainer>& frControllers) {
+    if (IsProtocolTracingEnabled()) {
+        LogProtocolBeginTraceReadConnectOk();
+    }
+
+    constexpr size_t size = sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
+
+    BlockReader blockReader;
+    CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for ConnectOk frame.");
+
+    blockReader.Read(clientMode);
+    blockReader.Read(stepSize);
+    blockReader.Read(simulationState);
+
+    CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
+    CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
+    CheckResultWithMessage(V1::Protocol::ReadControllerInfos(reader, canControllers),
+                           "Could not read CAN controllers.");
+    CheckResultWithMessage(V1::Protocol::ReadControllerInfos(reader, ethControllers),
+                           "Could not read ETH controllers.");
+    CheckResultWithMessage(V1::Protocol::ReadControllerInfos(reader, linControllers),
+                           "Could not read LIN controllers.");
+    CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
+
+    if (IsProtocolTracingEnabled()) {
+        LogProtocolEndTraceReadConnectOk(clientMode,
+                                         stepSize,
+                                         simulationState,
+                                         incomingSignals,
+                                         outgoingSignals,
+                                         canControllers,
+                                         ethControllers,
+                                         linControllers,
+                                         frControllers);
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result V1::Protocol::SendConnectOk(ChannelWriter& writer,
+                                                 uint32_t protocolVersion,
+                                                 Mode clientMode,
+                                                 SimulationTime stepSize,
+                                                 SimulationState simulationState,
+                                                 const std::vector<IoSignalContainer>& incomingSignals,
+                                                 const std::vector<IoSignalContainer>& outgoingSignals,
+                                                 const std::vector<CanControllerContainer>& canControllers,
+                                                 const std::vector<EthControllerContainer>& ethControllers,
+                                                 const std::vector<LinControllerContainer>& linControllers,
+                                                 const std::vector<FrControllerContainer>& frControllers) {
+    if (IsProtocolTracingEnabled()) {
+        LogProtocolBeginTraceSendConnectOk(protocolVersion,
+                                           clientMode,
+                                           stepSize,
+                                           simulationState,
+                                           incomingSignals,
+                                           outgoingSignals,
+                                           canControllers,
+                                           ethControllers,
+                                           linControllers,
+                                           frControllers);
+    }
+    constexpr size_t size =
+        sizeof(FrameKind) + sizeof(protocolVersion) + sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
+
+    BlockWriter blockWriter;
+    CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for ConnectOk frame.");
+
+    blockWriter.Write(FrameKind::ConnectOk);
+    blockWriter.Write(protocolVersion);
+    blockWriter.Write(clientMode);
+    blockWriter.Write(stepSize);
+    blockWriter.Write(simulationState);
+
+    CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
+    CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
+    CheckResultWithMessage(WriteControllerInfos(writer, canControllers), "Could not write CAN controllers.");
+    CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
+    CheckResultWithMessage(WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
+    CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+    if (IsProtocolTracingEnabled()) {
+        LogProtocolEndTraceSendConnectOk();
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result V2::Protocol::SendConnectOk(ChannelWriter& writer,
+                                                 uint32_t protocolVersion,
+                                                 Mode clientMode,
+                                                 SimulationTime stepSize,
+                                                 SimulationState simulationState,
+                                                 const std::vector<IoSignalContainer>& incomingSignals,
+                                                 const std::vector<IoSignalContainer>& outgoingSignals,
+                                                 const std::vector<CanControllerContainer>& canControllers,
+                                                 const std::vector<EthControllerContainer>& ethControllers,
+                                                 const std::vector<LinControllerContainer>& linControllers,
+                                                 const std::vector<FrControllerContainer>& frControllers) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendConnectOk(protocolVersion,
                                            clientMode,
@@ -449,9 +565,12 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
     CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
-    CheckResultWithMessage(WriteControllerInfos(writer, canControllers), "Could not write CAN controllers.");
-    CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
-    CheckResultWithMessage(WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
+    CheckResultWithMessage(V1::Protocol::WriteControllerInfos(writer, canControllers),
+                           "Could not write CAN controllers.");
+    CheckResultWithMessage(V1::Protocol::WriteControllerInfos(writer, ethControllers),
+                           "Could not write ETH controllers.");
+    CheckResultWithMessage(V1::Protocol::WriteControllerInfos(writer, linControllers),
+                           "Could not write LIN controllers.");
     CheckResultWithMessage(WriteControllerInfos(writer, frControllers), "Could not write FLEXRAY controllers.");
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -462,7 +581,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result V1::Protocol::ReadStart(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStart();
     }
@@ -476,7 +595,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result V1::Protocol::SendStart(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStart(simulationTime);
     }
@@ -498,7 +617,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result V1::Protocol::ReadStop(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStop();
     }
@@ -512,7 +631,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result V1::Protocol::SendStop(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStop(simulationTime);
     }
@@ -534,7 +653,9 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) {
+[[nodiscard]] Result V1::Protocol::ReadTerminate(ChannelReader& reader,
+                                                 SimulationTime& simulationTime,
+                                                 TerminateReason& reason) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadTerminate();
     }
@@ -554,7 +675,9 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) {
+[[nodiscard]] Result V1::Protocol::SendTerminate(ChannelWriter& writer,
+                                                 SimulationTime simulationTime,
+                                                 TerminateReason reason) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendTerminate(simulationTime, reason);
     }
@@ -577,7 +700,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result V1::Protocol::ReadPause(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadPause();
     }
@@ -591,7 +714,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result V1::Protocol::SendPause(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendPause(simulationTime);
     }
@@ -613,7 +736,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
+[[nodiscard]] Result V1::Protocol::ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadContinue();
     }
@@ -627,7 +750,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
+[[nodiscard]] Result V1::Protocol::SendContinue(ChannelWriter& writer, SimulationTime simulationTime) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendContinue(simulationTime);
     }
@@ -649,11 +772,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadStep(ChannelReader& reader,
-                              SimulationTime& simulationTime,
-                              const DeserializeFunction& deserializeIoData,
-                              const DeserializeFunction& deserializeBusMessages,
-                              const Callbacks& callbacks) {
+[[nodiscard]] Result V1::Protocol::ReadStep(ChannelReader& reader,
+                                            SimulationTime& simulationTime,
+                                            const DeserializeFunction& deserializeIoData,
+                                            const DeserializeFunction& deserializeBusMessages,
+                                            const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStep();
     }
@@ -675,10 +798,10 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendStep(ChannelWriter& writer,
-                              SimulationTime simulationTime,
-                              const SerializeFunction& serializeIoData,
-                              const SerializeFunction& serializeBusMessages) {
+[[nodiscard]] Result V1::Protocol::SendStep(ChannelWriter& writer,
+                                            SimulationTime simulationTime,
+                                            const SerializeFunction& serializeIoData,
+                                            const SerializeFunction& serializeBusMessages) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStep(simulationTime);
     }
@@ -702,12 +825,12 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadStepOk(ChannelReader& reader,
-                                SimulationTime& nextSimulationTime,
-                                Command& command,
-                                const DeserializeFunction& deserializeIoData,
-                                const DeserializeFunction& deserializeBusMessages,
-                                const Callbacks& callbacks) {
+[[nodiscard]] Result V1::Protocol::ReadStepOk(ChannelReader& reader,
+                                              SimulationTime& nextSimulationTime,
+                                              Command& command,
+                                              const DeserializeFunction& deserializeIoData,
+                                              const DeserializeFunction& deserializeBusMessages,
+                                              const Callbacks& callbacks) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadStepOk();
     }
@@ -735,11 +858,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendStepOk(ChannelWriter& writer,
-                                SimulationTime nextSimulationTime,
-                                Command command,
-                                const SerializeFunction& serializeIoData,
-                                const SerializeFunction& serializeBusMessages) {
+[[nodiscard]] Result V1::Protocol::SendStepOk(ChannelWriter& writer,
+                                              SimulationTime nextSimulationTime,
+                                              Command command,
+                                              const SerializeFunction& serializeIoData,
+                                              const SerializeFunction& serializeBusMessages) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendStepOk(nextSimulationTime, command);
     }
@@ -764,12 +887,12 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
+[[nodiscard]] Result V1::Protocol::ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadSetPort();
     }
 
-    CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    CheckResultWithMessage(V1::Protocol::ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
 
     if (IsProtocolTracingEnabled()) {
@@ -779,7 +902,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
+[[nodiscard]] Result V1::Protocol::SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendSetPort(serverName, port);
     }
@@ -796,7 +919,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] Result V1::Protocol::ReadUnsetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadUnsetPort();
     }
@@ -810,7 +933,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
+[[nodiscard]] Result V1::Protocol::SendUnsetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendUnsetPort(serverName);
     }
@@ -826,7 +949,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName) {
+[[nodiscard]] Result V1::Protocol::ReadGetPort(ChannelReader& reader, std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadGetPort();
     }
@@ -840,7 +963,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) {
+[[nodiscard]] Result V1::Protocol::SendGetPort(ChannelWriter& writer, const std::string& serverName) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendGetPort(serverName);
     }
@@ -856,7 +979,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
+[[nodiscard]] Result V1::Protocol::ReadGetPortOk(ChannelReader& reader, uint16_t& port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceReadGetPortOk();
     }
@@ -870,7 +993,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port) {
+[[nodiscard]] Result V1::Protocol::SendGetPortOk(ChannelWriter& writer, uint16_t port) {
     if (IsProtocolTracingEnabled()) {
         LogProtocolBeginTraceSendGetPortOk(port);
     }
@@ -892,7 +1015,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string) {
+[[nodiscard]] Result V1::Protocol::ReadString(ChannelReader& reader, std::string& string) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read string size.");
 
@@ -902,13 +1025,13 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
+[[nodiscard]] Result V1::Protocol::WriteString(ChannelWriter& writer, const std::string& string) {
     CheckResultWithMessage(WriteSize(writer, string.size()), "Could not write string size.");
     CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
+[[nodiscard]] Result V1::Protocol::ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(IoSignalInfoSize, blockReader),
                            "Could not read block for IoSignalContainer.");
@@ -922,7 +1045,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
+[[nodiscard]] Result V1::Protocol::WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(IoSignalInfoSize, blockWriter),
                            "Could not reserve memory for IoSignalContainer.");
@@ -936,7 +1059,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
+[[nodiscard]] Result V1::Protocol::ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read signals count.");
 
@@ -949,7 +1072,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
+[[nodiscard]] Result V1::Protocol::WriteIoSignalInfos(ChannelWriter& writer,
+                                                      const std::vector<IoSignalContainer>& signals) {
     CheckResultWithMessage(WriteSize(writer, signals.size()), "Could not write signals count.");
 
     for (const auto& signal : signals) {
@@ -959,7 +1083,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(CanControllerSize, blockReader),
                            "Could not read block for CanControllerContainer.");
@@ -975,7 +1099,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
+[[nodiscard]] Result
+V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(CanControllerSize, blockWriter),
                            "Could not reserve memory for CanControllerContainer.");
@@ -991,7 +1116,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfos(ChannelReader& reader,
+                                                       std::vector<CanControllerContainer>& controllers) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
 
@@ -1004,8 +1130,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<CanControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfos(ChannelWriter& writer,
+                                                        const std::vector<CanControllerContainer>& controllers) {
     CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
 
     for (const auto& controller : controllers) {
@@ -1015,7 +1141,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(EthControllerSize, blockReader),
                            "Could not read block for EthControllerContainer.");
@@ -1031,7 +1157,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
+[[nodiscard]] Result
+V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(EthControllerSize, blockWriter),
                            "Could not reserve memory for EthControllerContainer.");
@@ -1047,7 +1174,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfos(ChannelReader& reader,
+                                                       std::vector<EthControllerContainer>& controllers) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
 
@@ -1060,8 +1188,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<EthControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfos(ChannelWriter& writer,
+                                                        const std::vector<EthControllerContainer>& controllers) {
     CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
 
     for (const auto& controller : controllers) {
@@ -1071,7 +1199,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(LinControllerSize, blockReader),
                            "Could not read block for LinControllerContainer.");
@@ -1087,7 +1215,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
+[[nodiscard]] Result
+V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(LinControllerSize, blockWriter),
                            "Could not reserve memory for LinControllerContainer.");
@@ -1103,7 +1232,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::ReadControllerInfos(ChannelReader& reader,
+                                                       std::vector<LinControllerContainer>& controllers) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
 
@@ -1116,8 +1246,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<LinControllerContainer>& controllers) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfos(ChannelWriter& writer,
+                                                        const std::vector<LinControllerContainer>& controllers) {
     CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
 
     for (const auto& controller : controllers) {
@@ -1127,7 +1257,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, FrControllerContainer& controller) {
+[[nodiscard]] bool V1::Protocol::DoFlexRayOperations() {
+    return false;
+}
+
+[[nodiscard]] Result V2::Protocol::ReadControllerInfo(ChannelReader& reader, FrControllerContainer& controller) {
     BlockReader blockReader;
     CheckResultWithMessage(reader.ReadBlock(FrControllerSize, blockReader),
                            "Could not read block for FrControllerContainer.");
@@ -1142,7 +1276,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const FrControllerContainer& controller) {
+[[nodiscard]] Result V2::Protocol::WriteControllerInfo(ChannelWriter& writer, const FrControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(FrControllerSize, blockWriter),
                            "Could not reserve memory for FrControllerContainer.");
@@ -1157,7 +1291,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<FrControllerContainer>& controllers) {
+[[nodiscard]] Result V2::Protocol::ReadControllerInfos(ChannelReader& reader,
+                                                       std::vector<FrControllerContainer>& controllers) {
     size_t size{};
     CheckResultWithMessage(ReadSize(reader, size), "Could not read controllers count.");
 
@@ -1170,8 +1305,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                          const std::vector<FrControllerContainer>& controllers) {
+[[nodiscard]] Result V2::Protocol::WriteControllerInfos(ChannelWriter& writer,
+                                                        const std::vector<FrControllerContainer>& controllers) {
     CheckResultWithMessage(WriteSize(writer, controllers.size()), "Could not write controllers count.");
 
     for (const auto& controller : controllers) {
@@ -1181,4 +1316,40 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-}  // namespace DsVeosCoSim::Protocol
+[[nodiscard]] bool V2::Protocol::DoFlexRayOperations() {
+    return true;
+}
+
+[[nodiscard]] uint32_t V1::Protocol::GetVersion() {
+    return CoSimProtocolVersion;
+}
+
+
+FactoryResult MakeProtocol(uint32_t negotiatedVersion) {
+    FactoryResult r{};
+
+    if (negotiatedVersion >= V2_VERSION) {
+        // V2 bevorzugen, wenn >= 0x20000
+        auto p = std::make_shared<V2::Protocol>();
+        if (!p) {
+            r.error = FactoryError::ConstructionFailed;
+            return r;
+        }
+        r.protocol = std::move(p);
+        return r;
+    }
+
+    if (negotiatedVersion >= V1_VERSION) {
+        auto p = std::make_shared<V1::Protocol>();
+        if (!p) {
+            r.error = FactoryError::ConstructionFailed;
+            return r;
+        }
+        r.protocol = std::move(p);
+        return r;
+    }
+
+    r.error = FactoryError::UnsupportedVersion;
+    return r;
+}
+} // namespace DsVeosCoSim::Protocol

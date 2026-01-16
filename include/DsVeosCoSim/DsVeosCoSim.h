@@ -74,7 +74,7 @@ enum {
  * \brief Defines the maximum length of a FLEXRAY message payload.
  */
 enum {
-    DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH = 256 //TODO: Leon enter right value
+    DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH = 254 //TODO: Leon enter right value
 };
 
 /**
@@ -547,19 +547,17 @@ typedef uint32_t DsVeosCoSim_FrMessageFlags;
 * \brief Represents the flags of a FLEXRAY message.
 */
 enum {
-    DsVeosCoSim_FrMessageFlags_Startup = 0,
-    DsVeosCoSim_FrMessageFlags_SyncFrame = 1,
-    DsVeosCoSim_FrMessageFlags_NullFrame = 2,
-    DsVeosCoSim_FrMessageFlags_PayloadPreamble = 4,
-    DsVeosCoSim_FrMessageFlags_Loopback = 8,
-    DsVeosCoSim_FrMessageFlags_TransferOnce = 16,
-    DsVeosCoSim_FrMessageFlags_ChannelA = 32,
-    DsVeosCoSim_FrMessageFlags_ChannelB = 64,
-    DsVeosCoSim_FrMessageFlags_Error = 128,
-    DsVeosCoSim_FrMessageFlags_Drop = 256,
+    DsVeosCoSim_FrMessageFlags_Loopback = 1,
+    DsVeosCoSim_FrMessageFlags_Error = 2,
+    DsVeosCoSim_FrMessageFlags_Drop = 4,
+    DsVeosCoSim_FrMessageFlags_Startup = 8,
+    DsVeosCoSim_FrMessageFlags_SyncFrame = 16,
+    DsVeosCoSim_FrMessageFlags_NullFrame = 32,
+    DsVeosCoSim_FrMessageFlags_PayloadPreamble = 64,
+    DsVeosCoSim_FrMessageFlags_TransferOnce = 128,
+    DsVeosCoSim_FrMessageFlags_ChannelA = 256,
+    DsVeosCoSim_FrMessageFlags_ChannelB = 512,
 };
-
-//TODO: Leon Continue
 
 /**
  * \brief Represents an IO signal.
@@ -1244,50 +1242,50 @@ typedef struct DsVeosCoSim_Callbacks {
 
     /**
      * \brief Will be called when a LIN message was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessage will always return
+     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessage will always return
      *        DsVeosCoSim_Result_Empty.
      */
-    DsVeosCoSim_LinMessageReceivedCallback LinMessageReceivedCallback;
+    DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback;
+    
+    /**
+    * \brief An arbitrary object that will be passed to every callback.
+    */
+    void* userData;
+    
+    /**
+    * \brief Will be called when a CAN message container was received from dSPACE VEOS.
+    *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
+    *        DsVeosCoSim_Result_Empty.
+    */
+    DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
+    
+    /**
+    * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
+    *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
+    *        DsVeosCoSim_Result_Empty.
+    */
+    DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
+    
+    /**
+    * \brief Will be called when a LIN message container was received from dSPACE VEOS.
+    *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
+    *        DsVeosCoSim_Result_Empty.
+    */
+    DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
+    
+    /**
+    * \brief Will be called when a FLEXRAY message container was received from dSPACE VEOS.
+    *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessageContainer will always return
+    *        DsVeosCoSim_Result_Empty.
+    */
+    DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
 
     /**
      * \brief Will be called when a FLEXRAY message was received from dSPACE VEOS.
      *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessage will always return
      *        DsVeosCoSim_Result_Empty.
      */
-    DsVeosCoSim_FrMessageReceivedCallback FrMessageReceivedCallback;
-
-    /**
-     * \brief An arbitrary object that will be passed to every callback.
-     */
-    void* userData;
-
-    /**
-     * \brief Will be called when a CAN message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
-     */
-    DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
-
-    /**
-     * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
-     */
-    DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
-
-    /**
-     * \brief Will be called when a LIN message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
-     */
-    DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
-
-    /**
-     * \brief Will be called when a FLEXRAY message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
-     */
-    DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
+    DsVeosCoSim_FrMessageReceivedCallback frMessageReceivedCallback;
 } DsVeosCoSim_Callbacks;
 
 /**

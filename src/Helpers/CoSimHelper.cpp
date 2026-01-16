@@ -231,8 +231,14 @@ void LogProtocolBeginTraceReadConnectOk() {
     LogProtocolBeginTrace("ReadConnectOk()");
 }
 
-void LogProtocolEndTraceReadConnectOk(uint32_t protocolVersion,
-                                      Mode clientMode,
+void LogProtocolEndTraceReadConnectOkVersion(uint32_t protocolVersion) {
+    std::string str = "ReadConnectOk(ProtocolVersion: ";
+    str.append(std::to_string(protocolVersion));
+    str.append(")");
+    LogProtocolEndTrace(str);
+}
+
+void LogProtocolEndTraceReadConnectOk(Mode clientMode,
                                       SimulationTime stepSize,
                                       SimulationState simulationState,
                                       const std::vector<IoSignalContainer>& incomingSignals,
@@ -241,9 +247,7 @@ void LogProtocolEndTraceReadConnectOk(uint32_t protocolVersion,
                                       const std::vector<EthControllerContainer>& ethControllers,
                                       const std::vector<LinControllerContainer>& linControllers,
                                       const std::vector<FrControllerContainer>& frControllers) {
-    std::string str = "ReadConnectOk(ProtocolVersion: ";
-    str.append(std::to_string(protocolVersion));
-    str.append(", ClientMode: ");
+    std::string str = "ClientMode: ";
     str.append(ToString(clientMode));
     str.append(", StepSize: ");
     str.append(ToString(stepSize));

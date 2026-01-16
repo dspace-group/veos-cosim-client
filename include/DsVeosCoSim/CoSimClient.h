@@ -5,15 +5,14 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-
 #include "CoSimTypes.h"
+
 
 namespace DsVeosCoSim {
 
 class CoSimClient {
 protected:
     CoSimClient() = default;
-
 public:
     virtual ~CoSimClient() = default;
 

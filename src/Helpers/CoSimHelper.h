@@ -64,9 +64,9 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
                                         const std::vector<FrControllerContainer>& frControllers);
 void LogProtocolEndTraceSendConnectOk();
 
+void LogProtocolEndTraceReadConnectOkVersion(uint32_t protocolVersion);
 void LogProtocolBeginTraceReadConnectOk();
-void LogProtocolEndTraceReadConnectOk(uint32_t protocolVersion,
-                                      Mode clientMode,
+void LogProtocolEndTraceReadConnectOk(Mode clientMode,
                                       SimulationTime stepSize,
                                       SimulationState simulationState,
                                       const std::vector<IoSignalContainer>& incomingSignals,
