@@ -300,8 +300,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result GetFrControllers(uint32_t& controllersCount,
-                                          const FrController*& controllers) const override {
+    [[nodiscard]] Result GetFrControllers(uint32_t& controllersCount, const FrController*& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllersCount = static_cast<uint32_t>(_frControllersExtern.size());
@@ -532,8 +531,7 @@ private:
 
     [[nodiscard]] Result OnConnectOk() {
         uint32_t serverProtocolVersion{};
-        CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(),
-                                   serverProtocolVersion),
+        CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(), serverProtocolVersion),
                                "Could not read protocol version.");
 
         if (_protocol->GetVersion() != serverProtocolVersion) {
@@ -545,15 +543,15 @@ private:
 
         Mode mode{};
         CheckResultWithMessage(_protocol->ReadConnectOk(_channel->GetReader(),
-                                   mode,
-                                   _stepSize,
-                                   _simulationState,
-                                   _incomingSignals,
-                                   _outgoingSignals,
-                                   _canControllers,
-                                   _ethControllers,
-                                   _linControllers,
-                                   _frControllers),
+                                                        mode,
+                                                        _stepSize,
+                                                        _simulationState,
+                                                        _incomingSignals,
+                                                        _outgoingSignals,
+                                                        _canControllers,
+                                                        _ethControllers,
+                                                        _linControllers,
+                                                        _frControllers),
                                "Could not read connect ok frame.");
 
         _incomingSignalsExtern = Convert(_incomingSignals);
@@ -590,22 +588,22 @@ private:
         }
 
         CheckResult(CreateIoBuffer(CoSimType::Client,
-            _connectionKind,
-            _serverName,
-            _incomingSignalsExtern,
-            _outgoingSignalsExtern,
-            *_protocol,
-            _ioBuffer));
+                                   _connectionKind,
+                                   _serverName,
+                                   _incomingSignalsExtern,
+                                   _outgoingSignalsExtern,
+                                   *_protocol,
+                                   _ioBuffer));
 
         CheckResult(CreateBusBuffer(CoSimType::Client,
-            _connectionKind,
-            _serverName,
-            _canControllersExtern,
-            _ethControllersExtern,
-            _linControllersExtern,
-            _frControllersExtern,
-            *_protocol,
-            _busBuffer));
+                                    _connectionKind,
+                                    _serverName,
+                                    _canControllersExtern,
+                                    _ethControllersExtern,
+                                    _linControllersExtern,
+                                    _frControllersExtern,
+                                    *_protocol,
+                                    _busBuffer));
 
         _isConnected = true;
         return Result::Ok;
@@ -774,10 +772,10 @@ private:
 
     [[nodiscard]] Result OnStep() {
         CheckResultWithMessage(_protocol->ReadStep(_channel->GetReader(),
-                                   _currentSimulationTime,
-                                   _deserializeIoData,
-                                   _deserializeBusMessages,
-                                   _callbacks),
+                                                   _currentSimulationTime,
+                                                   _deserializeIoData,
+                                                   _deserializeBusMessages,
+                                                   _callbacks),
                                "Could not read step frame.");
 
         if (_callbacks.simulationEndStepCallback) {
@@ -849,10 +847,10 @@ private:
     [[nodiscard]] Result FinishStep() {
         Command nextCommand = _nextCommand.exchange({});
         CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(),
-                                   _nextSimulationTime,
-                                   nextCommand,
-                                   _serializeIoData,
-                                   _serializeBusMessages),
+                                                     _nextSimulationTime,
+                                                     nextCommand,
+                                                     _serializeIoData,
+                                                     _serializeBusMessages),
                                "Could not send step ok frame.");
         return Result::Ok;
     }
@@ -1004,18 +1002,18 @@ private:
 
     DeserializeFunction _deserializeIoData =
         [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
-    };
+            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 
     DeserializeFunction _deserializeBusMessages =
         [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
-    };
+            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 };
-} // namespace
+}  // namespace
 
 [[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client) {
     client = std::make_unique<CoSimClientImpl>();
     return Result::Ok;
 }
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

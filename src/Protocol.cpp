@@ -17,8 +17,8 @@ namespace {
 constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + sizeof(DataType) + sizeof(SizeKind);
 constexpr size_t CanControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
 constexpr size_t EthControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + EthAddressLength;
-constexpr size_t LinControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(
-                                         LinControllerType);
+constexpr size_t LinControllerSize =
+    sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(LinControllerType);
 constexpr size_t FrControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
 constexpr size_t CanMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(CanMessageFlags) + sizeof(uint32_t);
@@ -26,9 +26,9 @@ constexpr size_t EthMessageSize =
     sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(EthMessageFlags) + sizeof(uint32_t);
 constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
                                   sizeof(LinMessageFlags) + sizeof(uint32_t);
-constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) +
-                                 sizeof(FrMessageFlags) + sizeof(uint32_t);
-} // namespace
+constexpr size_t FrMessageSize =
+    sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) + sizeof(FrMessageFlags) + sizeof(uint32_t);
+}  // namespace
 
 [[nodiscard]] Result V1::Protocol::ReadSize(ChannelReader& reader, size_t& size) {
     uint32_t intSize{};
@@ -164,12 +164,14 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result V1::Protocol::ReadMessage([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::ReadMessage([[maybe_unused]] ChannelReader& reader,
+                                               [[maybe_unused]] FrMessageContainer& messageContainer) {
     // V1 does not have this functionality
     return Result::Ok;
 }
 
-[[nodiscard]] Result V1::Protocol::WriteMessage([[maybe_unused]] ChannelWriter& writer, [[maybe_unused]] const FrMessageContainer& messageContainer) {
+[[nodiscard]] Result V1::Protocol::WriteMessage([[maybe_unused]] ChannelWriter& writer,
+                                                [[maybe_unused]] const FrMessageContainer& messageContainer) {
     // V1 does not have this functionality
     return Result::Ok;
 }
@@ -1098,8 +1100,8 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return Result::Ok;
 }
 
-[[nodiscard]] Result
-V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfo(ChannelWriter& writer,
+                                                       const CanControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(CanControllerSize, blockWriter),
                            "Could not reserve memory for CanControllerContainer.");
@@ -1156,8 +1158,8 @@ V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const CanControllerCont
     return Result::Ok;
 }
 
-[[nodiscard]] Result
-V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfo(ChannelWriter& writer,
+                                                       const EthControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(EthControllerSize, blockWriter),
                            "Could not reserve memory for EthControllerContainer.");
@@ -1214,8 +1216,8 @@ V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const EthControllerCont
     return Result::Ok;
 }
 
-[[nodiscard]] Result
-V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
+[[nodiscard]] Result V1::Protocol::WriteControllerInfo(ChannelWriter& writer,
+                                                       const LinControllerContainer& controller) {
     BlockWriter blockWriter;
     CheckResultWithMessage(writer.Reserve(LinControllerSize, blockWriter),
                            "Could not reserve memory for LinControllerContainer.");
@@ -1323,12 +1325,10 @@ V1::Protocol::WriteControllerInfo(ChannelWriter& writer, const LinControllerCont
     return CoSimProtocolVersion;
 }
 
-
 FactoryResult MakeProtocol(uint32_t negotiatedVersion) {
     FactoryResult r{};
 
     if (negotiatedVersion >= V2_VERSION) {
-        // V2 bevorzugen, wenn >= 0x20000
         auto p = std::make_shared<V2::Protocol>();
         if (!p) {
             r.error = FactoryError::ConstructionFailed;
@@ -1351,4 +1351,4 @@ FactoryResult MakeProtocol(uint32_t negotiatedVersion) {
     r.error = FactoryError::UnsupportedVersion;
     return r;
 }
-} // namespace DsVeosCoSim::Protocol
+}  // namespace DsVeosCoSim

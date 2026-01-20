@@ -463,41 +463,41 @@ private:
         }
 
         CheckResultWithMessage(_protocol->SendConnectOk(_channel->GetWriter(),
-                                   CoSimProtocolVersion,
-                                   {},
-                                   _stepSize,
-                                   _simulationState,
-                                   _incomingSignals,
-                                   _outgoingSignals,
-                                   _canControllers,
-                                   _ethControllers,
-                                   _linControllers,
-                                   _frControllers),
+                                                        CoSimProtocolVersion,
+                                                        {},
+                                                        _stepSize,
+                                                        _simulationState,
+                                                        _incomingSignals,
+                                                        _outgoingSignals,
+                                                        _canControllers,
+                                                        _ethControllers,
+                                                        _linControllers,
+                                                        _frControllers),
                                "Could not send connect ok frame.");
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
         std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
         CheckResult(CreateIoBuffer(CoSimType::Server,
-            _connectionKind,
-            _serverName,
-            incomingSignalsExtern,
-            outgoingSignalsExtern,
-            *_protocol,
-            _ioBuffer));
+                                   _connectionKind,
+                                   _serverName,
+                                   incomingSignalsExtern,
+                                   outgoingSignalsExtern,
+                                   *_protocol,
+                                   _ioBuffer));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
         std::vector<LinController> linControllersExtern = Convert(_linControllers);
         std::vector<FrController> frControllersExtern = Convert(_frControllers);
         CheckResult(CreateBusBuffer(CoSimType::Server,
-            _connectionKind,
-            _serverName,
-            canControllersExtern,
-            ethControllersExtern,
-            linControllersExtern,
-            frControllersExtern,
-            *_protocol,
-            _busBuffer));
+                                    _connectionKind,
+                                    _serverName,
+                                    canControllersExtern,
+                                    ethControllersExtern,
+                                    linControllersExtern,
+                                    frControllersExtern,
+                                    *_protocol,
+                                    _busBuffer));
 
         StopAccepting();
 
@@ -588,11 +588,11 @@ private:
             // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::StepOk:
                 CheckResultWithMessage(_protocol->ReadStepOk(_channel->GetReader(),
-                                           simulationTime,
-                                           command,
-                                           _deserializeIoData,
-                                           _deserializeBusMessages,
-                                           _callbacks),
+                                                             simulationTime,
+                                                             command,
+                                                             _deserializeIoData,
+                                                             _deserializeBusMessages,
+                                                             _callbacks),
                                        "Could not receive step ok frame.");
                 return Result::Ok;
             case FrameKind::Error:
@@ -685,18 +685,18 @@ private:
 
     DeserializeFunction _deserializeIoData =
         [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
-    };
+            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 
     DeserializeFunction _deserializeBusMessages =
         [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
-    };
+            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        };
 };
-} // namespace
+}  // namespace
 
 [[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server) {
     server = std::make_unique<CoSimServerImpl>();
     return Result::Ok;
 }
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

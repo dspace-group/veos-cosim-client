@@ -217,7 +217,7 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
     str.append(ToString(ethControllers));
     str.append(", LinControllers: ");
     str.append(ToString(linControllers));
-        str.append(", FrControllers: ");
+    str.append(", FrControllers: ");
     str.append(ToString(frControllers));
     str.append(")");
     LogProtocolBeginTrace(str);

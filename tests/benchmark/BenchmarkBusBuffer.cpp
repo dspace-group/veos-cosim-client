@@ -50,7 +50,6 @@ void RunTest(benchmark::State& state,
     using TController = std::tuple_element_t<0, TypeParam>;
     using TMessageContainer = std::tuple_element_t<2, TypeParam>;
 
-
     std::shared_ptr<IProtocol> protocol;
     FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
     if (result.error == FactoryError::None && result.protocol) {
@@ -60,11 +59,19 @@ void RunTest(benchmark::State& state,
     FillWithRandom(controller);
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
-    MustBeOk(
-        CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {controller.Convert()}, *protocol, transmitterBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Server,
+                             connectionKind,
+                             senderName,
+                             {controller.Convert()},
+                             *protocol,
+                             transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    MustBeOk(
-        CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller.Convert()}, *protocol, receiverBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Client,
+                             connectionKind,
+                             receiverName,
+                             {controller.Convert()},
+                             *protocol,
+                             receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
 

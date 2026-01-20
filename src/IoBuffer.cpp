@@ -192,7 +192,7 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
 public:
     RemoteIoPartBuffer() = delete;
     ~RemoteIoPartBuffer() override = default;
-    explicit RemoteIoPartBuffer(IProtocol& protocol): _protocol(protocol) {};
+    explicit RemoteIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
 
     RemoteIoPartBuffer(const RemoteIoPartBuffer&) = delete;
     RemoteIoPartBuffer& operator=(const RemoteIoPartBuffer&) = delete;
@@ -326,7 +326,8 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * currentLength;
-            CheckResultWithMessage(_protocol.WriteData(writer, buffer.data(), totalSize), "Could not write signal data.");
+            CheckResultWithMessage(_protocol.WriteData(writer, buffer.data(), totalSize),
+                                   "Could not write signal data.");
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
@@ -367,7 +368,8 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * data.currentLength;
-            CheckResultWithMessage(_protocol.ReadData(reader, data.buffer.data(), totalSize), "Could not read signal data.");
+            CheckResultWithMessage(_protocol.ReadData(reader, data.buffer.data(), totalSize),
+                                   "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTraceSignal(metaData->info.id,
@@ -409,7 +411,7 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
 public:
     LocalIoPartBuffer() = delete;
     ~LocalIoPartBuffer() override = default;
-    explicit LocalIoPartBuffer(IProtocol& protocol): _protocol(protocol) {};
+    explicit LocalIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
 
     LocalIoPartBuffer(const LocalIoPartBuffer&) = delete;
     LocalIoPartBuffer& operator=(const LocalIoPartBuffer&) = delete;

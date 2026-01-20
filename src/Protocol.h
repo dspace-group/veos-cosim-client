@@ -11,10 +11,15 @@
 namespace DsVeosCoSim {
 using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
 using DeserializeFunction =
-std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
+    std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
 
 class IProtocol {
 public:
+    IProtocol() = default;
+    IProtocol(const IProtocol&) = default;
+    IProtocol(IProtocol&&) = default;
+    IProtocol& operator=(const IProtocol&) = default;
+    IProtocol& operator=(IProtocol&&) = default;
     virtual ~IProtocol() = default;
     [[nodiscard]] virtual Result ReadSize(ChannelReader& reader, size_t& size) = 0;
     [[nodiscard]] virtual Result WriteSize(ChannelWriter& writer, size_t size) = 0;
@@ -140,18 +145,16 @@ public:
 
     [[nodiscard]] virtual uint32_t GetVersion() = 0;
 
-    //V2:
+    // V2:
     [[nodiscard]] virtual Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) = 0;
     [[nodiscard]] virtual Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) = 0;
 
     [[nodiscard]] virtual bool DoFlexRayOperations() = 0;
 };
 
-
 namespace V1 {
 class Protocol : public IProtocol {
 public:
-    virtual ~Protocol() = default;
     static const uint32_t CoSimProtocolVersion = 0x10000U;
     [[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) override;
     [[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) override;
@@ -227,10 +230,12 @@ public:
     [[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) override;
     [[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) override;
 
-    [[nodiscard]] Result
-    ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) override;
-    [[nodiscard]] Result
-    SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) override;
+    [[nodiscard]] Result ReadTerminate(ChannelReader& reader,
+                                       SimulationTime& simulationTime,
+                                       TerminateReason& reason) override;
+    [[nodiscard]] Result SendTerminate(ChannelWriter& writer,
+                                       SimulationTime simulationTime,
+                                       TerminateReason reason) override;
 
     [[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) override;
     [[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) override;
@@ -272,8 +277,8 @@ public:
     [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) override;
     [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) override;
 
-    [[nodiscard]] Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer);
-    [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer);
+    [[nodiscard]] Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) override;
+    [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) override;
 
 protected:
     [[nodiscard]] Result ReadString(ChannelReader& reader, std::string& string);
@@ -310,7 +315,7 @@ protected:
 
     [[nodiscard]] bool DoFlexRayOperations() override;
 };
-} // namespace v1
+}  // namespace V1
 
 namespace V2 {
 class Protocol : public DsVeosCoSim::V1::Protocol {
@@ -353,7 +358,7 @@ protected:
     [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
                                               const std::vector<FrControllerContainer>& controllers);
 };
-} // namespace v2
+}  // namespace V2
 
 enum class FactoryError {
     None,
@@ -366,11 +371,9 @@ struct FactoryResult {
     FactoryError error{FactoryError::None};
 };
 
-// Versionen (Beispielwerte)
-constexpr uint32_t V1_VERSION = V1::Protocol::CoSimProtocolVersion; // 0x10000U
-constexpr uint32_t V2_VERSION = V2::Protocol::CoSimProtocolVersion; // 0x20000U
+constexpr uint32_t V1_VERSION = V1::Protocol::CoSimProtocolVersion;  // 0x10000U
+constexpr uint32_t V2_VERSION = V2::Protocol::CoSimProtocolVersion;  // 0x20000U
 constexpr uint32_t LATEST_VERSION = V2_VERSION;
 
-// Wähle passende Implementierung anhand der ausgehandelten Version
 FactoryResult MakeProtocol(uint32_t negotiatedVersion);
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

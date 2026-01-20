@@ -311,7 +311,7 @@ template <typename T, size_t TSize>
 
     return Result::Ok;
 }
-} // namespace
+}  // namespace
 
 [[nodiscard]] std::string ToString(SimulationTime simulationTime) {
     int64_t nanoseconds = simulationTime.count();
@@ -1853,4 +1853,4 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 
     return oss.str();
 }
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

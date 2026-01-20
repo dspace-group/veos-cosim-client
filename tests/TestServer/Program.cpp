@@ -91,7 +91,7 @@ public:
         return _server->Transmit(messageContainer);
     }
 
-        [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) {
+    [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) {
         std::lock_guard lock(_mutex);
         return _server->Transmit(messageContainer);
     }
@@ -162,7 +162,6 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 bool SendFrMessages;
-
 
 bool StopSimulationThreadFlag;
 std::thread SimulationThread;
@@ -590,8 +589,8 @@ void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTim
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
-                                   [[maybe_unused]] const FrController& controller,
-                                   const FrMessageContainer& messageContainer) {
+                                  [[maybe_unused]] const FrController& controller,
+                                  const FrMessageContainer& messageContainer) {
     print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
 }
 

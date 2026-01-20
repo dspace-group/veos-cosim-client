@@ -46,14 +46,26 @@ void RunTest(benchmark::State& state,
 
     std::shared_ptr<IProtocol> protocol;
     FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
-        if (result.error == FactoryError::None && result.protocol) {
-            protocol = std::move(result.protocol);
-        }
+    if (result.error == FactoryError::None && result.protocol) {
+        protocol = std::move(result.protocol);
+    }
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server,
+                            connectionKind,
+                            writerName,
+                            {signal.Convert()},
+                            {},
+                            *protocol,
+                            writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, *protocol, readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client,
+                            connectionKind,
+                            readerName,
+                            {signal.Convert()},
+                            {},
+                            *protocol,
+                            readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 

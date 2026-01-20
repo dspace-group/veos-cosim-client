@@ -23,8 +23,7 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 class PortMapperServerImpl final : public PortMapperServer {
 public:
     explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, std::shared_ptr<IProtocol> protocol)
-        : _server(std::move(channelServer))
-        , _protocol(protocol) {
+        : _server(std::move(channelServer)), _protocol(std::move(protocol)) {
         _thread = std::thread([this] {
             RunPortMapperServer();
         });
@@ -68,8 +67,7 @@ private:
         FrameKind frameKind{};
         CheckResult(_protocol->ReceiveHeader(channel.GetReader(), frameKind));
 
-        switch (frameKind) {
-            // NOLINT(clang-diagnostic-switch-enum)
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::GetPort:
                 CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
                 return Result::Ok;
@@ -181,7 +179,7 @@ private:
     Event _stopEvent;
     std::shared_ptr<IProtocol> _protocol;
 };
-} // namespace
+}  // namespace
 
 [[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
                                             std::shared_ptr<IProtocol> protocol,
@@ -267,7 +265,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, std::shared_ptr<IProtocol> protocol) {
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol> protocol) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
@@ -296,4 +294,4 @@ private:
             return Result::Error;
     }
 }
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

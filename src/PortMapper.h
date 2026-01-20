@@ -36,4 +36,4 @@ public:
                                        std::shared_ptr<IProtocol> protocol);
 [[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, std::shared_ptr<IProtocol> protocol);
 [[nodiscard]] Result PortMapperUnsetPort(const std::string& name, std::shared_ptr<IProtocol> protocol);
-} // namespace DsVeosCoSim
+}  // namespace DsVeosCoSim

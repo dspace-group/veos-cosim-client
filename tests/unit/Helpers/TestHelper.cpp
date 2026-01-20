@@ -250,11 +250,11 @@ void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     thread.join();
 }
 
-std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol(){
-        std::shared_ptr<IProtocol> _protocol;
-        FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
-        if (result.error == FactoryError::None && result.protocol) {
-            _protocol = std::move(result.protocol);
-        }
-        return _protocol;
+std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol() {
+    std::shared_ptr<IProtocol> _protocol;
+    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
+    if (result.error == FactoryError::None && result.protocol) {
+        _protocol = std::move(result.protocol);
+    }
+    return _protocol;
 }

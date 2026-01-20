@@ -29,7 +29,7 @@ TEST_F(TestPortMapper, StartOfServer) {
     std::unique_ptr<PortMapperServer> portMapperServer;
 
     // Act
-    AssertOk(CreatePortMapperServer(false,GetLatestProtocol(), portMapperServer));
+    AssertOk(CreatePortMapperServer(false, GetLatestProtocol(), portMapperServer));
 
     // Assert
     AssertTrue(portMapperServer);
