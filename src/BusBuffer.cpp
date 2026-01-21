@@ -9,6 +9,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Channel.h"
@@ -194,7 +195,7 @@ class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMe
 public:
     RemoteBusProtocolBuffer() = default;
 
-    explicit RemoteBusProtocolBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    explicit RemoteBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
     ~RemoteBusProtocolBuffer() override = default;
 
     RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
@@ -294,7 +295,7 @@ protected:
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
         size_t count = _messageBuffer.Size();
-        CheckResultWithMessage(this->_protocol.WriteSize(writer, count), "Could not write count of messages.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, count), "Could not write count of messages.");
 
         for (size_t i = 0; i < count; i++) {
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
@@ -303,8 +304,7 @@ protected:
                 LogProtocolDataTrace(messageContainer.ToString());
             }
 
-            CheckResultWithMessage(this->_protocol.WriteMessage(writer, messageContainer),
-                                   "Could not serialize message.");
+            CheckResultWithMessage(_protocol->WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
         for (auto& [controllerId, extension] : Base::_controllers) {
@@ -320,12 +320,11 @@ protected:
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t totalCount{};
-        CheckResultWithMessage(this->_protocol.ReadSize(reader, totalCount), "Could not read count of messages.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, totalCount), "Could not read count of messages.");
 
         for (size_t i = 0; i < totalCount; i++) {
             TMessageContainer messageContainer{};
-            CheckResultWithMessage(this->_protocol.ReadMessage(reader, messageContainer),
-                                   "Could not deserialize message.");
+            CheckResultWithMessage(_protocol->ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTrace(messageContainer.ToString());
@@ -370,7 +369,7 @@ private:
 
     RingBuffer<TMessageContainer> _messageBuffer;
 
-    IProtocol& _protocol;
+    std::shared_ptr<IProtocol> _protocol;
 };
 
 #ifdef _WIN32
@@ -475,7 +474,7 @@ class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMes
 public:
     LocalBusProtocolBuffer() = default;
 
-    explicit LocalBusProtocolBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    explicit LocalBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
     ~LocalBusProtocolBuffer() override = default;
 
     LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
@@ -604,8 +603,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(this->_protocol.WriteSize(writer, _messageBuffer->Size()),
-                               "Could not write transmit count.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
         return Result::Ok;
     }
 
@@ -615,7 +613,7 @@ protected:
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t receiveCount{};
-        CheckResultWithMessage(this->_protocol.ReadSize(reader, receiveCount), "Could not read receive count.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
 
         if (!messageCallback && !messageContainerCallback) {
@@ -654,7 +652,7 @@ private:
     size_t _totalReceiveCount{};
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessageContainer>* _messageBuffer{};
-    IProtocol& _protocol;
+    std::shared_ptr<IProtocol> _protocol;
 
     SharedMemory _sharedMemory;
 };
@@ -689,8 +687,8 @@ public:
                                     const std::vector<EthController>& ethControllers,
                                     const std::vector<LinController>& linControllers,
                                     const std::vector<FrController>& frControllers,
-                                    IProtocol& protocol) {
-        _doFlexrayOperations = protocol.DoFlexRayOperations();
+                                    const std::shared_ptr<IProtocol>& protocol) {
+        _doFlexrayOperations = protocol->DoFlexRayOperations();
 
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
@@ -902,7 +900,7 @@ private:
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
                                      const std::vector<FrController>& frControllers,
-                                     IProtocol& protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     busBuffer = std::make_unique<BusBufferImpl>();
     CheckResult(dynamic_cast<BusBufferImpl&>(*busBuffer)

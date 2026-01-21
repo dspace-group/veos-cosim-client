@@ -192,7 +192,7 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
 public:
     RemoteIoPartBuffer() = delete;
     ~RemoteIoPartBuffer() override = default;
-    explicit RemoteIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    explicit RemoteIoPartBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
 
     RemoteIoPartBuffer(const RemoteIoPartBuffer&) = delete;
     RemoteIoPartBuffer& operator=(const RemoteIoPartBuffer&) = delete;
@@ -309,7 +309,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()),
+        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()),
                                "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
@@ -319,14 +319,14 @@ protected:
             MetaData*& metaData = _changedSignalsQueue.PopFront();
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
-            CheckResultWithMessage(_protocol.WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
+            CheckResultWithMessage(_protocol->WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
 
             if (metaData->info.sizeKind == SizeKind::Variable) {
-                CheckResultWithMessage(_protocol.WriteLength(writer, currentLength), "Could not write signal length.");
+                CheckResultWithMessage(_protocol->WriteLength(writer, currentLength), "Could not write signal length.");
             }
 
             size_t totalSize = metaData->dataTypeSize * currentLength;
-            CheckResultWithMessage(_protocol.WriteData(writer, buffer.data(), totalSize),
+            CheckResultWithMessage(_protocol->WriteData(writer, buffer.data(), totalSize),
                                    "Could not write signal data.");
             isChanged = false;
 
@@ -342,12 +342,12 @@ protected:
                                              SimulationTime simulationTime,
                                              const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount),
+        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount),
                                "Could not read count of changed signals.");
 
         for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
-            CheckResultWithMessage(_protocol.ReadSignalId(reader, signalId), "Could not read signal id.");
+            CheckResultWithMessage(_protocol->ReadSignalId(reader, signalId), "Could not read signal id.");
 
             MetaData* metaData{};
             CheckResult(FindMetaData(signalId, metaData));
@@ -355,7 +355,7 @@ protected:
 
             if (metaData->info.sizeKind == SizeKind::Variable) {
                 uint32_t length = 0;
-                CheckResultWithMessage(_protocol.ReadLength(reader, length), "Could not read signal length.");
+                CheckResultWithMessage(_protocol->ReadLength(reader, length), "Could not read signal length.");
                 if (length > metaData->info.length) {
                     std::string message = "Length of variable sized IO signal '";
                     message.append(metaData->info.name);
@@ -368,7 +368,7 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * data.currentLength;
-            CheckResultWithMessage(_protocol.ReadData(reader, data.buffer.data(), totalSize),
+            CheckResultWithMessage(_protocol->ReadData(reader, data.buffer.data(), totalSize),
                                    "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
@@ -391,7 +391,7 @@ protected:
 
 private:
     std::vector<Data> _dataVector;
-    IProtocol& _protocol;
+    std::shared_ptr<IProtocol> _protocol;
 };
 
 #ifdef _WIN32
@@ -411,7 +411,7 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
 public:
     LocalIoPartBuffer() = delete;
     ~LocalIoPartBuffer() override = default;
-    explicit LocalIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    explicit LocalIoPartBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
 
     LocalIoPartBuffer(const LocalIoPartBuffer&) = delete;
     LocalIoPartBuffer& operator=(const LocalIoPartBuffer&) = delete;
@@ -560,7 +560,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()),
+        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()),
                                "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
@@ -578,7 +578,7 @@ protected:
                                            dataBuffer->data);
             }
 
-            CheckResultWithMessage(_protocol.WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
+            CheckResultWithMessage(_protocol->WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
 
             data.isChanged = false;
         }
@@ -590,12 +590,12 @@ protected:
                                              SimulationTime simulationTime,
                                              const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount),
+        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount),
                                "Could not read count of changed signals.");
 
         for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
-            CheckResultWithMessage(_protocol.ReadSignalId(reader, signalId), "Could not read signal id.");
+            CheckResultWithMessage(_protocol->ReadSignalId(reader, signalId), "Could not read signal id.");
 
             MetaData* metaData{};
             CheckResult(FindMetaData(signalId, metaData));
@@ -634,7 +634,7 @@ private:
 
     std::vector<Data> _dataVector;
     SharedMemory _sharedMemory;
-    IProtocol& _protocol;
+    std::shared_ptr<IProtocol> _protocol;
 };
 
 #endif
@@ -655,7 +655,7 @@ public:
                                     const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
-                                    IProtocol& protocol) {
+                                    const std::shared_ptr<IProtocol>& protocol) {
         std::string outgoingName(name);
         outgoingName.append(".Outgoing");
         std::string incomingName(name);
@@ -727,7 +727,7 @@ private:
                                     const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
-                                    IProtocol& protocol,
+                                    const std::shared_ptr<IProtocol>& protocol,
                                     std::unique_ptr<IoBuffer>& ioBuffer) {
     auto tmpIoBuffer = std::make_unique<IoBufferImpl>();
     CheckResult(tmpIoBuffer->Initialize(coSimType, connectionKind, name, incomingSignals, outgoingSignals, protocol));

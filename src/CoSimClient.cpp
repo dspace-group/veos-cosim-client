@@ -592,7 +592,7 @@ private:
                                    _serverName,
                                    _incomingSignalsExtern,
                                    _outgoingSignalsExtern,
-                                   *_protocol,
+                                   _protocol,
                                    _ioBuffer));
 
         CheckResult(CreateBusBuffer(CoSimType::Client,
@@ -602,7 +602,7 @@ private:
                                     _ethControllersExtern,
                                     _linControllersExtern,
                                     _frControllersExtern,
-                                    *_protocol,
+                                    _protocol,
                                     _busBuffer));
 
         _isConnected = true;

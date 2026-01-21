@@ -60,7 +60,7 @@ public:
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
                                      const std::vector<FrController>& frControllers,
-                                     IProtocol& protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 }  // namespace DsVeosCoSim

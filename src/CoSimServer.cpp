@@ -482,7 +482,7 @@ private:
                                    _serverName,
                                    incomingSignalsExtern,
                                    outgoingSignalsExtern,
-                                   *_protocol,
+                                   _protocol,
                                    _ioBuffer));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
@@ -496,7 +496,7 @@ private:
                                     ethControllersExtern,
                                     linControllersExtern,
                                     frControllersExtern,
-                                    *_protocol,
+                                    _protocol,
                                     _busBuffer));
 
         StopAccepting();

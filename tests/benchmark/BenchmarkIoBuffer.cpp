@@ -56,7 +56,7 @@ void RunTest(benchmark::State& state,
                             writerName,
                             {signal.Convert()},
                             {},
-                            *protocol,
+                            protocol,
                             writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
     MustBeOk(CreateIoBuffer(CoSimType::Client,
@@ -64,7 +64,7 @@ void RunTest(benchmark::State& state,
                             readerName,
                             {signal.Convert()},
                             {},
-                            *protocol,
+                            protocol,
                             readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);

@@ -2,6 +2,7 @@
 
 #include "Helper.h"
 
+#include <memory>
 #include <string>
 
 #include <fmt/color.h>
@@ -156,7 +157,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
-                                     IProtocol& protocol,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busBuffer);
 }
@@ -165,7 +166,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
-                                     IProtocol& protocol,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busBuffer);
 }
@@ -174,7 +175,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
-                                     IProtocol& protocol,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busBuffer);
 }
@@ -183,7 +184,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<FrController>& controllers,
-                                     IProtocol& protocol,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
 }

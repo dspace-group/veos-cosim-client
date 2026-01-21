@@ -63,14 +63,14 @@ void RunTest(benchmark::State& state,
                              connectionKind,
                              senderName,
                              {controller.Convert()},
-                             *protocol,
+                             protocol,
                              transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     MustBeOk(CreateBusBuffer(CoSimType::Client,
                              connectionKind,
                              receiverName,
                              {controller.Convert()},
-                             *protocol,
+                             protocol,
                              receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
