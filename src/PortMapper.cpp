@@ -22,8 +22,9 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 class PortMapperServerImpl final : public PortMapperServer {
 public:
-    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, std::shared_ptr<IProtocol> protocol)
-        : _server(std::move(channelServer)), _protocol(std::move(protocol)) {
+    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer,
+                                  const std::shared_ptr<IProtocol>& protocol)
+        : _server(std::move(channelServer)), _protocol(protocol) {
         _thread = std::thread([this] {
             RunPortMapperServer();
         });
@@ -182,7 +183,7 @@ private:
 }  // namespace
 
 [[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
-                                            std::shared_ptr<IProtocol> protocol,
+                                            const std::shared_ptr<IProtocol>& protocol,
                                             std::unique_ptr<PortMapperServer>& portMapperServer) {
     std::unique_ptr<ChannelServer> channelServer;
     CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
@@ -193,7 +194,7 @@ private:
 [[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress,
                                        const std::string& serverName,
                                        uint16_t& port,
-                                       std::shared_ptr<IProtocol> protocol) {
+                                       const std::shared_ptr<IProtocol>& protocol) {
     if (IsPortMapperClientVerbose()) {
         std::string message = "PortMapperGetPort(ipAddress: '";
         message.append(ipAddress);
@@ -235,7 +236,9 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, std::shared_ptr<IProtocol> protocol) {
+[[nodiscard]] Result PortMapperSetPort(const std::string& name,
+                                       uint16_t port,
+                                       const std::shared_ptr<IProtocol>& protocol) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
@@ -265,7 +268,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol> protocol) {
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol>& protocol) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");

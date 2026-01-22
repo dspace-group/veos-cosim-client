@@ -55,6 +55,11 @@ public:
         _clientName = connectConfig.clientName;
         _remotePort = connectConfig.remotePort;
 
+        FactoryResult result = MakeProtocol(V1_VERSION);
+        if (result.error == FactoryError::None && result.protocol) {
+            _protocol = std::move(result.protocol);
+        }
+
         if (!connectConfig.serverName.empty() && _remoteIpAddress.empty() && (connectConfig.remotePort == 0)) {
             if (!IsOk(LocalConnect())) {
                 _remoteIpAddress = "127.0.0.1";
@@ -518,11 +523,6 @@ private:
     }
 
     [[nodiscard]] Result SendConnectRequest() {
-        FactoryResult result = MakeProtocol(DsVeosCoSim::V1_VERSION);
-        if (result.error == FactoryError::None && result.protocol) {
-            _protocol = std::move(result.protocol);
-        }
-
         CheckResultWithMessage(
             _protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::LATEST_VERSION, {}, _serverName, _clientName),
             "Could not send connect frame.");

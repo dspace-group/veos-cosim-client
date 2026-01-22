@@ -17,7 +17,7 @@ protected:
 public:
     virtual ~PortMapperServer() = default;
 
-    explicit PortMapperServer(IProtocol& protocol);
+    explicit PortMapperServer(const std::shared_ptr<IProtocol>& protocol);
 
     PortMapperServer(const PortMapperServer&) = delete;
     PortMapperServer& operator=(const PortMapperServer&) = delete;
@@ -27,13 +27,15 @@ public:
 };
 
 [[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
-                                            std::shared_ptr<IProtocol> protocol,
+                                            const std::shared_ptr<IProtocol>& protocol,
                                             std::unique_ptr<PortMapperServer>& portMapperServer);
 
 [[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress,
                                        const std::string& serverName,
                                        uint16_t& port,
-                                       std::shared_ptr<IProtocol> protocol);
-[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, std::shared_ptr<IProtocol> protocol);
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, std::shared_ptr<IProtocol> protocol);
+                                       const std::shared_ptr<IProtocol>& protocol);
+[[nodiscard]] Result PortMapperSetPort(const std::string& name,
+                                       uint16_t port,
+                                       const std::shared_ptr<IProtocol>& protocol);
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol>& protocol);
 }  // namespace DsVeosCoSim
