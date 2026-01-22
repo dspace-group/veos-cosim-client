@@ -6,10 +6,12 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 #include <thread>
 
 #include "Helper.h"
+#include "Protocol.h"
 
 using namespace DsVeosCoSim;
 
@@ -247,3 +249,17 @@ void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
 
     thread.join();
 }
+
+static std::shared_ptr<IProtocol> _protocol;
+std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol() {
+    if (_protocol) {
+        return _protocol;
+    }
+
+    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
+    if (result.error == FactoryError::None && result.protocol) {
+        _protocol = std::move(result.protocol);
+    }
+    return _protocol;
+
+}  // namespace

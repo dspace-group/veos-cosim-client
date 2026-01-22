@@ -26,12 +26,14 @@ struct CoSimServerConfig {
     SimulationCallback simulationContinuedCallback;
     CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
     LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
+    FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
     EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
     std::vector<IoSignalContainer> incomingSignals;
     std::vector<IoSignalContainer> outgoingSignals;
     std::vector<CanControllerContainer> canControllers;
     std::vector<EthControllerContainer> ethControllers;
     std::vector<LinControllerContainer> linControllers;
+    std::vector<FrControllerContainer> frControllers;
 };
 
 class CoSimServer {
@@ -67,10 +69,13 @@ public:
     [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
+
 
     [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] virtual Result Transmit(const FrMessageContainer& messageContainer) const = 0;
 
     [[nodiscard]] virtual Result BackgroundService(std::chrono::nanoseconds& roundTripTime) = 0;
 

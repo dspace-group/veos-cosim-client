@@ -9,6 +9,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Channel.h"
@@ -25,9 +26,7 @@
 #endif
 
 namespace DsVeosCoSim {
-
 namespace {
-
 template <typename TMessage, typename TMessageContainer, typename TController>
 class BusProtocolBufferBase {
 protected:
@@ -195,6 +194,8 @@ class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMe
 
 public:
     RemoteBusProtocolBuffer() = default;
+
+    explicit RemoteBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
     ~RemoteBusProtocolBuffer() override = default;
 
     RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
@@ -294,7 +295,7 @@ protected:
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
         size_t count = _messageBuffer.Size();
-        CheckResultWithMessage(Protocol::WriteSize(writer, count), "Could not write count of messages.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, count), "Could not write count of messages.");
 
         for (size_t i = 0; i < count; i++) {
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
@@ -303,7 +304,7 @@ protected:
                 LogProtocolDataTrace(messageContainer.ToString());
             }
 
-            CheckResultWithMessage(Protocol::WriteMessage(writer, messageContainer), "Could not serialize message.");
+            CheckResultWithMessage(_protocol->WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
         for (auto& [controllerId, extension] : Base::_controllers) {
@@ -319,11 +320,11 @@ protected:
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t totalCount{};
-        CheckResultWithMessage(Protocol::ReadSize(reader, totalCount), "Could not read count of messages.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, totalCount), "Could not read count of messages.");
 
         for (size_t i = 0; i < totalCount; i++) {
             TMessageContainer messageContainer{};
-            CheckResultWithMessage(Protocol::ReadMessage(reader, messageContainer), "Could not deserialize message.");
+            CheckResultWithMessage(_protocol->ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTrace(messageContainer.ToString());
@@ -367,6 +368,8 @@ private:
     std::vector<uint32_t> _messageCountPerController;
 
     RingBuffer<TMessageContainer> _messageBuffer;
+
+    std::shared_ptr<IProtocol> _protocol;
 };
 
 #ifdef _WIN32
@@ -470,6 +473,8 @@ class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMes
 
 public:
     LocalBusProtocolBuffer() = default;
+
+    explicit LocalBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
     ~LocalBusProtocolBuffer() override = default;
 
     LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
@@ -598,7 +603,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(Protocol::WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
         return Result::Ok;
     }
 
@@ -608,7 +613,7 @@ protected:
         const typename Base::MessageCallback& messageCallback,
         const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t receiveCount{};
-        CheckResultWithMessage(Protocol::ReadSize(reader, receiveCount), "Could not read receive count.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
 
         if (!messageCallback && !messageContainerCallback) {
@@ -647,6 +652,7 @@ private:
     size_t _totalReceiveCount{};
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessageContainer>* _messageBuffer{};
+    std::shared_ptr<IProtocol> _protocol;
 
     SharedMemory _sharedMemory;
 };
@@ -657,43 +663,55 @@ private:
 using LocalCanBuffer = LocalBusProtocolBuffer<CanMessage, CanMessageContainer, CanController>;
 using LocalEthBuffer = LocalBusProtocolBuffer<EthMessage, EthMessageContainer, EthController>;
 using LocalLinBuffer = LocalBusProtocolBuffer<LinMessage, LinMessageContainer, LinController>;
+using LocalFrBuffer = LocalBusProtocolBuffer<FrMessage, FrMessageContainer, FrController>;
 #endif
 
 using RemoteCanBuffer = RemoteBusProtocolBuffer<CanMessage, CanMessageContainer, CanController>;
 using RemoteEthBuffer = RemoteBusProtocolBuffer<EthMessage, EthMessageContainer, EthController>;
 using RemoteLinBuffer = RemoteBusProtocolBuffer<LinMessage, LinMessageContainer, LinController>;
+using RemoteFrBuffer = RemoteBusProtocolBuffer<FrMessage, FrMessageContainer, FrController>;
 
 class BusBufferImpl final : public BusBuffer {
     using CanBufferBase = BusProtocolBufferBase<CanMessage, CanMessageContainer, CanController>;
     using EthBufferBase = BusProtocolBufferBase<EthMessage, EthMessageContainer, EthController>;
     using LinBufferBase = BusProtocolBufferBase<LinMessage, LinMessageContainer, LinController>;
+    using FrBufferBase = BusProtocolBufferBase<FrMessage, FrMessageContainer, FrController>;
 
 public:
     BusBufferImpl() = default;
+
     [[nodiscard]] Result Initialize(CoSimType coSimType,
                                     [[maybe_unused]] ConnectionKind connectionKind,
                                     const std::string& name,
                                     const std::vector<CanController>& canControllers,
                                     const std::vector<EthController>& ethControllers,
-                                    const std::vector<LinController>& linControllers) {
+                                    const std::vector<LinController>& linControllers,
+                                    const std::vector<FrController>& frControllers,
+                                    const std::shared_ptr<IProtocol>& protocol) {
+        _doFlexrayOperations = protocol->DoFlexRayOperations();
+
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
-            _canTransmitBuffer = std::make_unique<LocalCanBuffer>();
-            _ethTransmitBuffer = std::make_unique<LocalEthBuffer>();
-            _linTransmitBuffer = std::make_unique<LocalLinBuffer>();
+            _canTransmitBuffer = std::make_unique<LocalCanBuffer>(protocol);
+            _ethTransmitBuffer = std::make_unique<LocalEthBuffer>(protocol);
+            _linTransmitBuffer = std::make_unique<LocalLinBuffer>(protocol);
+            _frTransmitBuffer = std::make_unique<LocalFrBuffer>(protocol);
 
-            _canReceiveBuffer = std::make_unique<LocalCanBuffer>();
-            _ethReceiveBuffer = std::make_unique<LocalEthBuffer>();
-            _linReceiveBuffer = std::make_unique<LocalLinBuffer>();
+            _canReceiveBuffer = std::make_unique<LocalCanBuffer>(protocol);
+            _ethReceiveBuffer = std::make_unique<LocalEthBuffer>(protocol);
+            _linReceiveBuffer = std::make_unique<LocalLinBuffer>(protocol);
+            _frReceiveBuffer = std::make_unique<LocalFrBuffer>(protocol);
         } else {
 #endif
-            _canTransmitBuffer = std::make_unique<RemoteCanBuffer>();
-            _ethTransmitBuffer = std::make_unique<RemoteEthBuffer>();
-            _linTransmitBuffer = std::make_unique<RemoteLinBuffer>();
+            _canTransmitBuffer = std::make_unique<RemoteCanBuffer>(protocol);
+            _ethTransmitBuffer = std::make_unique<RemoteEthBuffer>(protocol);
+            _linTransmitBuffer = std::make_unique<RemoteLinBuffer>(protocol);
+            _frTransmitBuffer = std::make_unique<RemoteFrBuffer>(protocol);
 
-            _canReceiveBuffer = std::make_unique<RemoteCanBuffer>();
-            _ethReceiveBuffer = std::make_unique<RemoteEthBuffer>();
-            _linReceiveBuffer = std::make_unique<RemoteLinBuffer>();
+            _canReceiveBuffer = std::make_unique<RemoteCanBuffer>(protocol);
+            _ethReceiveBuffer = std::make_unique<RemoteEthBuffer>(protocol);
+            _linReceiveBuffer = std::make_unique<RemoteLinBuffer>(protocol);
+            _frReceiveBuffer = std::make_unique<RemoteFrBuffer>(protocol);
 #ifdef _WIN32
         }
 #endif
@@ -710,6 +728,9 @@ public:
         std::string linTransmitBufferName(name);
         linTransmitBufferName.append(".Lin.");
         linTransmitBufferName.append(suffixForTransmit);
+        std::string frTransmitBufferName(name);
+        frTransmitBufferName.append(".Flexray.");
+        frTransmitBufferName.append(suffixForTransmit);
 
         std::string canReceiveBufferName(name);
         canReceiveBufferName.append(".Can.");
@@ -720,13 +741,19 @@ public:
         std::string linReceiveBufferName(name);
         linReceiveBufferName.append(".Lin.");
         linReceiveBufferName.append(suffixForReceive);
+        std::string frReceiveBufferName(name);
+        frReceiveBufferName.append(".Flexray.");
+        frReceiveBufferName.append(suffixForReceive);
 
         CheckResult(_canTransmitBuffer->Initialize(coSimType, canTransmitBufferName, canControllers));
         CheckResult(_ethTransmitBuffer->Initialize(coSimType, ethTransmitBufferName, ethControllers));
         CheckResult(_linTransmitBuffer->Initialize(coSimType, linTransmitBufferName, linControllers));
+        CheckResult(_frTransmitBuffer->Initialize(coSimType, frTransmitBufferName, frControllers));
         CheckResult(_canReceiveBuffer->Initialize(coSimType, canReceiveBufferName, canControllers));
         CheckResult(_ethReceiveBuffer->Initialize(coSimType, ethReceiveBufferName, ethControllers));
         CheckResult(_linReceiveBuffer->Initialize(coSimType, linReceiveBufferName, linControllers));
+        CheckResult(_frReceiveBuffer->Initialize(coSimType, frReceiveBufferName, frControllers));
+
         return Result::Ok;
     }
 
@@ -742,10 +769,12 @@ public:
         _canTransmitBuffer->ClearData();
         _ethTransmitBuffer->ClearData();
         _linTransmitBuffer->ClearData();
+        _frTransmitBuffer->ClearData();
 
         _canReceiveBuffer->ClearData();
         _ethReceiveBuffer->ClearData();
         _linReceiveBuffer->ClearData();
+        _frReceiveBuffer->ClearData();
     }
 
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
@@ -760,6 +789,10 @@ public:
         return _linTransmitBuffer->Transmit(message);
     }
 
+    [[nodiscard]] Result Transmit(const FrMessage& message) const override {
+        return _frTransmitBuffer->Transmit(message);
+    }
+
     [[nodiscard]] Result Transmit(const CanMessageContainer& message) const override {
         return _canTransmitBuffer->Transmit(message);
     }
@@ -770,6 +803,10 @@ public:
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& message) const override {
         return _linTransmitBuffer->Transmit(message);
+    }
+
+    [[nodiscard]] Result Transmit(const FrMessageContainer& message) const override {
+        return _frTransmitBuffer->Transmit(message);
     }
 
     [[nodiscard]] Result Receive(CanMessage& message) const override {
@@ -784,6 +821,10 @@ public:
         return _linReceiveBuffer->Receive(message);
     }
 
+    [[nodiscard]] Result Receive(FrMessage& message) const override {
+        return _frReceiveBuffer->Receive(message);
+    }
+
     [[nodiscard]] Result Receive(CanMessageContainer& message) const override {
         return _canReceiveBuffer->Receive(message);
     }
@@ -796,10 +837,17 @@ public:
         return _linReceiveBuffer->Receive(message);
     }
 
+    [[nodiscard]] Result Receive(FrMessageContainer& message) const override {
+        return _frReceiveBuffer->Receive(message);
+    }
+
     [[nodiscard]] Result Serialize(ChannelWriter& writer) const override {
         CheckResultWithMessage(_canTransmitBuffer->Serialize(writer), "Could not transmit CAN messages.");
         CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit ETH messages.");
         CheckResultWithMessage(_linTransmitBuffer->Serialize(writer), "Could not transmit LIN messages.");
+        if (_doFlexrayOperations) {
+            CheckResultWithMessage(_frTransmitBuffer->Serialize(writer), "Could not transmit FLEXRAY messages.");
+        }
         return Result::Ok;
     }
 
@@ -821,6 +869,13 @@ public:
                                                               callbacks.linMessageReceivedCallback,
                                                               callbacks.linMessageContainerReceivedCallback),
                                "Could not receive LIN messages.");
+        if (_doFlexrayOperations) {
+            CheckResultWithMessage(_frReceiveBuffer->Deserialize(reader,
+                                                                 simulationTime,
+                                                                 callbacks.frMessageReceivedCallback,
+                                                                 callbacks.frMessageContainerReceivedCallback),
+                                   "Could not receive FLEXRAY messages.");
+        }
         return Result::Ok;
     }
 
@@ -828,12 +883,14 @@ private:
     std::unique_ptr<CanBufferBase> _canTransmitBuffer;
     std::unique_ptr<EthBufferBase> _ethTransmitBuffer;
     std::unique_ptr<LinBufferBase> _linTransmitBuffer;
+    std::unique_ptr<FrBufferBase> _frTransmitBuffer;
 
     std::unique_ptr<CanBufferBase> _canReceiveBuffer;
     std::unique_ptr<EthBufferBase> _ethReceiveBuffer;
     std::unique_ptr<LinBufferBase> _linReceiveBuffer;
+    std::unique_ptr<FrBufferBase> _frReceiveBuffer;
+    bool _doFlexrayOperations{};
 };
-
 }  // namespace
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
@@ -842,11 +899,19 @@ private:
                                      const std::vector<CanController>& canControllers,
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
+                                     const std::vector<FrController>& frControllers,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     busBuffer = std::make_unique<BusBufferImpl>();
     CheckResult(dynamic_cast<BusBufferImpl&>(*busBuffer)
-                    .Initialize(coSimType, connectionKind, name, canControllers, ethControllers, linControllers));
+                    .Initialize(coSimType,
+                                connectionKind,
+                                name,
+                                canControllers,
+                                ethControllers,
+                                linControllers,
+                                frControllers,
+                                protocol));
     return Result::Ok;
 }
-
 }  // namespace DsVeosCoSim

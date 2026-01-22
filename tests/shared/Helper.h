@@ -95,18 +95,28 @@ void SetEnvVariable(const std::string& name, const std::string& value);
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
+                                     std::shared_ptr<IProtocol> protocol,
+                                     std::unique_ptr<BusBuffer>& busBuffer);
+
+[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
+                                     ConnectionKind connectionKind,
+                                     const std::string& name,
+                                     const std::vector<FrController>& controllers,
+                                     std::shared_ptr<IProtocol> protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] uint8_t GenerateU8();
@@ -141,15 +151,18 @@ template <typename T>
 void FillWithRandom(CanControllerContainer& controller);
 void FillWithRandom(EthControllerContainer& controller);
 void FillWithRandom(LinControllerContainer& controller);
+void FillWithRandom(FrControllerContainer& controller);
 
 void FillWithRandom(CanMessageContainer& message, BusControllerId controllerId);
 void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId);
 void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId);
+void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId);
 
 [[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count);
 
 [[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(size_t count);
 [[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(size_t count);
 [[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(size_t count);
+[[nodiscard]] std::vector<FrControllerContainer> CreateFrControllers(size_t count);
 
 }  // namespace DsVeosCoSim

@@ -9,6 +9,7 @@
 
 #include "Channel.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Protocol.h"
 
 namespace DsVeosCoSim {
 
@@ -42,6 +43,7 @@ public:
                                     const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
+                                    const std::shared_ptr<IProtocol>& protocol,
                                     std::unique_ptr<IoBuffer>& ioBuffer);
 
 }  // namespace DsVeosCoSim

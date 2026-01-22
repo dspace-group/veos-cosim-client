@@ -22,6 +22,7 @@ namespace {
 using CanTypes = std::tuple<CanControllerContainer, CanController, CanMessageContainer, CanMessage>;
 using EthTypes = std::tuple<EthControllerContainer, EthController, EthMessageContainer, EthMessage>;
 using LinTypes = std::tuple<LinControllerContainer, LinController, LinMessageContainer, LinMessage>;
+using FrTypes = std::tuple<FrControllerContainer, FrController, FrMessageContainer, FrMessage>;
 
 template <typename TypeParam>
 void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channel, bool& stopThread, Event& endEvent) {
@@ -49,15 +50,28 @@ void RunTest(benchmark::State& state,
     using TController = std::tuple_element_t<0, TypeParam>;
     using TMessageContainer = std::tuple_element_t<2, TypeParam>;
 
+    std::shared_ptr<IProtocol> protocol;
+    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
+    if (result.error == FactoryError::None && result.protocol) {
+        protocol = std::move(result.protocol);
+    }
     TController controller{};
     FillWithRandom(controller);
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
-    MustBeOk(
-        CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {controller.Convert()}, transmitterBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Server,
+                             connectionKind,
+                             senderName,
+                             {controller.Convert()},
+                             protocol,
+                             transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    MustBeOk(
-        CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller.Convert()}, receiverBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Client,
+                             connectionKind,
+                             receiverName,
+                             {controller.Convert()},
+                             protocol,
+                             receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
 
@@ -180,16 +194,20 @@ void RemoteOnLocalMessages(benchmark::State& state) {
 BENCHMARK_TEMPLATE(TcpMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(TcpMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(TcpMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(UdsMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(UdsMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(UdsMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(UdsMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
 #ifdef _WIN32
 BENCHMARK_TEMPLATE(LocalMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(LocalMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(LocalMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(RemoteOnLocalMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(RemoteOnLocalMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(RemoteOnLocalMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(RemoteOnLocalMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
 #endif
 
 #endif

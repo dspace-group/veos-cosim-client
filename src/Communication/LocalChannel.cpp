@@ -12,8 +12,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <type_traits>
+#include <utility>
 
 #include <emmintrin.h>  // IWYU pragma: keep
 
@@ -616,8 +616,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(const std::string& name,
-                                              std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
     auto server = std::make_unique<LocalChannelServer>();
     CheckResult(server->Initialize(name));
     channelServer = std::move(server);

@@ -37,11 +37,13 @@ std::vector<DsVeosCoSim_IoSignal> OutgoingSignals;
 std::vector<DsVeosCoSim_CanController> CanControllers;
 std::vector<DsVeosCoSim_EthController> EthControllers;
 std::vector<DsVeosCoSim_LinController> LinControllers;
+std::vector<DsVeosCoSim_FrController> FrControllers;
 
 bool SendIoData;
 bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
+bool SendFrMessages;
 
 void PrintStatus(bool value, const std::string& what) {
     if (value) {
@@ -69,6 +71,11 @@ void SwitchSendingEthMessages() {
 void SwitchSendingLinMessages() {
     SendLinMessages = !SendLinMessages;
     PrintStatus(SendLinMessages, "LIN messages");
+}
+
+void SwitchSendingFrMessages() {
+    SendFrMessages = !SendFrMessages;
+    PrintStatus(SendFrMessages, "FR messages");
 }
 
 [[nodiscard]] DsVeosCoSim_Result WriteOutGoingSignal(const DsVeosCoSim_IoSignal& ioSignal) {
@@ -113,6 +120,18 @@ void SwitchSendingLinMessages() {
     return DsVeosCoSim_TransmitLinMessageContainer(Client, &messageContainer);
 }
 
+[[nodiscard]] DsVeosCoSim_Result TransmitFrMessage(const DsVeosCoSim_FrController& controller) {
+    uint32_t length = GenerateRandom(1U, 8U);
+    DsVeosCoSim_FrMessageContainer messageContainer{};
+    messageContainer.controllerId = controller.id;
+    messageContainer.id = GenerateU32();
+    messageContainer.timestamp = GenerateI64();
+    messageContainer.length = length;
+    FillWithRandomData(messageContainer.data, length);
+
+    return DsVeosCoSim_TransmitFrMessageContainer(Client, &messageContainer);
+}
+
 [[nodiscard]] DsVeosCoSim_Result SendSomeData(DsVeosCoSim_SimulationTime simulationTime) {
     static DsVeosCoSim_SimulationTime lastHalfSecond = -1;
     static int64_t counter = 0;
@@ -124,27 +143,33 @@ void SwitchSendingLinMessages() {
     lastHalfSecond = currentHalfSecond;
     counter++;
 
-    if (SendIoData && ((counter % 4) == 0)) {
+    if (SendIoData && ((counter % 5) == 0)) {
         for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
             CheckDsVeosCoSimResult(WriteOutGoingSignal(signal));
         }
     }
 
-    if (SendCanMessages && ((counter % 4) == 1)) {
+    if (SendCanMessages && ((counter % 5) == 1)) {
         for (const DsVeosCoSim_CanController& controller : CanControllers) {
             CheckDsVeosCoSimResult(TransmitCanMessage(controller));
         }
     }
 
-    if (SendEthMessages && ((counter % 4) == 2)) {
+    if (SendEthMessages && ((counter % 5) == 2)) {
         for (const DsVeosCoSim_EthController& controller : EthControllers) {
             CheckDsVeosCoSimResult(TransmitEthMessage(controller));
         }
     }
 
-    if (SendLinMessages && ((counter % 4) == 3)) {
+    if (SendLinMessages && ((counter % 5) == 3)) {
         for (const DsVeosCoSim_LinController& controller : LinControllers) {
             CheckDsVeosCoSimResult(TransmitLinMessage(controller));
+        }
+    }
+
+    if (SendFrMessages && ((counter % 5) == 4)) {
+        for (const DsVeosCoSim_FrController& controller : FrControllers) {
+            CheckDsVeosCoSimResult(TransmitFrMessage(controller));
         }
     }
 
@@ -184,6 +209,13 @@ void OnLinMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime s
                                    const DsVeosCoSim_LinMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
     print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_LinMessageContainerToString(messageContainer));
+}
+
+void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
+                                  [[maybe_unused]] const DsVeosCoSim_FrController* controller,
+                                  const DsVeosCoSim_FrMessageContainer* messageContainer,
+                                  [[maybe_unused]] void* userData) {
+    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_FrMessageContainerToString(messageContainer));
 }
 
 void StartSimulationThread(const std::function<void()>& function) {
@@ -301,6 +333,20 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
         LogTrace("");
     }
 
+    uint32_t tmpFrControllersCount{};
+    const DsVeosCoSim_FrController* tmpFrControllers{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetFrControllers(Client, &tmpFrControllersCount, &tmpFrControllers));
+    if (tmpFrControllersCount > 0) {
+        FrControllers =
+            std::vector<DsVeosCoSim_FrController>(tmpFrControllers, tmpFrControllers + tmpFrControllersCount);
+        LogTrace("Found the following FR controllers:");
+        for (const DsVeosCoSim_FrController& controller : FrControllers) {
+            LogTrace("  {}", DsVeosCoSim_FrControllerToString(&controller));
+        }
+
+        LogTrace("");
+    }
+
     uint32_t tmpIncomingSignalsCount{};
     const DsVeosCoSim_IoSignal* tmpIncomingSignals{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetIncomingSignals(Client, &tmpIncomingSignalsCount, &tmpIncomingSignals));
@@ -352,6 +398,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     callbacks.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
     callbacks.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
     callbacks.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
+    callbacks.frMessageContainerReceivedCallback = OnFrMessageContainerReceived;
 
     LogInfo("Running callback-based co-simulation ...");
     if (DsVeosCoSim_RunCallbackBasedCoSimulation(Client, callbacks) != DsVeosCoSim_Result_Disconnected) {
@@ -469,6 +516,9 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
                 break;
             case '4':
                 SwitchSendingLinMessages();
+                break;
+            case '5':
+                SwitchSendingFrMessages();
                 break;
             case 's':
                 CheckDsVeosCoSimResult(Start());
