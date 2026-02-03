@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -46,8 +46,7 @@
  * \brief Converts the given simulation time to a double in seconds.
  * \param simulationTime    The simulation time to convert.
  */
-#define DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) \
-    ((double)(simulationTime) / DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND)
+#define DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) ((double)(simulationTime) / DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND)
 
 /**
  * \brief Defines the maximum length of a CAN message payload.
@@ -539,18 +538,18 @@ enum {
 };
 
 /**
-* \brief Underlying data type of the flags of a FLEXRAY message.
-*/
+ * \brief Underlying data type of the flags of a FLEXRAY message.
+ */
 typedef uint32_t DsVeosCoSim_FrMessageFlags;
 
 /**
-* \brief Represents the flags of a FLEXRAY message.
-*/
+ * \brief Represents the flags of a FLEXRAY message.
+ */
 enum {
     /**
-    * \brief FLEXRAY message will be transmitted to sender as well.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message will be transmitted to sender as well.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_Loopback = 1,
 
     /**
@@ -566,45 +565,45 @@ enum {
     DsVeosCoSim_FrMessageFlags_Drop = 4,
 
     /**
-    * \brief FLEXRAY message is a startup frame.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message is a startup frame.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_Startup = 8,
 
     /**
-    * \brief FLEXRAY message is a sync frame.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message is a sync frame.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_SyncFrame = 16,
 
     /**
-    * \brief FLEXRAY message is a null frame.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message is a null frame.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_NullFrame = 32,
 
     /**
-    * \brief FLEXRAY message uses the payload preamble.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message uses the payload preamble.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_PayloadPreamble = 64,
 
     /**
-    * \brief FLEXRAY message will only be transmitted in one cycle, otherwise message will be retransmitted in every upcoming cycle.
-    *        For transmitted messages only.
-    */
+     * \brief FLEXRAY message will only be transmitted in one cycle, otherwise message will be retransmitted in every
+     * upcoming cycle. For transmitted messages only.
+     */
     DsVeosCoSim_FrMessageFlags_TransferOnce = 128,
 
     /**
-    * \brief FLEXRAY message is transmitted on Channel A.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message is transmitted on Channel A.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_ChannelA = 256,
 
     /**
-    * \brief FLEXRAY message is transmitted on Channel B.
-    *        For received and transmitted messages.
-    */
+     * \brief FLEXRAY message is transmitted on Channel B.
+     *        For received and transmitted messages.
+     */
     DsVeosCoSim_FrMessageFlags_ChannelB = 512,
 };
 
@@ -1117,9 +1116,7 @@ typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simula
  * \param reason            The termination reason.
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
-typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationTime simulationTime,
-                                                         DsVeosCoSim_TerminateReason reason,
-                                                         void* userData);
+typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason, void* userData);
 
 /**
  * \brief Represents an incoming signal changed callback function pointer.
@@ -1215,9 +1212,9 @@ typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_Simu
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
 typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
-                                                       const DsVeosCoSim_FrController* frController,
-                                                       const DsVeosCoSim_FrMessage* message,
-                                                       void* userData);
+                                                      const DsVeosCoSim_FrController* frController,
+                                                      const DsVeosCoSim_FrMessage* message,
+                                                      void* userData);
 
 /**
  * \brief Represents a Fr message container received callback function pointer.
@@ -1227,9 +1224,9 @@ typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(DsVeosCoSim_SimulationTime
  * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
  */
 typedef void (*DsVeosCoSim_FrMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
-                                                                const DsVeosCoSim_FrController* frController,
-                                                                const DsVeosCoSim_FrMessageContainer* messageContainer,
-                                                                void* userData);
+                                                               const DsVeosCoSim_FrController* frController,
+                                                               const DsVeosCoSim_FrMessageContainer* messageContainer,
+                                                               void* userData);
 
 /**
  * \brief Represents the callbacks that will be fired during the co-simulation.
@@ -1295,38 +1292,38 @@ typedef struct DsVeosCoSim_Callbacks {
      *        DsVeosCoSim_Result_Empty.
      */
     DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback;
-    
+
     /**
-    * \brief An arbitrary object that will be passed to every callback.
-    */
+     * \brief An arbitrary object that will be passed to every callback.
+     */
     void* userData;
-    
+
     /**
-    * \brief Will be called when a CAN message container was received from dSPACE VEOS.
-    *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
-    *        DsVeosCoSim_Result_Empty.
-    */
+     * \brief Will be called when a CAN message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
     DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
-    
+
     /**
-    * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
-    *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
-    *        DsVeosCoSim_Result_Empty.
-    */
+     * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
     DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
-    
+
     /**
-    * \brief Will be called when a LIN message container was received from dSPACE VEOS.
-    *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
-    *        DsVeosCoSim_Result_Empty.
-    */
+     * \brief Will be called when a LIN message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
     DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
-    
+
     /**
-    * \brief Will be called when a FLEXRAY message container was received from dSPACE VEOS.
-    *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessageContainer will always return
-    *        DsVeosCoSim_Result_Empty.
-    */
+     * \brief Will be called when a FLEXRAY message container was received from dSPACE VEOS.
+     *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessageContainer will always return
+     *        DsVeosCoSim_Result_Empty.
+     */
     DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
 
     /**
@@ -1392,8 +1389,7 @@ DSVEOSCOSIM_DECL void DsVeosCoSim_Destroy(DsVeosCoSim_Handle handle);
  * \param handle        The handle.
  * \param connectConfig The data used for connecting.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle,
-                                                        DsVeosCoSim_ConnectConfig connectConfig);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectConfig connectConfig);
 
 /**
  * \brief Disconnects the given handle from a dSPACE VEOS CoSim server.
@@ -1406,8 +1402,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_Disconnect(DsVeosCoSim_Handle ha
  * \param handle            The handle.
  * \param connectionState   The connection state as an out value.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle,
-                                                                   DsVeosCoSim_ConnectionState* connectionState);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle, DsVeosCoSim_ConnectionState* connectionState);
 
 /**
  * \brief Runs a callback based co-simulation for the given handle.
@@ -1416,16 +1411,14 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_H
  * \param handle    The handle.
  * \param callbacks The callbacks.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle,
-                                                                             DsVeosCoSim_Callbacks callbacks);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks);
 
 /**
  * \brief Starts a polling based co-simulation for the given handle.
  * \param handle    The handle.
  * \param callbacks The callbacks.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle handle,
-                                                                              DsVeosCoSim_Callbacks callbacks);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks);
 
 /**
  * \brief Polls a command for the co-simulation for the given handle.
@@ -1448,16 +1441,14 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle
  * \param handle            The handle.
  * \param simulationTime    The next simulation time.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle,
-                                                                      DsVeosCoSim_SimulationTime simulationTime);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime simulationTime);
 
 /**
  * \brief Gets the step size of the dSPACE VEOS CoSim server.
  * \param handle                The handle.
  * \param stepSize              The step size.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle,
-                                                            DsVeosCoSim_SimulationTime* stepSize);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* stepSize);
 
 /**
  * \brief Gets all available incoming signals.
@@ -1518,33 +1509,28 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Ha
  * \param handle    The handle.
  * \param message   The received CAN message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle,
-                                                                  DsVeosCoSim_CanMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessage* message);
 
 /**
  * \brief Receives a CAN message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The received CAN message container.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessageContainer* messageContainer);
 
 /**
  * \brief Transmits the given message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle,
-                                                                   const DsVeosCoSim_CanMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessage* message);
 
 /**
  * \brief Transmits the given message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle handle,
-                                        const DsVeosCoSim_CanMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessageContainer* messageContainer);
 
 /**
  * \brief Gets all available ethernet controllers.
@@ -1561,33 +1547,28 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Ha
  * \param handle    The handle.
  * \param message   The received ethernet message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle,
-                                                                  DsVeosCoSim_EthMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessage* message);
 
 /**
  * \brief Receives an ethernet message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The received ethernet message container.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessageContainer* messageContainer);
 
 /**
  * \brief Transmits the given ethernet message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle,
-                                                                   const DsVeosCoSim_EthMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessage* message);
 
 /**
  * \brief Transmits the given ethernet message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle handle,
-                                        const DsVeosCoSim_EthMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessageContainer* messageContainer);
 
 /**
  * \brief Gets all available LIN controllers.
@@ -1604,33 +1585,28 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Ha
  * \param handle    The handle.
  * \param message   The received LIN message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle,
-                                                                  DsVeosCoSim_LinMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessage* message);
 
 /**
  * \brief Receives a LIN message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The received LIN message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessageContainer* messageContainer);
 
 /**
  * \brief Transmits the given LIN message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle,
-                                                                   const DsVeosCoSim_LinMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessage* message);
 
 /**
  * \brief Transmits the given LIN message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle,
-                                        const DsVeosCoSim_LinMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessageContainer* messageContainer);
 
 /**
  * \brief Gets all available FLEXRAY controllers.
@@ -1639,54 +1615,46 @@ DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle,
  * \param frControllers         The FLEXRAY controllers.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetFrControllers(DsVeosCoSim_Handle handle,
-                                                                  uint32_t* frControllersCount,
-                                                                  const DsVeosCoSim_FrController** frControllers);
+                                                                 uint32_t* frControllersCount,
+                                                                 const DsVeosCoSim_FrController** frControllers);
 
 /**
  * \brief Receives a FLEXRAY message from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The received FLEXRAY message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle handle,
-                                                                  DsVeosCoSim_FrMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessage* message);
 
 /**
  * \brief Receives a FLEXRAY message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The received FLEXRAY message.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessageContainer* messageContainer);
 
 /**
  * \brief Transmits the given FLEXRAY message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle handle,
-                                                                   const DsVeosCoSim_FrMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_FrMessage* message);
 
 /**
  * \brief Transmits the given FLEXRAY message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_TransmitFrMessageContainer(DsVeosCoSim_Handle handle,
-                                        const DsVeosCoSim_FrMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_FrMessageContainer* messageContainer);
 
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle handle);
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle handle);
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(DsVeosCoSim_Handle handle);
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(DsVeosCoSim_Handle handle);
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle,
-                                                                    DsVeosCoSim_TerminateReason terminateReason);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_TerminateReason terminateReason);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle,
-                                                                         DsVeosCoSim_SimulationTime* simulationTime);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle,
-                                                                   DsVeosCoSim_SimulationState* simulationState);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationState* simulationState);
 
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);
@@ -1699,33 +1667,25 @@ DSVEOSCOSIM_DECL const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind s
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType);
 DSVEOSCOSIM_DECL size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteCanMessageContainerToMessage(const DsVeosCoSim_CanMessageContainer* messageContainer,
-                                              DsVeosCoSim_CanMessage* message);
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteCanMessageToMessageContainer(const DsVeosCoSim_CanMessage* message,
-                                              DsVeosCoSim_CanMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteCanMessageContainerToMessage(const DsVeosCoSim_CanMessageContainer* messageContainer,
+                                                                                  DsVeosCoSim_CanMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteCanMessageToMessageContainer(const DsVeosCoSim_CanMessage* message,
+                                                                                  DsVeosCoSim_CanMessageContainer* messageContainer);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteEthMessageContainerToMessage(const DsVeosCoSim_EthMessageContainer* messageContainer,
-                                              DsVeosCoSim_EthMessage* message);
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteEthMessageToMessageContainer(const DsVeosCoSim_EthMessage* message,
-                                              DsVeosCoSim_EthMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteEthMessageContainerToMessage(const DsVeosCoSim_EthMessageContainer* messageContainer,
+                                                                                  DsVeosCoSim_EthMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteEthMessageToMessageContainer(const DsVeosCoSim_EthMessage* message,
+                                                                                  DsVeosCoSim_EthMessageContainer* messageContainer);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteLinMessageContainerToMessage(const DsVeosCoSim_LinMessageContainer* messageContainer,
-                                              DsVeosCoSim_LinMessage* message);
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoSim_LinMessage* message,
-                                              DsVeosCoSim_LinMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteLinMessageContainerToMessage(const DsVeosCoSim_LinMessageContainer* messageContainer,
+                                                                                  DsVeosCoSim_LinMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoSim_LinMessage* message,
+                                                                                  DsVeosCoSim_LinMessageContainer* messageContainer);
 
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteFrMessageContainerToMessage(const DsVeosCoSim_FrMessageContainer* messageContainer,
-                                              DsVeosCoSim_FrMessage* message);
-DSVEOSCOSIM_DECL DsVeosCoSim_Result
-DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSim_FrMessage* message,
-                                              DsVeosCoSim_FrMessageContainer* messageContainer);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageContainerToMessage(const DsVeosCoSim_FrMessageContainer* messageContainer,
+                                                                                 DsVeosCoSim_FrMessage* message);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSim_FrMessage* message,
+                                                                                 DsVeosCoSim_FrMessageContainer* messageContainer);
 
 #ifdef __cplusplus
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime);
@@ -1736,33 +1696,24 @@ extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthControllerToString(const DsVeo
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType,
-                                                             uint32_t length,
-                                                             const void* value);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator = 0);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal,
-                                                              uint32_t length,
-                                                              const void* value);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value);
 
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageContainerToString(
-    const DsVeosCoSim_CanMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageContainerToString(
-    const DsVeosCoSim_EthMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageContainerToString(
-    const DsVeosCoSim_LinMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageContainerToString(
-    const DsVeosCoSim_FrMessageContainer* messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer);
+extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer);
 
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags);
 extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags);
-
 
 #endif
 

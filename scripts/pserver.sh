@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 scriptFile=$(readlink -f "$0")
-currentDir=$(dirname "$scriptFile")
+baseDir=$(dirname "$scriptFile")/..
 
 config=$1
 [ -z "$config" ] && config=Release
@@ -12,7 +12,7 @@ config=$1
 
 echo Running performance test server for $config ...
 
-filePath=$currentDir/tmplin/$config/tests/PerformanceTestServer/PerformanceTestServer
+filePath=$baseDir/tmplin/$config/tests/PerformanceTestServer/PerformanceTestServer
 if [ -z "$filePath" ]; then
     echo Could not find file "$filePath".
     exit 1

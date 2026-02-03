@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "CoSimHelper.h"
 
@@ -149,10 +149,7 @@ void LogProtocolEndTraceReadPingOk(Command command) {
     LogProtocolEndTrace(str);
 }
 
-void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion,
-                                      Mode clientMode,
-                                      const std::string& serverName,
-                                      const std::string& clientName) {
+void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
     std::string str = "SendConnect(ProtocolVersion: ";
     str.append(std::to_string(protocolVersion));
     str.append(", ClientMode: ");
@@ -173,10 +170,7 @@ void LogProtocolBeginTraceReadConnect() {
     LogProtocolBeginTrace("ReadConnect()");
 }
 
-void LogProtocolEndTraceReadConnect(uint32_t protocolVersion,
-                                    Mode clientMode,
-                                    const std::string& serverName,
-                                    const std::string& clientName) {
+void LogProtocolEndTraceReadConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
     std::string str = "ReadConnect(ProtocolVersion: ";
     str.append(std::to_string(protocolVersion));
     str.append(", ClientMode: ");

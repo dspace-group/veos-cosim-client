@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <chrono>
 #include <cstring>
@@ -564,8 +564,7 @@ void OnSimulationContinuedCallback([[maybe_unused]] SimulationTime simulationTim
     std::thread(OnSimulationStarted).detach();
 }
 
-void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime,
-                                    [[maybe_unused]] TerminateReason terminateReason) {
+void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] TerminateReason terminateReason) {
     LogInfo("Received simulation continued event.");
     std::thread(OnSimulationTerminated).detach();
 }

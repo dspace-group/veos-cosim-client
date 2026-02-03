@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <array>
 #include <string>
@@ -37,10 +37,7 @@ namespace {
     return Result::Ok;
 }
 
-void RemoteCommunicationClientRun(const std::string& host,
-                                  Event& connectedEvent,
-                                  uint64_t& counter,
-                                  const bool& isStopped) {
+void RemoteCommunicationClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run remote communication client.");
     }

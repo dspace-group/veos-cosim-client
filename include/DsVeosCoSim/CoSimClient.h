@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -7,12 +7,12 @@
 #include <vector>
 #include "CoSimTypes.h"
 
-
 namespace DsVeosCoSim {
 
 class CoSimClient {
 protected:
     CoSimClient() = default;
+
 public:
     virtual ~CoSimClient() = default;
 
@@ -53,14 +53,10 @@ public:
     [[nodiscard]] virtual Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const = 0;
     [[nodiscard]] virtual Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const = 0;
 
-    [[nodiscard]] virtual Result GetCanControllers(uint32_t& controllersCount,
-                                                   const CanController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetEthControllers(uint32_t& controllersCount,
-                                                   const EthController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetLinControllers(uint32_t& controllersCount,
-                                                   const LinController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetFrControllers(uint32_t& controllersCount,
-                                                   const FrController*& controllers) const = 0;
+    [[nodiscard]] virtual Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const = 0;
+    [[nodiscard]] virtual Result GetEthControllers(uint32_t& controllersCount, const EthController*& controllers) const = 0;
+    [[nodiscard]] virtual Result GetLinControllers(uint32_t& controllersCount, const LinController*& controllers) const = 0;
+    [[nodiscard]] virtual Result GetFrControllers(uint32_t& controllersCount, const FrController*& controllers) const = 0;
 
     [[nodiscard]] virtual Result GetCanControllers(std::vector<CanController>& controllers) const = 0;
     [[nodiscard]] virtual Result GetEthControllers(std::vector<EthController>& controllers) const = 0;
@@ -71,8 +67,6 @@ public:
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
-
-
 
     [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;

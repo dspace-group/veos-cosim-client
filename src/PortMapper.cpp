@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "PortMapper.h"
 
@@ -17,13 +17,14 @@
 #include "Protocol.h"
 
 namespace DsVeosCoSim {
+
 namespace {
+
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 class PortMapperServerImpl final : public PortMapperServer {
 public:
-    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer,
-                                  const std::shared_ptr<IProtocol>& protocol)
+    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, const std::shared_ptr<IProtocol>& protocol)
         : _server(std::move(channelServer)), _protocol(protocol) {
         _thread = std::thread([this] {
             RunPortMapperServer();
@@ -107,16 +108,14 @@ private:
             return Result::Ok;
         }
 
-        CheckResultWithMessage(_protocol->SendGetPortOk(channel.GetWriter(), search->second),
-                               "Could not send get port ok frame.");
+        CheckResultWithMessage(_protocol->SendGetPortOk(channel.GetWriter(), search->second), "Could not send get port ok frame.");
         return Result::Ok;
     }
 
     [[nodiscard]] Result HandleSetPort(Channel& channel) {
         std::string name;
         uint16_t port = 0;
-        CheckResultWithMessage(_protocol->ReadSetPort(channel.GetReader(), name, port),
-                               "Could not read set port frame.");
+        CheckResultWithMessage(_protocol->ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
 
         if (IsPortMapperServerVerbose()) {
             std::string message = "Set '";
@@ -180,6 +179,7 @@ private:
     Event _stopEvent;
     std::shared_ptr<IProtocol> _protocol;
 };
+
 }  // namespace
 
 [[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
@@ -216,14 +216,12 @@ private:
     switch (frameKind) {
         // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::GetPortOk: {
-            CheckResultWithMessage(protocol->ReadGetPortOk(channel->GetReader(), port),
-                                   "Could not receive port ok frame.");
+            CheckResultWithMessage(protocol->ReadGetPortOk(channel->GetReader(), port), "Could not receive port ok frame.");
             return Result::Ok;
         }
         case FrameKind::Error: {
             std::string errorMessage;
-            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage),
-                                   "Could not read error frame.");
+            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage), "Could not read error frame.");
             LogError(errorMessage);
             return Result::Error;
         }
@@ -236,9 +234,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(const std::string& name,
-                                       uint16_t port,
-                                       const std::shared_ptr<IProtocol>& protocol) {
+[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, const std::shared_ptr<IProtocol>& protocol) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
@@ -254,8 +250,7 @@ private:
             return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;
-            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString),
-                                   "Could not read error frame.");
+            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
             LogError(errorString);
             return Result::Error;
         }
@@ -284,8 +279,7 @@ private:
             return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;
-            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString),
-                                   "Could not read error frame.");
+            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
             LogError(errorString);
             return Result::Error;
         }
@@ -297,4 +291,5 @@ private:
             return Result::Error;
     }
 }
+
 }  // namespace DsVeosCoSim

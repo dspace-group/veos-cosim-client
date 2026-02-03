@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -95,9 +95,7 @@ public:
     SharedMemory& operator=(SharedMemory&& other) noexcept;
 
     [[nodiscard]] static Result CreateOrOpen(const std::string& name, size_t size, SharedMemory& sharedMemory);
-    [[nodiscard]] static Result TryOpenExisting(const std::string& name,
-                                                size_t size,
-                                                std::optional<SharedMemory>& sharedMemory);
+    [[nodiscard]] static Result TryOpenExisting(const std::string& name, size_t size, std::optional<SharedMemory>& sharedMemory);
 
     [[nodiscard]] void* GetData() const;
     [[nodiscard]] size_t GetSize() const;

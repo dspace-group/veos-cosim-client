@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #ifdef ALL_BENCHMARK_TESTS
 
@@ -59,31 +59,16 @@ void RunTest(benchmark::State& state,
     FillWithRandom(controller);
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Server,
-                             connectionKind,
-                             senderName,
-                             {controller.Convert()},
-                             protocol,
-                             transmitterBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {controller.Convert()}, protocol, transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Client,
-                             connectionKind,
-                             receiverName,
-                             {controller.Convert()},
-                             protocol,
-                             receiverBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller.Convert()}, protocol, receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
 
     bool stopThread{};
     Event endEvent;
 
-    std::thread thread(ReceiveMessages<TypeParam>,
-                       count,
-                       std::ref(*receiverBusBuffer),
-                       std::ref(receiverChannel),
-                       std::ref(stopThread),
-                       std::ref(endEvent));
+    std::thread thread(ReceiveMessages<TypeParam>, count, std::ref(*receiverBusBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
 
     TMessageContainer sendMessage{};
     FillWithRandom(sendMessage, controller.id);

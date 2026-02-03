@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <gtest/gtest.h>
 
@@ -216,8 +216,7 @@ TEST_F(TestTypes, IoSignalToString) {
     std::string string = signal.ToString();
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }",
-                   string);
+    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerToString) {
@@ -233,8 +232,7 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     std::string string = signalContainer.ToString();
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }",
-                   string);
+    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerConvert) {

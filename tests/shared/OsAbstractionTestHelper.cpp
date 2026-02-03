@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "OsAbstractionTestHelper.h"
 
@@ -94,24 +94,14 @@ UdpSocket::~UdpSocket() {
 [[nodiscard]] Result UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
     const auto* sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    auto length = CAST(sendto(_socket,
-                              sourcePointer,
-                              static_cast<int32_t>(size),
-                              0,
-                              reinterpret_cast<const sockaddr*>(&address),
-                              addressLength));
+    auto length = CAST(sendto(_socket, sourcePointer, static_cast<int32_t>(size), 0, reinterpret_cast<const sockaddr*>(&address), addressLength));
     return length == static_cast<int32_t>(size) ? Result::Ok : Result::Error;
 }
 
 [[nodiscard]] Result UdpSocket::ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const {
     auto* destinationPointer = static_cast<char*>(destination);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    auto length = CAST(recvfrom(_socket,
-                                destinationPointer,
-                                static_cast<int32_t>(size),
-                                0,
-                                reinterpret_cast<sockaddr*>(&address),
-                                &addressLength));
+    auto length = CAST(recvfrom(_socket, destinationPointer, static_cast<int32_t>(size), 0, reinterpret_cast<sockaddr*>(&address), &addressLength));
     return length == static_cast<int32_t>(size) ? Result::Ok : Result::Error;
 }
 

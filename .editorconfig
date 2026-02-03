@@ -4,4 +4,4 @@ root=true
 charset = utf-8
 trim_trailing_whitespace = true
 
-file_header_template = Copyright dSPACE GmbH. All rights reserved.
+file_header_template = Copyright dSPACE SE & Co. KG. All rights reserved.

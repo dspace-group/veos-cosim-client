@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "BusBuffer.h"
 
@@ -26,7 +26,9 @@
 #endif
 
 namespace DsVeosCoSim {
+
 namespace {
+
 template <typename TMessage, typename TMessageContainer, typename TController>
 class BusProtocolBufferBase {
 protected:
@@ -53,9 +55,7 @@ public:
     BusProtocolBufferBase(BusProtocolBufferBase&&) = delete;
     BusProtocolBufferBase& operator=(BusProtocolBufferBase&&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    const std::string& name,
-                                    const std::vector<TController>& controllers) {
+    [[nodiscard]] Result Initialize(CoSimType coSimType, const std::string& name, const std::vector<TController>& controllers) {
         _coSimType = coSimType;
 
         size_t totalQueueItemsCountPerBuffer = 0;
@@ -205,8 +205,7 @@ public:
     RemoteBusProtocolBuffer& operator=(RemoteBusProtocolBuffer&&) = delete;
 
 protected:
-    [[nodiscard]] Result InitializeInternal([[maybe_unused]] const std::string& name,
-                                            size_t totalQueueItemsCountPerBuffer) override {
+    [[nodiscard]] Result InitializeInternal([[maybe_unused]] const std::string& name, size_t totalQueueItemsCountPerBuffer) override {
         _messageCountPerController.resize(this->_controllers.size());
         _messageBuffer = RingBuffer<TMessageContainer>(totalQueueItemsCountPerBuffer);
         return Result::Ok;
@@ -314,11 +313,10 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(
-        ChannelReader& reader,
-        SimulationTime simulationTime,
-        const typename Base::MessageCallback& messageCallback,
-        const typename Base::MessageContainerCallback& messageContainerCallback) override {
+    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
+                                             SimulationTime simulationTime,
+                                             const typename Base::MessageCallback& messageCallback,
+                                             const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t totalCount{};
         CheckResultWithMessage(_protocol->ReadSize(reader, totalCount), "Could not read count of messages.");
 
@@ -490,8 +488,7 @@ protected:
         // [ message buffer ]
 
         size_t sizeOfMessageCountPerController = Base::_controllers.size() * sizeof(std::atomic<uint32_t>);
-        size_t sizeOfRingBuffer =
-            sizeof(ShmRingBuffer<TMessageContainer>) + (totalQueueItemsCountPerBuffer * sizeof(TMessageContainer));
+        size_t sizeOfRingBuffer = sizeof(ShmRingBuffer<TMessageContainer>) + (totalQueueItemsCountPerBuffer * sizeof(TMessageContainer));
 
         size_t sizeOfSharedMemory = 0;
         sizeOfSharedMemory += sizeOfMessageCountPerController;
@@ -607,11 +604,10 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(
-        ChannelReader& reader,
-        SimulationTime simulationTime,
-        const typename Base::MessageCallback& messageCallback,
-        const typename Base::MessageContainerCallback& messageContainerCallback) override {
+    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
+                                             SimulationTime simulationTime,
+                                             const typename Base::MessageCallback& messageCallback,
+                                             const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t receiveCount{};
         CheckResultWithMessage(_protocol->ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
@@ -851,30 +847,20 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result Deserialize(ChannelReader& reader,
-                                     SimulationTime simulationTime,
-                                     const Callbacks& callbacks) const override {
-        CheckResultWithMessage(_canReceiveBuffer->Deserialize(reader,
-                                                              simulationTime,
-                                                              callbacks.canMessageReceivedCallback,
-                                                              callbacks.canMessageContainerReceivedCallback),
-                               "Could not receive CAN messages.");
-        CheckResultWithMessage(_ethReceiveBuffer->Deserialize(reader,
-                                                              simulationTime,
-                                                              callbacks.ethMessageReceivedCallback,
-                                                              callbacks.ethMessageContainerReceivedCallback),
-                               "Could not receive ETH messages.");
-        CheckResultWithMessage(_linReceiveBuffer->Deserialize(reader,
-                                                              simulationTime,
-                                                              callbacks.linMessageReceivedCallback,
-                                                              callbacks.linMessageContainerReceivedCallback),
-                               "Could not receive LIN messages.");
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const override {
+        CheckResultWithMessage(
+            _canReceiveBuffer->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback, callbacks.canMessageContainerReceivedCallback),
+            "Could not receive CAN messages.");
+        CheckResultWithMessage(
+            _ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback, callbacks.ethMessageContainerReceivedCallback),
+            "Could not receive ETH messages.");
+        CheckResultWithMessage(
+            _linReceiveBuffer->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback, callbacks.linMessageContainerReceivedCallback),
+            "Could not receive LIN messages.");
         if (_doFlexrayOperations) {
-            CheckResultWithMessage(_frReceiveBuffer->Deserialize(reader,
-                                                                 simulationTime,
-                                                                 callbacks.frMessageReceivedCallback,
-                                                                 callbacks.frMessageContainerReceivedCallback),
-                                   "Could not receive FLEXRAY messages.");
+            CheckResultWithMessage(
+                _frReceiveBuffer->Deserialize(reader, simulationTime, callbacks.frMessageReceivedCallback, callbacks.frMessageContainerReceivedCallback),
+                "Could not receive FLEXRAY messages.");
         }
         return Result::Ok;
     }
@@ -891,6 +877,7 @@ private:
     std::unique_ptr<FrBufferBase> _frReceiveBuffer;
     bool _doFlexrayOperations{};
 };
+
 }  // namespace
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
@@ -904,14 +891,8 @@ private:
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     busBuffer = std::make_unique<BusBufferImpl>();
     CheckResult(dynamic_cast<BusBufferImpl&>(*busBuffer)
-                    .Initialize(coSimType,
-                                connectionKind,
-                                name,
-                                canControllers,
-                                ethControllers,
-                                linControllers,
-                                frControllers,
-                                protocol));
+                    .Initialize(coSimType, connectionKind, name, canControllers, ethControllers, linControllers, frControllers, protocol));
     return Result::Ok;
 }
+
 }  // namespace DsVeosCoSim

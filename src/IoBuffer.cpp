@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "IoBuffer.h"
 
@@ -46,9 +46,7 @@ public:
     IoPartBufferBase(IoPartBufferBase&&) = delete;
     IoPartBufferBase& operator=(IoPartBufferBase&&) = delete;
 
-    [[nodiscard]] virtual Result Initialize(CoSimType coSimType,
-                                            [[maybe_unused]] const std::string& name,
-                                            const std::vector<IoSignal>& signals) {
+    [[nodiscard]] virtual Result Initialize(CoSimType coSimType, [[maybe_unused]] const std::string& name, const std::vector<IoSignal>& signals) {
         _coSimType = coSimType;
         _changedSignalsQueue = RingBuffer<MetaData*>(signals.size());
         size_t nextSignalIndex = 0;
@@ -156,9 +154,7 @@ protected:
     [[nodiscard]] virtual Result ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) = 0;
 
     [[nodiscard]] virtual Result SerializeInternal(ChannelWriter& writer) = 0;
-    [[nodiscard]] virtual Result DeserializeInternal(ChannelReader& reader,
-                                                     SimulationTime simulationTime,
-                                                     const Callbacks& callbacks) = 0;
+    [[nodiscard]] virtual Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) = 0;
 
     [[nodiscard]] Result FindMetaData(IoSignalId signalId, MetaData*& metaData) {
         auto search = _metaDataLookup.find(signalId);
@@ -200,9 +196,7 @@ public:
     RemoteIoPartBuffer(RemoteIoPartBuffer&&) = delete;
     RemoteIoPartBuffer& operator=(RemoteIoPartBuffer&&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    const std::string& name,
-                                    const std::vector<IoSignal>& signals) override {
+    [[nodiscard]] Result Initialize(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals) override {
         CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
 
         _dataVector.resize(_metaDataLookup.size());
@@ -309,8 +303,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()),
-                               "Could not write count of changed signals.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
@@ -326,8 +319,7 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * currentLength;
-            CheckResultWithMessage(_protocol->WriteData(writer, buffer.data(), totalSize),
-                                   "Could not write signal data.");
+            CheckResultWithMessage(_protocol->WriteData(writer, buffer.data(), totalSize), "Could not write signal data.");
             isChanged = false;
 
             if (IsProtocolTracingEnabled()) {
@@ -338,12 +330,9 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
-                                             SimulationTime simulationTime,
-                                             const Callbacks& callbacks) override {
+    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount),
-                               "Could not read count of changed signals.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
         for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
@@ -368,21 +357,14 @@ protected:
             }
 
             size_t totalSize = metaData->dataTypeSize * data.currentLength;
-            CheckResultWithMessage(_protocol->ReadData(reader, data.buffer.data(), totalSize),
-                                   "Could not read signal data.");
+            CheckResultWithMessage(_protocol->ReadData(reader, data.buffer.data(), totalSize), "Could not read signal data.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTraceSignal(metaData->info.id,
-                                           data.currentLength,
-                                           metaData->info.dataType,
-                                           data.buffer.data());
+                LogProtocolDataTraceSignal(metaData->info.id, data.currentLength, metaData->info.dataType, data.buffer.data());
             }
 
             if (callbacks.incomingSignalChangedCallback) {
-                callbacks.incomingSignalChangedCallback(simulationTime,
-                                                        metaData->info,
-                                                        data.currentLength,
-                                                        data.buffer.data());
+                callbacks.incomingSignalChangedCallback(simulationTime, metaData->info, data.currentLength, data.buffer.data());
             }
         }
 
@@ -419,9 +401,7 @@ public:
     LocalIoPartBuffer(LocalIoPartBuffer&&) = delete;
     LocalIoPartBuffer& operator=(LocalIoPartBuffer&&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    const std::string& name,
-                                    const std::vector<IoSignal>& signals) override {
+    [[nodiscard]] Result Initialize(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals) override {
         CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
         _dataVector.resize(_metaDataLookup.size());
 
@@ -560,8 +540,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()),
-                               "Could not write count of changed signals.");
+        CheckResultWithMessage(_protocol->WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
@@ -572,10 +551,7 @@ protected:
 
             if (IsProtocolTracingEnabled()) {
                 DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
-                LogProtocolDataTraceSignal(metaData->info.id,
-                                           dataBuffer->currentLength,
-                                           metaData->info.dataType,
-                                           dataBuffer->data);
+                LogProtocolDataTraceSignal(metaData->info.id, dataBuffer->currentLength, metaData->info.dataType, dataBuffer->data);
             }
 
             CheckResultWithMessage(_protocol->WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
@@ -586,12 +562,9 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader,
-                                             SimulationTime simulationTime,
-                                             const Callbacks& callbacks) override {
+    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
-        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount),
-                               "Could not read count of changed signals.");
+        CheckResultWithMessage(_protocol->ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
         for (size_t i = 0; i < ioSignalChangedCount; i++) {
             IoSignalId signalId{};
@@ -606,17 +579,11 @@ protected:
             DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTraceSignal(metaData->info.id,
-                                           dataBuffer->currentLength,
-                                           metaData->info.dataType,
-                                           dataBuffer->data);
+                LogProtocolDataTraceSignal(metaData->info.id, dataBuffer->currentLength, metaData->info.dataType, dataBuffer->data);
             }
 
             if (callbacks.incomingSignalChangedCallback) {
-                callbacks.incomingSignalChangedCallback(simulationTime,
-                                                        metaData->info,
-                                                        dataBuffer->currentLength,
-                                                        dataBuffer->data);
+                callbacks.incomingSignalChangedCallback(simulationTime, metaData->info, dataBuffer->currentLength, dataBuffer->data);
             }
         }
 
@@ -709,9 +676,7 @@ public:
         return _writeBuffer->Serialize(writer);
     }
 
-    [[nodiscard]] Result Deserialize(ChannelReader& reader,
-                                     SimulationTime simulationTime,
-                                     const Callbacks& callbacks) const override {
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const override {
         return _readBuffer->Deserialize(reader, simulationTime, callbacks);
     }
 

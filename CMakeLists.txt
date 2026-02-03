@@ -1,4 +1,4 @@
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 cmake_minimum_required(VERSION 3.15)
 
@@ -30,6 +30,7 @@ if(MSVC)
     /wd4710
     /wd4711
     /wd4820
+    /wd4865
     /wd5026
     /wd5027
     /wd5039

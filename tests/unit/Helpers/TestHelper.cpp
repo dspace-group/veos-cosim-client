@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "TestHelper.h"
 
@@ -18,6 +18,8 @@ using namespace DsVeosCoSim;
 namespace {
 
 constexpr uint64_t BigNumber = 0x1000000;
+
+std::shared_ptr<IProtocol> _protocol;
 
 }  // namespace
 
@@ -89,8 +91,7 @@ void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(writeChannel->GetWriter().EndWrite());
 }
 
-void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel,
-                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     uint16_t sendValue = GenerateU16();
 
     ExpectOk(writeChannel->GetWriter().Write(sendValue));
@@ -105,8 +106,7 @@ void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel,
     AssertEq(sendValue, receiveValue);
 }
 
-void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel,
-                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     uint32_t sendValue = GenerateU32();
 
     ExpectOk(writeChannel->GetWriter().Write(sendValue));
@@ -121,8 +121,7 @@ void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel,
     AssertEq(sendValue, receiveValue);
 }
 
-void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel,
-                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     uint64_t sendValue = GenerateU64();
 
     ExpectOk(writeChannel->GetWriter().Write(sendValue));
@@ -137,8 +136,7 @@ void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel,
     AssertEq(sendValue, receiveValue);
 }
 
-void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel,
-                               std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     std::vector<uint8_t> sendBuffer = GenerateBytes(10);
 
     ExpectOk(writeChannel->GetWriter().Write(sendBuffer.data(), sendBuffer.size()));
@@ -154,8 +152,7 @@ void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel,
     AssertEqHelper(sendBuffer, receiveBuffer);
 }
 
-void TestPingPong(std::unique_ptr<DsVeosCoSim::Channel>& firstChannel,
-                  std::unique_ptr<DsVeosCoSim::Channel>& secondChannel) {
+void TestPingPong(std::unique_ptr<DsVeosCoSim::Channel>& firstChannel, std::unique_ptr<DsVeosCoSim::Channel>& secondChannel) {
     // Act and assert
     for (uint16_t i = 0; i < 100; i++) {
         Channel* sendChannel = firstChannel.get();
@@ -176,8 +173,7 @@ void TestPingPong(std::unique_ptr<DsVeosCoSim::Channel>& firstChannel,
     }
 }
 
-void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
-                             std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     uint32_t sendValue1 = GenerateU32();
     uint64_t sendValue2 = GenerateU64();
     uint32_t receiveValue1{};
@@ -198,8 +194,7 @@ void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel
     AssertEq(sendValue2, receiveValue2);
 }
 
-void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
-                std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     std::thread thread([&] {
         uint16_t firstValue{};
         ExpectOk(readChannel->GetReader().Read(firstValue));
@@ -214,8 +209,7 @@ void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     });
 
     // Act and assert
-    AssertOk(
-        writeChannel->GetWriter().Write(static_cast<uint16_t>(42)));  // Forcing the following elements to be unaligned
+    AssertOk(writeChannel->GetWriter().Write(static_cast<uint16_t>(42)));  // Forcing the following elements to be unaligned
     for (uint64_t i = 0; i < BigNumber; i++) {
         AssertOk(writeChannel->GetWriter().Write(i));
     }
@@ -225,8 +219,7 @@ void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     thread.join();
 }
 
-void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
-                    std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
+void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel) {
     std::thread thread([&] {
         auto receiveArray = std::make_unique<std::array<uint32_t, BigNumber>>();
         ExpectOk(readChannel->GetReader().Read(receiveArray.get(), receiveArray->size() * 4));
@@ -250,7 +243,6 @@ void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel,
     thread.join();
 }
 
-static std::shared_ptr<IProtocol> _protocol;
 std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol() {
     if (_protocol) {
         return _protocol;

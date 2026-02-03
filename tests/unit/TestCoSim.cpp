@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <gtest/gtest.h>
 
@@ -63,9 +63,7 @@ auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
     return config;
 }
 
-[[nodiscard]] ConnectConfig CreateConnectConfig(ConnectionKind connectionKind,
-                                                const std::string& serverName,
-                                                uint16_t port) {
+[[nodiscard]] ConnectConfig CreateConnectConfig(ConnectionKind connectionKind, const std::string& serverName, uint16_t port) {
     ConnectConfig connectConfig{};
     connectConfig.serverName = serverName;
     connectConfig.clientName = GenerateString("Client名前");

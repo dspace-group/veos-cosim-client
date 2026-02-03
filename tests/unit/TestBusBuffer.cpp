@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <fmt/format.h>
 
@@ -88,10 +88,8 @@ protected:
     }
 
     void Transfer(ConnectionKind connectionKind, const BusBuffer& senderBusBuffer, const BusBuffer& receiverBusBuffer) {
-        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()
-                                                                         : _localReceiverChannel->GetReader();
-        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter()
-                                                                         : _localSenderChannel->GetWriter();
+        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
+        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
         std::thread thread([&] {
             ExpectOk(receiverBusBuffer.Deserialize(reader, {}, {}));
         });
@@ -106,64 +104,58 @@ protected:
                   BusBuffer& senderBusBuffer,
                   BusBuffer& receiverBusBuffer,
                   std::deque<std::tuple<TController, TMessageContainer>>& expectedCallbacks) {
-        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()
-                                                                         : _localReceiverChannel->GetReader();
-        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter()
-                                                                         : _localSenderChannel->GetWriter();
+        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
+        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
         SimulationTime expectedSimulationTime = GenerateSimulationTime();
 
         Callbacks callbacks{};
         if constexpr (std::is_same_v<TController, CanController>) {
-            callbacks.canMessageContainerReceivedCallback = [&](SimulationTime simulationTime,
-                                                                const CanController& controller,
-                                                                const CanMessageContainer& messageContainer) {
-                AssertEq(simulationTime, expectedSimulationTime);
-                AssertFalse(expectedCallbacks.empty());
-                auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessageContainer, messageContainer);
-                expectedCallbacks.pop_front();
-            };
+            callbacks.canMessageContainerReceivedCallback =
+                [&](SimulationTime simulationTime, const CanController& controller, const CanMessageContainer& messageContainer) {
+                    AssertEq(simulationTime, expectedSimulationTime);
+                    AssertFalse(expectedCallbacks.empty());
+                    auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(expectedMessageContainer, messageContainer);
+                    expectedCallbacks.pop_front();
+                };
         }
 
         if constexpr (std::is_same_v<TController, EthController>) {
-            callbacks.ethMessageContainerReceivedCallback = [&](SimulationTime simulationTime,
-                                                                const EthController& controller,
-                                                                const EthMessageContainer& messageContainer) {
-                AssertEq(simulationTime, expectedSimulationTime);
-                AssertFalse(expectedCallbacks.empty());
-                auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessageContainer, messageContainer);
-                expectedCallbacks.pop_front();
-            };
+            callbacks.ethMessageContainerReceivedCallback =
+                [&](SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer) {
+                    AssertEq(simulationTime, expectedSimulationTime);
+                    AssertFalse(expectedCallbacks.empty());
+                    auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(expectedMessageContainer, messageContainer);
+                    expectedCallbacks.pop_front();
+                };
         }
 
         if constexpr (std::is_same_v<TController, LinController>) {
-            callbacks.linMessageContainerReceivedCallback = [&](SimulationTime simulationTime,
-                                                                const LinController& controller,
-                                                                const LinMessageContainer& messageContainer) {
-                AssertEq(simulationTime, expectedSimulationTime);
-                AssertFalse(expectedCallbacks.empty());
-                auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessageContainer, messageContainer);
-                expectedCallbacks.pop_front();
-            };
+            callbacks.linMessageContainerReceivedCallback =
+                [&](SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer) {
+                    AssertEq(simulationTime, expectedSimulationTime);
+                    AssertFalse(expectedCallbacks.empty());
+                    auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(expectedMessageContainer, messageContainer);
+                    expectedCallbacks.pop_front();
+                };
         }
 
         if constexpr (std::is_same_v<TController, FrController>) {
-            callbacks.frMessageContainerReceivedCallback = [&](SimulationTime simulationTime,
-                                                               const FrController& controller,
-                                                               const FrMessageContainer& messageContainer) {
-                AssertEq(simulationTime, expectedSimulationTime);
-                AssertFalse(expectedCallbacks.empty());
-                auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                AssertEq(expectedController, controller);
-                AssertEq(expectedMessageContainer, messageContainer);
-                expectedCallbacks.pop_front();
-            };
+            callbacks.frMessageContainerReceivedCallback =
+                [&](SimulationTime simulationTime, const FrController& controller, const FrMessageContainer& messageContainer) {
+                    AssertEq(simulationTime, expectedSimulationTime);
+                    AssertFalse(expectedCallbacks.empty());
+                    auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
+                    AssertEq(expectedController, controller);
+                    AssertEq(expectedMessageContainer, messageContainer);
+                    expectedCallbacks.pop_front();
+                };
         }
 
         std::thread thread([&] {
@@ -182,60 +174,54 @@ protected:
                   BusBuffer& senderBusBuffer,
                   BusBuffer& receiverBusBuffer,
                   std::deque<std::tuple<TController, TMessage>>& expectedCallbacks) {
-        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader()
-                                                                         : _localReceiverChannel->GetReader();
-        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter()
-                                                                         : _localSenderChannel->GetWriter();
+        ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
+        ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
         SimulationTime expectedSimulationTime = GenerateSimulationTime();
 
         Callbacks callbacks{};
         if constexpr (std::is_same_v<TController, CanController>) {
-            callbacks.canMessageReceivedCallback =
-                [&](SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
-                    AssertEq(simulationTime, expectedSimulationTime);
-                    AssertFalse(expectedCallbacks.empty());
-                    auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                    AssertEq(expectedController, controller);
-                    AssertEq(expectedMessage, message);
-                    expectedCallbacks.pop_front();
-                };
+            callbacks.canMessageReceivedCallback = [&](SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
+                AssertEq(simulationTime, expectedSimulationTime);
+                AssertFalse(expectedCallbacks.empty());
+                auto& [expectedController, expectedMessage] = expectedCallbacks.front();
+                AssertEq(expectedController, controller);
+                AssertEq(expectedMessage, message);
+                expectedCallbacks.pop_front();
+            };
         }
 
         if constexpr (std::is_same_v<TController, EthController>) {
-            callbacks.ethMessageReceivedCallback =
-                [&](SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
-                    AssertEq(simulationTime, expectedSimulationTime);
-                    AssertFalse(expectedCallbacks.empty());
-                    auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                    AssertEq(expectedController, controller);
-                    AssertEq(expectedMessage, message);
-                    expectedCallbacks.pop_front();
-                };
+            callbacks.ethMessageReceivedCallback = [&](SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
+                AssertEq(simulationTime, expectedSimulationTime);
+                AssertFalse(expectedCallbacks.empty());
+                auto& [expectedController, expectedMessage] = expectedCallbacks.front();
+                AssertEq(expectedController, controller);
+                AssertEq(expectedMessage, message);
+                expectedCallbacks.pop_front();
+            };
         }
 
         if constexpr (std::is_same_v<TController, LinController>) {
-            callbacks.linMessageReceivedCallback =
-                [&](SimulationTime simulationTime, const LinController& controller, const LinMessage& message) {
-                    AssertEq(simulationTime, expectedSimulationTime);
-                    AssertFalse(expectedCallbacks.empty());
-                    auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                    AssertEq(expectedController, controller);
-                    AssertEq(expectedMessage, message);
-                    expectedCallbacks.pop_front();
-                };
+            callbacks.linMessageReceivedCallback = [&](SimulationTime simulationTime, const LinController& controller, const LinMessage& message) {
+                AssertEq(simulationTime, expectedSimulationTime);
+                AssertFalse(expectedCallbacks.empty());
+                auto& [expectedController, expectedMessage] = expectedCallbacks.front();
+                AssertEq(expectedController, controller);
+                AssertEq(expectedMessage, message);
+                expectedCallbacks.pop_front();
+            };
         }
 
         if constexpr (std::is_same_v<TController, FrController>) {
-            callbacks.frMessageReceivedCallback =
-                [&](SimulationTime simulationTime, const FrController& controller, const FrMessage& message) {
-                    AssertEq(simulationTime, expectedSimulationTime);
-                    AssertFalse(expectedCallbacks.empty());
-                    auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                    AssertEq(expectedController, controller);
-                    AssertEq(expectedMessage, message);
-                    expectedCallbacks.pop_front();
-                };
+            callbacks.frMessageReceivedCallback = [&](SimulationTime simulationTime, const FrController& controller, const FrMessage& message) {
+                AssertEq(simulationTime, expectedSimulationTime);
+                AssertFalse(expectedCallbacks.empty());
+                auto& [expectedController, expectedMessage] = expectedCallbacks.front();
+                AssertEq(expectedController, controller);
+                AssertEq(expectedMessage, message);
+                expectedCallbacks.pop_front();
+            };
         }
 
         std::thread thread([&] {
@@ -287,100 +273,24 @@ struct Param {
 // #define SINGLE_TEST
 
 #ifdef SINGLE_TEST
-using Parameters = Types<Param<CanControllerContainer,
-                               CanController,
-                               CanMessageContainer,
-                               CanMessage,
-                               CoSimType::Client,
-                               ConnectionKind::Local>>;
+using Parameters = Types<Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Client, ConnectionKind::Local>>;
 #else
-using Parameters = Types<
-    Param<CanControllerContainer,
-          CanController,
-          CanMessageContainer,
-          CanMessage,
-          CoSimType::Client,
-          ConnectionKind::Local>,
-    Param<CanControllerContainer,
-          CanController,
-          CanMessageContainer,
-          CanMessage,
-          CoSimType::Client,
-          ConnectionKind::Remote>,
-    Param<CanControllerContainer,
-          CanController,
-          CanMessageContainer,
-          CanMessage,
-          CoSimType::Server,
-          ConnectionKind::Local>,
-    Param<CanControllerContainer,
-          CanController,
-          CanMessageContainer,
-          CanMessage,
-          CoSimType::Server,
-          ConnectionKind::Remote>,
-    Param<EthControllerContainer,
-          EthController,
-          EthMessageContainer,
-          EthMessage,
-          CoSimType::Client,
-          ConnectionKind::Local>,
-    Param<EthControllerContainer,
-          EthController,
-          EthMessageContainer,
-          EthMessage,
-          CoSimType::Client,
-          ConnectionKind::Remote>,
-    Param<EthControllerContainer,
-          EthController,
-          EthMessageContainer,
-          EthMessage,
-          CoSimType::Server,
-          ConnectionKind::Local>,
-    Param<EthControllerContainer,
-          EthController,
-          EthMessageContainer,
-          EthMessage,
-          CoSimType::Server,
-          ConnectionKind::Remote>,
-    Param<LinControllerContainer,
-          LinController,
-          LinMessageContainer,
-          LinMessage,
-          CoSimType::Client,
-          ConnectionKind::Local>,
-    Param<LinControllerContainer,
-          LinController,
-          LinMessageContainer,
-          LinMessage,
-          CoSimType::Client,
-          ConnectionKind::Remote>,
-    Param<LinControllerContainer,
-          LinController,
-          LinMessageContainer,
-          LinMessage,
-          CoSimType::Server,
-          ConnectionKind::Local>,
-    Param<LinControllerContainer,
-          LinController,
-          LinMessageContainer,
-          LinMessage,
-          CoSimType::Server,
-          ConnectionKind::Remote>,
-    Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Client, ConnectionKind::Local>,
-    Param<FrControllerContainer,
-          FrController,
-          FrMessageContainer,
-          FrMessage,
-          CoSimType::Client,
-          ConnectionKind::Remote>,
-    Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Server, ConnectionKind::Local>,
-    Param<FrControllerContainer,
-          FrController,
-          FrMessageContainer,
-          FrMessage,
-          CoSimType::Server,
-          ConnectionKind::Remote>>;
+using Parameters = Types<Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Client, ConnectionKind::Local>,
+                         Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Client, ConnectionKind::Remote>,
+                         Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Server, ConnectionKind::Local>,
+                         Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Server, ConnectionKind::Remote>,
+                         Param<EthControllerContainer, EthController, EthMessageContainer, EthMessage, CoSimType::Client, ConnectionKind::Local>,
+                         Param<EthControllerContainer, EthController, EthMessageContainer, EthMessage, CoSimType::Client, ConnectionKind::Remote>,
+                         Param<EthControllerContainer, EthController, EthMessageContainer, EthMessage, CoSimType::Server, ConnectionKind::Local>,
+                         Param<EthControllerContainer, EthController, EthMessageContainer, EthMessage, CoSimType::Server, ConnectionKind::Remote>,
+                         Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Client, ConnectionKind::Local>,
+                         Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Client, ConnectionKind::Remote>,
+                         Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Server, ConnectionKind::Local>,
+                         Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Server, ConnectionKind::Remote>,
+                         Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Client, ConnectionKind::Local>,
+                         Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Client, ConnectionKind::Remote>,
+                         Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Server, ConnectionKind::Local>,
+                         Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Server, ConnectionKind::Remote>>;
 #endif
 
 class NameGenerator {
@@ -455,8 +365,7 @@ TYPED_TEST(TestBusBuffer, InitializeMultipleControllers) {
     std::unique_ptr<BusBuffer> busBuffer;
 
     // Act and assert
-    AssertOk(
-        CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
+    AssertOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageContainer) {
@@ -549,8 +458,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsFull) {
     AssertFull(busBuffer->Transmit(rejectedMessageContainer));
 
     // Assert
-    AssertLastMessage(
-        fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFull) {
@@ -594,8 +502,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFull) {
     AssertFull(busBuffer->Transmit(rejectedMessage));
 
     // Assert
-    AssertLastMessage(
-        fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsOnlyFullForSpecificController) {
@@ -620,8 +527,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsOnlyFullForSpecifi
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> busBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
 
     // Fill queue
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
@@ -638,8 +544,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsOnlyFullForSpecifi
     AssertFull(busBuffer->Transmit(rejectedMessageContainer));
 
     // Assert
-    AssertLastMessage(
-        fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller1.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller1.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificController) {
@@ -665,8 +570,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> busBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
 
     // Fill queue
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
@@ -689,8 +593,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
     AssertFull(busBuffer->Transmit(rejectedMessage));
 
     // Assert
-    AssertLastMessage(
-        fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller1.name));
+    AssertLastMessage(fmt::format("Transmit buffer for controller '{}' is full. Messages are dropped.", controller1.name));
 }
 
 TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsFullForOtherController) {
@@ -715,8 +618,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsFullForOtherContro
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> busBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
 
     // Fill queue
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
@@ -756,8 +658,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFullForOtherController) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> busBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), busBuffer));
 
     // Fill queue
     for (uint32_t i = 0; i < controller1.queueSize; i++) {
@@ -800,12 +701,8 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageContainerOnEmptyBuffer) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer);
 
@@ -835,12 +732,8 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBuffer) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TestBusBuffer<TypeParam>::Transfer(connectionKind, *senderBusBuffer, *receiverBusBuffer);
 
@@ -870,12 +763,8 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageContainerOnEmptyBufferByEvent) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessageContainer>> expectedEvents;
 
@@ -903,12 +792,8 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBufferByEvent) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessage>> expectedEvents;
 
@@ -936,12 +821,8 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainer) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TMessageContainer sendMessageContainer{};
     FillWithRandom(sendMessageContainer, controller.id);
@@ -980,12 +861,8 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TMessageContainer sendMessageContainer{};
     FillWithRandom(sendMessageContainer, controller.id);
@@ -1026,12 +903,8 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainerByEvent) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessageContainer>> expectedEvents;
 
@@ -1066,12 +939,8 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageByEvent) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessage>> expectedEvents;
 
@@ -1110,12 +979,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessageContainers) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
-    ExpectOk(CreateBusBuffer(coSimType,
-                             connectionKind,
-                             name,
-                             {controller1, controller2},
-                             GetLatestProtocol(),
-                             senderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
@@ -1173,12 +1037,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
-    ExpectOk(CreateBusBuffer(coSimType,
-                             connectionKind,
-                             name,
-                             {controller1, controller2},
-                             GetLatestProtocol(),
-                             senderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
@@ -1242,12 +1101,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainersByEventWithTransfer
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
-    ExpectOk(CreateBusBuffer(coSimType,
-                             connectionKind,
-                             name,
-                             {controller1, controller2},
-                             GetLatestProtocol(),
-                             senderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
@@ -1296,12 +1150,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
-    ExpectOk(CreateBusBuffer(coSimType,
-                             connectionKind,
-                             name,
-                             {controller1, controller2},
-                             GetLatestProtocol(),
-                             senderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
     ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
@@ -1354,16 +1203,11 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageContainer) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> fakeSenderBusBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TMessageContainer sendMessageContainer{};
     FillWithRandom(sendMessageContainer, controller.id);
@@ -1401,16 +1245,11 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> fakeSenderBusBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     TMessageContainer sendMessageContainer{};
     FillWithRandom(sendMessageContainer, controller.id);
@@ -1450,16 +1289,11 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageContainerByEvent
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> fakeSenderBusBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessageContainer>> expectedEvents;
 
@@ -1469,9 +1303,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageContainerByEvent
     ExpectOk(senderBusBuffer->Transmit(sendMessageContainer));
 
     // Act and assert
-    TestBusBuffer<TypeParam>::Transfer(connectionKind,
-                                       *fakeSenderBusBuffer,
-                                       *receiverBusBuffer,
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *fakeSenderBusBuffer, *receiverBusBuffer,
                                        expectedEvents);  // Should not transfer anything
 }
 
@@ -1497,16 +1329,11 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, GetLatestProtocol(), senderBusBuffer));
 
     std::unique_ptr<BusBuffer> fakeSenderBusBuffer;
-    ExpectOk(
-        CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, fakeName, {controller}, GetLatestProtocol(), fakeSenderBusBuffer));
 
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller},
-                             GetLatestProtocol(),
-                             receiverBusBuffer));
+    ExpectOk(
+        CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, GetLatestProtocol(), receiverBusBuffer));
 
     std::deque<std::tuple<TController, TMessage>> expectedEvents;
 
@@ -1519,9 +1346,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
     ExpectOk(senderBusBuffer->Transmit(sendMessage));
 
     // Act and assert
-    TestBusBuffer<TypeParam>::Transfer(connectionKind,
-                                       *fakeSenderBusBuffer,
-                                       *receiverBusBuffer,
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *fakeSenderBusBuffer, *receiverBusBuffer,
                                        expectedEvents);  // Should not transfer anything
 }
 

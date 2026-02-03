@@ -1,4 +1,4 @@
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 add_library(
   DsVeosCoSim

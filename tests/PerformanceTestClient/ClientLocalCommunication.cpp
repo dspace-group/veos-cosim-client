@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <array>
 #include <cstdint>
@@ -14,10 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host,
-                         Event& connectedEvent,
-                         uint64_t& counter,
-                         const bool& isStopped) {
+[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
 #ifdef _WIN32
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToLocalChannel(LocalName, channel));
@@ -45,10 +42,7 @@ namespace {
     return Result::Ok;
 }
 
-void LocalCommunicationClientRun(const std::string& host,
-                                 Event& connectedEvent,
-                                 uint64_t& counter,
-                                 const bool& isStopped) {
+void LocalCommunicationClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run local communication client.");
     }

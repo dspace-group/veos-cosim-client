@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "PerformanceTestClient.h"
 
@@ -16,10 +16,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host,
-                         Event& connectedEvent,
-                         uint64_t& counter,
-                         const bool& isStopped) {
+[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     Pipe pipe;
     CheckResult(pipe.Initialize(PipeName));
     CheckResult(pipe.Connect());

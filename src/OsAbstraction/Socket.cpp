@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "Socket.h"
 
@@ -84,9 +84,7 @@ using AddressInfoPtr = addrinfo*;
 #endif
 }
 
-[[nodiscard]] Result ConvertToInternetAddress(const std::string& ipAddress,
-                                              uint16_t port,
-                                              AddressInfoPtr& addressInfo) {
+[[nodiscard]] Result ConvertToInternetAddress(const std::string& ipAddress, uint16_t port, AddressInfoPtr& addressInfo) {
     std::string portString = std::to_string(port);
 
     addrinfo hints{};
@@ -292,8 +290,7 @@ void CloseSocket(SocketHandle socket) {
     return Result::Ok;
 }
 
-Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path)
-    : _socket(socket), _addressFamily(addressFamily), _path(path) {
+Socket::Socket(SocketHandle socket, AddressFamily addressFamily, const std::string& path) : _socket(socket), _addressFamily(addressFamily), _path(path) {
 }
 
 Socket::~Socket() noexcept {
@@ -411,11 +408,7 @@ void Socket::Close() {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
-    int32_t result = setsockopt(_socket,
-                                IPPROTO_IPV6,
-                                IPV6_V6ONLY,
-                                reinterpret_cast<char*>(&flags),
-                                static_cast<SocketLength>(sizeof(flags)));
+    int32_t result = setsockopt(_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
         LogSystemError("Could not enable IPv6 only.", GetLastNetworkError());
         return Result::Error;
@@ -471,8 +464,7 @@ void Socket::Close() {
     while (currentAddressInfo) {
         int32_t addressFamily = currentAddressInfo->ai_family;
 
-        SocketHandle socketHandle =
-            socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
+        SocketHandle socketHandle = socket(addressFamily, currentAddressInfo->ai_socktype, currentAddressInfo->ai_protocol);
         if (socketHandle == InvalidSocket) {
             currentAddressInfo = currentAddressInfo->ai_next;
             continue;

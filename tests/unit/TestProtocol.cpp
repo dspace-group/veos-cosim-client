@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <memory>
 #include <optional>
@@ -256,8 +256,7 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     std::string sendClientName = GenerateString("Client名前");
 
     // Act
-    AssertOk(GetLatestProtocol()
-                 ->SendConnect(_senderChannel->GetWriter(), sendVersion, sendMode, sendServerName, sendClientName));
+    AssertOk(GetLatestProtocol()->SendConnect(_senderChannel->GetWriter(), sendVersion, sendMode, sendServerName, sendClientName));
 
     // Assert
     AssertFrame(FrameKind::Connect);
@@ -266,11 +265,7 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     Mode receiveMode{};
     std::string receiveServerName;
     std::string receiveClientName;
-    AssertOk(GetLatestProtocol()->ReadConnect(_receiverChannel->GetReader(),
-                                              receiveVersion,
-                                              receiveMode,
-                                              receiveServerName,
-                                              receiveClientName));
+    AssertOk(GetLatestProtocol()->ReadConnect(_receiverChannel->GetReader(), receiveVersion, receiveMode, receiveServerName, receiveClientName));
     AssertEq(sendVersion, receiveVersion);
     AssertEq(sendMode, receiveMode);
     AssertEq(sendServerName, receiveServerName);
@@ -389,9 +384,7 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
 
     SimulationTime receiveSimulationTime{};
     TerminateReason receiveTerminateReason{};
-    AssertOk(GetLatestProtocol()->ReadTerminate(_receiverChannel->GetReader(),
-                                                receiveSimulationTime,
-                                                receiveTerminateReason));
+    AssertOk(GetLatestProtocol()->ReadTerminate(_receiverChannel->GetReader(), receiveSimulationTime, receiveTerminateReason));
     AssertEq(sendSimulationTime, receiveSimulationTime);
     AssertEq(sendTerminateReason, receiveTerminateReason);
 }
@@ -441,27 +434,19 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
         return Result::Ok;
     };
 
-    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
-                                                  [[maybe_unused]] SimulationTime simulationTime,
-                                                  [[maybe_unused]] const Callbacks& callbacks) {
-        return Result::Ok;
-    };
+    DeserializeFunction deserializeFunction =
+        [=]([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] const Callbacks& callbacks) {
+            return Result::Ok;
+        };
 
     // Act
-    AssertOk(GetLatestProtocol()->SendStep(_senderChannel->GetWriter(),
-                                           sendSimulationTime,
-                                           serializeFunction,
-                                           serializeFunction));
+    AssertOk(GetLatestProtocol()->SendStep(_senderChannel->GetWriter(), sendSimulationTime, serializeFunction, serializeFunction));
 
     // Assert
     AssertFrame(FrameKind::Step);
 
     SimulationTime receiveSimulationTime{};
-    AssertOk(GetLatestProtocol()->ReadStep(_receiverChannel->GetReader(),
-                                           receiveSimulationTime,
-                                           deserializeFunction,
-                                           deserializeFunction,
-                                           {}));
+    AssertOk(GetLatestProtocol()->ReadStep(_receiverChannel->GetReader(), receiveSimulationTime, deserializeFunction, deserializeFunction, {}));
     AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 
@@ -478,30 +463,21 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
         return Result::Ok;
     };
 
-    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
-                                                  [[maybe_unused]] SimulationTime simulationTime,
-                                                  [[maybe_unused]] const Callbacks& callbacks) {
-        return Result::Ok;
-    };
+    DeserializeFunction deserializeFunction =
+        [=]([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] const Callbacks& callbacks) {
+            return Result::Ok;
+        };
 
     // Act
-    AssertOk(GetLatestProtocol()->SendStepOk(_senderChannel->GetWriter(),
-                                             sendSimulationTime,
-                                             sendCommand,
-                                             serializeFunction,
-                                             serializeFunction));
+    AssertOk(GetLatestProtocol()->SendStepOk(_senderChannel->GetWriter(), sendSimulationTime, sendCommand, serializeFunction, serializeFunction));
 
     // Assert
     AssertFrame(FrameKind::StepOk);
 
     SimulationTime receiveSimulationTime{};
     Command receiveCommand{};
-    AssertOk(GetLatestProtocol()->ReadStepOk(_receiverChannel->GetReader(),
-                                             receiveSimulationTime,
-                                             receiveCommand,
-                                             deserializeFunction,
-                                             deserializeFunction,
-                                             {}));
+    AssertOk(
+        GetLatestProtocol()->ReadStepOk(_receiverChannel->GetReader(), receiveSimulationTime, receiveCommand, deserializeFunction, deserializeFunction, {}));
     AssertEq(sendSimulationTime, receiveSimulationTime);
 }
 

@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "DsVeosCoSim/CoSimTypes.h"
 
@@ -12,9 +12,11 @@
 #include <vector>
 
 namespace DsVeosCoSim {
+
 extern void LogError(const std::string& message);
 
 namespace {
+
 [[nodiscard]] bool Equals(const std::string& first, const std::string& second) {
     if (first.length() != second.length()) {
         return false;
@@ -75,11 +77,7 @@ template <typename T, size_t TSize>
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] std::string IoSignalToString(IoSignalId signalId,
-                                           uint32_t length,
-                                           DataType dataType,
-                                           SizeKind sizeKind,
-                                           const std::string& name) {
+[[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, const std::string& name) {
     std::string str = "IO Signal { Id: ";
     str.append(ToString(signalId));
     str.append(", Length: ");
@@ -311,6 +309,7 @@ template <typename T, size_t TSize>
 
     return Result::Ok;
 }
+
 }  // namespace
 
 [[nodiscard]] std::string ToString(SimulationTime simulationTime) {
@@ -723,23 +722,11 @@ template <typename T, size_t TSize>
 }
 
 [[nodiscard]] std::string CanController::ToString() const {
-    return CanControllerToString(id,
-                                 queueSize,
-                                 bitsPerSecond,
-                                 flexibleDataRateBitsPerSecond,
-                                 name,
-                                 channelName,
-                                 clusterName);
+    return CanControllerToString(id, queueSize, bitsPerSecond, flexibleDataRateBitsPerSecond, name, channelName, clusterName);
 }
 
 [[nodiscard]] std::string CanControllerContainer::ToString() const {
-    return CanControllerToString(id,
-                                 queueSize,
-                                 bitsPerSecond,
-                                 flexibleDataRateBitsPerSecond,
-                                 name,
-                                 channelName,
-                                 clusterName);
+    return CanControllerToString(id, queueSize, bitsPerSecond, flexibleDataRateBitsPerSecond, name, channelName, clusterName);
 }
 
 [[nodiscard]] std::string CanMessage::ToString() const {
@@ -1853,4 +1840,5 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 
     return oss.str();
 }
+
 }  // namespace DsVeosCoSim
