@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <gtest/gtest.h>
 
@@ -52,12 +52,9 @@ struct Param {
 
 class TestTcpChannel : public testing::TestWithParam<Param> {};
 
-INSTANTIATE_TEST_SUITE_P(,
-                         TestTcpChannel,
-                         testing::ValuesIn(GetValues()),
-                         [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
-                             return std::string(ToString(info.param.addressFamily));
-                         });
+INSTANTIATE_TEST_SUITE_P(, TestTcpChannel, testing::ValuesIn(GetValues()), [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
+    return std::string(ToString(info.param.addressFamily));
+});
 
 TEST_F(TestTcpChannel, StartServer) {
     // Arrange

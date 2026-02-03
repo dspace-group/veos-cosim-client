@@ -1,4 +1,4 @@
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 cmake_minimum_required(VERSION 3.15)
 

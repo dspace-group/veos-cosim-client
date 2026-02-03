@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -61,16 +61,12 @@ public:
 
     [[nodiscard]] virtual Result Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
 
-    [[nodiscard]] virtual Result Read(IoSignalId signalId,
-                                      uint32_t& length,
-                                      const void** value,
-                                      bool& valueRead) const = 0;
+    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, const void** value, bool& valueRead) const = 0;
 
     [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
     [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
-
 
     [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;

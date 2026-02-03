@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -10,6 +10,7 @@
 #include "Protocol.h"
 
 namespace DsVeosCoSim {
+
 class PortMapperServer {
 protected:
     PortMapperServer() = default;
@@ -30,12 +31,8 @@ public:
                                             const std::shared_ptr<IProtocol>& protocol,
                                             std::unique_ptr<PortMapperServer>& portMapperServer);
 
-[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress,
-                                       const std::string& serverName,
-                                       uint16_t& port,
-                                       const std::shared_ptr<IProtocol>& protocol);
-[[nodiscard]] Result PortMapperSetPort(const std::string& name,
-                                       uint16_t port,
-                                       const std::shared_ptr<IProtocol>& protocol);
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port, const std::shared_ptr<IProtocol>& protocol);
+[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, const std::shared_ptr<IProtocol>& protocol);
 [[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol>& protocol);
+
 }  // namespace DsVeosCoSim

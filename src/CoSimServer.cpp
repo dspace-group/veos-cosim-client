@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "DsVeosCoSim/CoSimServer.h"
 
@@ -21,7 +21,9 @@
 using namespace std::chrono;
 
 namespace DsVeosCoSim {
+
 namespace {
+
 class CoSimServerImpl final : public CoSimServer {
 public:
     CoSimServerImpl() = default;
@@ -185,10 +187,7 @@ public:
         return _ioBuffer->Write(signalId, length, value);
     }
 
-    [[nodiscard]] Result Read(IoSignalId signalId,
-                              uint32_t& length,
-                              const void** value,
-                              bool& valueRead) const override {
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value, bool& valueRead) const override {
         if (!_channel) {
             valueRead = false;
             return Result::Ok;
@@ -292,56 +291,48 @@ public:
 
 private:
     [[nodiscard]] Result StartInternal(SimulationTime simulationTime) {
-        CheckResultWithMessage(_protocol->SendStart(_channel->GetWriter(), simulationTime),
-                               "Could not send start frame.");
+        CheckResultWithMessage(_protocol->SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         _simulationState = SimulationState::Running;
         return Result::Ok;
     }
 
     [[nodiscard]] Result StopInternal(SimulationTime simulationTime) {
-        CheckResultWithMessage(_protocol->SendStop(_channel->GetWriter(), simulationTime),
-                               "Could not send stop frame.");
+        CheckResultWithMessage(_protocol->SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         _simulationState = SimulationState::Stopped;
         return Result::Ok;
     }
 
     [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason) {
-        CheckResultWithMessage(_protocol->SendTerminate(_channel->GetWriter(), simulationTime, reason),
-                               "Could not send terminate frame.");
+        CheckResultWithMessage(_protocol->SendTerminate(_channel->GetWriter(), simulationTime, reason), "Could not send terminate frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         _simulationState = SimulationState::Terminated;
         return Result::Ok;
     }
 
     [[nodiscard]] Result PauseInternal(SimulationTime simulationTime) {
-        CheckResultWithMessage(_protocol->SendPause(_channel->GetWriter(), simulationTime),
-                               "Could not send pause frame.");
+        CheckResultWithMessage(_protocol->SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         _simulationState = SimulationState::Paused;
         return Result::Ok;
     }
 
     [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime) {
-        CheckResultWithMessage(_protocol->SendContinue(_channel->GetWriter(), simulationTime),
-                               "Could not send continue frame.");
+        CheckResultWithMessage(_protocol->SendContinue(_channel->GetWriter(), simulationTime), "Could not send continue frame.");
         CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
         _simulationState = SimulationState::Running;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result StepInternal(SimulationTime simulationTime,
-                                      SimulationTime& nextSimulationTime,
-                                      Command& command) {
+    [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command) {
         if (_firstStep) {
             SetThreadAffinity(_serverName);
             _firstStep = false;
         }
 
-        CheckResultWithMessage(
-            _protocol->SendStep(_channel->GetWriter(), simulationTime, _serializeIoData, _serializeBusMessages),
-            "Could not send step frame.");
+        CheckResultWithMessage(_protocol->SendStep(_channel->GetWriter(), simulationTime, _serializeIoData, _serializeBusMessages),
+                               "Could not send step frame.");
         CheckResultWithMessage(WaitForStepOkFrame(nextSimulationTime, command), "Could not receive step ok frame");
         return Result::Ok;
     }
@@ -446,8 +437,7 @@ private:
         uint32_t clientProtocolVersion{};
         std::string clientName;
         uint32_t CoSimProtocolVersion = DsVeosCoSim::V1_VERSION;
-        CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName),
-                               "Could not receive connect frame.");
+        CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName), "Could not receive connect frame.");
 
         if (clientProtocolVersion >= DsVeosCoSim::LATEST_VERSION) {
             CoSimProtocolVersion = DsVeosCoSim::LATEST_VERSION;
@@ -477,13 +467,7 @@ private:
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
         std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-        CheckResult(CreateIoBuffer(CoSimType::Server,
-                                   _connectionKind,
-                                   _serverName,
-                                   incomingSignalsExtern,
-                                   outgoingSignalsExtern,
-                                   _protocol,
-                                   _ioBuffer));
+        CheckResult(CreateIoBuffer(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, _protocol, _ioBuffer));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
@@ -553,8 +537,7 @@ private:
         switch (frameKind) {
             // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::PingOk:
-                CheckResultWithMessage(_protocol->ReadPingOk(_channel->GetReader(), command),
-                                       "Could not read ping ok frame.");
+                CheckResultWithMessage(_protocol->ReadPingOk(_channel->GetReader(), command), "Could not read ping ok frame.");
                 return Result::Ok;
             default:
                 return OnUnexpectedFrame(frameKind);
@@ -570,9 +553,7 @@ private:
             case FrameKind::Connect: {
                 Mode mode{};
                 std::string serverName;
-                CheckResultWithMessage(
-                    _protocol->ReadConnect(_channel->GetReader(), version, mode, serverName, clientName),
-                    "Could not read connect frame.");
+                CheckResultWithMessage(_protocol->ReadConnect(_channel->GetReader(), version, mode, serverName, clientName), "Could not read connect frame.");
                 return Result::Ok;
             }
             default:
@@ -587,13 +568,9 @@ private:
         switch (frameKind) {
             // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::StepOk:
-                CheckResultWithMessage(_protocol->ReadStepOk(_channel->GetReader(),
-                                                             simulationTime,
-                                                             command,
-                                                             _deserializeIoData,
-                                                             _deserializeBusMessages,
-                                                             _callbacks),
-                                       "Could not receive step ok frame.");
+                CheckResultWithMessage(
+                    _protocol->ReadStepOk(_channel->GetReader(), simulationTime, command, _deserializeIoData, _deserializeBusMessages, _callbacks),
+                    "Could not receive step ok frame.");
                 return Result::Ok;
             case FrameKind::Error:
                 return OnError();
@@ -604,8 +581,7 @@ private:
 
     [[nodiscard]] Result OnError() const {
         std::string errorMessage;
-        CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorMessage),
-                               "Could not read error frame.");
+        CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorMessage), "Could not read error frame.");
         LogError(errorMessage);
         return Result::Error;
     }
@@ -683,20 +659,20 @@ private:
         return _busBuffer->Serialize(writer);
     };
 
-    DeserializeFunction _deserializeIoData =
-        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
-        };
+    DeserializeFunction _deserializeIoData = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+    };
 
-    DeserializeFunction _deserializeBusMessages =
-        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
-        };
+    DeserializeFunction _deserializeBusMessages = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+    };
 };
+
 }  // namespace
 
 [[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server) {
     server = std::make_unique<CoSimServerImpl>();
     return Result::Ok;
 }
+
 }  // namespace DsVeosCoSim

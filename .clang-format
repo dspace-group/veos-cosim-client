@@ -8,9 +8,10 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortLambdasOnASingleLine: None
 BinPackArguments: false
 BinPackParameters: false
-ColumnLimit: 120
+ColumnLimit: 160
 IndentWidth: 4
 InsertBraces: true
 InsertNewlineAtEOF: true
 LineEnding: LF
 UseTab: false
+WrapNamespaceBodyWithEmptyLines: Always

@@ -41,5 +41,5 @@ CheckOptions:
   readability-identifier-naming.ProtectedMethodCase: CamelCase
   readability-identifier-naming.PrivateMethodCase: CamelCase
   readability-identifier-naming.PrivateMemberCase: camelBack
-  readability-identifier-naming.PrivateMemberPrefix: '_'
+  readability-identifier-naming.PrivateMemberPrefix: "_"
   readability-implicit-bool-conversion.AllowPointerConditions: 1

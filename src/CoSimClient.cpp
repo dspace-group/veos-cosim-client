@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include "DsVeosCoSim/CoSimClient.h"
 
@@ -18,7 +18,9 @@
 #include "Protocol.h"
 
 namespace DsVeosCoSim {
+
 namespace {
+
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 enum class ResponderMode {
@@ -228,8 +230,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result GetIncomingSignals(uint32_t& incomingSignalsCount,
-                                            const IoSignal*& incomingSignals) const override {
+    [[nodiscard]] Result GetIncomingSignals(uint32_t& incomingSignalsCount, const IoSignal*& incomingSignals) const override {
         CheckResult(EnsureIsConnected());
 
         incomingSignalsCount = static_cast<uint32_t>(_incomingSignalsExtern.size());
@@ -237,8 +238,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result GetOutgoingSignals(uint32_t& outgoingSignalsCount,
-                                            const IoSignal*& outgoingSignals) const override {
+    [[nodiscard]] Result GetOutgoingSignals(uint32_t& outgoingSignalsCount, const IoSignal*& outgoingSignals) const override {
         CheckResult(EnsureIsConnected());
 
         outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignalsExtern.size());
@@ -278,8 +278,7 @@ public:
         return _ioBuffer->Read(incomingSignalId, length, value);
     }
 
-    [[nodiscard]] Result GetCanControllers(uint32_t& controllersCount,
-                                           const CanController*& controllers) const override {
+    [[nodiscard]] Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllersCount = static_cast<uint32_t>(_canControllersExtern.size());
@@ -287,8 +286,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result GetEthControllers(uint32_t& controllersCount,
-                                           const EthController*& controllers) const override {
+    [[nodiscard]] Result GetEthControllers(uint32_t& controllersCount, const EthController*& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllersCount = static_cast<uint32_t>(_ethControllersExtern.size());
@@ -296,8 +294,7 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result GetLinControllers(uint32_t& controllersCount,
-                                           const LinController*& controllers) const override {
+    [[nodiscard]] Result GetLinControllers(uint32_t& controllersCount, const LinController*& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllersCount = static_cast<uint32_t>(_linControllersExtern.size());
@@ -492,8 +489,7 @@ private:
             message.append(_remoteIpAddress);
             message.append(" ...");
             LogInfo(message);
-            CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort, _protocol),
-                                   "Could not get port from port mapper.");
+            CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort, _protocol), "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
@@ -514,8 +510,7 @@ private:
             LogInfo(message);
         }
 
-        CheckResult(
-            TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel));
+        CheckResult(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel));
         CheckBoolWithMessage(_channel, "Could not connect to dSPACE VEOS CoSim server.");
 
         _connectionKind = ConnectionKind::Remote;
@@ -523,16 +518,14 @@ private:
     }
 
     [[nodiscard]] Result SendConnectRequest() {
-        CheckResultWithMessage(
-            _protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::LATEST_VERSION, {}, _serverName, _clientName),
-            "Could not send connect frame.");
+        CheckResultWithMessage(_protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::LATEST_VERSION, {}, _serverName, _clientName),
+                               "Could not send connect frame.");
         return Result::Ok;
     }
 
     [[nodiscard]] Result OnConnectOk() {
         uint32_t serverProtocolVersion{};
-        CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(), serverProtocolVersion),
-                               "Could not read protocol version.");
+        CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(), serverProtocolVersion), "Could not read protocol version.");
 
         if (_protocol->GetVersion() != serverProtocolVersion) {
             FactoryResult result = MakeProtocol(serverProtocolVersion);
@@ -587,13 +580,7 @@ private:
             }
         }
 
-        CheckResult(CreateIoBuffer(CoSimType::Client,
-                                   _connectionKind,
-                                   _serverName,
-                                   _incomingSignalsExtern,
-                                   _outgoingSignalsExtern,
-                                   _protocol,
-                                   _ioBuffer));
+        CheckResult(CreateIoBuffer(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, _protocol, _ioBuffer));
 
         CheckResult(CreateBusBuffer(CoSimType::Client,
                                     _connectionKind,
@@ -771,11 +758,7 @@ private:
     }
 
     [[nodiscard]] Result OnStep() {
-        CheckResultWithMessage(_protocol->ReadStep(_channel->GetReader(),
-                                                   _currentSimulationTime,
-                                                   _deserializeIoData,
-                                                   _deserializeBusMessages,
-                                                   _callbacks),
+        CheckResultWithMessage(_protocol->ReadStep(_channel->GetReader(), _currentSimulationTime, _deserializeIoData, _deserializeBusMessages, _callbacks),
                                "Could not read step frame.");
 
         if (_callbacks.simulationEndStepCallback) {
@@ -786,8 +769,7 @@ private:
     }
 
     [[nodiscard]] Result OnStart() {
-        CheckResultWithMessage(_protocol->ReadStart(_channel->GetReader(), _currentSimulationTime),
-                               "Could not read start frame.");
+        CheckResultWithMessage(_protocol->ReadStart(_channel->GetReader(), _currentSimulationTime), "Could not read start frame.");
 
         _ioBuffer->ClearData();
         _busBuffer->ClearData();
@@ -800,8 +782,7 @@ private:
     }
 
     [[nodiscard]] Result OnStop() {
-        CheckResultWithMessage(_protocol->ReadStop(_channel->GetReader(), _currentSimulationTime),
-                               "Could not read stop frame.");
+        CheckResultWithMessage(_protocol->ReadStop(_channel->GetReader(), _currentSimulationTime), "Could not read stop frame.");
 
         if (_callbacks.simulationStoppedCallback) {
             _callbacks.simulationStoppedCallback(_currentSimulationTime);
@@ -812,8 +793,7 @@ private:
 
     [[nodiscard]] Result OnTerminate() {
         TerminateReason reason{};
-        CheckResultWithMessage(_protocol->ReadTerminate(_channel->GetReader(), _currentSimulationTime, reason),
-                               "Could not read terminate frame.");
+        CheckResultWithMessage(_protocol->ReadTerminate(_channel->GetReader(), _currentSimulationTime, reason), "Could not read terminate frame.");
 
         if (_callbacks.simulationTerminatedCallback) {
             _callbacks.simulationTerminatedCallback(_currentSimulationTime, reason);
@@ -823,8 +803,7 @@ private:
     }
 
     [[nodiscard]] Result OnPause() {
-        CheckResultWithMessage(_protocol->ReadPause(_channel->GetReader(), _currentSimulationTime),
-                               "Could not read pause frame.");
+        CheckResultWithMessage(_protocol->ReadPause(_channel->GetReader(), _currentSimulationTime), "Could not read pause frame.");
 
         if (_callbacks.simulationPausedCallback) {
             _callbacks.simulationPausedCallback(_currentSimulationTime);
@@ -834,8 +813,7 @@ private:
     }
 
     [[nodiscard]] Result OnContinue() {
-        CheckResultWithMessage(_protocol->ReadContinue(_channel->GetReader(), _currentSimulationTime),
-                               "Could not read continue frame.");
+        CheckResultWithMessage(_protocol->ReadContinue(_channel->GetReader(), _currentSimulationTime), "Could not read continue frame.");
 
         if (_callbacks.simulationContinuedCallback) {
             _callbacks.simulationContinuedCallback(_currentSimulationTime);
@@ -846,19 +824,14 @@ private:
 
     [[nodiscard]] Result FinishStep() {
         Command nextCommand = _nextCommand.exchange({});
-        CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(),
-                                                     _nextSimulationTime,
-                                                     nextCommand,
-                                                     _serializeIoData,
-                                                     _serializeBusMessages),
+        CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(), _nextSimulationTime, nextCommand, _serializeIoData, _serializeBusMessages),
                                "Could not send step ok frame.");
         return Result::Ok;
     }
 
     [[nodiscard]] Result FinishPing() {
         Command nextCommand = _nextCommand.exchange({});
-        CheckResultWithMessage(_protocol->SendPingOk(_channel->GetWriter(), nextCommand),
-                               "Could not send ping ok frame.");
+        CheckResultWithMessage(_protocol->SendPingOk(_channel->GetWriter(), nextCommand), "Could not send ping ok frame.");
         return Result::Ok;
     }
 
@@ -1000,20 +973,20 @@ private:
         return _busBuffer->Serialize(writer);
     };
 
-    DeserializeFunction _deserializeIoData =
-        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-            return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
-        };
+    DeserializeFunction _deserializeIoData = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+    };
 
-    DeserializeFunction _deserializeBusMessages =
-        [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-            return _busBuffer->Deserialize(reader, simulationTime, callbacks);
-        };
+    DeserializeFunction _deserializeBusMessages = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+    };
 };
+
 }  // namespace
 
 [[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client) {
     client = std::make_unique<CoSimClientImpl>();
     return Result::Ok;
 }
+
 }  // namespace DsVeosCoSim

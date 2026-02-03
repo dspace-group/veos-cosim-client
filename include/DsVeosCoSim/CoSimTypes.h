@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -9,6 +9,7 @@
 #include <string>
 
 namespace DsVeosCoSim {
+
 // NOLINTBEGIN
 #define ENUM_BITMASK_OPS(TEnum)                                                             \
     constexpr TEnum operator&(TEnum lhs, TEnum rhs) {                                       \
@@ -86,30 +87,20 @@ using SimulationTime = std::chrono::nanoseconds;
 using LogCallback = std::function<void(Severity, const std::string&)>;
 
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
-using SimulationTerminatedCallback =
-std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
-using IncomingSignalChangedCallback =
-std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
-using CanMessageReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const CanController& canController, const CanMessage& canMessage)>;
-using EthMessageReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const EthController& ethController, const EthMessage& ethMessage)>;
-using LinMessageReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const LinController& linController, const LinMessage& linMessage)>;
-using FrMessageReceivedCallback = std::function<
-    void(SimulationTime simulationTime, const FrController& linController, const FrMessage& frMessage)>;
-using CanMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
-                                                               const CanController& canController,
-                                                               const CanMessageContainer& canMessageContainer)>;
-using EthMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
-                                                               const EthController& ethController,
-                                                               const EthMessageContainer& ethMessageContainer)>;
-using LinMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
-                                                               const LinController& linController,
-                                                               const LinMessageContainer& linMessageContainer)>;
-using FrMessageContainerReceivedCallback = std::function<void(SimulationTime simulationTime,
-                                                              const FrController& frController,
-                                                              const FrMessageContainer& frMessageContainer)>;
+using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
+using IncomingSignalChangedCallback = std::function<void(SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value)>;
+using CanMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const CanController& canController, const CanMessage& canMessage)>;
+using EthMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const EthController& ethController, const EthMessage& ethMessage)>;
+using LinMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const LinController& linController, const LinMessage& linMessage)>;
+using FrMessageReceivedCallback = std::function<void(SimulationTime simulationTime, const FrController& linController, const FrMessage& frMessage)>;
+using CanMessageContainerReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const CanController& canController, const CanMessageContainer& canMessageContainer)>;
+using EthMessageContainerReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const EthController& ethController, const EthMessageContainer& ethMessageContainer)>;
+using LinMessageContainerReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const LinController& linController, const LinMessageContainer& linMessageContainer)>;
+using FrMessageContainerReceivedCallback =
+    std::function<void(SimulationTime simulationTime, const FrController& frController, const FrMessageContainer& frMessageContainer)>;
 
 enum class Result : uint32_t {
     Ok,
@@ -550,13 +541,11 @@ ENUM_BITMASK_OPS(FrMessageFlags);
 [[nodiscard]] std::string ToString(FrMessageFlags frMessageFlags);
 [[nodiscard]] const char* ToString(FrameKind frameKind);
 
-
 [[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& ioSignalContainers);
 [[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& canControllerContainers);
 [[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& ethControllerContainers);
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers);;
+[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers);
 [[nodiscard]] std::string ToString(const std::vector<FrControllerContainer>& frControllerContainers);
-
 
 std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
 std::ostream& operator<<(std::ostream& stream, Result result);
@@ -606,7 +595,6 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerCo
 std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers);
 std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers);
 
-
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
 [[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second);
 [[nodiscard]] bool operator==(const CanController& first, const CanController& second);
@@ -632,7 +620,6 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers);
 [[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers);
 
-
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
@@ -640,4 +627,5 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
 
 void SetLogCallback(LogCallback logCallback);
-} // namespace DsVeosCoSim
+
+}  // namespace DsVeosCoSim

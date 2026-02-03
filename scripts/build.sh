@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 scriptFile=$(readlink -f "$0")
 baseDir=$(dirname "$scriptFile")/..

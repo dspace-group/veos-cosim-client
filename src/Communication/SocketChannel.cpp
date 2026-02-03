@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <algorithm>
 #include <array>
@@ -112,9 +112,7 @@ public:
             }
 
             int32_t sizeOfChunkToCopy = std::min(sizeToCopy, BufferSize - _writeIndex);
-            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
-                         bufferPointer,
-                         static_cast<size_t>(sizeOfChunkToCopy));
+            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)], bufferPointer, static_cast<size_t>(sizeOfChunkToCopy));
             _writeIndex += sizeOfChunkToCopy;
             bufferPointer += sizeOfChunkToCopy;
             sizeToCopy -= sizeOfChunkToCopy;
@@ -172,8 +170,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -184,8 +181,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -196,8 +192,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -213,9 +208,7 @@ public:
             }
 
             int32_t sizeOfChunkToCopy = std::min(sizeToCopy, _endFrameIndex - _readIndex);
-            (void)memcpy(bufferPointer,
-                         &_readBuffer[static_cast<size_t>(_readIndex)],
-                         static_cast<size_t>(sizeOfChunkToCopy));
+            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeOfChunkToCopy));
             _readIndex += sizeOfChunkToCopy;
             bufferPointer += sizeOfChunkToCopy;
             sizeToCopy -= sizeOfChunkToCopy;
@@ -233,9 +226,7 @@ private:
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
             int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            (void)memcpy(_readBuffer.data(),
-                         &_readBuffer[static_cast<size_t>(_endFrameIndex)],
-                         static_cast<size_t>(bytesToMove));
+            (void)memcpy(_readBuffer.data(), &_readBuffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
 
             _writeIndex = bytesToMove;
 
@@ -257,9 +248,7 @@ private:
 
         while (sizeToRead > 0) {
             size_t receivedSize{};
-            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)],
-                                        static_cast<size_t>(sizeToRead),
-                                        receivedSize));
+            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], static_cast<size_t>(sizeToRead), receivedSize));
 
             sizeToRead -= static_cast<int32_t>(receivedSize);
             _writeIndex += static_cast<int32_t>(receivedSize);
@@ -448,9 +437,7 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port,
-                                            bool enableRemoteAccess,
-                                            std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& channelServer) {
     CheckResult(StartupNetwork());
 
     Socket listenSocketIpv4;

@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -271,9 +271,7 @@ public:
 
 [[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port,
-                                            bool enableRemoteAccess,
-                                            std::unique_ptr<ChannelServer>& channelServer);
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& channelServer);
 
 [[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
 

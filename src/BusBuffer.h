@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -48,9 +48,7 @@ public:
     [[nodiscard]] virtual Result Receive(FrMessageContainer& message) const = 0;
 
     [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) const = 0;
-    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader,
-                                             SimulationTime simulationTime,
-                                             const Callbacks& callbacks) const = 0;
+    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const = 0;
 };
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,

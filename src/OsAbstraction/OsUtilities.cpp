@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #ifdef _WIN32
 
@@ -31,20 +31,14 @@ namespace {
         return Result::Ok;
     }
 
-    int32_t sizeNeeded =
-        MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
+    int32_t sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
     if (sizeNeeded <= 0) {
         LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
         return Result::Error;
     }
 
     utf16String.resize(static_cast<size_t>(sizeNeeded));
-    sizeNeeded = MultiByteToWideChar(CP_UTF8,
-                                     0,
-                                     utf8String.data(),
-                                     static_cast<int32_t>(utf8String.size()),
-                                     utf16String.data(),
-                                     sizeNeeded);
+    sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), utf16String.data(), sizeNeeded);
     if (sizeNeeded <= 0) {
         LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
         return Result::Error;
@@ -191,12 +185,10 @@ void NamedMutex::Unlock() {
     _isLocked = false;
 }
 
-SharedMemory::SharedMemory(Handle handle, size_t size, void* data)
-    : _handle(std::move(handle)), _size(size), _data(data) {
+SharedMemory::SharedMemory(Handle handle, size_t size, void* data) : _handle(std::move(handle)), _size(size), _data(data) {
 }
 
-SharedMemory::SharedMemory(SharedMemory&& other) noexcept
-    : _handle(std::move(other._handle)), _size(other._size), _data(other._data) {
+SharedMemory::SharedMemory(SharedMemory&& other) noexcept : _handle(std::move(other._handle)), _size(other._size), _data(other._data) {
     other._size = {};
     other._data = {};
 }
@@ -217,8 +209,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     CheckResult(GetFullSharedMemoryName(name, fullName));
     DWORD sizeHigh{};
     auto sizeLow = static_cast<DWORD>(size);
-    Handle handle =
-        CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
+    Handle handle = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
         LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
         return Result::Error;
@@ -234,9 +225,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     return Result::Ok;
 }
 
-[[nodiscard]] Result SharedMemory::TryOpenExisting(const std::string& name,
-                                                   size_t size,
-                                                   std::optional<SharedMemory>& sharedMemory) {
+[[nodiscard]] Result SharedMemory::TryOpenExisting(const std::string& name, size_t size, std::optional<SharedMemory>& sharedMemory) {
     std::wstring fullName{};
     CheckResult(GetFullSharedMemoryName(name, fullName));
     Handle handle = OpenFileMappingW(FILE_MAP_WRITE, FALSE, fullName.c_str());
@@ -296,13 +285,7 @@ void SetThreadAffinity(const std::string& name) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     LPSTR buffer = nullptr;
-    DWORD size = FormatMessageA(flags,
-                                nullptr,
-                                static_cast<DWORD>(errorCode),
-                                languageId,
-                                reinterpret_cast<LPSTR>(&buffer),
-                                0,
-                                nullptr);
+    DWORD size = FormatMessageA(flags, nullptr, static_cast<DWORD>(errorCode), languageId, reinterpret_cast<LPSTR>(&buffer), 0, nullptr);
 
     std::string message;
     if ((size > 0) && buffer) {

@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #ifdef _WIN32
 
@@ -255,9 +255,7 @@ public:
             }
 
             int32_t sizeOfChunkToCopy = std::min(sizeToCopy, BufferSize - _writeIndex);
-            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)],
-                         bufferPointer,
-                         static_cast<size_t>(sizeOfChunkToCopy));
+            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)], bufferPointer, static_cast<size_t>(sizeOfChunkToCopy));
             _writeIndex += sizeOfChunkToCopy;
             bufferPointer += sizeOfChunkToCopy;
             sizeToCopy -= sizeOfChunkToCopy;
@@ -377,8 +375,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -389,8 +386,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -401,8 +397,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value =
-            *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
         _readIndex += size;
         return Result::Ok;
     }
@@ -418,9 +413,7 @@ public:
             }
 
             int32_t sizeOfChunkToCopy = std::min(sizeToCopy, _writeIndex - _readIndex);
-            (void)memcpy(bufferPointer,
-                         &_readBuffer[static_cast<size_t>(_readIndex)],
-                         static_cast<size_t>(sizeOfChunkToCopy));
+            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeOfChunkToCopy));
             _readIndex += sizeOfChunkToCopy;
             bufferPointer += sizeOfChunkToCopy;
             sizeToCopy -= sizeOfChunkToCopy;
@@ -433,9 +426,7 @@ private:
     [[nodiscard]] Result BeginRead() {
         int32_t unreadSize = _writeIndex - _readIndex;
         if (unreadSize > 0) {
-            (void)memmove(_readBuffer.data(),
-                          &_readBuffer[static_cast<size_t>(_readIndex)],
-                          static_cast<size_t>(unreadSize));
+            (void)memmove(_readBuffer.data(), &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(unreadSize));
         }
 
         _writeIndex -= _readIndex;

@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -9,9 +9,9 @@
 #include "DsVeosCoSim/CoSimTypes.h"
 
 namespace DsVeosCoSim {
+
 using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
-using DeserializeFunction =
-    std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
+using DeserializeFunction = std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
 
 class IProtocol {
 public:
@@ -96,12 +96,8 @@ public:
     [[nodiscard]] virtual Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) = 0;
     [[nodiscard]] virtual Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) = 0;
 
-    [[nodiscard]] virtual Result ReadTerminate(ChannelReader& reader,
-                                               SimulationTime& simulationTime,
-                                               TerminateReason& reason) = 0;
-    [[nodiscard]] virtual Result SendTerminate(ChannelWriter& writer,
-                                               SimulationTime simulationTime,
-                                               TerminateReason reason) = 0;
+    [[nodiscard]] virtual Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) = 0;
+    [[nodiscard]] virtual Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) = 0;
 
     [[nodiscard]] virtual Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) = 0;
     [[nodiscard]] virtual Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) = 0;
@@ -153,6 +149,7 @@ public:
 };
 
 namespace V1 {
+
 class Protocol : public IProtocol {
 public:
     static const uint32_t CoSimProtocolVersion = 0x10000U;
@@ -230,12 +227,8 @@ public:
     [[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) override;
     [[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) override;
 
-    [[nodiscard]] Result ReadTerminate(ChannelReader& reader,
-                                       SimulationTime& simulationTime,
-                                       TerminateReason& reason) override;
-    [[nodiscard]] Result SendTerminate(ChannelWriter& writer,
-                                       SimulationTime simulationTime,
-                                       TerminateReason reason) override;
+    [[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) override;
+    [[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) override;
 
     [[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) override;
     [[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) override;
@@ -294,30 +287,29 @@ protected:
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller);
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers);
-    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                              const std::vector<CanControllerContainer>& controllers);
+    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers);
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller);
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller);
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers);
-    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                              const std::vector<EthControllerContainer>& controllers);
+    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers);
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller);
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller);
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers);
-    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                              const std::vector<LinControllerContainer>& controllers);
+    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers);
 
     [[nodiscard]] uint32_t GetVersion() override;
 
     [[nodiscard]] bool DoFlexRayOperations() override;
 };
+
 }  // namespace V1
 
 namespace V2 {
+
 class Protocol : public DsVeosCoSim::V1::Protocol {
 public:
     static const uint32_t CoSimProtocolVersion = 0x20000U;
@@ -355,9 +347,9 @@ protected:
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const FrControllerContainer& controller);
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<FrControllerContainer>& controllers);
-    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer,
-                                              const std::vector<FrControllerContainer>& controllers);
+    [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<FrControllerContainer>& controllers);
 };
+
 }  // namespace V2
 
 enum class FactoryError {
@@ -376,4 +368,5 @@ constexpr uint32_t V2_VERSION = V2::Protocol::CoSimProtocolVersion;  // 0x20000U
 constexpr uint32_t LATEST_VERSION = V2_VERSION;
 
 FactoryResult MakeProtocol(uint32_t negotiatedVersion);
+
 }  // namespace DsVeosCoSim

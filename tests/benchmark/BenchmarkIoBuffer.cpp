@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <memory>
 #include "Protocol.h"
@@ -19,11 +19,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void Receive(const IoSignalContainer& signal,
-             const IoBuffer& readerIoBuffer,
-             Channel& channel,
-             const bool& stopThread,
-             Event& endEvent) {
+void Receive(const IoSignalContainer& signal, const IoBuffer& readerIoBuffer, Channel& channel, const bool& stopThread, Event& endEvent) {
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
@@ -51,33 +47,16 @@ void RunTest(benchmark::State& state,
     }
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server,
-                            connectionKind,
-                            writerName,
-                            {signal.Convert()},
-                            {},
-                            protocol,
-                            writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, protocol, writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client,
-                            connectionKind,
-                            readerName,
-                            {signal.Convert()},
-                            {},
-                            protocol,
-                            readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, protocol, readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     bool stopThread{};
     Event endEvent;
 
-    std::thread thread(Receive,
-                       std::ref(signal),
-                       std::ref(*readerIoBuffer),
-                       std::ref(receiverChannel),
-                       std::ref(stopThread),
-                       std::ref(endEvent));
+    std::thread thread(Receive, std::ref(signal), std::ref(*readerIoBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
 
     for (auto _ : state) {
         writeValue[0]++;

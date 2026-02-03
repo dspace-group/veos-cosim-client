@@ -1,4 +1,4 @@
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 param(
   [string]$config = "Debug"
@@ -7,9 +7,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 switch ($config.ToLower()) {
-  'debug'   { $config = "Debug" }
+  'debug' { $config = "Debug" }
   'release' { $config = "Release" }
-  default   { $config = "Debug" }
+  default { $config = "Debug" }
 }
 
 $baseDir = Split-Path $PSScriptRoot
@@ -39,6 +39,7 @@ try {
   & cmake --build . --config $config
 
   Write-Host "Building for $config finished successfully."
-} finally {
+}
+finally {
   Pop-Location
 }

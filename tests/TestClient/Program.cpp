@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <cstdint>
 #include <cstring>
@@ -234,13 +234,9 @@ void OnSimulationStoppedCallback(DsVeosCoSim_SimulationTime simulationTime, [[ma
     State = DsVeosCoSim_SimulationState_Stopped;
 }
 
-void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime,
-                                    DsVeosCoSim_TerminateReason reason,
-                                    [[maybe_unused]] void* userData) {
+void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason, [[maybe_unused]] void* userData) {
     std::lock_guard lock(LockState);
-    LogInfo("Simulation terminated with reason {} at {} s.",
-            DsVeosCoSim_TerminateReasonToString(reason),
-            DsVeosCoSim_SimulationTimeToString(simulationTime));
+    LogInfo("Simulation terminated with reason {} at {} s.", DsVeosCoSim_TerminateReasonToString(reason), DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Terminated;
 }
 
@@ -295,8 +291,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     const DsVeosCoSim_CanController* tmpCanControllers{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetCanControllers(Client, &tmpCanControllersCount, &tmpCanControllers));
     if (tmpCanControllersCount > 0) {
-        CanControllers =
-            std::vector<DsVeosCoSim_CanController>(tmpCanControllers, tmpCanControllers + tmpCanControllersCount);
+        CanControllers = std::vector<DsVeosCoSim_CanController>(tmpCanControllers, tmpCanControllers + tmpCanControllersCount);
         LogTrace("Found the following CAN controllers:");
         for (const DsVeosCoSim_CanController& controller : CanControllers) {
             LogTrace("  {}", DsVeosCoSim_CanControllerToString(&controller));
@@ -309,8 +304,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     const DsVeosCoSim_EthController* tmpEthControllers{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetEthControllers(Client, &tmpEthControllersCount, &tmpEthControllers));
     if (tmpEthControllersCount > 0) {
-        EthControllers =
-            std::vector<DsVeosCoSim_EthController>(tmpEthControllers, tmpEthControllers + tmpEthControllersCount);
+        EthControllers = std::vector<DsVeosCoSim_EthController>(tmpEthControllers, tmpEthControllers + tmpEthControllersCount);
         LogTrace("Found the following ETH controllers:");
         for (const DsVeosCoSim_EthController& controller : EthControllers) {
             LogTrace("  {}", DsVeosCoSim_EthControllerToString(&controller));
@@ -323,8 +317,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     const DsVeosCoSim_LinController* tmpLinControllers{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetLinControllers(Client, &tmpLinControllersCount, &tmpLinControllers));
     if (tmpLinControllersCount > 0) {
-        LinControllers =
-            std::vector<DsVeosCoSim_LinController>(tmpLinControllers, tmpLinControllers + tmpLinControllersCount);
+        LinControllers = std::vector<DsVeosCoSim_LinController>(tmpLinControllers, tmpLinControllers + tmpLinControllersCount);
         LogTrace("Found the following LIN controllers:");
         for (const DsVeosCoSim_LinController& controller : LinControllers) {
             LogTrace("  {}", DsVeosCoSim_LinControllerToString(&controller));
@@ -337,8 +330,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     const DsVeosCoSim_FrController* tmpFrControllers{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetFrControllers(Client, &tmpFrControllersCount, &tmpFrControllers));
     if (tmpFrControllersCount > 0) {
-        FrControllers =
-            std::vector<DsVeosCoSim_FrController>(tmpFrControllers, tmpFrControllers + tmpFrControllersCount);
+        FrControllers = std::vector<DsVeosCoSim_FrController>(tmpFrControllers, tmpFrControllers + tmpFrControllersCount);
         LogTrace("Found the following FR controllers:");
         for (const DsVeosCoSim_FrController& controller : FrControllers) {
             LogTrace("  {}", DsVeosCoSim_FrControllerToString(&controller));
@@ -364,8 +356,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     const DsVeosCoSim_IoSignal* tmpOutgoingSignals{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetOutgoingSignals(Client, &tmpOutgoingSignalsCount, &tmpOutgoingSignals));
     if (tmpOutgoingSignalsCount > 0) {
-        OutgoingSignals =
-            std::vector<DsVeosCoSim_IoSignal>(tmpOutgoingSignals, tmpOutgoingSignals + tmpOutgoingSignalsCount);
+        OutgoingSignals = std::vector<DsVeosCoSim_IoSignal>(tmpOutgoingSignals, tmpOutgoingSignals + tmpOutgoingSignalsCount);
         LogTrace("Found the following outgoing signals:");
         for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
             LogTrace("  {}", DsVeosCoSim_IoSignalToString(&signal));

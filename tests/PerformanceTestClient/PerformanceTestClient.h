@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -7,8 +7,7 @@
 
 #include "Event.h"
 
-using PerformanceTestFunc = std::function<
-    void(const std::string& host, DsVeosCoSim::Event& connectedEvent, uint64_t& counter, const bool& isStopped)>;
+using PerformanceTestFunc = std::function<void(const std::string& host, DsVeosCoSim::Event& connectedEvent, uint64_t& counter, const bool& isStopped)>;
 
 void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& host);
 

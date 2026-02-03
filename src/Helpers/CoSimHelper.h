@@ -1,4 +1,4 @@
-// Copyright dSPACE GmbH. All rights reserved.
+// Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #pragma once
 
@@ -40,17 +40,11 @@ void LogProtocolEndTraceSendPingOk();
 void LogProtocolBeginTraceReadPingOk();
 void LogProtocolEndTraceReadPingOk(Command command);
 
-void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion,
-                                      Mode clientMode,
-                                      const std::string& serverName,
-                                      const std::string& clientName);
+void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName);
 void LogProtocolEndTraceSendConnect();
 
 void LogProtocolBeginTraceReadConnect();
-void LogProtocolEndTraceReadConnect(uint32_t protocolVersion,
-                                    Mode clientMode,
-                                    const std::string& serverName,
-                                    const std::string& clientName);
+void LogProtocolEndTraceReadConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName);
 
 void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
                                         Mode clientMode,

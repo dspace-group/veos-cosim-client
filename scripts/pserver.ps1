@@ -1,4 +1,4 @@
-# Copyright dSPACE GmbH. All rights reserved.
+# Copyright dSPACE SE & Co. KG. All rights reserved.
 
 param(
   [string]$config = "Release"
@@ -7,9 +7,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 switch ($config.ToLower()) {
-  'debug'   { $config = "Debug" }
+  'debug' { $config = "Debug" }
   'release' { $config = "Release" }
-  default   { $config = "Release" }
+  default { $config = "Release" }
 }
 
 $baseDir = Split-Path $PSScriptRoot
