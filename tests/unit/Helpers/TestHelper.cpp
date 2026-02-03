@@ -19,6 +19,8 @@ namespace {
 
 constexpr uint64_t BigNumber = 0x1000000;
 
+std::shared_ptr<IProtocol> _protocol;
+
 }  // namespace
 
 [[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
@@ -241,7 +243,6 @@ void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::un
     thread.join();
 }
 
-static std::shared_ptr<IProtocol> _protocol;
 std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol() {
     if (_protocol) {
         return _protocol;

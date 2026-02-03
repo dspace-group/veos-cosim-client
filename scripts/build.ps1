@@ -24,7 +24,7 @@ if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
   exit 1
 }
 
-Write-Host "Building for $config ..."
+Write-Host "Building for $config ..." -ForegroundColor Blue
 
 $buildDir = Join-Path $baseDir "tmpwin/$config"
 
@@ -38,7 +38,7 @@ try {
   & cmake ../.. -GNinja -DCMAKE_BUILD_TYPE="$config" -DDSVEOSCOSIM_BUILD_TESTS=ON
   & cmake --build . --config $config
 
-  Write-Host "Building for $config finished successfully."
+  Write-Host "Building for $config finished successfully." -ForegroundColor Blue
 }
 finally {
   Pop-Location

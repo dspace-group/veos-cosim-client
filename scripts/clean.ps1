@@ -2,10 +2,10 @@
 
 $baseDir = Split-Path $PSScriptRoot
 
-Write-Host "Cleaning ..."
+Write-Host "Cleaning ..." -ForegroundColor Blue
 
 $dirToRemove = Join-Path $baseDir "tmpwin"
 
 Remove-Item -Path $dirToRemove -Recurse -Force -ErrorAction SilentlyContinue
 
-Write-Host "Cleaning finished successfully."
+Write-Host "Cleaning finished successfully." -ForegroundColor Blue

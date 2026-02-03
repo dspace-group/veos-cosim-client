@@ -14,7 +14,7 @@ switch ($config.ToLower()) {
 
 $baseDir = Split-Path $PSScriptRoot
 
-Write-Host "Running test client for $config ..."
+Write-Host "Running test client for $config ..." -ForegroundColor Blue
 
 $filePath = Join-Path $baseDir "tmpwin/$config/tests/TestClient/TestClient.exe"
 
@@ -25,4 +25,4 @@ if (-not (Test-Path $filePath)) {
 
 & "$filePath"
 
-Write-Host "Running test client for $config finished successfully."
+Write-Host "Running test client for $config finished successfully." -ForegroundColor Blue

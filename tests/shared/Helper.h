@@ -95,28 +95,28 @@ void SetEnvVariable(const std::string& name, const std::string& value);
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
-                                     std::shared_ptr<IProtocol> protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
-                                     std::shared_ptr<IProtocol> protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
-                                     std::shared_ptr<IProtocol> protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<FrController>& controllers,
-                                     std::shared_ptr<IProtocol> protocol,
+                                     const std::shared_ptr<IProtocol>& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] uint8_t GenerateU8();
