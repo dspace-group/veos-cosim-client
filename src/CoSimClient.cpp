@@ -464,11 +464,7 @@ private:
     }
 
     [[nodiscard]] Result LocalConnect() {
-#ifdef _WIN32
         CheckResult(TryConnectToLocalChannel(_serverName, _channel));
-#else
-        CheckResult(TryConnectToUdsChannel(_serverName, _channel));
-#endif
         if (!_channel) {
             std::string message = "Could not connect to local dSPACE VEOS CoSim server '";
             message.append(_serverName);

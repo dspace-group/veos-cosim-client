@@ -19,7 +19,7 @@ namespace {
 
 [[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     std::optional<Socket> clientSocket;
-    CheckResult(Socket::TryConnect(UdsName, clientSocket));
+    CheckResult(Socket::TryConnect(LocalName, clientSocket));
     CheckBoolResult(clientSocket);
 
     std::array<char, BufferSize> buffer{};
@@ -36,23 +36,23 @@ namespace {
     return Result::Ok;
 }
 
-void UdsClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void LocalClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
-        LogError("Could not run Unix Domain Socket client.");
+        LogError("Could not run Local client.");
     }
 }
 
 }  // namespace
 
-void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
-    LogTrace("Unix Domain Socket:");
-    RunPerformanceTest(UdsClientRun, "");
+void RunLocalTest() {  // NOLINT(misc-use-internal-linkage)
+    LogTrace("Local:");
+    RunPerformanceTest(LocalClientRun, "");
     LogTrace("");
 }
 
 #else
 
-void RunUdsTest() {  // NOLINT(misc-use-internal-linkage)
+void RunLocalTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 #endif

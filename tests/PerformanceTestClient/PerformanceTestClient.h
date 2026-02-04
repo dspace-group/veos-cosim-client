@@ -13,7 +13,7 @@ void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& 
 
 void RunTcpTest(const std::string& host);
 void RunUdpTest(const std::string& host);
-void RunUdsTest();
+void RunLocalTest();
 void RunPipeTest();
 void RunEventsTest();
 void RunRemoteCommunicationTest(const std::string& host);

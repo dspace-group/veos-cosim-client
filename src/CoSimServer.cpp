@@ -366,11 +366,7 @@ private:
         }
 
         if (!_localChannelServer) {
-#ifdef _WIN32
             CheckResult(CreateLocalChannelServer(_serverName, _localChannelServer));
-#else
-            CheckResult(CreateUdsChannelServer(_serverName, _localChannelServer));
-#endif
         }
 
         if (port != 0) {

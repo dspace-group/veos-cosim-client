@@ -422,6 +422,10 @@ public:
         return Result::Ok;
     }
 
+    void EndRead() override {
+        // Currently no action needed. The size of a single frame is stored nowhere
+    }
+
 private:
     [[nodiscard]] Result BeginRead() {
         int32_t unreadSize = _writeIndex - _readIndex;

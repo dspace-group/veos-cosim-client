@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     } else {
         RunTcpTest("127.0.0.1");
         RunUdpTest("127.0.0.1");
-        RunUdsTest();
+        RunLocalTest();
         RunPipeTest();
         RunEventsTest();
 

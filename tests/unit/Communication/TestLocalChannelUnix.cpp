@@ -14,12 +14,12 @@ using namespace DsVeosCoSim;
 namespace {
 
 [[nodiscard]] std::string GenerateName() {
-    return GenerateString("UdsChannel");
+    return GenerateString("LocalChannel");
 }
 
 [[nodiscard]] std::unique_ptr<ChannelServer> CreateServer(const std::string& name) {
     std::unique_ptr<ChannelServer> server;
-    ExpectOk(CreateUdsChannelServer(name, server));
+    ExpectOk(CreateLocalChannelServer(name, server));
     ExpectTrue(server);
 
     return server;
@@ -27,28 +27,28 @@ namespace {
 
 [[nodiscard]] std::unique_ptr<Channel> ConnectToServer(const std::string& name) {
     std::unique_ptr<Channel> connectedChannel;
-    ExpectOk(TryConnectToUdsChannel(name, connectedChannel));
+    ExpectOk(TryConnectToLocalChannel(name, connectedChannel));
     ExpectTrue(connectedChannel);
 
     return connectedChannel;
 }
 
-class TestUdsChannel : public testing::Test {};
+class TestLocalChannel : public testing::Test {};
 
-TEST_F(TestUdsChannel, StartServer) {
+TEST_F(TestLocalChannel, StartServer) {
     // Arrange
     std::string name = GenerateName();
 
     std::unique_ptr<ChannelServer> server;
 
     // Act
-    AssertOk(CreateUdsChannelServer(name, server));
+    AssertOk(CreateLocalChannelServer(name, server));
 
     // Assert
     AssertTrue(server);
 }
 
-TEST_F(TestUdsChannel, ConnectWithoutStart) {
+TEST_F(TestLocalChannel, ConnectWithoutStart) {
     // Arrange
     std::string name = GenerateName();
 
@@ -59,13 +59,13 @@ TEST_F(TestUdsChannel, ConnectWithoutStart) {
     std::unique_ptr<Channel> connectedChannel;
 
     // Act
-    AssertOk(TryConnectToUdsChannel(name, connectedChannel));
+    AssertOk(TryConnectToLocalChannel(name, connectedChannel));
 
     // Assert
     AssertFalse(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, Connect) {
+TEST_F(TestLocalChannel, Connect) {
     // Arrange
     std::string name = GenerateName();
 
@@ -74,13 +74,13 @@ TEST_F(TestUdsChannel, Connect) {
     std::unique_ptr<Channel> connectedChannel;
 
     // Act
-    AssertOk(TryConnectToUdsChannel(name, connectedChannel));
+    AssertOk(TryConnectToLocalChannel(name, connectedChannel));
 
     // Assert
     AssertTrue(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, AcceptWithoutConnect) {
+TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     // Arrange
     std::string name = GenerateName();
 
@@ -95,7 +95,7 @@ TEST_F(TestUdsChannel, AcceptWithoutConnect) {
     AssertFalse(acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, Accept) {
+TEST_F(TestLocalChannel, Accept) {
     // Arrange
     std::string name = GenerateName();
 
@@ -112,7 +112,7 @@ TEST_F(TestUdsChannel, Accept) {
     AssertTrue(acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, AcceptAfterDisconnect) {
+TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     // Arrange
     std::string name = GenerateName();
 
@@ -132,7 +132,7 @@ TEST_F(TestUdsChannel, AcceptAfterDisconnect) {
     AssertTrue(acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, WriteUInt16ToChannel) {
+TEST_F(TestLocalChannel, WriteUInt16ToChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -145,7 +145,7 @@ TEST_F(TestUdsChannel, WriteUInt16ToChannel) {
     TestWriteUInt16ToChannel(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, WriteUInt32ToChannel) {
+TEST_F(TestLocalChannel, WriteUInt32ToChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -158,7 +158,7 @@ TEST_F(TestUdsChannel, WriteUInt32ToChannel) {
     TestWriteUInt32ToChannel(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, WriteUInt64ToChannel) {
+TEST_F(TestLocalChannel, WriteUInt64ToChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -171,7 +171,7 @@ TEST_F(TestUdsChannel, WriteUInt64ToChannel) {
     TestWriteUInt64ToChannel(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, WriteBufferToChannel) {
+TEST_F(TestLocalChannel, WriteBufferToChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -184,7 +184,7 @@ TEST_F(TestUdsChannel, WriteBufferToChannel) {
     TestWriteBufferToChannel(connectedChannel);
 }
 
-TEST_F(TestUdsChannel, ReadUInt16FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt16FromChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -197,7 +197,7 @@ TEST_F(TestUdsChannel, ReadUInt16FromChannel) {
     TestReadUInt16FromChannel(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, ReadUInt32FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt32FromChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -210,7 +210,7 @@ TEST_F(TestUdsChannel, ReadUInt32FromChannel) {
     TestReadUInt32FromChannel(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, ReadUInt64FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt64FromChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -223,7 +223,7 @@ TEST_F(TestUdsChannel, ReadUInt64FromChannel) {
     TestReadUInt64FromChannel(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, ReadBufferFromChannel) {
+TEST_F(TestLocalChannel, ReadBufferFromChannel) {
     // Arrange
     std::string name = GenerateName();
 
@@ -236,7 +236,7 @@ TEST_F(TestUdsChannel, ReadBufferFromChannel) {
     TestReadBufferFromChannel(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, PingPong) {
+TEST_F(TestLocalChannel, PingPong) {
     // Arrange
     std::string name = GenerateName();
 
@@ -249,7 +249,7 @@ TEST_F(TestUdsChannel, PingPong) {
     TestPingPong(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, SendTwoFramesAtOnce) {
+TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     // Arrange
     std::string name = GenerateName();
 
@@ -262,7 +262,7 @@ TEST_F(TestUdsChannel, SendTwoFramesAtOnce) {
     TestSendTwoFramesAtOnce(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, Stream) {
+TEST_F(TestLocalChannel, Stream) {
     // Arrange
     std::string name = GenerateName();
 
@@ -275,7 +275,7 @@ TEST_F(TestUdsChannel, Stream) {
     TestStream(connectedChannel, acceptedChannel);
 }
 
-TEST_F(TestUdsChannel, SendAndReceiveBigElement) {
+TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
     // Arrange
     std::string name = GenerateName();
 

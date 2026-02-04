@@ -15,7 +15,7 @@ target_sources(
   ClientRemoteCommunication.cpp
   ClientTcp.cpp
   ClientUdp.cpp
-  ClientUds.cpp
+  ClientLocal.cpp
   PerformanceTestClient.cpp
   Program.cpp
 )

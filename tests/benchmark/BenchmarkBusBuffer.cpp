@@ -43,8 +43,8 @@ void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channe
 template <typename TypeParam>
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             const std::string& senderName,
-             const std::string& receiverName,
+             const std::string& writerName,
+             const std::string& readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     using TController = std::tuple_element_t<0, TypeParam>;
@@ -59,9 +59,9 @@ void RunTest(benchmark::State& state,
     FillWithRandom(controller);
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Server, connectionKind, senderName, {controller.Convert()}, protocol, transmitterBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Server, connectionKind, writerName, {controller.Convert()}, protocol, transmitterBusBuffer));
     std::unique_ptr<BusBuffer> receiverBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Client, connectionKind, receiverName, {controller.Convert()}, protocol, receiverBusBuffer));
+    MustBeOk(CreateBusBuffer(CoSimType::Client, connectionKind, readerName, {controller.Convert()}, protocol, receiverBusBuffer));
 
     auto count = static_cast<size_t>(state.range(0));
 
@@ -110,69 +110,34 @@ void TcpMessages(benchmark::State& state) {
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
-    std::string senderName = GenerateString("BenchmarkBusSender名前");
-    std::string receiverName = GenerateString("BenchmarkBusReceiver名前");
+    std::string writerName = GenerateString("BenchmarkBusWriter名前");
+    std::string readerName = GenerateString("BenchmarkBusReader名前");
 
-    RunTest<TypeParam>(state, ConnectionKind::Remote, senderName, receiverName, *connectedChannel, *acceptedChannel);
+    RunTest<TypeParam>(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
 template <typename TypeParam>
-void UdsMessages(benchmark::State& state) {
+void LocalMessages(benchmark::State& state) {
     std::string serverName = GenerateString("Server");
 
     std::unique_ptr<ChannelServer> server;
-    MustBeOk(CreateUdsChannelServer(serverName, server));
+    MustBeOk(CreateLocalChannelServer(serverName, server));
 
     std::unique_ptr<Channel> connectedChannel;
-    MustBeOk(TryConnectToUdsChannel(serverName, connectedChannel));
+    MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
     MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
-    std::string senderName = GenerateString("BenchmarkBusSender名前");
-    std::string receiverName = GenerateString("BenchmarkBusReceiver名前");
-
-    RunTest<TypeParam>(state, ConnectionKind::Remote, senderName, receiverName, *connectedChannel, *acceptedChannel);
-}
-
+    std::string writerName = GenerateString("BenchmarkBusWriter名前");
 #ifdef _WIN32
-template <typename TypeParam>
-void LocalMessages(benchmark::State& state) {
-    std::string serverName = GenerateString("Server名前");
-
-    std::unique_ptr<ChannelServer> server;
-    MustBeOk(CreateLocalChannelServer(serverName, server));
-
-    std::unique_ptr<Channel> connectedChannel;
-    MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
-    std::unique_ptr<Channel> acceptedChannel;
-    MustBeOk(server->TryAccept(acceptedChannel));
-
-    std::string name = GenerateString("BenchmarkBus名前");
-
-    RunTest<TypeParam>(state, ConnectionKind::Local, name, name, *connectedChannel, *acceptedChannel);
-}
-
-template <typename TypeParam>
-void RemoteOnLocalMessages(benchmark::State& state) {
-    std::string serverName = GenerateString("Server名前");
-
-    std::unique_ptr<ChannelServer> server;
-    MustBeOk(CreateLocalChannelServer(serverName, server));
-
-    std::unique_ptr<Channel> connectedChannel;
-    MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
-    std::unique_ptr<Channel> acceptedChannel;
-    MustBeOk(server->TryAccept(acceptedChannel));
-
-    std::string senderName = GenerateString("BenchmarkBusSender名前");
-    std::string receiverName = GenerateString("BenchmarkBusReceiver名前");
-
-    RunTest<TypeParam>(state, ConnectionKind::Remote, senderName, receiverName, *connectedChannel, *acceptedChannel);
-}
+    std::string readerName = writerName;  // NOLINT(performance-unnecessary-copy-initialization)
+#else
+    std::string readerName = GenerateString("BenchmarkBusReader名前");
 #endif
+
+    RunTest<TypeParam>(state, ConnectionKind::Local, writerName, readerName, *connectedChannel, *acceptedChannel);
+}
 
 }  // namespace
 
@@ -180,19 +145,9 @@ BENCHMARK_TEMPLATE(TcpMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(TcpMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(TcpMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(TcpMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(UdsMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(UdsMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(UdsMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(UdsMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
-#ifdef _WIN32
 BENCHMARK_TEMPLATE(LocalMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(LocalMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(LocalMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
 BENCHMARK_TEMPLATE(LocalMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(RemoteOnLocalMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(RemoteOnLocalMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(RemoteOnLocalMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(RemoteOnLocalMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
-#endif
 
 #endif

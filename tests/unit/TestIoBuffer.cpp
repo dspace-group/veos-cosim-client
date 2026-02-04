@@ -155,7 +155,9 @@ protected:
 
         thread.join();
 
-        AssertTrue(expectedCallbacks.empty());
+        if (!expectedCallbacks.empty()) {
+            throw std::runtime_error("Not all expected callbacks were called.");
+        }
     }
 };
 

@@ -13,7 +13,7 @@ namespace DsVeosCoSim {
 [[nodiscard]] Result StartupNetwork();
 
 enum class AddressFamily {
-    Uds = 1,
+    Local = 1,
     Ipv4 = 2,
     Ipv6 = 23
 };
@@ -51,7 +51,7 @@ public:
 
     [[nodiscard]] static bool IsIpv4Supported();
     [[nodiscard]] static bool IsIpv6Supported();
-    [[nodiscard]] static bool IsUdsSupported();
+    [[nodiscard]] static bool IsLocalSupported();
 
     void Shutdown() const;
     void Close();

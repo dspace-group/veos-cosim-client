@@ -64,7 +64,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 using AddressInfoPtr = addrinfo*;
 
-[[nodiscard]] std::string GetUdsPath(const std::string& name) {
+[[nodiscard]] std::string GetLocalPath(const std::string& name) {
     std::string fileName = "dSPACE.VEOS.CoSim.";
     fileName.append(name);
 #ifdef _WIN32
@@ -264,8 +264,8 @@ void CloseSocket(SocketHandle socket) {
             return "Ipv4";
         case AddressFamily::Ipv6:
             return "Ipv6";
-        case AddressFamily::Uds:
-            return "Uds";
+        case AddressFamily::Local:
+            return "Local";
     }
 
     return "<Invalid AddressFamily>";
@@ -353,7 +353,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     return isSupported;
 }
 
-[[nodiscard]] bool Socket::IsUdsSupported() {
+[[nodiscard]] bool Socket::IsLocalSupported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -430,7 +430,7 @@ void Socket::Close() {
             protocol = IPPROTO_TCP;
             domain = AF_INET6;
             break;
-        case AddressFamily::Uds:
+        case AddressFamily::Local:
             protocol = 0;
             domain = AF_UNIX;
             break;
@@ -511,7 +511,7 @@ void Socket::Close() {
         return Result::Error;
     }
 
-    std::string path = GetUdsPath(name);
+    std::string path = GetLocalPath(name);
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
@@ -527,12 +527,12 @@ void Socket::Close() {
         return Result::Ok;
     }
 
-    connectedSocket = Socket{socket, AddressFamily::Uds, path};
+    connectedSocket = Socket{socket, AddressFamily::Local, path};
     return Result::Ok;
 }
 
 [[nodiscard]] Result Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
-    if (_addressFamily == AddressFamily::Uds) {
+    if (_addressFamily == AddressFamily::Local) {
         LogError("Not supported for address family.");
         return Result::Error;
     }
@@ -578,7 +578,7 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::Bind(const std::string& name) {
-    if (_addressFamily != AddressFamily::Uds) {
+    if (_addressFamily != AddressFamily::Local) {
         LogError("Not supported for address family.");
         return Result::Error;
     }
@@ -588,7 +588,7 @@ void Socket::Close() {
         return Result::Error;
     }
 
-    _path = GetUdsPath(name);
+    _path = GetLocalPath(name);
 #ifdef _WIN32
     (void)Unlink(_path.c_str());
 #endif
@@ -611,7 +611,7 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::EnableReuseAddress() const {
-    if (_addressFamily == AddressFamily::Uds) {
+    if (_addressFamily == AddressFamily::Local) {
         LogError("Not supported for address family.");
         return Result::Error;
     }

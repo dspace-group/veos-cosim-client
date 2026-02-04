@@ -9,7 +9,6 @@
 
 #include "Helper.h"
 #include "PortMapper.h"
-#include "Protocol.h"
 #include "TestHelper.h"
 
 using namespace DsVeosCoSim;

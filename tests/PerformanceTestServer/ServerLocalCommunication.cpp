@@ -18,13 +18,9 @@ namespace {
     LogTrace("Local communication server is listening ...");
 
     std::unique_ptr<ChannelServer> server;
-#ifdef _WIN32
-    CheckResult(CreateLocalChannelServer(LocalName, server));
-#else
-    CheckResult(CreateUdsChannelServer(LocalName, server));
-#endif
+    CheckResult(CreateLocalChannelServer(LocalChannelName, server));
 
-    SetThreadAffinity(LocalName);
+    SetThreadAffinity(LocalChannelName);
 
     std::array<char, BufferSize> buffer{};
 

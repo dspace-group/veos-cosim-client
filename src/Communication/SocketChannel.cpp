@@ -217,6 +217,12 @@ public:
         return Result::Ok;
     }
 
+    void EndRead() override {
+        if (_readIndex != _endFrameIndex) {
+            throw std::runtime_error("Not all data has been read.");
+        }
+    }
+
 private:
     [[nodiscard]] Result BeginRead() {
         _readIndex = HeaderSize;
@@ -370,18 +376,20 @@ private:
     uint16_t _port{};
 };
 
-class UdsChannelServer final : public ChannelServer {
+#ifndef _WIN32
+
+class LocalChannelServer final : public ChannelServer {
 public:
-    explicit UdsChannelServer(Socket socket) : _listenSocket(std::move(socket)) {
+    explicit LocalChannelServer(Socket socket) : _listenSocket(std::move(socket)) {
     }
 
-    ~UdsChannelServer() override = default;
+    ~LocalChannelServer() override = default;
 
-    UdsChannelServer(const UdsChannelServer&) = delete;
-    UdsChannelServer& operator=(const UdsChannelServer&) = delete;
+    LocalChannelServer(const LocalChannelServer&) = delete;
+    LocalChannelServer& operator=(const LocalChannelServer&) = delete;
 
-    UdsChannelServer(UdsChannelServer&&) = delete;
-    UdsChannelServer& operator=(UdsChannelServer&&) = delete;
+    LocalChannelServer(LocalChannelServer&&) = delete;
+    LocalChannelServer& operator=(LocalChannelServer&&) = delete;
 
     [[nodiscard]] uint16_t GetLocalPort() const override {
         return {};
@@ -402,6 +410,8 @@ private:
     Socket _listenSocket;
 };
 
+#endif
+
 }  // namespace
 
 [[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
@@ -415,22 +425,6 @@ private:
     CheckResult(Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds, connectedSocket));
     if (connectedSocket) {
         CheckResult(connectedSocket->EnableNoDelay());
-        connectedChannel = std::make_unique<SocketChannel>(std::move(*connectedSocket));
-    }
-
-    return Result::Ok;
-}
-
-[[nodiscard]] Result TryConnectToUdsChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
-    CheckResult(StartupNetwork());
-
-    if (!Socket::IsUdsSupported()) {
-        return Result::Ok;
-    }
-
-    std::optional<Socket> connectedSocket{};
-    CheckResult(Socket::TryConnect(name, connectedSocket));
-    if (connectedSocket) {
         connectedChannel = std::make_unique<SocketChannel>(std::move(*connectedSocket));
     }
 
@@ -463,20 +457,40 @@ private:
     return Result::Ok;
 }
 
-[[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
+#ifndef _WIN32
+
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
     CheckResult(StartupNetwork());
 
-    if (!Socket::IsUdsSupported()) {
+    if (!Socket::IsLocalSupported()) {
+        return Result::Ok;
+    }
+
+    std::optional<Socket> connectedSocket{};
+    CheckResult(Socket::TryConnect(name, connectedSocket));
+    if (connectedSocket) {
+        connectedChannel = std::make_unique<SocketChannel>(std::move(*connectedSocket));
+    }
+
+    return Result::Ok;
+}
+
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
+    CheckResult(StartupNetwork());
+
+    if (!Socket::IsLocalSupported()) {
         return Result::Ok;
     }
 
     Socket listenSocket;
-    CheckResult(Socket::Create(AddressFamily::Uds, listenSocket));
+    CheckResult(Socket::Create(AddressFamily::Local, listenSocket));
     CheckResult(listenSocket.Bind(name));
     CheckResult(listenSocket.Listen());
 
-    channelServer = std::make_unique<UdsChannelServer>(std::move(listenSocket));
+    channelServer = std::make_unique<LocalChannelServer>(std::move(listenSocket));
     return Result::Ok;
 }
+
+#endif
 
 }  // namespace DsVeosCoSim

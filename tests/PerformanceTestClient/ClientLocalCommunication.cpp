@@ -15,16 +15,11 @@ using namespace DsVeosCoSim;
 namespace {
 
 [[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-#ifdef _WIN32
     std::unique_ptr<Channel> channel;
-    CheckResult(TryConnectToLocalChannel(LocalName, channel));
-#else
-    std::unique_ptr<Channel> channel;
-    CheckResult(TryConnectToUdsChannel(LocalName, channel));
-#endif
+    CheckResult(TryConnectToLocalChannel(LocalChannelName, channel));
     CheckBoolResult(channel);
 
-    SetThreadAffinity(LocalName);
+    SetThreadAffinity(LocalChannelName);
 
     std::array<char, BufferSize> buffer{};
 

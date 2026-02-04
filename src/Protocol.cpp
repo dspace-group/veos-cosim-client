@@ -19,7 +19,7 @@ constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + size
 constexpr size_t CanControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
 constexpr size_t EthControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + EthAddressLength;
 constexpr size_t LinControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(LinControllerType);
-constexpr size_t FrControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
+constexpr size_t FrControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t);
 constexpr size_t CanMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) + sizeof(CanMessageFlags) + sizeof(uint32_t);
 constexpr size_t EthMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(EthMessageFlags) + sizeof(uint32_t);
 constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) + sizeof(LinMessageFlags) + sizeof(uint32_t);
@@ -79,6 +79,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(messageContainer.id);
     blockReader.Read(messageContainer.flags);
     blockReader.Read(messageContainer.length);
+    blockReader.EndRead();
 
     CheckResult(messageContainer.Check());
 
@@ -96,6 +97,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
+    blockWriter.EndWrite();
     return Result::Ok;
 }
 
@@ -107,6 +109,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(messageContainer.controllerId);
     blockReader.Read(messageContainer.flags);
     blockReader.Read(messageContainer.length);
+    blockReader.EndRead();
 
     CheckResult(messageContainer.Check());
 
@@ -123,6 +126,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
+    blockWriter.EndWrite();
     return Result::Ok;
 }
 
@@ -135,6 +139,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(messageContainer.id);
     blockReader.Read(messageContainer.flags);
     blockReader.Read(messageContainer.length);
+    blockReader.EndRead();
 
     CheckResult(messageContainer.Check());
 
@@ -152,6 +157,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
+    blockWriter.EndWrite();
     return Result::Ok;
 }
 
@@ -174,6 +180,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(messageContainer.id);
     blockReader.Read(messageContainer.flags);
     blockReader.Read(messageContainer.length);
+    blockReader.EndRead();
 
     CheckResult(messageContainer.Check());
 
@@ -191,6 +198,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(messageContainer.flags);
     blockWriter.Write(messageContainer.length);
     blockWriter.Write(messageContainer.data.data(), messageContainer.length);
+    blockWriter.EndWrite();
     return Result::Ok;
 }
 
@@ -229,6 +237,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadError(errorMessage);
@@ -274,6 +283,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(command), "Could not read command.");
+    reader.EndRead();
 
     if (IsProtocolPingTracingEnabled()) {
         LogProtocolEndTraceReadPingOk(command);
@@ -294,6 +304,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::PingOk);
     blockWriter.Write(command);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -320,9 +331,11 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockReader.Read(protocolVersion);
     blockReader.Read(clientMode);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadConnect(protocolVersion, clientMode, serverName, clientName);
@@ -348,6 +361,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(FrameKind::Connect);
     blockWriter.Write(protocolVersion);
     blockWriter.Write(clientMode);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, serverName), "Could not write server name.");
     CheckResultWithMessage(WriteString(writer, clientName), "Could not write client name.");
@@ -361,10 +375,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 }
 
 [[nodiscard]] Result V1::Protocol::ReadConnectOkVersion(ChannelReader& reader, uint32_t& protocolVersion) {
-    constexpr size_t size = sizeof(protocolVersion);
-    BlockReader blockReader;
-    CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read protocolVersion block for ConnectOkVersion frame.");
-    blockReader.Read(protocolVersion);
+    CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocolVersion block for ConnectOkVersion frame.");
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadConnectOkVersion(protocolVersion);
@@ -395,12 +406,14 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(clientMode);
     blockReader.Read(stepSize);
     blockReader.Read(simulationState);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
     CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
     CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadConnectOk(clientMode,
@@ -439,6 +452,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(clientMode);
     blockReader.Read(stepSize);
     blockReader.Read(simulationState);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
     CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
@@ -446,6 +460,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     CheckResultWithMessage(V1::Protocol::ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
     CheckResultWithMessage(V1::Protocol::ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
     CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadConnectOk(clientMode,
@@ -495,6 +510,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(clientMode);
     blockWriter.Write(stepSize);
     blockWriter.Write(simulationState);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
     CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
@@ -544,6 +560,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(clientMode);
     blockWriter.Write(stepSize);
     blockWriter.Write(simulationState);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
     CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
@@ -566,6 +583,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStart(simulationTime);
@@ -586,6 +604,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::Start);
     blockWriter.Write(simulationTime);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -602,6 +621,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStop(simulationTime);
@@ -622,6 +642,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::Stop);
     blockWriter.Write(simulationTime);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -644,6 +665,9 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockReader.Read(simulationTime);
     blockReader.Read(reason);
+    blockReader.EndRead();
+
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadTerminate(simulationTime, reason);
@@ -665,6 +689,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(FrameKind::Terminate);
     blockWriter.Write(simulationTime);
     blockWriter.Write(reason);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -681,6 +706,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadPause(simulationTime);
@@ -701,6 +727,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::Pause);
     blockWriter.Write(simulationTime);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -717,6 +744,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadContinue(simulationTime);
@@ -737,6 +765,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::Continue);
     blockWriter.Write(simulationTime);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -764,6 +793,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     CheckResultWithMessage(deserializeIoData(reader, simulationTime, callbacks), "Could not read IO buffer data.");
     CheckResultWithMessage(deserializeBusMessages(reader, simulationTime, callbacks), "Could not read bus buffer data.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStep(simulationTime);
@@ -787,6 +817,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::Step);
     blockWriter.Write(simulationTime);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(serializeIoData(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(serializeBusMessages(writer), "Could not write bus buffer data.");
@@ -816,6 +847,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockReader.Read(nextSimulationTime);
     blockReader.Read(command);
+    blockReader.EndRead();
 
     if (callbacks.simulationBeginStepCallback) {
         callbacks.simulationBeginStepCallback(nextSimulationTime);
@@ -823,6 +855,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     CheckResultWithMessage(deserializeIoData(reader, nextSimulationTime, callbacks), "Could not read IO buffer data.");
     CheckResultWithMessage(deserializeBusMessages(reader, nextSimulationTime, callbacks), "Could not read bus buffer data.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadStepOk(nextSimulationTime, command);
@@ -848,6 +881,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(FrameKind::StepOk);
     blockWriter.Write(nextSimulationTime);
     blockWriter.Write(command);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(serializeIoData(writer), "Could not write IO buffer data.");
     CheckResultWithMessage(serializeBusMessages(writer), "Could not write bus buffer data.");
@@ -867,6 +901,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     CheckResultWithMessage(V1::Protocol::ReadString(reader, serverName), "Could not read server name.");
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadSetPort(serverName, port);
@@ -898,6 +933,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadUnsetPort(serverName);
@@ -928,6 +964,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadGetPort(serverName);
@@ -958,6 +995,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     }
 
     CheckResultWithMessage(reader.Read(port), "Could not read port.");
+    reader.EndRead();
 
     if (IsProtocolTracingEnabled()) {
         LogProtocolEndTraceReadGetPortOk(port);
@@ -978,6 +1016,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
 
     blockWriter.Write(FrameKind::GetPortOk);
     blockWriter.Write(port);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -1012,6 +1051,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(signal.length);
     blockReader.Read(signal.dataType);
     blockReader.Read(signal.sizeKind);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
     return Result::Ok;
@@ -1025,6 +1065,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(signal.length);
     blockWriter.Write(signal.dataType);
     blockWriter.Write(signal.sizeKind);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
     return Result::Ok;
@@ -1061,6 +1102,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(controller.queueSize);
     blockReader.Read(controller.bitsPerSecond);
     blockReader.Read(controller.flexibleDataRateBitsPerSecond);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
@@ -1076,6 +1118,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(controller.queueSize);
     blockWriter.Write(controller.bitsPerSecond);
     blockWriter.Write(controller.flexibleDataRateBitsPerSecond);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
@@ -1114,6 +1157,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(controller.queueSize);
     blockReader.Read(controller.bitsPerSecond);
     blockReader.Read(controller.macAddress.data(), controller.macAddress.size());
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
@@ -1129,6 +1173,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(controller.queueSize);
     blockWriter.Write(controller.bitsPerSecond);
     blockWriter.Write(controller.macAddress.data(), controller.macAddress.size());
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
@@ -1167,6 +1212,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(controller.queueSize);
     blockReader.Read(controller.bitsPerSecond);
     blockReader.Read(controller.type);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
@@ -1182,6 +1228,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(controller.queueSize);
     blockWriter.Write(controller.bitsPerSecond);
     blockWriter.Write(controller.type);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
@@ -1223,6 +1270,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockReader.Read(controller.id);
     blockReader.Read(controller.queueSize);
     blockReader.Read(controller.bitsPerSecond);
+    blockReader.EndRead();
 
     CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
     CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
@@ -1237,6 +1285,7 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     blockWriter.Write(controller.id);
     blockWriter.Write(controller.queueSize);
     blockWriter.Write(controller.bitsPerSecond);
+    blockWriter.EndWrite();
 
     CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
     CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");

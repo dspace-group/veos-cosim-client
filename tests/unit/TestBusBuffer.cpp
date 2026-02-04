@@ -48,7 +48,6 @@ protected:
         ExpectOk(remoteServer->TryAccept(_remoteReceiverChannel));
         ExpectTrue(_remoteReceiverChannel);
 
-#ifdef _WIN32
         std::string name = GenerateString("LocalChannel名前");
         std::unique_ptr<ChannelServer> localServer;
         ExpectOk(CreateLocalChannelServer(name, localServer));
@@ -58,17 +57,6 @@ protected:
         ExpectTrue(_localSenderChannel);
         ExpectOk(localServer->TryAccept(_localReceiverChannel));
         ExpectTrue(_localReceiverChannel);
-#else
-        std::string name = GenerateString("UdsChannel名前");
-        std::unique_ptr<ChannelServer> localServer;
-        ExpectOk(CreateUdsChannelServer(name, localServer));
-        ExpectTrue(localServer);
-
-        ExpectOk(TryConnectToUdsChannel(name, _localSenderChannel));
-        ExpectTrue(_localSenderChannel);
-        ExpectOk(localServer->TryAccept(_localReceiverChannel));
-        ExpectTrue(_localReceiverChannel);
-#endif
     }
 
     static void TearDownTestSuite() {

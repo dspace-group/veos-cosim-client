@@ -32,7 +32,6 @@ protected:
             ExpectOk(server->TryAccept(_receiverChannel));
             ExpectTrue(_receiverChannel);
         } else {
-#ifdef _WIN32
             std::string name = GenerateString("LocalChannel名前");
             std::unique_ptr<ChannelServer> server;
             ExpectOk(CreateLocalChannelServer(name, server));
@@ -41,17 +40,6 @@ protected:
             ExpectTrue(_senderChannel);
             ExpectOk(server->TryAccept(_receiverChannel));
             ExpectTrue(_receiverChannel);
-#else
-            std::string name = GenerateString("UdsChannel名前");
-            std::unique_ptr<ChannelServer> server;
-            ExpectOk(CreateUdsChannelServer(name, server));
-            ExpectTrue(server);
-
-            ExpectOk(TryConnectToUdsChannel(name, _senderChannel));
-            ExpectTrue(_senderChannel);
-            ExpectOk(server->TryAccept(_receiverChannel));
-            ExpectTrue(_receiverChannel);
-#endif
         }
     }
 
@@ -87,6 +75,7 @@ TEST_P(TestProtocol, SendAndReceiveSize) {
     // Assert
     size_t receiveSize{};
     AssertOk(GetLatestProtocol()->ReadSize(_receiverChannel->GetReader(), receiveSize));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendSize, receiveSize);
 }
 
@@ -103,6 +92,7 @@ TEST_P(TestProtocol, SendAndReceiveLength) {
     // Assert
     uint32_t receiveLength{};
     AssertOk(GetLatestProtocol()->ReadLength(_receiverChannel->GetReader(), receiveLength));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendLength, receiveLength);
 }
 
@@ -119,6 +109,7 @@ TEST_P(TestProtocol, SendAndReceiveSignalId) {
     // Assert
     IoSignalId receiveSignalId{};
     AssertOk(GetLatestProtocol()->ReadSignalId(_receiverChannel->GetReader(), receiveSignalId));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendSignalId, receiveSignalId);
 }
 
@@ -136,6 +127,7 @@ TEST_P(TestProtocol, SendAndReceiveCanMessageContainer) {
     // Assert
     CanMessageContainer receiveCanMessageContainer;
     AssertOk(GetLatestProtocol()->ReadMessage(_receiverChannel->GetReader(), receiveCanMessageContainer));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendCanMessageContainer, receiveCanMessageContainer);
 }
 
@@ -153,6 +145,7 @@ TEST_P(TestProtocol, SendAndReceiveEthMessageContainer) {
     // Assert
     EthMessageContainer receiveEthMessageContainer;
     AssertOk(GetLatestProtocol()->ReadMessage(_receiverChannel->GetReader(), receiveEthMessageContainer));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendEthMessageContainer, receiveEthMessageContainer);
 }
 
@@ -170,6 +163,7 @@ TEST_P(TestProtocol, SendAndReceiveLinMessageContainer) {
     // Assert
     LinMessageContainer receiveLinMessageContainer;
     AssertOk(GetLatestProtocol()->ReadMessage(_receiverChannel->GetReader(), receiveLinMessageContainer));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendLinMessageContainer, receiveLinMessageContainer);
 }
 
@@ -187,6 +181,7 @@ TEST_P(TestProtocol, SendAndReceiveFrMessageContainer) {
     // Assert
     FrMessageContainer receiveFrMessageContainer;
     AssertOk(GetLatestProtocol()->ReadMessage(_receiverChannel->GetReader(), receiveFrMessageContainer));
+    _receiverChannel->GetReader().EndRead();
     AssertEq(sendFrMessageContainer, receiveFrMessageContainer);
 }
 
@@ -199,6 +194,22 @@ TEST_P(TestProtocol, SendAndReceiveOk) {
 
     // Assert
     AssertFrame(FrameKind::Ok);
+    _receiverChannel->GetReader().EndRead();
+}
+
+TEST_P(TestProtocol, SendTwoFramesAtOnce) {
+    // Arrange
+    CustomSetUp(GetParam());
+
+    // Act
+    AssertOk(GetLatestProtocol()->SendOk(_senderChannel->GetWriter()));
+    AssertOk(GetLatestProtocol()->SendOk(_senderChannel->GetWriter()));
+
+    // Assert
+    AssertFrame(FrameKind::Ok);
+    _receiverChannel->GetReader().EndRead();
+    AssertFrame(FrameKind::Ok);
+    _receiverChannel->GetReader().EndRead();
 }
 
 TEST_P(TestProtocol, SendAndReceiveError) {
