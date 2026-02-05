@@ -25,8 +25,8 @@
 #include <unistd.h>
 #endif
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Helper.h"
 
 #ifdef _WIN32
 using socklen_t = int32_t;

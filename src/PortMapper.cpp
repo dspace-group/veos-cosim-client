@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Event.h"
@@ -51,7 +50,7 @@ private:
         while (!_stopEvent.Wait(timeoutInMilliseconds)) {
             std::unique_ptr<Channel> channel;
             if (!IsOk(_server->TryAccept(channel))) {
-                LogError("Could not accept port mapper client.");
+                Logger::Instance().LogError("Could not accept port mapper client.");
                 return;
             }
 
@@ -60,7 +59,7 @@ private:
             }
 
             if (!IsOk(HandleClient(*channel))) {
-                LogTrace("Port mapper client disconnected unexpectedly.");
+                Logger::Instance().LogTrace("Port mapper client disconnected unexpectedly.");
             }
         }
     }
@@ -83,7 +82,7 @@ private:
                 std::string message = "Received unexpected frame '";
                 message.append(ToString(frameKind));
                 message.append("'.");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
         }
     }
@@ -96,7 +95,7 @@ private:
             std::string message = "Get '";
             message.append(name);
             message.append("'");
-            LogTrace(message);
+            Logger::Instance().LogTrace(message);
         }
 
         auto search = _ports.find(name);
@@ -122,7 +121,7 @@ private:
             message.append(name);
             message.append("': ");
             message.append(std::to_string(port));
-            LogTrace(message);
+            Logger::Instance().LogTrace(message);
         }
 
         _ports[name] = port;
@@ -143,7 +142,7 @@ private:
             std::string message = "Unset '";
             message.append(name);
             message.append("'");
-            LogTrace(message);
+            Logger::Instance().LogTrace(message);
         }
 
         _ports.erase(name);
@@ -158,16 +157,16 @@ private:
 
     void DumpEntries() {
         if (_ports.empty()) {
-            LogTrace("No PortMapper Ports.");
+            Logger::Instance().LogTrace("No PortMapper Ports.");
         } else {
-            LogTrace("PortMapper Ports:");
+            Logger::Instance().LogTrace("PortMapper Ports:");
 
             for (auto& [name, port] : _ports) {
                 std::string message = "  '";
                 message.append(name);
                 message.append("': ");
                 message.append(std::to_string(port));
-                LogTrace(message);
+                Logger::Instance().LogTrace(message);
             }
         }
     }
@@ -201,7 +200,7 @@ private:
         message.append("', serverName: '");
         message.append(serverName);
         message.append("')");
-        LogTrace(message);
+        Logger::Instance().LogTrace(message);
     }
 
     std::unique_ptr<Channel> channel;
@@ -222,14 +221,14 @@ private:
         case FrameKind::Error: {
             std::string errorMessage;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage), "Could not read error frame.");
-            LogError(errorMessage);
+            Logger::Instance().LogError(errorMessage);
             return Result::Error;
         }
         default:
             std::string message = "PortMapperGetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            LogError(message);
+            Logger::Instance().LogError(message);
             return Result::Error;
     }
 }
@@ -251,14 +250,14 @@ private:
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
-            LogError(errorString);
+            Logger::Instance().LogError(errorString);
             return Result::Error;
         }
         default:
             std::string message = "PortMapperSetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            LogError(message);
+            Logger::Instance().LogError(message);
             return Result::Error;
     }
 }
@@ -280,14 +279,14 @@ private:
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
-            LogError(errorString);
+            Logger::Instance().LogError(errorString);
             return Result::Error;
         }
         default:
             std::string message = "PortMapperUnsetPort: Received unexpected frame '";
             message.append(ToString(frameKind));
             message.append("'.");
-            LogError(message);
+            Logger::Instance().LogError(message);
             return Result::Error;
     }
 }

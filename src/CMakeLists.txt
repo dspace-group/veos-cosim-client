@@ -17,8 +17,8 @@ target_sources(
   PRIVATE
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
-  Helpers/CoSimHelper.cpp
   Helpers/Environment.cpp
+  Helpers/ProtocolLogger.cpp
   OsAbstraction/OsUtilities.cpp
   OsAbstraction/Socket.cpp
   BusBuffer.cpp

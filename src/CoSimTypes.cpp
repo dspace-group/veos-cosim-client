@@ -11,9 +11,27 @@
 #include <string>
 #include <vector>
 
+#include "OsUtilities.h"
+
 namespace DsVeosCoSim {
 
-extern void LogError(const std::string& message);
+namespace {
+
+[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
+    std::string message = "Error code: ";
+    message.append(std::to_string(errorCode));
+    message.append(". ");
+
+#if _WIN32
+    message.append(GetEnglishErrorMessage(errorCode));
+#else
+    message.append(std::system_category().message(errorCode));
+#endif
+
+    return message;
+}
+
+}  // namespace
 
 namespace {
 
@@ -141,7 +159,7 @@ template <typename T, size_t TSize>
 
 [[nodiscard]] Result CheckCanMessage(uint32_t length) {
     if (length > CanMessageMaxLength) {
-        LogError("CAN message data exceeds maximum length.");
+        Logger::Instance().LogError("CAN message data exceeds maximum length.");
         return Result::InvalidArgument;
     }
 
@@ -194,7 +212,7 @@ template <typename T, size_t TSize>
 
 [[nodiscard]] Result EthMessageCheck(uint32_t length) {
     if (length > EthMessageMaxLength) {
-        LogError("Ethernet message data exceeds maximum length.");
+        Logger::Instance().LogError("Ethernet message data exceeds maximum length.");
         return Result::InvalidArgument;
     }
 
@@ -250,7 +268,7 @@ template <typename T, size_t TSize>
 
 [[nodiscard]] Result LinMessageCheck(uint32_t length) {
     if (length > LinMessageMaxLength) {
-        LogError("LIN message data exceeds maximum length.");
+        Logger::Instance().LogError("LIN message data exceeds maximum length.");
         return Result::InvalidArgument;
     }
 
@@ -303,7 +321,7 @@ template <typename T, size_t TSize>
 
 [[nodiscard]] Result FrMessageCheck(uint32_t length) {
     if (length > FrMessageMaxLength) {
-        LogError("FLEXRAY message data exceeds maximum length.");
+        Logger::Instance().LogError("FLEXRAY message data exceeds maximum length.");
         return Result::InvalidArgument;
     }
 
@@ -311,6 +329,43 @@ template <typename T, size_t TSize>
 }
 
 }  // namespace
+
+void Logger::SetLogCallback(LogCallback logCallback) {
+    _logCallback = std::move(logCallback);
+}
+
+void Logger::LogError(const std::string& message) {
+    if (auto logCallback = _logCallback; logCallback) {
+        logCallback(Severity::Error, message);
+    }
+}
+
+void Logger::LogWarning(const std::string& message) {
+    if (auto logCallback = _logCallback; logCallback) {
+        logCallback(Severity::Warning, message);
+    }
+}
+
+void Logger::LogInfo(const std::string& message) {
+    if (auto logCallback = _logCallback; logCallback) {
+        logCallback(Severity::Info, message);
+    }
+}
+
+void Logger::LogTrace(const std::string& message) {
+    if (auto logCallback = _logCallback; logCallback) {
+        logCallback(Severity::Trace, message);
+    }
+}
+
+void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
+    if (auto logCallback = _logCallback; logCallback) {
+        std::string fullMessage(message);
+        fullMessage.append(" ");
+        fullMessage.append(GetSystemErrorMessage(errorCode));
+        logCallback(Severity::Error, fullMessage);
+    }
+}
 
 [[nodiscard]] std::string ToString(SimulationTime simulationTime) {
     int64_t nanoseconds = simulationTime.count();

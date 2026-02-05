@@ -18,7 +18,6 @@
 #include <emmintrin.h>  // IWYU pragma: keep
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "OsUtilities.h"
@@ -118,14 +117,14 @@ protected:
             if (!_connectionDetected) {
                 _detectionCounter++;
                 if (_detectionCounter == 5000U) {
-                    LogError("Counterpart still not connected after 5 seconds.");
+                    Logger::Instance().LogError("Counterpart still not connected after 5 seconds.");
                     return Result::Error;
                 }
 
                 return Result::Ok;
             }
 
-            LogTrace("Remote endpoint disconnected.");
+            Logger::Instance().LogTrace("Remote endpoint disconnected.");
             return Result::Disconnected;
         }
 
@@ -133,7 +132,7 @@ protected:
             return Result::Ok;
         }
 
-        LogError("Counterpart process is not running anymore.");
+        Logger::Instance().LogError("Counterpart process is not running anymore.");
         return Result::Error;
     }
 

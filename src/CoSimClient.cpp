@@ -10,7 +10,6 @@
 
 #include "BusBuffer.h"
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
 #include "OsUtilities.h"
@@ -42,7 +41,7 @@ public:
 
     [[nodiscard]] Result Connect(const ConnectConfig& connectConfig) override {
         if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
-            LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
+            Logger::Instance().LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
             return Result::InvalidArgument;
         }
 
@@ -147,7 +146,7 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand != Command::None) {
-            LogError("Call to FinishCommand() for last command is missing.");
+            Logger::Instance().LogError("Call to FinishCommand() for last command is missing.");
             return Result::Error;
         }
 
@@ -164,7 +163,7 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand == Command::None) {
-            LogError("Call to PollCommand(...) is missing.");
+            Logger::Instance().LogError("Call to PollCommand(...) is missing.");
             return Result::Error;
         }
 
@@ -212,7 +211,7 @@ public:
         std::string message = "Unknown terminate reason '";
         message.append(ToString(terminateReason));
         message.append("'.");
-        LogError(message);
+        Logger::Instance().LogError(message);
         return Result::Error;
     }
 
@@ -469,7 +468,7 @@ private:
             std::string message = "Could not connect to local dSPACE VEOS CoSim server '";
             message.append(_serverName);
             message.append("'.");
-            LogTrace(message);
+            Logger::Instance().LogTrace(message);
             return Result::Error;
         }
 
@@ -484,7 +483,7 @@ private:
             message.append("' at ");
             message.append(_remoteIpAddress);
             message.append(" ...");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
             CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort, _protocol), "Could not get port from port mapper.");
         }
 
@@ -494,7 +493,7 @@ private:
             message.append(":");
             message.append(std::to_string(_remotePort));
             message.append(" ...");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
         } else {
             std::string message = "Connecting to dSPACE VEOS CoSim server '";
             message.append(_serverName);
@@ -503,7 +502,7 @@ private:
             message.append(":");
             message.append(std::to_string(_remotePort));
             message.append(" ...");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
         }
 
         CheckResult(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel));
@@ -555,7 +554,7 @@ private:
             std::string message = "Connected to local dSPACE VEOS CoSim server '";
             message.append(_serverName);
             message.append("'.");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
         } else {
             if (_serverName.empty()) {
                 std::string message = "Connected to dSPACE VEOS CoSim server at ";
@@ -563,7 +562,7 @@ private:
                 message.append(":");
                 message.append(std::to_string(_remotePort));
                 message.append(".");
-                LogInfo(message);
+                Logger::Instance().LogInfo(message);
             } else {
                 std::string message = "Connected to dSPACE VEOS CoSim server '";
                 message.append(_serverName);
@@ -572,7 +571,7 @@ private:
                 message.append(":");
                 message.append(std::to_string(_remotePort));
                 message.append(".");
-                LogInfo(message);
+                Logger::Instance().LogInfo(message);
             }
         }
 
@@ -838,7 +837,7 @@ private:
 
     [[nodiscard]] Result EnsureIsConnected() const {
         if (!_isConnected) {
-            LogError("Not connected.");
+            Logger::Instance().LogError("Not connected.");
             return Result::Error;
         }
 
@@ -854,11 +853,11 @@ private:
                 _responderMode = ResponderMode::Blocking;
                 return Result::Ok;
             case ResponderMode::NonBlocking:
-                LogError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
+                Logger::Instance().LogError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
                 return Result::Error;
         }
 
-        LogError("Invalid responder mode.");
+        Logger::Instance().LogError("Invalid responder mode.");
         return Result::Error;
     }
 
@@ -871,16 +870,16 @@ private:
                 _responderMode = ResponderMode::NonBlocking;
                 return Result::Ok;
             case ResponderMode::Blocking:
-                LogError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
+                Logger::Instance().LogError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
                 return Result::Error;
         }
 
-        LogError("Invalid responder mode.");
+        Logger::Instance().LogError("Invalid responder mode.");
         return Result::Error;
     }
 
     void CloseConnection() {
-        LogWarning("dSPACE VEOS CoSim server disconnected.");
+        Logger::Instance().LogWarning("dSPACE VEOS CoSim server disconnected.");
 
         _isConnected = false;
 
@@ -893,24 +892,24 @@ private:
         std::string message = "Received unexpected frame '";
         message.append(ToString(frameKind));
         message.append("'.");
-        LogError(message);
+        Logger::Instance().LogError(message);
         return Result::Error;
     }
 
     [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
         if (length > CanMessageMaxLength) {
-            LogError("CAN message data exceeds maximum length.");
+            Logger::Instance().LogError("CAN message data exceeds maximum length.");
             return Result::InvalidArgument;
         }
 
         if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
             if (length > 8) {
-                LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
+                Logger::Instance().LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
                 return Result::InvalidArgument;
             }
 
             if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-                LogError(
+                Logger::Instance().LogError(
                     "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format "
                     "flag.");
                 return Result::InvalidArgument;

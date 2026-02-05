@@ -13,10 +13,10 @@
 #include <vector>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Protocol.h"
+#include "ProtocolLogger.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -55,7 +55,7 @@ public:
                 std::string message = "Invalid length 0 for IO signal '";
                 message.append(signal.name);
                 message.append("'.");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -64,7 +64,7 @@ public:
                 std::string message = "Invalid data type for IO signal '";
                 message.append(signal.name);
                 message.append("'.");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -73,7 +73,7 @@ public:
                 std::string message = "Duplicated IO signal id ";
                 message.append(ToString(signal.id));
                 message.append(".");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -166,7 +166,7 @@ protected:
         std::string message = "IO signal id '";
         message.append(ToString(signalId));
         message.append("' is unknown.");
-        LogError(message);
+        Logger::Instance().LogError(message);
         return Result::Error;
     }
 
@@ -238,7 +238,7 @@ protected:
                 std::string message = "Length of variable sized IO signal '";
                 message.append(metaData->info.name);
                 message.append("' exceeds max size.");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -259,7 +259,7 @@ protected:
                 message.append(" but was ");
                 message.append(std::to_string(length));
                 message.append(".");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
         }
@@ -349,7 +349,7 @@ protected:
                     std::string message = "Length of variable sized IO signal '";
                     message.append(metaData->info.name);
                     message.append("' exceeds max size.");
-                    LogError(message);
+                    Logger::Instance().LogError(message);
                     return Result::Error;
                 }
 
@@ -472,7 +472,7 @@ protected:
                 std::string message = "Length of variable sized IO signal '";
                 message.append(metaData->info.name);
                 message.append("' exceeds max size.");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -486,7 +486,7 @@ protected:
                 message.append(" but was ");
                 message.append(std::to_string(length));
                 message.append(".");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
         }

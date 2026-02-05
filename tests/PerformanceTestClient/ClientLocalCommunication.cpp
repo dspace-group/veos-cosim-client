@@ -5,7 +5,7 @@
 #include <string>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
+#include "Helper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestClient.h"
 #include "PerformanceTestHelper.h"

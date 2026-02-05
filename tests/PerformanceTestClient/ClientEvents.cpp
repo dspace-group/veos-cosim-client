@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 
-#include "CoSimHelper.h"
+#include "Helper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 

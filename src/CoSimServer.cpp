@@ -11,7 +11,6 @@
 
 #include "BusBuffer.h"
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "IoBuffer.h"
 #include "OsUtilities.h"
@@ -99,7 +98,7 @@ public:
             std::string message = "Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '";
             message.append(_serverName);
             message.append("' ...");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
 
             while (!IsOk(AcceptChannel())) {
                 std::this_thread::sleep_for(milliseconds(100));
@@ -338,7 +337,7 @@ private:
     }
 
     [[nodiscard]] Result CloseConnection() {
-        LogWarning("dSPACE VEOS CoSim client disconnected.");
+        Logger::Instance().LogWarning("dSPACE VEOS CoSim client disconnected.");
 
         _channel.reset();
 
@@ -372,7 +371,7 @@ private:
         if (port != 0) {
             if (_registerAtPortMapper) {
                 if (!IsOk(PortMapperSetPort(_serverName, port, _protocol))) {
-                    LogTrace("Could not set port in port mapper.");
+                    Logger::Instance().LogTrace("Could not set port in port mapper.");
                 }
             }
 
@@ -383,7 +382,7 @@ private:
             message.append(":");
             message.append(std::to_string(port));
             message.append(".");
-            LogInfo(message);
+            Logger::Instance().LogInfo(message);
         }
 
         return Result::Ok;
@@ -488,23 +487,23 @@ private:
                 std::string message = "dSPACE VEOS CoSim client at ";
                 message.append(remoteAddress);
                 message.append(" connected.");
-                LogInfo(message);
+                Logger::Instance().LogInfo(message);
             } else {
                 std::string message = "dSPACE VEOS CoSim client '";
                 message.append(clientName);
                 message.append("' at ");
                 message.append(remoteAddress);
                 message.append(" connected.");
-                LogInfo(message);
+                Logger::Instance().LogInfo(message);
             }
         } else {
             if (clientName.empty()) {
-                LogInfo("Local dSPACE VEOS CoSim client connected.");
+                Logger::Instance().LogInfo("Local dSPACE VEOS CoSim client connected.");
             } else {
                 std::string message = "Local dSPACE VEOS CoSim client '";
                 message.append(clientName);
                 message.append("' connected.");
-                LogInfo(message);
+                Logger::Instance().LogInfo(message);
             }
         }
 
@@ -578,7 +577,7 @@ private:
     [[nodiscard]] Result OnError() const {
         std::string errorMessage;
         CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorMessage), "Could not read error frame.");
-        LogError(errorMessage);
+        Logger::Instance().LogError(errorMessage);
         return Result::Error;
     }
 
@@ -613,7 +612,7 @@ private:
         std::string message = "Received unexpected frame '";
         message.append(ToString(frameKind));
         message.append("'.");
-        LogError(message);
+        Logger::Instance().LogError(message);
         return Result::Error;
     }
 

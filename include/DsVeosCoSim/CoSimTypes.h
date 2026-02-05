@@ -60,6 +60,23 @@ namespace DsVeosCoSim {
         }                         \
     } while (0)
 
+#define CheckResultWithMessage(result, message)   \
+    do {                                          \
+        Result _result_ = (result);               \
+        if (!IsOk(_result_)) {                    \
+            Logger::Instance().LogTrace(message); \
+            return _result_;                      \
+        }                                         \
+    } while (0)
+
+#define CheckBoolWithMessage(result, message)     \
+    do {                                          \
+        if (!(result)) {                          \
+            Logger::Instance().LogTrace(message); \
+            return Result::Error;                 \
+        }                                         \
+    } while (0)
+
 constexpr uint32_t CanMessageMaxLength = 64U;
 constexpr uint32_t EthMessageMaxLength = 9018U;
 constexpr uint32_t LinMessageMaxLength = 8U;
@@ -101,6 +118,30 @@ using LinMessageContainerReceivedCallback =
     std::function<void(SimulationTime simulationTime, const LinController& linController, const LinMessageContainer& linMessageContainer)>;
 using FrMessageContainerReceivedCallback =
     std::function<void(SimulationTime simulationTime, const FrController& frController, const FrMessageContainer& frMessageContainer)>;
+
+class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
+private:
+    Logger() {
+    }
+
+    ~Logger() = default;
+
+public:
+    static Logger& Instance() {
+        static Logger instance;
+        return instance;
+    }
+
+    void SetLogCallback(LogCallback logCallback);
+    void LogError(const std::string& message);
+    void LogWarning(const std::string& message);
+    void LogInfo(const std::string& message);
+    void LogTrace(const std::string& message);
+    void LogSystemError(const std::string& message, int32_t errorCode);
+
+private:
+    LogCallback _logCallback;
+};
 
 enum class Result : uint32_t {
     Ok,
@@ -625,7 +666,5 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value);
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator);
-
-void SetLogCallback(LogCallback logCallback);
 
 }  // namespace DsVeosCoSim

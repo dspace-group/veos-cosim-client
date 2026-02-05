@@ -13,10 +13,10 @@
 #include <vector>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Protocol.h"
+#include "ProtocolLogger.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -66,7 +66,7 @@ public:
                 std::string message = "Duplicated controller id ";
                 message.append(ToString(controller.id));
                 message.append(".");
-                LogError(message);
+                Logger::Instance().LogError(message);
                 return Result::Error;
             }
 
@@ -174,7 +174,7 @@ protected:
         std::string message = "Controller id ";
         message.append(ToString(controllerId));
         message.append(" is unknown.");
-        LogError(message);
+        Logger::Instance().LogError(message);
         return Result::Error;
     }
 
@@ -229,7 +229,7 @@ protected:
                 std::string warningMessage = "Transmit buffer for controller '";
                 warningMessage.append(extension->info.name);
                 warningMessage.append("' is full. Messages are dropped.");
-                LogWarning(warningMessage);
+                Logger::Instance().LogWarning(warningMessage);
                 extension->warningSent = true;
             }
 
@@ -348,7 +348,7 @@ protected:
                     std::string warningMessage = "Receive buffer for controller '";
                     warningMessage.append(extension->info.name);
                     warningMessage.append("' is full. Messages are dropped.");
-                    LogWarning(warningMessage);
+                    Logger::Instance().LogWarning(warningMessage);
                     extension->warningSent = true;
                 }
 
@@ -530,7 +530,7 @@ protected:
                 std::string warningMessage = "Transmit buffer for controller '";
                 warningMessage.append(extension->info.name);
                 warningMessage.append("' is full. Messages are dropped.");
-                LogWarning(warningMessage);
+                Logger::Instance().LogWarning(warningMessage);
                 extension->warningSent = true;
             }
 

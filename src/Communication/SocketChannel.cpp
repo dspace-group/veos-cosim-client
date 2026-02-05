@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Socket.h"
 
@@ -264,7 +263,7 @@ private:
                 _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
 
                 if (_endFrameIndex > BufferSize) {
-                    LogError("Protocol error. The buffer size is too small.");
+                    Logger::Instance().LogError("Protocol error. The buffer size is too small.");
                     return Result::Error;
                 }
 

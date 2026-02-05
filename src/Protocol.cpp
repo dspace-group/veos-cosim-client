@@ -8,11 +8,12 @@
 #include <vector>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
+#include "ProtocolLogger.h"
 
 namespace DsVeosCoSim {
+
 namespace {
 
 constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + sizeof(DataType) + sizeof(SizeKind);

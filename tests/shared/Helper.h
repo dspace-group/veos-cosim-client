@@ -9,7 +9,6 @@
 #include <fmt/format.h>
 
 #include "BusBuffer.h"    // IWYU pragma: keep
-#include "CoSimHelper.h"  // IWYU pragma: keep
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Socket.h"
 
@@ -73,6 +72,11 @@ template <typename... T>
 void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
     OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
 }
+
+void LogError(const std::string& message);
+void LogWarning(const std::string& message);
+void LogInfo(const std::string& message);
+void LogTrace(const std::string& message);
 
 void InitializeOutput();
 
