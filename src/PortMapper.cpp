@@ -23,8 +23,8 @@ constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 class PortMapperServerImpl final : public PortMapperServer {
 public:
-    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, const std::shared_ptr<IProtocol>& protocol)
-        : _server(std::move(channelServer)), _protocol(protocol) {
+    explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol)
+        : _server(std::move(channelServer)), _protocol(std::move(protocol)) {
         _thread = std::thread([this] {
             RunPortMapperServer();
         });
@@ -176,24 +176,22 @@ private:
     std::unique_ptr<ChannelServer> _server;
     std::thread _thread;
     Event _stopEvent;
-    std::shared_ptr<IProtocol> _protocol;
+    std::unique_ptr<IProtocol> _protocol;
 };
 
 }  // namespace
 
-[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
-                                            const std::shared_ptr<IProtocol>& protocol,
-                                            std::unique_ptr<PortMapperServer>& portMapperServer) {
+[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer) {
     std::unique_ptr<ChannelServer> channelServer;
     CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
-    portMapperServer = std::make_unique<PortMapperServerImpl>(std::move(channelServer), protocol);
+
+    std::unique_ptr<IProtocol> protocol;
+    CheckResult(MakeProtocol(V1_VERSION, protocol));
+    portMapperServer = std::make_unique<PortMapperServerImpl>(std::move(channelServer), std::move(protocol));
     return Result::Ok;
 }
 
-[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress,
-                                       const std::string& serverName,
-                                       uint16_t& port,
-                                       const std::shared_ptr<IProtocol>& protocol) {
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
         std::string message = "PortMapperGetPort(ipAddress: '";
         message.append(ipAddress);
@@ -206,6 +204,9 @@ private:
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
+
+    std::unique_ptr<IProtocol> protocol;
+    CheckResult(MakeProtocol(V1_VERSION, protocol));
 
     CheckResultWithMessage(protocol->SendGetPort(channel->GetWriter(), serverName), "Could not send get port frame.");
 
@@ -233,10 +234,13 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, const std::shared_ptr<IProtocol>& protocol) {
+[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
+
+    std::unique_ptr<IProtocol> protocol;
+    CheckResult(MakeProtocol(V1_VERSION, protocol));
 
     CheckResultWithMessage(protocol->SendSetPort(channel->GetWriter(), name, port), "Could not send set port frame.");
 
@@ -262,10 +266,13 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol>& protocol) {
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
+
+    std::unique_ptr<IProtocol> protocol;
+    CheckResult(MakeProtocol(V1_VERSION, protocol));
 
     CheckResultWithMessage(protocol->SendUnsetPort(channel->GetWriter(), name), "Could not send unset port frame.");
 

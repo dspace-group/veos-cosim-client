@@ -1325,31 +1325,19 @@ constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId
     return CoSimProtocolVersion;
 }
 
-FactoryResult MakeProtocol(uint32_t negotiatedVersion) {
-    FactoryResult r{};
-
+[[nodiscard]] Result MakeProtocol(uint32_t negotiatedVersion, std::unique_ptr<IProtocol>& protocol) {
     if (negotiatedVersion >= V2_VERSION) {
-        auto p = std::make_shared<V2::Protocol>();
-        if (!p) {
-            r.error = FactoryError::ConstructionFailed;
-            return r;
-        }
-        r.protocol = std::move(p);
-        return r;
+        protocol = std::make_unique<V2::Protocol>();
+        return Result::Ok;
     }
 
     if (negotiatedVersion >= V1_VERSION) {
-        auto p = std::make_shared<V1::Protocol>();
-        if (!p) {
-            r.error = FactoryError::ConstructionFailed;
-            return r;
-        }
-        r.protocol = std::move(p);
-        return r;
+        protocol = std::make_unique<V1::Protocol>();
+        return Result::Ok;
     }
 
-    r.error = FactoryError::UnsupportedVersion;
-    return r;
+    Logger::Instance().LogError("Unsupported protocol version: " + std::to_string(negotiatedVersion) + ".");
+    return Result::Error;
 }
 
 }  // namespace DsVeosCoSim

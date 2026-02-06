@@ -61,13 +61,10 @@ public:
         _callbacks.frMessageContainerReceivedCallback = config.frMessageContainerReceivedCallback;
         _callbacks.ethMessageContainerReceivedCallback = config.ethMessageContainerReceivedCallback;
 
-        FactoryResult result = MakeProtocol(V1_VERSION);
-        if (result.error == FactoryError::None && result.protocol) {
-            _protocol = std::move(result.protocol);
-        }
+        CheckResult(MakeProtocol(V1_VERSION, _protocol));
 
         if (config.startPortMapper) {
-            CheckResult(CreatePortMapperServer(_enableRemoteAccess, _protocol, _portMapperServer));
+            CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
         }
 
         CheckResult(StartAccepting());
@@ -370,7 +367,7 @@ private:
 
         if (port != 0) {
             if (_registerAtPortMapper) {
-                if (!IsOk(PortMapperSetPort(_serverName, port, _protocol))) {
+                if (!IsOk(PortMapperSetPort(_serverName, port))) {
                     Logger::Instance().LogTrace("Could not set port in port mapper.");
                 }
             }
@@ -390,7 +387,7 @@ private:
 
     void StopAccepting() {
         if (_registerAtPortMapper) {
-            (void)PortMapperUnsetPort(_serverName, _protocol);
+            (void)PortMapperUnsetPort(_serverName);
         }
 
         if (_tcpChannelServer) {
@@ -441,10 +438,7 @@ private:
         }
 
         if (_protocol->GetVersion() != CoSimProtocolVersion) {
-            FactoryResult result = MakeProtocol(CoSimProtocolVersion);
-            if (result.error == FactoryError::None && result.protocol) {
-                _protocol = std::move(result.protocol);
-            }
+            CheckResult(MakeProtocol(CoSimProtocolVersion, _protocol));
         }
 
         CheckResultWithMessage(_protocol->SendConnectOk(_channel->GetWriter(),
@@ -462,7 +456,7 @@ private:
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
         std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-        CheckResult(CreateIoBuffer(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, _protocol, _ioBuffer));
+        CheckResult(CreateIoBuffer(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, *_protocol, _ioBuffer));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
@@ -475,7 +469,7 @@ private:
                                     ethControllersExtern,
                                     linControllersExtern,
                                     frControllersExtern,
-                                    _protocol,
+                                    *_protocol,
                                     _busBuffer));
 
         StopAccepting();
@@ -618,7 +612,7 @@ private:
 
     std::unique_ptr<Channel> _channel;
 
-    std::shared_ptr<IProtocol> _protocol;
+    std::unique_ptr<IProtocol> _protocol;
 
     uint16_t _localPort{};
     bool _enableRemoteAccess{};

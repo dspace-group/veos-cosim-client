@@ -174,7 +174,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busBuffer);
 }
@@ -183,7 +183,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busBuffer);
 }
@@ -192,7 +192,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busBuffer);
 }
@@ -201,7 +201,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<FrController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
 }

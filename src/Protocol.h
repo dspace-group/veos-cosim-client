@@ -21,6 +21,7 @@ public:
     IProtocol& operator=(const IProtocol&) = default;
     IProtocol& operator=(IProtocol&&) = default;
     virtual ~IProtocol() = default;
+
     [[nodiscard]] virtual Result ReadSize(ChannelReader& reader, size_t& size) = 0;
     [[nodiscard]] virtual Result WriteSize(ChannelWriter& writer, size_t size) = 0;
 
@@ -352,21 +353,10 @@ protected:
 
 }  // namespace V2
 
-enum class FactoryError {
-    None,
-    UnsupportedVersion,
-    ConstructionFailed
-};
-
-struct FactoryResult {
-    std::shared_ptr<DsVeosCoSim::V1::Protocol> protocol;
-    FactoryError error{FactoryError::None};
-};
-
 constexpr uint32_t V1_VERSION = V1::Protocol::CoSimProtocolVersion;  // 0x10000U
 constexpr uint32_t V2_VERSION = V2::Protocol::CoSimProtocolVersion;  // 0x20000U
 constexpr uint32_t LATEST_VERSION = V2_VERSION;
 
-FactoryResult MakeProtocol(uint32_t negotiatedVersion);
+[[nodiscard]] Result MakeProtocol(uint32_t negotiatedVersion, std::unique_ptr<IProtocol>& protocol);
 
 }  // namespace DsVeosCoSim

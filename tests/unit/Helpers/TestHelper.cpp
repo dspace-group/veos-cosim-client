@@ -11,15 +11,12 @@
 #include <thread>
 
 #include "Helper.h"
-#include "Protocol.h"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
 constexpr uint64_t BigNumber = 0x1000000;
-
-std::shared_ptr<IProtocol> _protocol;
 
 }  // namespace
 
@@ -242,16 +239,3 @@ void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::un
 
     thread.join();
 }
-
-std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol() {
-    if (_protocol) {
-        return _protocol;
-    }
-
-    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
-    if (result.error == FactoryError::None && result.protocol) {
-        _protocol = std::move(result.protocol);
-    }
-    return _protocol;
-
-}  // namespace

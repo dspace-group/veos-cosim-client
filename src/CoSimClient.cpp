@@ -56,10 +56,7 @@ public:
         _clientName = connectConfig.clientName;
         _remotePort = connectConfig.remotePort;
 
-        FactoryResult result = MakeProtocol(V1_VERSION);
-        if (result.error == FactoryError::None && result.protocol) {
-            _protocol = std::move(result.protocol);
-        }
+        CheckResult(MakeProtocol(V1_VERSION, _protocol));
 
         if (!connectConfig.serverName.empty() && _remoteIpAddress.empty() && (connectConfig.remotePort == 0)) {
             if (!IsOk(LocalConnect())) {
@@ -484,7 +481,7 @@ private:
             message.append(_remoteIpAddress);
             message.append(" ...");
             Logger::Instance().LogInfo(message);
-            CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort, _protocol), "Could not get port from port mapper.");
+            CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort), "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
@@ -523,10 +520,7 @@ private:
         CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(), serverProtocolVersion), "Could not read protocol version.");
 
         if (_protocol->GetVersion() != serverProtocolVersion) {
-            FactoryResult result = MakeProtocol(serverProtocolVersion);
-            if (result.error == FactoryError::None && result.protocol) {
-                _protocol = std::move(result.protocol);
-            }
+            CheckResult(MakeProtocol(serverProtocolVersion, _protocol));
         }
 
         Mode mode{};
@@ -575,7 +569,7 @@ private:
             }
         }
 
-        CheckResult(CreateIoBuffer(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, _protocol, _ioBuffer));
+        CheckResult(CreateIoBuffer(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _ioBuffer));
 
         CheckResult(CreateBusBuffer(CoSimType::Client,
                                     _connectionKind,
@@ -584,7 +578,7 @@ private:
                                     _ethControllersExtern,
                                     _linControllersExtern,
                                     _frControllersExtern,
-                                    _protocol,
+                                    *_protocol,
                                     _busBuffer));
 
         _isConnected = true;
@@ -922,7 +916,7 @@ private:
     std::unique_ptr<Channel> _channel;
     ConnectionKind _connectionKind = ConnectionKind::Remote;
 
-    std::shared_ptr<IProtocol> _protocol;
+    std::unique_ptr<IProtocol> _protocol;
 
     bool _isConnected{};
     Callbacks _callbacks{};
