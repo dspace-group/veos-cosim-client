@@ -64,7 +64,7 @@ protected:
     void SetUp() override {
         ClearLastMessage();
 
-        AssertOk(MakeProtocol(LATEST_VERSION, _protocol));
+        AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 };
 
@@ -120,7 +120,7 @@ protected:
     void SetUp() override {
         ClearLastMessage();
 
-        AssertOk(MakeProtocol(LATEST_VERSION, _protocol));
+        AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
     static void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {

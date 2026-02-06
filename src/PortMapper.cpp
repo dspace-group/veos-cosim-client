@@ -186,7 +186,7 @@ private:
     CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
 
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(MakeProtocol(V1_VERSION, protocol));
+    CheckResult(CreateProtocol(ProtocolVersion1, protocol));
     portMapperServer = std::make_unique<PortMapperServerImpl>(std::move(channelServer), std::move(protocol));
     return Result::Ok;
 }
@@ -206,7 +206,7 @@ private:
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(MakeProtocol(V1_VERSION, protocol));
+    CheckResult(CreateProtocol(ProtocolVersion1, protocol));
 
     CheckResultWithMessage(protocol->SendGetPort(channel->GetWriter(), serverName), "Could not send get port frame.");
 
@@ -240,7 +240,7 @@ private:
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(MakeProtocol(V1_VERSION, protocol));
+    CheckResult(CreateProtocol(ProtocolVersion1, protocol));
 
     CheckResultWithMessage(protocol->SendSetPort(channel->GetWriter(), name, port), "Could not send set port frame.");
 
@@ -272,7 +272,7 @@ private:
     CheckBoolWithMessage(channel, "Could not connect to port mapper.");
 
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(MakeProtocol(V1_VERSION, protocol));
+    CheckResult(CreateProtocol(ProtocolVersion1, protocol));
 
     CheckResultWithMessage(protocol->SendUnsetPort(channel->GetWriter(), name), "Could not send unset port frame.");
 

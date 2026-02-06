@@ -61,7 +61,7 @@ public:
         _callbacks.frMessageContainerReceivedCallback = config.frMessageContainerReceivedCallback;
         _callbacks.ethMessageContainerReceivedCallback = config.ethMessageContainerReceivedCallback;
 
-        CheckResult(MakeProtocol(V1_VERSION, _protocol));
+        CheckResult(CreateProtocol(ProtocolVersion1, _protocol));
 
         if (config.startPortMapper) {
             CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
@@ -428,17 +428,17 @@ private:
     [[nodiscard]] Result OnHandleConnect() {
         uint32_t clientProtocolVersion{};
         std::string clientName;
-        uint32_t CoSimProtocolVersion = DsVeosCoSim::V1_VERSION;
+        uint32_t CoSimProtocolVersion = DsVeosCoSim::ProtocolVersion1;
         CheckResultWithMessage(WaitForConnectFrame(clientProtocolVersion, clientName), "Could not receive connect frame.");
 
-        if (clientProtocolVersion >= DsVeosCoSim::LATEST_VERSION) {
-            CoSimProtocolVersion = DsVeosCoSim::LATEST_VERSION;
+        if (clientProtocolVersion >= DsVeosCoSim::ProtocolVersionLatest) {
+            CoSimProtocolVersion = DsVeosCoSim::ProtocolVersionLatest;
         } else {
             CoSimProtocolVersion = clientProtocolVersion;
         }
 
         if (_protocol->GetVersion() != CoSimProtocolVersion) {
-            CheckResult(MakeProtocol(CoSimProtocolVersion, _protocol));
+            CheckResult(CreateProtocol(CoSimProtocolVersion, _protocol));
         }
 
         CheckResultWithMessage(_protocol->SendConnectOk(_channel->GetWriter(),

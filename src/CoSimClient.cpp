@@ -56,7 +56,7 @@ public:
         _clientName = connectConfig.clientName;
         _remotePort = connectConfig.remotePort;
 
-        CheckResult(MakeProtocol(V1_VERSION, _protocol));
+        CheckResult(CreateProtocol(ProtocolVersion1, _protocol));
 
         if (!connectConfig.serverName.empty() && _remoteIpAddress.empty() && (connectConfig.remotePort == 0)) {
             if (!IsOk(LocalConnect())) {
@@ -510,7 +510,7 @@ private:
     }
 
     [[nodiscard]] Result SendConnectRequest() {
-        CheckResultWithMessage(_protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::LATEST_VERSION, {}, _serverName, _clientName),
+        CheckResultWithMessage(_protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::ProtocolVersionLatest, {}, _serverName, _clientName),
                                "Could not send connect frame.");
         return Result::Ok;
     }
@@ -520,7 +520,7 @@ private:
         CheckResultWithMessage(_protocol->ReadConnectOkVersion(_channel->GetReader(), serverProtocolVersion), "Could not read protocol version.");
 
         if (_protocol->GetVersion() != serverProtocolVersion) {
-            CheckResult(MakeProtocol(serverProtocolVersion, _protocol));
+            CheckResult(CreateProtocol(serverProtocolVersion, _protocol));
         }
 
         Mode mode{};

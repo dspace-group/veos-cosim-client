@@ -51,7 +51,7 @@ void RunTest(benchmark::State& state,
     using TMessageContainer = std::tuple_element_t<2, TypeParam>;
 
     std::unique_ptr<IProtocol> protocol;
-    MustBeOk(MakeProtocol(DsVeosCoSim::LATEST_VERSION, protocol));
+    MustBeOk(CreateProtocol(DsVeosCoSim::ProtocolVersionLatest, protocol));
 
     TController controller{};
     FillWithRandom(controller);

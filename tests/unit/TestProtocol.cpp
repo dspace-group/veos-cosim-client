@@ -44,7 +44,7 @@ protected:
             ExpectTrue(_receiverChannel);
         }
 
-        AssertOk(MakeProtocol(LATEST_VERSION, _protocol));
+        AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
     void TearDown() override {

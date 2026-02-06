@@ -319,7 +319,7 @@ TYPED_TEST(TestBusBuffer, InitializeOneController) {
     std::unique_ptr<BusBuffer> busBuffer;
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     // Act and assert
     AssertOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer));
@@ -348,7 +348,7 @@ TYPED_TEST(TestBusBuffer, InitializeMultipleControllers) {
     std::unique_ptr<BusBuffer> busBuffer;
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     // Act and assert
     AssertOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, busBuffer));
@@ -371,7 +371,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainer) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer));
@@ -401,7 +401,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessage) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer));
@@ -433,7 +433,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsFull) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer));
@@ -474,7 +474,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFull) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer));
@@ -525,7 +525,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsOnlyFullForSpecifi
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, busBuffer));
@@ -571,7 +571,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsOnlyFullForSpecificControll
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, busBuffer));
@@ -622,7 +622,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageContainerWhenBufferIsFullForOtherContro
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, busBuffer));
@@ -665,7 +665,7 @@ TYPED_TEST(TestBusBuffer, TransmitMessageWhenBufferIsFullForOtherController) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> busBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, busBuffer));
@@ -708,7 +708,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageContainerOnEmptyBuffer) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -741,7 +741,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBuffer) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -774,7 +774,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageContainerOnEmptyBufferByEvent) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -805,7 +805,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMessageOnEmptyBufferByEvent) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -836,7 +836,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainer) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -878,7 +878,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -922,7 +922,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainerByEvent) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -960,7 +960,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageByEvent) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -1005,7 +1005,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessageContainers) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, senderBusBuffer));
@@ -1066,7 +1066,7 @@ TYPED_TEST(TestBusBuffer, ReceiveMultipleTransmittedMessages) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, senderBusBuffer));
@@ -1133,7 +1133,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainersByEventWithTransfer
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, senderBusBuffer));
@@ -1185,7 +1185,7 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessagesByEventWithTransfer) {
     TController controller2 = controllerContainer2.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller1, controller2}, *protocol, senderBusBuffer));
@@ -1238,7 +1238,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageContainer) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -1282,7 +1282,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessage) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -1328,7 +1328,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageContainerByEvent
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));
@@ -1370,7 +1370,7 @@ TYPED_TEST(TestBusBuffer, DoNotReceiveNotFullyTransmittedMessageByEvent) {
     TController controller = controllerContainer.Convert();
 
     std::unique_ptr<IProtocol> protocol;
-    AssertOk(MakeProtocol(LATEST_VERSION, protocol));
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<BusBuffer> senderBusBuffer;
     ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, senderBusBuffer));

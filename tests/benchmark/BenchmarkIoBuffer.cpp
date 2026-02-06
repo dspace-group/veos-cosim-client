@@ -41,7 +41,7 @@ void RunTest(benchmark::State& state,
     signal.length = static_cast<uint32_t>(state.range(0));
 
     std::unique_ptr<IProtocol> protocol;
-    MustBeOk(MakeProtocol(DsVeosCoSim::LATEST_VERSION, protocol));
+    MustBeOk(CreateProtocol(DsVeosCoSim::ProtocolVersionLatest, protocol));
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
     MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
