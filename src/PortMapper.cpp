@@ -250,6 +250,7 @@ private:
     switch (frameKind) {
         // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Ok:
+            CheckResultWithMessage(protocol->ReadOk(channel->GetReader()), "Could not read ok frame.");
             return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;
@@ -282,6 +283,7 @@ private:
     switch (frameKind) {
         // NOLINT(clang-diagnostic-switch-enum)
         case FrameKind::Ok:
+            CheckResultWithMessage(protocol->ReadOk(channel->GetReader()), "Could not read ok frame.");
             return Result::Ok;
         case FrameKind::Error: {
             std::string errorString;

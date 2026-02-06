@@ -20,11 +20,13 @@ using DeserializeFunction = std::function<Result(ChannelReader& reader, Simulati
 class IProtocol {
 public:
     IProtocol() = default;
-    IProtocol(const IProtocol&) = default;
-    IProtocol(IProtocol&&) = default;
-    IProtocol& operator=(const IProtocol&) = default;
-    IProtocol& operator=(IProtocol&&) = default;
     virtual ~IProtocol() = default;
+
+    IProtocol(const IProtocol&) = default;
+    IProtocol& operator=(const IProtocol&) = default;
+
+    IProtocol(IProtocol&&) = default;
+    IProtocol& operator=(IProtocol&&) = default;
 
     [[nodiscard]] virtual Result ReadSize(ChannelReader& reader, size_t& size) = 0;
     [[nodiscard]] virtual Result WriteSize(ChannelWriter& writer, size_t size) = 0;
@@ -52,12 +54,14 @@ public:
 
     [[nodiscard]] virtual Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) = 0;
 
+    [[nodiscard]] virtual Result ReadOk(ChannelReader& reader) = 0;
     [[nodiscard]] virtual Result SendOk(ChannelWriter& writer) = 0;
 
     [[nodiscard]] virtual Result ReadError(ChannelReader& reader, std::string& errorMessage) = 0;
     [[nodiscard]] virtual Result SendError(ChannelWriter& writer, const std::string& errorMessage) = 0;
 
-    [[nodiscard]] virtual Result SendPing(ChannelWriter& writer) = 0;
+    [[nodiscard]] virtual Result ReadPing(ChannelReader& reader, std::chrono::nanoseconds& roundTripTime) = 0;
+    [[nodiscard]] virtual Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) = 0;
 
     [[nodiscard]] virtual Result ReadPingOk(ChannelReader& reader, Command& command) = 0;
     [[nodiscard]] virtual Result SendPingOk(ChannelWriter& writer, Command command) = 0;

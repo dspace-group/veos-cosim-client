@@ -188,6 +188,12 @@ public:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result ReadOk(ChannelReader& reader) override {
+        reader.EndRead();
+
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result SendOk(ChannelWriter& writer) override {
         if (IsProtocolTracingEnabled()) {
             LogProtocolBeginTraceSendOk();
@@ -234,9 +240,13 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result SendPing(ChannelWriter& writer) override {
+    [[nodiscard]] Result ReadPing([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] std::chrono::nanoseconds& roundTripTime) override {
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceSendPing();
+            LogProtocolBeginTraceSendPing(roundTripTime);
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::Ping), "Could not write frame kind.");
@@ -1243,12 +1253,49 @@ public:
         return Result::Ok;
     }
 
-    [[nodiscard]] bool DoFlexRayOperations() override {
-        return true;
+    [[nodiscard]] Result ReadPing(ChannelReader& reader, std::chrono::nanoseconds& roundTripTime) override {
+        if (IsProtocolPingTracingEnabled()) {
+            LogProtocolBeginTraceReadPing();
+        }
+
+        CheckResultWithMessage(reader.Read(roundTripTime), "Could not read round trip time.");
+        reader.EndRead();
+
+        if (IsProtocolPingTracingEnabled()) {
+            LogProtocolEndTraceReadPing(roundTripTime);
+        }
+
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
+        if (IsProtocolPingTracingEnabled()) {
+            LogProtocolBeginTraceSendPing(roundTripTime);
+        }
+
+        constexpr size_t size = sizeof(FrameKind) + sizeof(roundTripTime);
+
+        BlockWriter blockWriter;
+        CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Ping frame.");
+        blockWriter.Write(FrameKind::Ping);
+        blockWriter.Write(roundTripTime);
+        blockWriter.EndWrite();
+
+        CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
+
+        if (IsProtocolPingTracingEnabled()) {
+            LogProtocolEndTraceSendPing();
+        }
+
+        return Result::Ok;
     }
 
     [[nodiscard]] uint32_t GetVersion() override {
         return ProtocolVersion2;
+    }
+
+    [[nodiscard]] bool DoFlexRayOperations() override {
+        return true;
     }
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, FrControllerContainer& controller) {

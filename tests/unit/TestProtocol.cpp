@@ -198,7 +198,7 @@ TEST_P(TestProtocol, SendAndReceiveOk) {
 
     // Assert
     AssertFrame(FrameKind::Ok);
-    _receiverChannel->GetReader().EndRead();
+    AssertOk(_protocol->ReadOk(_receiverChannel->GetReader()));
 }
 
 TEST_P(TestProtocol, SendTwoFramesAtOnce) {
@@ -211,9 +211,9 @@ TEST_P(TestProtocol, SendTwoFramesAtOnce) {
 
     // Assert
     AssertFrame(FrameKind::Ok);
-    _receiverChannel->GetReader().EndRead();
+    AssertOk(_protocol->ReadOk(_receiverChannel->GetReader()));
     AssertFrame(FrameKind::Ok);
-    _receiverChannel->GetReader().EndRead();
+    AssertOk(_protocol->ReadOk(_receiverChannel->GetReader()));
 }
 
 TEST_P(TestProtocol, SendAndReceiveError) {
@@ -237,11 +237,16 @@ TEST_P(TestProtocol, SendAndReceivePing) {
     // Arrange
     CustomSetUp(GetParam());
 
+    std::chrono::nanoseconds sendRoundTripTime = std::chrono::nanoseconds(GenerateU64());
+
     // Act
-    AssertOk(_protocol->SendPing(_senderChannel->GetWriter()));
+    AssertOk(_protocol->SendPing(_senderChannel->GetWriter(), sendRoundTripTime));
 
     // Assert
     AssertFrame(FrameKind::Ping);
+    std::chrono::nanoseconds receiveRoundTripTime;
+    AssertOk(_protocol->ReadPing(_receiverChannel->GetReader(), receiveRoundTripTime));
+    AssertEq(sendRoundTripTime, receiveRoundTripTime);
 }
 
 TEST_P(TestProtocol, SendAndReceivePingOk) {

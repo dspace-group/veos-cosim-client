@@ -69,12 +69,26 @@ void LogProtocolEndTraceReadError(const std::string& errorMessage) {
     LogProtocolEndTrace(str);
 }
 
-void LogProtocolBeginTraceSendPing() {
-    LogProtocolBeginTrace("SendPing()");
+void LogProtocolBeginTraceSendPing(std::chrono::nanoseconds roundTripTime) {
+    std::string str = "SendPing(RoundTripTime: ";
+    str.append(ToString(roundTripTime));
+    str.append(")");
+    LogProtocolBeginTrace(str);
 }
 
 void LogProtocolEndTraceSendPing() {
     LogProtocolEndTrace("SendPing()");
+}
+
+void LogProtocolBeginTraceReadPing() {
+    LogProtocolBeginTrace("ReadPing()");
+}
+
+void LogProtocolEndTraceReadPing(std::chrono::nanoseconds roundTripTime) {
+    std::string str = "ReadPing(RoundTripTime: ";
+    str.append(ToString(roundTripTime));
+    str.append(")");
+    LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendPingOk(Command command) {

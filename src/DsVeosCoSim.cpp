@@ -578,6 +578,15 @@ DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsV
     return static_cast<DsVeosCoSim_Result>(client->GetSimulationState(*reinterpret_cast<SimulationState*>(simulationState)));
 }
 
+DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64_t* roundTripTimeInNanoseconds) {
+    CheckNotNull(handle);
+    CheckNotNull(roundTripTimeInNanoseconds);
+
+    auto* client = static_cast<CoSimClient*>(handle);
+
+    return static_cast<DsVeosCoSim_Result>(client->GetRoundTripTime(*reinterpret_cast<std::chrono::nanoseconds*>(roundTripTimeInNanoseconds)));
+}
+
 const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) {
     return ToString(static_cast<Result>(result));
 }

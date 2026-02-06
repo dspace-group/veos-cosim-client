@@ -3,6 +3,7 @@
 #include "DsVeosCoSim/CoSimClient.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -176,6 +177,13 @@ public:
         CheckResult(EnsureIsConnected());
 
         _nextSimulationTime = simulationTime;
+        return Result::Ok;
+    }
+
+    [[nodiscard]] Result GetRoundTripTime(std::chrono::nanoseconds& roundTripTime) const override {
+        CheckResult(EnsureIsConnected());
+
+        roundTripTime = _roundTripTime;
         return Result::Ok;
     }
 
@@ -665,6 +673,7 @@ private:
                     CheckResult(FinishCurrentCommand());
                     break;
                 case FrameKind::Ping:
+                    CheckResultWithMessage(OnPing(), "Could not handle ping.");
                     CheckResult(FinishPing());
                     break;
                 default:
@@ -811,6 +820,11 @@ private:
         return Result::Ok;
     }
 
+    [[nodiscard]] Result OnPing() {
+        CheckResultWithMessage(_protocol->ReadPing(_channel->GetReader(), _roundTripTime), "Could not read ping frame.");
+        return Result::Ok;
+    }
+
     [[nodiscard]] Result FinishStep() {
         Command nextCommand = _nextCommand.exchange({});
         CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(), _nextSimulationTime, nextCommand, _serializeIoData, _serializeBusMessages),
@@ -922,6 +936,7 @@ private:
     Callbacks _callbacks{};
     SimulationTime _currentSimulationTime{};
     SimulationTime _nextSimulationTime{};
+    std::chrono::nanoseconds _roundTripTime{};
 
     SimulationTime _stepSize{};
 

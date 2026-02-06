@@ -1655,6 +1655,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime);
 
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationState* simulationState);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64_t* roundTripTimeInNanoseconds);
 
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);

@@ -258,6 +258,7 @@ public:
     }
 
     [[nodiscard]] Result BackgroundService(std::chrono::nanoseconds& roundTripTime) override {
+        roundTripTime = {};
         if (!_channel) {
             if (IsOk(AcceptChannel())) {
                 if (!IsOk(OnHandleConnect())) {
@@ -269,10 +270,11 @@ public:
         }
 
         Command command{};
-        if (!IsOk(Ping(command, roundTripTime))) {
+        if (!IsOk(Ping(command))) {
             return CloseConnection();
         }
 
+        roundTripTime = _roundTripTime;
         HandlePendingCommand(command);
         return Result::Ok;
     }
@@ -345,12 +347,12 @@ private:
         return StartAccepting();
     }
 
-    [[nodiscard]] Result Ping(Command& command, std::chrono::nanoseconds& roundTripTime) const {
+    [[nodiscard]] Result Ping(Command& command) {
         auto start = high_resolution_clock::now();
-        CheckResultWithMessage(_protocol->SendPing(_channel->GetWriter()), "Could not send ping frame.");
+        CheckResultWithMessage(_protocol->SendPing(_channel->GetWriter(), _roundTripTime), "Could not send ping frame.");
         CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
         auto stop = high_resolution_clock::now();
-        roundTripTime = duration_cast<nanoseconds>(stop - start);
+        _roundTripTime = duration_cast<nanoseconds>(stop - start);
         return Result::Ok;
     }
 
@@ -511,6 +513,7 @@ private:
         switch (frameKind) {
             // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::Ok:
+                CheckResultWithMessage(_protocol->ReadOk(_channel->GetReader()), "Could not read ok frame.");
                 return Result::Ok;
             case FrameKind::Error:
                 return OnError();
@@ -628,6 +631,7 @@ private:
     SimulationTime _stepSize{};
     SimulationState _simulationState{};
     bool _registerAtPortMapper{};
+    std::chrono::nanoseconds _roundTripTime{};
 
     bool _firstStep{true};
 
