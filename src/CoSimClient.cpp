@@ -214,7 +214,7 @@ public:
         }
 
         std::string message = "Unknown terminate reason '";
-        message.append(ToString(terminateReason));
+        message.append(format_as(terminateReason));
         message.append("'.");
         Logger::Instance().LogError(message);
         return Result::Error;
@@ -898,7 +898,7 @@ private:
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
         std::string message = "Received unexpected frame '";
-        message.append(ToString(frameKind));
+        message.append(format_as(frameKind));
         message.append("'.");
         Logger::Instance().LogError(message);
         return Result::Error;

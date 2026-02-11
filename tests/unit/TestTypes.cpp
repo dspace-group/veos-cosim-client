@@ -39,7 +39,7 @@ TEST_F(TestTypes, SimulationTimeToString) {
     SimulationTime simulationTime = 42ns;
 
     // Act
-    std::string string = ToString(simulationTime);
+    std::string string = format_as(simulationTime);
 
     // Assert
     AssertEqHelper("0.000000042", string);
@@ -50,7 +50,7 @@ TEST_F(TestTypes, ResultToString) {
     Result result = Result::Disconnected;
 
     // Act
-    const char* string = ToString(result);
+    const char* string = format_as(result);
 
     // Assert
     AssertEqHelper("Disconnected", string);
@@ -61,7 +61,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
     CoSimType coSimType = CoSimType::Server;
 
     // Act
-    const char* string = ToString(coSimType);
+    const char* string = format_as(coSimType);
 
     // Assert
     AssertEqHelper("Server", string);
@@ -72,7 +72,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
     ConnectionKind connectionKind = ConnectionKind::Remote;
 
     // Act
-    const char* string = ToString(connectionKind);
+    const char* string = format_as(connectionKind);
 
     // Assert
     AssertEqHelper("Remote", string);
@@ -83,7 +83,7 @@ TEST_F(TestTypes, CommandToString) {
     Command command = Command::Start;
 
     // Act
-    const char* string = ToString(command);
+    const char* string = format_as(command);
 
     // Assert
     AssertEqHelper("Start", string);
@@ -94,7 +94,7 @@ TEST_F(TestTypes, SeverityToString) {
     Severity severity = Severity::Warning;
 
     // Act
-    const char* string = ToString(severity);
+    const char* string = format_as(severity);
 
     // Assert
     AssertEqHelper("Warning", string);
@@ -105,7 +105,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
     TerminateReason terminateReason = TerminateReason::Finished;
 
     // Act
-    const char* string = ToString(terminateReason);
+    const char* string = format_as(terminateReason);
 
     // Assert
     AssertEqHelper("Finished", string);
@@ -116,7 +116,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
     ConnectionState connectionState = ConnectionState::Disconnected;
 
     // Act
-    const char* string = ToString(connectionState);
+    const char* string = format_as(connectionState);
 
     // Assert
     AssertEqHelper("Disconnected", string);
@@ -138,7 +138,7 @@ TEST_F(TestTypes, DataTypeToString) {
     DataType dataType = DataType::Float64;
 
     // Act
-    const char* string = ToString(dataType);
+    const char* string = format_as(dataType);
 
     // Assert
     AssertEqHelper("Float64", string);
@@ -149,7 +149,7 @@ TEST_F(TestTypes, SizeKindToString) {
     SizeKind sizeKind = SizeKind::Variable;
 
     // Act
-    const char* string = ToString(sizeKind);
+    const char* string = format_as(sizeKind);
 
     // Assert
     AssertEqHelper("Variable", string);
@@ -173,7 +173,7 @@ TEST_F(TestTypes, SimulationStateToString) {
     SimulationState simulationState = SimulationState::Stopped;
 
     // Act
-    const char* string = ToString(simulationState);
+    const char* string = format_as(simulationState);
 
     // Assert
     AssertEqHelper("Stopped", string);
@@ -184,7 +184,7 @@ TEST_F(TestTypes, ModeToString) {
     Mode mode{};
 
     // Act
-    const char* string = ToString(mode);
+    const char* string = format_as(mode);
 
     // Assert
     AssertEqHelper("<Unused>", string);
@@ -195,7 +195,7 @@ TEST_F(TestTypes, IoSignalIdToString) {
     auto signalId = static_cast<IoSignalId>(86);
 
     // Act
-    std::string string = ToString(signalId);
+    std::string string = format_as(signalId);
 
     // Assert
     AssertEqHelper("86", string);
@@ -213,7 +213,7 @@ TEST_F(TestTypes, IoSignalToString) {
     signal.name = name.c_str();
 
     // Act
-    std::string string = signal.ToString();
+    std::string string = format_as(signal);
 
     // Assert
     AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
@@ -229,7 +229,7 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     signalContainer.name = "MySignal";
 
     // Act
-    std::string string = signalContainer.ToString();
+    std::string string = format_as(signalContainer);
 
     // Assert
     AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
@@ -298,7 +298,7 @@ TEST_F(TestTypes, SignalContainersToString) {
     std::vector<IoSignalContainer> signalContainers = {signalContainer1, signalContainer2};
 
     // Act
-    std::string string = ToString(signalContainers);
+    std::string string = format_as(signalContainers);
 
     // Assert
     AssertEq(
@@ -353,7 +353,7 @@ TEST_F(TestTypes, BusControllerIdToString) {
     auto controllerId = static_cast<BusControllerId>(123);
 
     // Act
-    std::string string = ToString(controllerId);
+    std::string string = format_as(controllerId);
 
     // Assert
     AssertEqHelper("123", string);
@@ -364,7 +364,7 @@ TEST_F(TestTypes, BusMessageIdToString) {
     auto messageId = static_cast<BusMessageId>(234);
 
     // Act
-    std::string string = ToString(messageId);
+    std::string string = format_as(messageId);
 
     // Assert
     AssertEqHelper("234", string);
@@ -375,7 +375,7 @@ TEST_F(TestTypes, CanMessageFlagsToString) {
     CanMessageFlags flags = CanMessageFlags::Error | CanMessageFlags::Loopback;
 
     // Act
-    std::string string = ToString(flags);
+    std::string string = format_as(flags);
 
     // Assert
     AssertEqHelper("Loopback,Error", string);
@@ -397,7 +397,7 @@ TEST_F(TestTypes, CanControllerToString) {
     controller.clusterName = clusterName.c_str();
 
     // Act
-    std::string string = controller.ToString();
+    std::string string = format_as(controller);
 
     // Assert
     AssertEqHelper(
@@ -418,7 +418,7 @@ TEST_F(TestTypes, CanControllerContainerToString) {
     controllerContainer.clusterName = "clusterName";
 
     // Act
-    std::string string = controllerContainer.ToString();
+    std::string string = format_as(controllerContainer);
 
     // Assert
     AssertEqHelper(

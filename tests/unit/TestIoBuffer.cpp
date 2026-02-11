@@ -72,7 +72,7 @@ INSTANTIATE_TEST_SUITE_P(Test,
                          TestIoBufferWithCoSimType,
                          testing::Combine(CoSimTypes, IoBufferConnectionKinds),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
-                             return fmt::format("{}_{}", ToString(std::get<0>(info.param)), ToString(std::get<1>(info.param)));
+                             return fmt::format("{}_{}", std::get<0>(info.param), std::get<1>(info.param));
                          });
 
 TEST_P(TestIoBufferWithCoSimType, CreateWithZeroIoSignalInfos) {
@@ -176,10 +176,7 @@ INSTANTIATE_TEST_SUITE_P(,
                          TestIoBuffer,
                          testing::Combine(CoSimTypes, IoBufferConnectionKinds, DataTypes),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DataType>>& info) {
-                             return fmt::format("{}_{}_{}",
-                                                ToString(std::get<0>(info.param)),
-                                                ToString(std::get<1>(info.param)),
-                                                ToString(std::get<2>(info.param)));
+                             return fmt::format("{}_{}_{}", std::get<0>(info.param), std::get<1>(info.param), std::get<2>(info.param));
                          });
 
 TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {

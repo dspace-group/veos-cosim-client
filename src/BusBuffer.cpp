@@ -64,7 +64,7 @@ public:
             auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
                 std::string message = "Duplicated controller id ";
-                message.append(ToString(controller.id));
+                message.append(format_as(controller.id));
                 message.append(".");
                 Logger::Instance().LogError(message);
                 return Result::Error;
@@ -172,7 +172,7 @@ protected:
         }
 
         std::string message = "Controller id ";
-        message.append(ToString(controllerId));
+        message.append(format_as(controllerId));
         message.append(" is unknown.");
         Logger::Instance().LogError(message);
         return Result::Error;
@@ -300,7 +300,7 @@ protected:
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
             CheckResultWithMessage(_protocol.WriteMessage(writer, messageContainer), "Could not serialize message.");
@@ -325,7 +325,7 @@ protected:
             CheckResultWithMessage(_protocol.ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};
@@ -620,7 +620,7 @@ protected:
             TMessageContainer& messageContainer = _messageBuffer->PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};

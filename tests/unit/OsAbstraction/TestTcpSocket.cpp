@@ -41,7 +41,7 @@ class TestTcpSocket : public testing::TestWithParam<Param> {};
 
 INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetValues()), [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
     std::string access = info.param.enableRemoteAccess ? "Remote" : "Local";
-    return fmt::format("{}_{}", ToString(info.param.addressFamily), access);
+    return fmt::format("{}_{}", info.param.addressFamily, access);
 });
 
 TEST_P(TestTcpSocket, Create) {

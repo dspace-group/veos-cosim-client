@@ -257,7 +257,7 @@ void CloseSocket(SocketHandle socket) {
 
 }  // namespace
 
-[[nodiscard]] const char* ToString(AddressFamily addressFamily) {
+[[nodiscard]] const char* format_as(AddressFamily addressFamily) {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";

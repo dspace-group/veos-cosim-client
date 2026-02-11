@@ -18,7 +18,7 @@ enum class AddressFamily {
     Ipv6 = 23
 };
 
-[[nodiscard]] const char* ToString(AddressFamily addressFamily);
+[[nodiscard]] const char* format_as(AddressFamily addressFamily);
 
 #ifdef _WIN32
 using SocketHandle = uintptr_t;

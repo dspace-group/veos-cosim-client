@@ -282,19 +282,19 @@ public:
         ConnectionKind connectionKind = T::GetConnectionKind();
 
         if constexpr (std::is_same_v<TControllerContainer, CanControllerContainer>) {
-            return fmt::format("CAN_{}_{}", ToString(coSimType), ToString(connectionKind));
+            return fmt::format("CAN_{}_{}", coSimType, connectionKind);
         }
 
         if constexpr (std::is_same_v<TControllerContainer, EthControllerContainer>) {
-            return fmt::format("ETH_{}_{}", ToString(coSimType), ToString(connectionKind));
+            return fmt::format("ETH_{}_{}", coSimType, connectionKind);
         }
 
         if constexpr (std::is_same_v<TControllerContainer, LinControllerContainer>) {
-            return fmt::format("LIN_{}_{}", ToString(coSimType), ToString(connectionKind));
+            return fmt::format("LIN_{}_{}", coSimType, connectionKind);
         }
 
         if constexpr (std::is_same_v<TControllerContainer, FrControllerContainer>) {
-            return fmt::format("FR_{}_{}", ToString(coSimType), ToString(connectionKind));
+            return fmt::format("FR_{}_{}", coSimType, connectionKind);
         }
     }
 };

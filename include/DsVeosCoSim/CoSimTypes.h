@@ -244,11 +244,15 @@ enum class CanMessageFlags : uint32_t {
     FlexibleDataRateFormat = 32
 };
 
+ENUM_BITMASK_OPS(CanMessageFlags);
+
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
     Drop = 4
 };
+
+ENUM_BITMASK_OPS(EthMessageFlags);
 
 enum class LinMessageFlags : uint32_t {
     Loopback = 1,
@@ -265,6 +269,8 @@ enum class LinMessageFlags : uint32_t {
     NoResponse = 2048
 };
 
+ENUM_BITMASK_OPS(LinMessageFlags);
+
 enum class FrMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
@@ -277,6 +283,8 @@ enum class FrMessageFlags : uint32_t {
     ChannelA = 256,
     ChannelB = 512,
 };
+
+ENUM_BITMASK_OPS(FrMessageFlags);
 
 enum class FrameKind : uint32_t {
     Ok = 1,
@@ -336,8 +344,6 @@ struct IoSignal {
     DataType dataType{};
     SizeKind sizeKind{};
     const char* name{};
-
-    [[nodiscard]] std::string ToString() const;
 };
 
 struct IoSignalContainer {
@@ -347,7 +353,6 @@ struct IoSignalContainer {
     SizeKind sizeKind{};
     std::string name;
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] IoSignal Convert() const;
 };
 
@@ -359,8 +364,6 @@ struct CanController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
 };
 
 struct CanControllerContainer {
@@ -372,7 +375,6 @@ struct CanControllerContainer {
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] CanController Convert() const;
 };
 
@@ -384,7 +386,6 @@ struct CanMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(CanMessageContainer& canMessageContainer) const;
 };
@@ -398,7 +399,6 @@ struct CanMessageContainer {
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(CanMessage& canMessage) const;
 };
@@ -411,8 +411,6 @@ struct EthController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
 };
 
 struct EthControllerContainer {
@@ -424,7 +422,6 @@ struct EthControllerContainer {
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] EthController Convert() const;
 };
 
@@ -436,7 +433,6 @@ struct EthMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(EthMessageContainer& ethMessageContainer) const;
 };
@@ -449,7 +445,6 @@ struct EthMessageContainer {
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(EthMessage& ethMessage) const;
 };
@@ -462,8 +457,6 @@ struct LinController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
-
-    [[nodiscard]] std::string ToString() const;
 };
 
 struct LinControllerContainer {
@@ -475,7 +468,6 @@ struct LinControllerContainer {
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] LinController Convert() const;
 };
 
@@ -487,7 +479,6 @@ struct LinMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(LinMessageContainer& linMessageContainer) const;
 };
@@ -501,7 +492,6 @@ struct LinMessageContainer {
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(LinMessage& linMessage) const;
 };
@@ -513,7 +503,6 @@ struct FrController {
     const char* name{};
     const char* channelName{};
     const char* clusterName{};
-    [[nodiscard]] std::string ToString() const;
 };
 
 struct FrControllerContainer {
@@ -524,7 +513,6 @@ struct FrControllerContainer {
     std::string channelName;
     std::string clusterName;
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] FrController Convert() const;
 };
 
@@ -536,7 +524,6 @@ struct FrMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(FrMessageContainer& frMessageContainer) const;
 };
@@ -550,43 +537,55 @@ struct FrMessageContainer {
     uint32_t length{};
     std::array<uint8_t, FrMessageMaxLength> data{};
 
-    [[nodiscard]] std::string ToString() const;
     [[nodiscard]] Result Check() const;
     void WriteTo(FrMessage& frMessage) const;
 };
 
-ENUM_BITMASK_OPS(CanMessageFlags);
-ENUM_BITMASK_OPS(EthMessageFlags);
-ENUM_BITMASK_OPS(LinMessageFlags);
-ENUM_BITMASK_OPS(FrMessageFlags);
+[[nodiscard]] std::string format_as(const IoSignal& ioSignal);
+[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal);
+[[nodiscard]] std::string format_as(const CanController& canController);
+[[nodiscard]] std::string format_as(const CanControllerContainer& canController);
+[[nodiscard]] std::string format_as(const CanMessage& canMessage);
+[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage);
+[[nodiscard]] std::string format_as(const EthController& ethController);
+[[nodiscard]] std::string format_as(const EthControllerContainer& ethController);
+[[nodiscard]] std::string format_as(const EthMessage& ethMessage);
+[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage);
+[[nodiscard]] std::string format_as(const LinController& linController);
+[[nodiscard]] std::string format_as(const LinControllerContainer& linController);
+[[nodiscard]] std::string format_as(const LinMessage& linMessage);
+[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage);
+[[nodiscard]] std::string format_as(const FrController& frController);
+[[nodiscard]] std::string format_as(const FrControllerContainer& frController);
+[[nodiscard]] std::string format_as(const FrMessage& frMessage);
+[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage);
+[[nodiscard]] std::string format_as(SimulationTime simulationTime);
+[[nodiscard]] const char* format_as(Result result);
+[[nodiscard]] const char* format_as(CoSimType coSimType);
+[[nodiscard]] const char* format_as(ConnectionKind connectionKind);
+[[nodiscard]] const char* format_as(Command command);
+[[nodiscard]] const char* format_as(Severity severity);
+[[nodiscard]] const char* format_as(TerminateReason terminateReason);
+[[nodiscard]] const char* format_as(ConnectionState connectionState);
+[[nodiscard]] const char* format_as(SimulationState simulationState);
+[[nodiscard]] const char* format_as(Mode mode);
+[[nodiscard]] std::string format_as(IoSignalId ioSignalId);
+[[nodiscard]] const char* format_as(DataType dataType);
+[[nodiscard]] const char* format_as(SizeKind sizeKind);
+[[nodiscard]] std::string format_as(BusControllerId busControllerId);
+[[nodiscard]] std::string format_as(BusMessageId busMessageId);
+[[nodiscard]] const char* format_as(LinControllerType linControllerType);
+[[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags);
+[[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags);
+[[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags);
+[[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags);
+[[nodiscard]] const char* format_as(FrameKind frameKind);
 
-[[nodiscard]] std::string ToString(SimulationTime simulationTime);
-[[nodiscard]] const char* ToString(Result result);
-[[nodiscard]] const char* ToString(CoSimType coSimType);
-[[nodiscard]] const char* ToString(ConnectionKind connectionKind);
-[[nodiscard]] const char* ToString(Command command);
-[[nodiscard]] const char* ToString(Severity severity);
-[[nodiscard]] const char* ToString(TerminateReason terminateReason);
-[[nodiscard]] const char* ToString(ConnectionState connectionState);
-[[nodiscard]] const char* ToString(SimulationState simulationState);
-[[nodiscard]] const char* ToString(Mode mode);
-[[nodiscard]] std::string ToString(IoSignalId ioSignalId);
-[[nodiscard]] const char* ToString(DataType dataType);
-[[nodiscard]] const char* ToString(SizeKind sizeKind);
-[[nodiscard]] std::string ToString(BusControllerId busControllerId);
-[[nodiscard]] std::string ToString(BusMessageId busMessageId);
-[[nodiscard]] const char* ToString(LinControllerType linControllerType);
-[[nodiscard]] std::string ToString(CanMessageFlags canMessageFlags);
-[[nodiscard]] std::string ToString(EthMessageFlags ethMessageFlags);
-[[nodiscard]] std::string ToString(LinMessageFlags linMessageFlags);
-[[nodiscard]] std::string ToString(FrMessageFlags frMessageFlags);
-[[nodiscard]] const char* ToString(FrameKind frameKind);
-
-[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& ioSignalContainers);
-[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& canControllerContainers);
-[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& ethControllerContainers);
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers);
-[[nodiscard]] std::string ToString(const std::vector<FrControllerContainer>& frControllerContainers);
+[[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers);
+[[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers);
+[[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers);
+[[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers);
+[[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers);
 
 std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
 std::ostream& operator<<(std::ostream& stream, Result result);

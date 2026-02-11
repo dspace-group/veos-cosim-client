@@ -97,13 +97,13 @@ template <typename T, size_t TSize>
 
 [[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, const std::string& name) {
     std::string str = "IO Signal { Id: ";
-    str.append(ToString(signalId));
+    str.append(format_as(signalId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", DataType: ");
-    str.append(ToString(dataType));
+    str.append(format_as(dataType));
     str.append(", SizeKind: ");
-    str.append(ToString(sizeKind));
+    str.append(format_as(sizeKind));
     str.append(", Name: \"");
     str.append(name);
     str.append("\" }");
@@ -118,7 +118,7 @@ template <typename T, size_t TSize>
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "CAN Controller { Id: ";
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -142,17 +142,17 @@ template <typename T, size_t TSize>
                                              const uint8_t* data,
                                              CanMessageFlags flags) {
     std::string str = "CAN Message { Timestamp: ";
-    str.append(ToString(timestamp));
+    str.append(format_as(timestamp));
     str.append(", ControllerId: ");
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", Id: ");
-    str.append(ToString(messageId));
+    str.append(format_as(messageId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
     str.append(DataToString(data, length, '-'));
     str.append(", Flags: ");
-    str.append(ToString(flags));
+    str.append(format_as(flags));
     str.append(" }");
     return str;
 }
@@ -174,7 +174,7 @@ template <typename T, size_t TSize>
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "ETH Controller { Id: ";
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -197,15 +197,15 @@ template <typename T, size_t TSize>
                                              const uint8_t* data,
                                              EthMessageFlags flags) {
     std::string str = "ETH Message { Timestamp: ";
-    str.append(ToString(timestamp));
+    str.append(format_as(timestamp));
     str.append(", ControllerId: ");
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
     str.append(DataToString(data, length, '-'));
     str.append(", Flags: ");
-    str.append(ToString(flags));
+    str.append(format_as(flags));
     str.append(" }");
     return str;
 }
@@ -227,13 +227,13 @@ template <typename T, size_t TSize>
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::string str = "LIN Controller { Id: ";
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
     str.append(std::to_string(bitsPerSecond));
     str.append(", Type: ");
-    str.append(ToString(type));
+    str.append(format_as(type));
     str.append(", Name: \"");
     str.append(name);
     str.append("\", ChannelName: \"");
@@ -251,17 +251,17 @@ template <typename T, size_t TSize>
                                              const uint8_t* data,
                                              LinMessageFlags flags) {
     std::string str = "LIN Message { Timestamp: ";
-    str.append(ToString(timestamp));
+    str.append(format_as(timestamp));
     str.append(", ControllerId: ");
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", Id: ");
-    str.append(ToString(messageId));
+    str.append(format_as(messageId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
     str.append(DataToString(data, length, '-'));
     str.append(", Flags: ");
-    str.append(ToString(flags));
+    str.append(format_as(flags));
     str.append(" }");
     return str;
 }
@@ -282,7 +282,7 @@ template <typename T, size_t TSize>
                                                const std::string& channelName,
                                                const std::string& clusterName) {
     std::string str = "FLEXRAY Controller { Id: ";
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", QueueSize: ");
     str.append(std::to_string(queueSize));
     str.append(", BitsPerSecond: ");
@@ -304,17 +304,17 @@ template <typename T, size_t TSize>
                                             const uint8_t* data,
                                             FrMessageFlags flags) {
     std::string str = "FLEXRAY Message { Timestamp: ";
-    str.append(ToString(timestamp));
+    str.append(format_as(timestamp));
     str.append(", ControllerId: ");
-    str.append(ToString(controllerId));
+    str.append(format_as(controllerId));
     str.append(", Id: ");
-    str.append(ToString(messageId));
+    str.append(format_as(messageId));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");
     str.append(DataToString(data, length, '-'));
     str.append(", Flags: ");
-    str.append(ToString(flags));
+    str.append(format_as(flags));
     str.append(" }");
     return str;
 }
@@ -367,7 +367,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     }
 }
 
-[[nodiscard]] std::string ToString(SimulationTime simulationTime) {
+[[nodiscard]] std::string format_as(SimulationTime simulationTime) {
     int64_t nanoseconds = simulationTime.count();
     std::string str = std::to_string(nanoseconds);
 
@@ -389,7 +389,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] const char* ToString(Result result) {
+[[nodiscard]] const char* format_as(Result result) {
     switch (result) {
         case Result::Ok:
             return "Ok";
@@ -408,7 +408,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid Result>";
 }
 
-[[nodiscard]] const char* ToString(CoSimType coSimType) {
+[[nodiscard]] const char* format_as(CoSimType coSimType) {
     switch (coSimType) {
         case CoSimType::Client:
             return "Client";
@@ -419,7 +419,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid CoSimType>";
 }
 
-[[nodiscard]] const char* ToString(ConnectionKind connectionKind) {
+[[nodiscard]] const char* format_as(ConnectionKind connectionKind) {
     switch (connectionKind) {
         case ConnectionKind::Remote:
             return "Remote";
@@ -430,7 +430,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid ConnectionKind>";
 }
 
-[[nodiscard]] const char* ToString(Command command) {
+[[nodiscard]] const char* format_as(Command command) {
     switch (command) {
         case Command::None:
             return "None";
@@ -455,7 +455,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid Command>";
 }
 
-[[nodiscard]] const char* ToString(Severity severity) {
+[[nodiscard]] const char* format_as(Severity severity) {
     switch (severity) {
         case Severity::Error:
             return "Error";
@@ -470,7 +470,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid Severity>";
 }
 
-[[nodiscard]] const char* ToString(TerminateReason terminateReason) {
+[[nodiscard]] const char* format_as(TerminateReason terminateReason) {
     switch (terminateReason) {
         case TerminateReason::Finished:
             return "Finished";
@@ -481,7 +481,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid TerminateReason>";
 }
 
-[[nodiscard]] const char* ToString(ConnectionState connectionState) {
+[[nodiscard]] const char* format_as(ConnectionState connectionState) {
     switch (connectionState) {
         case ConnectionState::Disconnected:
             return "Disconnected";
@@ -492,7 +492,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid ConnectionState>";
 }
 
-[[nodiscard]] const char* ToString(SimulationState simulationState) {
+[[nodiscard]] const char* format_as(SimulationState simulationState) {
     switch (simulationState) {
         case SimulationState::Unloaded:
             return "Unloaded";
@@ -509,15 +509,15 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Unknown SimulationState>";
 }
 
-[[nodiscard]] const char* ToString([[maybe_unused]] Mode mode) {
+[[nodiscard]] const char* format_as([[maybe_unused]] Mode mode) {
     return "<Unused>";
 }
 
-[[nodiscard]] std::string ToString(IoSignalId ioSignalId) {
+[[nodiscard]] std::string format_as(IoSignalId ioSignalId) {
     return std::to_string(static_cast<uint32_t>(ioSignalId));
 }
 
-[[nodiscard]] const char* ToString(DataType dataType) {
+[[nodiscard]] const char* format_as(DataType dataType) {
     switch (dataType) {
         case DataType::Bool:
             return "Bool";
@@ -546,7 +546,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid DataType>";
 }
 
-[[nodiscard]] const char* ToString(SizeKind sizeKind) {
+[[nodiscard]] const char* format_as(SizeKind sizeKind) {
     switch (sizeKind) {
         case SizeKind::Fixed:
             return "Fixed";
@@ -557,15 +557,15 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid SizeKind>";
 }
 
-[[nodiscard]] std::string ToString(BusControllerId busControllerId) {
+[[nodiscard]] std::string format_as(BusControllerId busControllerId) {
     return std::to_string(static_cast<uint32_t>(busControllerId));
 }
 
-[[nodiscard]] std::string ToString(BusMessageId busMessageId) {
+[[nodiscard]] std::string format_as(BusMessageId busMessageId) {
     return std::to_string(static_cast<uint32_t>(busMessageId));
 }
 
-[[nodiscard]] const char* ToString(LinControllerType linControllerType) {
+[[nodiscard]] const char* format_as(LinControllerType linControllerType) {
     switch (linControllerType) {
         case LinControllerType::Responder:
             return "Responder";
@@ -576,7 +576,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid LinControllerType>";
 }
 
-[[nodiscard]] std::string ToString(CanMessageFlags canMessageFlags) {
+[[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags) {
     std::string str;
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Loopback)) {
@@ -610,7 +610,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(EthMessageFlags ethMessageFlags) {
+[[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags) {
     std::string str;
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Loopback)) {
@@ -632,7 +632,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(LinMessageFlags linMessageFlags) {
+[[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags) {
     std::string str;
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Loopback)) {
@@ -690,7 +690,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(FrMessageFlags frMessageFlags) {
+[[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags) {
     std::string str;
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Loopback)) {
@@ -727,7 +727,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] const char* ToString(FrameKind frameKind) {
+[[nodiscard]] const char* format_as(FrameKind frameKind) {
     switch (frameKind) {
         case FrameKind::Ping:
             return "Ping";
@@ -768,79 +768,125 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return "<Invalid FrameKind>";
 }
 
-[[nodiscard]] std::string IoSignal::ToString() const {
-    return IoSignalToString(id, length, dataType, sizeKind, name);
+[[nodiscard]] std::string format_as(const IoSignal& ioSignal) {
+    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
 }
 
-[[nodiscard]] std::string IoSignalContainer::ToString() const {
-    return IoSignalToString(id, length, dataType, sizeKind, name);
+[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal) {
+    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
 }
 
-[[nodiscard]] std::string CanController::ToString() const {
-    return CanControllerToString(id, queueSize, bitsPerSecond, flexibleDataRateBitsPerSecond, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const CanController& canController) {
+    return CanControllerToString(canController.id,
+                                 canController.queueSize,
+                                 canController.bitsPerSecond,
+                                 canController.flexibleDataRateBitsPerSecond,
+                                 canController.name,
+                                 canController.channelName,
+                                 canController.clusterName);
 }
 
-[[nodiscard]] std::string CanControllerContainer::ToString() const {
-    return CanControllerToString(id, queueSize, bitsPerSecond, flexibleDataRateBitsPerSecond, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const CanControllerContainer& canController) {
+    return CanControllerToString(canController.id,
+                                 canController.queueSize,
+                                 canController.bitsPerSecond,
+                                 canController.flexibleDataRateBitsPerSecond,
+                                 canController.name,
+                                 canController.channelName,
+                                 canController.clusterName);
 }
 
-[[nodiscard]] std::string CanMessage::ToString() const {
-    return CanMessageToString(timestamp, controllerId, id, length, data, flags);
+[[nodiscard]] std::string format_as(const CanMessage& canMessage) {
+    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data, canMessage.flags);
 }
 
-[[nodiscard]] std::string CanMessageContainer::ToString() const {
-    return CanMessageToString(timestamp, controllerId, id, length, data.data(), flags);
+[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage) {
+    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data.data(), canMessage.flags);
 }
 
-[[nodiscard]] std::string EthController::ToString() const {
-    return EthControllerToString(id, queueSize, bitsPerSecond, macAddress, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const EthController& ethController) {
+    return EthControllerToString(ethController.id,
+                                 ethController.queueSize,
+                                 ethController.bitsPerSecond,
+                                 ethController.macAddress,
+                                 ethController.name,
+                                 ethController.channelName,
+                                 ethController.clusterName);
 }
 
-[[nodiscard]] std::string EthControllerContainer::ToString() const {
-    return EthControllerToString(id, queueSize, bitsPerSecond, macAddress, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const EthControllerContainer& ethController) {
+    return EthControllerToString(ethController.id,
+                                 ethController.queueSize,
+                                 ethController.bitsPerSecond,
+                                 ethController.macAddress,
+                                 ethController.name,
+                                 ethController.channelName,
+                                 ethController.clusterName);
 }
 
-[[nodiscard]] std::string EthMessage::ToString() const {
-    return EthMessageToString(timestamp, controllerId, length, data, flags);
+[[nodiscard]] std::string format_as(const EthMessage& ethMessage) {
+    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data, ethMessage.flags);
 }
 
-[[nodiscard]] std::string EthMessageContainer::ToString() const {
-    return EthMessageToString(timestamp, controllerId, length, data.data(), flags);
+[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage) {
+    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data.data(), ethMessage.flags);
 }
 
-[[nodiscard]] std::string LinController::ToString() const {
-    return LinControllerToString(id, queueSize, bitsPerSecond, type, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const LinController& linController) {
+    return LinControllerToString(linController.id,
+                                 linController.queueSize,
+                                 linController.bitsPerSecond,
+                                 linController.type,
+                                 linController.name,
+                                 linController.channelName,
+                                 linController.clusterName);
 }
 
-[[nodiscard]] std::string LinControllerContainer::ToString() const {
-    return LinControllerToString(id, queueSize, bitsPerSecond, type, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const LinControllerContainer& linController) {
+    return LinControllerToString(linController.id,
+                                 linController.queueSize,
+                                 linController.bitsPerSecond,
+                                 linController.type,
+                                 linController.name,
+                                 linController.channelName,
+                                 linController.clusterName);
 }
 
-[[nodiscard]] std::string LinMessage::ToString() const {
-    return LinMessageToString(timestamp, controllerId, id, length, data, flags);
+[[nodiscard]] std::string format_as(const LinMessage& linMessage) {
+    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data, linMessage.flags);
 }
 
-[[nodiscard]] std::string LinMessageContainer::ToString() const {
-    return LinMessageToString(timestamp, controllerId, id, length, data.data(), flags);
+[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage) {
+    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data.data(), linMessage.flags);
 }
 
-[[nodiscard]] std::string FrController::ToString() const {
-    return FrControllerToString(id, queueSize, bitsPerSecond, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const FrController& frController) {
+    return FrControllerToString(frController.id,
+                                frController.queueSize,
+                                frController.bitsPerSecond,
+                                frController.name,
+                                frController.channelName,
+                                frController.clusterName);
 }
 
-[[nodiscard]] std::string FrControllerContainer::ToString() const {
-    return FrControllerToString(id, queueSize, bitsPerSecond, name, channelName, clusterName);
+[[nodiscard]] std::string format_as(const FrControllerContainer& frController) {
+    return FrControllerToString(frController.id,
+                                frController.queueSize,
+                                frController.bitsPerSecond,
+                                frController.name,
+                                frController.channelName,
+                                frController.clusterName);
 }
 
-[[nodiscard]] std::string FrMessage::ToString() const {
-    return FrMessageToString(timestamp, controllerId, id, length, data, flags);
+[[nodiscard]] std::string format_as(const FrMessage& frMessage) {
+    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data, frMessage.flags);
 }
 
-[[nodiscard]] std::string FrMessageContainer::ToString() const {
-    return FrMessageToString(timestamp, controllerId, id, length, data.data(), flags);
+[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage) {
+    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data.data(), frMessage.flags);
 }
 
-[[nodiscard]] std::string ToString(const std::vector<IoSignalContainer>& ioSignalContainers) {
+[[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
     std::string str = "[";
 
     bool first = true;
@@ -851,7 +897,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
             str.append(", ");
         }
 
-        str.append(signalContainer.ToString());
+        str.append(format_as(signalContainer));
     }
 
     str.append("]");
@@ -859,7 +905,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(const std::vector<CanControllerContainer>& canControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers) {
     std::string str = "[";
 
     bool first = true;
@@ -870,7 +916,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
             str.append(", ");
         }
 
-        str.append(canControllerContainer.ToString());
+        str.append(format_as(canControllerContainer));
     }
 
     str.append("]");
@@ -878,7 +924,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(const std::vector<EthControllerContainer>& ethControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers) {
     std::string str = "[";
 
     bool first = true;
@@ -889,7 +935,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
             str.append(", ");
         }
 
-        str.append(ethControllerContainer.ToString());
+        str.append(format_as(ethControllerContainer));
     }
 
     str.append("]");
@@ -897,7 +943,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(const std::vector<LinControllerContainer>& linControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers) {
     std::string str = "[";
 
     bool first = true;
@@ -908,7 +954,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
             str.append(", ");
         }
 
-        str.append(linControllerContainer.ToString());
+        str.append(format_as(linControllerContainer));
     }
 
     str.append("]");
@@ -916,7 +962,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     return str;
 }
 
-[[nodiscard]] std::string ToString(const std::vector<FrControllerContainer>& frControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers) {
     std::string str = "[";
 
     bool first = true;
@@ -927,7 +973,7 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
             str.append(", ");
         }
 
-        str.append(frControllerContainer.ToString());
+        str.append(format_as(frControllerContainer));
     }
 
     str.append("]");
@@ -936,179 +982,179 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
-    return stream << ToString(simulationTime);
+    return stream << format_as(simulationTime);
 }
 
 std::ostream& operator<<(std::ostream& stream, Result result) {
-    return stream << ToString(result);
+    return stream << format_as(result);
 }
 
 std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
-    return stream << ToString(coSimType);
+    return stream << format_as(coSimType);
 }
 
 std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
-    return stream << ToString(connectionKind);
+    return stream << format_as(connectionKind);
 }
 
 std::ostream& operator<<(std::ostream& stream, Command command) {
-    return stream << ToString(command);
+    return stream << format_as(command);
 }
 
 std::ostream& operator<<(std::ostream& stream, Severity severity) {
-    return stream << ToString(severity);
+    return stream << format_as(severity);
 }
 
 std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
-    return stream << ToString(terminateReason);
+    return stream << format_as(terminateReason);
 }
 
 std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
-    return stream << ToString(connectionState);
+    return stream << format_as(connectionState);
 }
 
 std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
-    return stream << ToString(simulationState);
+    return stream << format_as(simulationState);
 }
 
 std::ostream& operator<<(std::ostream& stream, Mode mode) {
-    return stream << ToString(mode);
+    return stream << format_as(mode);
 }
 
 std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
-    return stream << ToString(ioSignalId);
+    return stream << format_as(ioSignalId);
 }
 
 std::ostream& operator<<(std::ostream& stream, DataType dataType) {
-    return stream << ToString(dataType);
+    return stream << format_as(dataType);
 }
 
 std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
-    return stream << ToString(sizeKind);
+    return stream << format_as(sizeKind);
 }
 
 std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
-    return stream << ToString(busControllerId);
+    return stream << format_as(busControllerId);
 }
 
 std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
-    return stream << ToString(busMessageId);
+    return stream << format_as(busMessageId);
 }
 
 std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
-    return stream << ToString(linControllerType);
+    return stream << format_as(linControllerType);
 }
 
 std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
-    return stream << ToString(canMessageFlags);
+    return stream << format_as(canMessageFlags);
 }
 
 std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
-    return stream << ToString(ethMessageFlags);
+    return stream << format_as(ethMessageFlags);
 }
 
 std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
-    return stream << ToString(linMessageFlags);
+    return stream << format_as(linMessageFlags);
 }
 
 std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
-    return stream << ToString(frMessageFlags);
+    return stream << format_as(frMessageFlags);
 }
 
 std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
-    return stream << ToString(frameKind);
+    return stream << format_as(frameKind);
 }
 
 std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
-    return stream << ioSignal.ToString();
+    return stream << format_as(ioSignal);
 }
 
 std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
-    return stream << ioSignalContainer.ToString();
+    return stream << format_as(ioSignalContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
-    return stream << canController.ToString();
+    return stream << format_as(canController);
 }
 
 std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
-    return stream << canControllerContainer.ToString();
+    return stream << format_as(canControllerContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
-    return stream << canMessage.ToString();
+    return stream << format_as(canMessage);
 }
 
 std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
-    return stream << canMessageContainer.ToString();
+    return stream << format_as(canMessageContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
-    return stream << ethController.ToString();
+    return stream << format_as(ethController);
 }
 
 std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
-    return stream << ethControllerContainer.ToString();
+    return stream << format_as(ethControllerContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
-    return stream << ethMessage.ToString();
+    return stream << format_as(ethMessage);
 }
 
 std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
-    return stream << ethMessageContainer.ToString();
+    return stream << format_as(ethMessageContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
-    return stream << linController.ToString();
+    return stream << format_as(linController);
 }
 
 std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
-    return stream << frControllerContainer.ToString();
+    return stream << format_as(frControllerContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
-    return stream << linMessage.ToString();
+    return stream << format_as(linMessage);
 }
 
 std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
-    return stream << linMessageContainer.ToString();
+    return stream << format_as(linMessageContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
-    return stream << frController.ToString();
+    return stream << format_as(frController);
 }
 
 std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
-    return stream << frControllerContainer.ToString();
+    return stream << format_as(frControllerContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
-    return stream << frMessage.ToString();
+    return stream << format_as(frMessage);
 }
 
 std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
-    return stream << frMessageContainer.ToString();
+    return stream << format_as(frMessageContainer);
 }
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
-    return stream << ToString(ioSignalContainers);
+    return stream << format_as(ioSignalContainers);
 }
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
-    return stream << ToString(canControllerContainers);
+    return stream << format_as(canControllerContainers);
 }
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
-    return stream << ToString(ethControllerContainers);
+    return stream << format_as(ethControllerContainers);
 }
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
-    return stream << ToString(linControllerContainers);
+    return stream << format_as(linControllerContainers);
 }
 
 std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
-    return stream << ToString(frControllerContainers);
+    return stream << format_as(frControllerContainers);
 }
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) {
@@ -1874,7 +1920,7 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
     std::string str = "IO Data { Id: ";
-    str.append(ToString(ioSignal.id));
+    str.append(format_as(ioSignal.id));
     str.append(", Length: ");
     str.append(std::to_string(length));
     str.append(", Data: ");

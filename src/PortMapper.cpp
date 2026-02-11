@@ -80,7 +80,7 @@ private:
                 return Result::Ok;
             default:
                 std::string message = "Received unexpected frame '";
-                message.append(ToString(frameKind));
+                message.append(format_as(frameKind));
                 message.append("'.");
                 Logger::Instance().LogError(message);
                 return Result::Error;
@@ -227,7 +227,7 @@ private:
         }
         default:
             std::string message = "PortMapperGetPort: Received unexpected frame '";
-            message.append(ToString(frameKind));
+            message.append(format_as(frameKind));
             message.append("'.");
             Logger::Instance().LogError(message);
             return Result::Error;
@@ -260,7 +260,7 @@ private:
         }
         default:
             std::string message = "PortMapperSetPort: Received unexpected frame '";
-            message.append(ToString(frameKind));
+            message.append(format_as(frameKind));
             message.append("'.");
             Logger::Instance().LogError(message);
             return Result::Error;
@@ -293,7 +293,7 @@ private:
         }
         default:
             std::string message = "PortMapperUnsetPort: Received unexpected frame '";
-            message.append(ToString(frameKind));
+            message.append(format_as(frameKind));
             message.append("'.");
             Logger::Instance().LogError(message);
             return Result::Error;

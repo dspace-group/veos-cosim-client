@@ -34,7 +34,7 @@ void LogProtocolBeginTraceReceiveHeader() {
 
 void LogProtocolEndTraceReceiveHeader(FrameKind frameKind) {
     std::string str = "ReceiveHeader(FrameKind: ";
-    str.append(ToString(frameKind));
+    str.append(format_as(frameKind));
     str.append(")");
     LogProtocolEndTrace(str);
 }
@@ -71,7 +71,7 @@ void LogProtocolEndTraceReadError(const std::string& errorMessage) {
 
 void LogProtocolBeginTraceSendPing(std::chrono::nanoseconds roundTripTime) {
     std::string str = "SendPing(RoundTripTime: ";
-    str.append(ToString(roundTripTime));
+    str.append(format_as(roundTripTime));
     str.append(")");
     LogProtocolBeginTrace(str);
 }
@@ -86,14 +86,14 @@ void LogProtocolBeginTraceReadPing() {
 
 void LogProtocolEndTraceReadPing(std::chrono::nanoseconds roundTripTime) {
     std::string str = "ReadPing(RoundTripTime: ";
-    str.append(ToString(roundTripTime));
+    str.append(format_as(roundTripTime));
     str.append(")");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendPingOk(Command command) {
     std::string str = "SendPingOk(Command: ";
-    str.append(ToString(command));
+    str.append(format_as(command));
     str.append(")");
     LogProtocolBeginTrace(str);
 }
@@ -108,7 +108,7 @@ void LogProtocolBeginTraceReadPingOk() {
 
 void LogProtocolEndTraceReadPingOk(Command command) {
     std::string str = "ReadPingOk(Command: ";
-    str.append(ToString(command));
+    str.append(format_as(command));
     str.append(")");
     LogProtocolEndTrace(str);
 }
@@ -117,7 +117,7 @@ void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion, Mode clientMode,
     std::string str = "SendConnect(ProtocolVersion: ";
     str.append(std::to_string(protocolVersion));
     str.append(", ClientMode: ");
-    str.append(ToString(clientMode));
+    str.append(format_as(clientMode));
     str.append(", ServerName: \"");
     str.append(serverName);
     str.append("\", ClientName: \"");
@@ -138,7 +138,7 @@ void LogProtocolEndTraceReadConnect(uint32_t protocolVersion, Mode clientMode, c
     std::string str = "ReadConnect(ProtocolVersion: ";
     str.append(std::to_string(protocolVersion));
     str.append(", ClientMode: ");
-    str.append(ToString(clientMode));
+    str.append(format_as(clientMode));
     str.append(", ServerName: \"");
     str.append(serverName);
     str.append("\", ClientName: \"");
@@ -160,23 +160,23 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
     std::string str = "SendConnectOk(ProtocolVersion: ";
     str.append(std::to_string(protocolVersion));
     str.append(", ClientMode: ");
-    str.append(ToString(clientMode));
+    str.append(format_as(clientMode));
     str.append(", StepSize: ");
-    str.append(ToString(stepSize));
+    str.append(format_as(stepSize));
     str.append(" s, SimulationState: ");
-    str.append(ToString(simulationState));
+    str.append(format_as(simulationState));
     str.append(", IncomingSignals: ");
-    str.append(ToString(incomingSignals));
+    str.append(format_as(incomingSignals));
     str.append(", OutgoingSignals: ");
-    str.append(ToString(outgoingSignals));
+    str.append(format_as(outgoingSignals));
     str.append(", CanControllers: ");
-    str.append(ToString(canControllers));
+    str.append(format_as(canControllers));
     str.append(", EthControllers: ");
-    str.append(ToString(ethControllers));
+    str.append(format_as(ethControllers));
     str.append(", LinControllers: ");
-    str.append(ToString(linControllers));
+    str.append(format_as(linControllers));
     str.append(", FrControllers: ");
-    str.append(ToString(frControllers));
+    str.append(format_as(frControllers));
     str.append(")");
     LogProtocolBeginTrace(str);
 }
@@ -206,30 +206,30 @@ void LogProtocolEndTraceReadConnectOk(Mode clientMode,
                                       const std::vector<LinControllerContainer>& linControllers,
                                       const std::vector<FrControllerContainer>& frControllers) {
     std::string str = "ClientMode: ";
-    str.append(ToString(clientMode));
+    str.append(format_as(clientMode));
     str.append(", StepSize: ");
-    str.append(ToString(stepSize));
+    str.append(format_as(stepSize));
     str.append(" s, SimulationState: ");
-    str.append(ToString(simulationState));
+    str.append(format_as(simulationState));
     str.append(", IncomingSignals: ");
-    str.append(ToString(incomingSignals));
+    str.append(format_as(incomingSignals));
     str.append(", OutgoingSignals: ");
-    str.append(ToString(outgoingSignals));
+    str.append(format_as(outgoingSignals));
     str.append(", CanControllers: ");
-    str.append(ToString(canControllers));
+    str.append(format_as(canControllers));
     str.append(", EthControllers: ");
-    str.append(ToString(ethControllers));
+    str.append(format_as(ethControllers));
     str.append(", LinControllers: ");
-    str.append(ToString(linControllers));
+    str.append(format_as(linControllers));
     str.append(", FrControllers: ");
-    str.append(ToString(frControllers));
+    str.append(format_as(frControllers));
     str.append(")");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendStart(SimulationTime simulationTime) {
     std::string str = "SendStart(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolBeginTrace(str);
 }
@@ -244,14 +244,14 @@ void LogProtocolBeginTraceReadStart() {
 
 void LogProtocolEndTraceReadStart(SimulationTime simulationTime) {
     std::string str = "ReadStart(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendStop(SimulationTime simulationTime) {
     std::string str = "SendStop(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolBeginTrace(str);
 }
@@ -266,16 +266,16 @@ void LogProtocolBeginTraceReadStop() {
 
 void LogProtocolEndTraceReadStop(SimulationTime simulationTime) {
     std::string str = "ReadStop(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendTerminate(SimulationTime simulationTime, TerminateReason reason) {
     std::string str = "SendTerminate(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s, Reason: ");
-    str.append(ToString(reason));
+    str.append(format_as(reason));
     str.append(")");
     LogProtocolBeginTrace(str);
 }
@@ -290,16 +290,16 @@ void LogProtocolBeginTraceReadTerminate() {
 
 void LogProtocolEndTraceReadTerminate(SimulationTime simulationTime, TerminateReason reason) {
     std::string str = "ReadTerminate(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s, Reason: ");
-    str.append(ToString(reason));
+    str.append(format_as(reason));
     str.append(")");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendPause(SimulationTime simulationTime) {
     std::string str = "SendPause(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolBeginTrace(str);
 }
@@ -314,14 +314,14 @@ void LogProtocolBeginTraceReadPause() {
 
 void LogProtocolEndTraceReadPause(SimulationTime simulationTime) {
     std::string str = "ReadPause(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendContinue(SimulationTime simulationTime) {
     std::string str = "SendContinue(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolBeginTrace(str);
 }
@@ -336,14 +336,14 @@ void LogProtocolBeginTraceReadContinue() {
 
 void LogProtocolEndTraceReadContinue(SimulationTime simulationTime) {
     std::string str = "ReadContinue(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendStep(SimulationTime simulationTime) {
     std::string str = "SendStep(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolBeginTrace(str);
 }
@@ -358,16 +358,16 @@ void LogProtocolBeginTraceReadStep() {
 
 void LogProtocolEndTraceReadStep(SimulationTime simulationTime) {
     std::string str = "ReadStep(SimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s)");
     LogProtocolEndTrace(str);
 }
 
 void LogProtocolBeginTraceSendStepOk(SimulationTime simulationTime, Command command) {
     std::string str = "SendStepOk(NextSimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s, Command: ");
-    str.append(ToString(command));
+    str.append(format_as(command));
     str.append(")");
     LogProtocolBeginTrace(str);
 }
@@ -382,9 +382,9 @@ void LogProtocolBeginTraceReadStepOk() {
 
 void LogProtocolEndTraceReadStepOk(SimulationTime simulationTime, Command command) {
     std::string str = "ReadStepOk(NextSimulationTime: ";
-    str.append(ToString(simulationTime));
+    str.append(format_as(simulationTime));
     str.append(" s, Command: ");
-    str.append(ToString(command));
+    str.append(format_as(command));
     str.append(")");
     LogProtocolEndTrace(str);
 }
@@ -483,7 +483,7 @@ void LogProtocolEndTraceReadGetPortOk(uint16_t port) {
 
 void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data) {
     std::string message = "Signal { Id: ";
-    message.append(ToString(signalId));
+    message.append(format_as(signalId));
     message.append(", Length: ");
     message.append(std::to_string(length));
     message.append(", Data: ");

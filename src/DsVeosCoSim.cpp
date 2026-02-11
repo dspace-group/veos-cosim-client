@@ -588,39 +588,39 @@ DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64
 }
 
 const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) {
-    return ToString(static_cast<Result>(result));
+    return format_as(static_cast<Result>(result));
 }
 
 const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command) {
-    return ToString(static_cast<Command>(command));
+    return format_as(static_cast<Command>(command));
 }
 
 const char* DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity) {
-    return ToString(static_cast<Severity>(severity));
+    return format_as(static_cast<Severity>(severity));
 }
 
 const char* DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason) {
-    return ToString(static_cast<TerminateReason>(terminateReason));
+    return format_as(static_cast<TerminateReason>(terminateReason));
 }
 
 const char* DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState) {
-    return ToString(static_cast<ConnectionState>(connectionState));
+    return format_as(static_cast<ConnectionState>(connectionState));
 }
 
 const char* DsVeosCoSim_SimulationStateToString(DsVeosCoSim_SimulationState simulationState) {
-    return ToString(static_cast<SimulationState>(simulationState));
+    return format_as(static_cast<SimulationState>(simulationState));
 }
 
 const char* DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType) {
-    return ToString(static_cast<DataType>(dataType));
+    return format_as(static_cast<DataType>(dataType));
 }
 
 const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind) {
-    return ToString(static_cast<SizeKind>(sizeKind));
+    return format_as(static_cast<SizeKind>(sizeKind));
 }
 
 const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType) {
-    return ToString(static_cast<LinControllerType>(linControllerType));
+    return format_as(static_cast<LinControllerType>(linControllerType));
 }
 
 size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType) {
@@ -700,27 +700,27 @@ DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSi
 }
 
 std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return ToString(SimulationTime(simulationTime));
+    return format_as(SimulationTime(simulationTime));
 }
 
 std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal) {
-    return reinterpret_cast<const IoSignal*>(ioSignal)->ToString();
+    return format_as(*reinterpret_cast<const IoSignal*>(ioSignal));
 }
 
 std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller) {
-    return reinterpret_cast<const CanController*>(controller)->ToString();
+    return format_as(*reinterpret_cast<const CanController*>(controller));
 }
 
 std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller) {
-    return reinterpret_cast<const EthController*>(controller)->ToString();
+    return format_as(*reinterpret_cast<const EthController*>(controller));
 }
 
 std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller) {
-    return reinterpret_cast<const LinController*>(controller)->ToString();
+    return format_as(*reinterpret_cast<const LinController*>(controller));
 }
 
 std::string DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller) {
-    return reinterpret_cast<const FrController*>(controller)->ToString();
+    return format_as(*reinterpret_cast<const FrController*>(controller));
 }
 
 std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value) {
@@ -736,51 +736,51 @@ std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uin
 }
 
 std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message) {
-    return reinterpret_cast<const CanMessage*>(message)->ToString();
+    return format_as(*reinterpret_cast<const CanMessage*>(message));
 }
 
 std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message) {
-    return reinterpret_cast<const EthMessage*>(message)->ToString();
+    return format_as(*reinterpret_cast<const EthMessage*>(message));
 }
 
 std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message) {
-    return reinterpret_cast<const LinMessage*>(message)->ToString();
+    return format_as(*reinterpret_cast<const LinMessage*>(message));
 }
 
 std::string DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message) {
-    return reinterpret_cast<const FrMessage*>(message)->ToString();
+    return format_as(*reinterpret_cast<const FrMessage*>(message));
 }
 
 std::string DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer) {
-    return reinterpret_cast<const CanMessageContainer*>(messageContainer)->ToString();
+    return format_as(*reinterpret_cast<const CanMessageContainer*>(messageContainer));
 }
 
 std::string DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer) {
-    return reinterpret_cast<const EthMessageContainer*>(messageContainer)->ToString();
+    return format_as(*reinterpret_cast<const EthMessageContainer*>(messageContainer));
 }
 
 std::string DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer) {
-    return reinterpret_cast<const LinMessageContainer*>(messageContainer)->ToString();
+    return format_as(*reinterpret_cast<const LinMessageContainer*>(messageContainer));
 }
 
 std::string DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer) {
-    return reinterpret_cast<const FrMessageContainer*>(messageContainer)->ToString();
+    return format_as(*reinterpret_cast<const FrMessageContainer*>(messageContainer));
 }
 
 std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags) {
-    return ToString(static_cast<CanMessageFlags>(flags));
+    return format_as(static_cast<CanMessageFlags>(flags));
 }
 
 std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags) {
-    return ToString(static_cast<EthMessageFlags>(flags));
+    return format_as(static_cast<EthMessageFlags>(flags));
 }
 
 std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags) {
-    return ToString(static_cast<LinMessageFlags>(flags));
+    return format_as(static_cast<LinMessageFlags>(flags));
 }
 
 std::string DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags) {
-    return ToString(static_cast<FrMessageFlags>(flags));
+    return format_as(static_cast<FrMessageFlags>(flags));
 }
 
 static_assert(CanMessageMaxLength == DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH);

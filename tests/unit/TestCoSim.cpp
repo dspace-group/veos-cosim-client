@@ -83,7 +83,7 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(, TestCoSim, ConnectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
-    return std::string(ToString(info.param));
+    return fmt::format("{}", info.param);
 });
 
 TEST_F(TestCoSim, LoadServer) {

@@ -53,7 +53,7 @@ struct Param {
 class TestTcpChannel : public testing::TestWithParam<Param> {};
 
 INSTANTIATE_TEST_SUITE_P(, TestTcpChannel, testing::ValuesIn(GetValues()), [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
-    return std::string(ToString(info.param.addressFamily));
+    return fmt::format("{}", info.param.addressFamily);
 });
 
 TEST_F(TestTcpChannel, StartServer) {

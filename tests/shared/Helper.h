@@ -23,22 +23,22 @@ namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t DefaultTimeout = 1000;
 
-#define MustBeOk(result)                                             \
-    do {                                                             \
-        Result _result_ = (result);                                  \
-        if (!IsOk(_result_)) {                                       \
-            LogError("Expected Ok but was {}.", ToString(_result_)); \
-            exit(1);                                                 \
-        }                                                            \
+#define MustBeOk(result)                                   \
+    do {                                                   \
+        Result _result_ = (result);                        \
+        if (!IsOk(_result_)) {                             \
+            LogError("Expected Ok but was {}.", _result_); \
+            exit(1);                                       \
+        }                                                  \
     } while (0)
 
-#define MustBeDisconnected(result)                                             \
-    do {                                                                       \
-        Result _result_ = (result);                                            \
-        if (_result_ != Result::Disconnected) {                                \
-            LogError("Expected Disconnected but was {}.", ToString(_result_)); \
-            exit(1);                                                           \
-        }                                                                      \
+#define MustBeDisconnected(result)                                   \
+    do {                                                             \
+        Result _result_ = (result);                                  \
+        if (_result_ != Result::Disconnected) {                      \
+            LogError("Expected Disconnected but was {}.", _result_); \
+            exit(1);                                                 \
+        }                                                            \
     } while (0)
 
 #define MustBeTrue(result)                            \

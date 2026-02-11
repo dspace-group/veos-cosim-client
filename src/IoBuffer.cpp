@@ -71,7 +71,7 @@ public:
             auto search = _metaDataLookup.find(signal.id);
             if (search != _metaDataLookup.end()) {
                 std::string message = "Duplicated IO signal id ";
-                message.append(ToString(signal.id));
+                message.append(format_as(signal.id));
                 message.append(".");
                 Logger::Instance().LogError(message);
                 return Result::Error;
@@ -164,7 +164,7 @@ protected:
         }
 
         std::string message = "IO signal id '";
-        message.append(ToString(signalId));
+        message.append(format_as(signalId));
         message.append("' is unknown.");
         Logger::Instance().LogError(message);
         return Result::Error;
