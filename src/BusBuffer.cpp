@@ -7,6 +7,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -63,10 +64,9 @@ public:
         for (const auto& controller : controllers) {
             auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                std::string message = "Duplicated controller id ";
-                message.append(format_as(controller.id));
-                message.append(".");
-                Logger::Instance().LogError(message);
+                std::ostringstream oss;
+                oss << "Duplicated controller id " << controller.id << '.';
+                Logger::Instance().LogError(oss.str());
                 return Result::Error;
             }
 
@@ -171,10 +171,9 @@ protected:
             return Result::Ok;
         }
 
-        std::string message = "Controller id ";
-        message.append(format_as(controllerId));
-        message.append(" is unknown.");
-        Logger::Instance().LogError(message);
+        std::ostringstream oss;
+        oss << "Controller id " << controllerId << " is unknown.";
+        Logger::Instance().LogError(oss.str());
         return Result::Error;
     }
 
@@ -226,10 +225,9 @@ protected:
     [[nodiscard]] Result CheckForSpace(ExtensionPtr extension) {
         if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::string warningMessage = "Transmit buffer for controller '";
-                warningMessage.append(extension->info.name);
-                warningMessage.append("' is full. Messages are dropped.");
-                Logger::Instance().LogWarning(warningMessage);
+                std::ostringstream oss;
+                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                Logger::Instance().LogWarning(oss.str());
                 extension->warningSent = true;
             }
 
@@ -345,10 +343,9 @@ protected:
 
             if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
                 if (!extension->warningSent) {
-                    std::string warningMessage = "Receive buffer for controller '";
-                    warningMessage.append(extension->info.name);
-                    warningMessage.append("' is full. Messages are dropped.");
-                    Logger::Instance().LogWarning(warningMessage);
+                    std::ostringstream oss;
+                    oss << "Receive buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                    Logger::Instance().LogWarning(oss.str());
                     extension->warningSent = true;
                 }
 
@@ -527,10 +524,9 @@ protected:
     [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
         if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::string warningMessage = "Transmit buffer for controller '";
-                warningMessage.append(extension->info.name);
-                warningMessage.append("' is full. Messages are dropped.");
-                Logger::Instance().LogWarning(warningMessage);
+                std::ostringstream oss;
+                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                Logger::Instance().LogWarning(oss.str());
                 extension->warningSent = true;
             }
 
@@ -715,31 +711,15 @@ public:
         const char* suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
         const char* suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-        std::string canTransmitBufferName(name);
-        canTransmitBufferName.append(".Can.");
-        canTransmitBufferName.append(suffixForTransmit);
-        std::string ethTransmitBufferName(name);
-        ethTransmitBufferName.append(".Eth.");
-        ethTransmitBufferName.append(suffixForTransmit);
-        std::string linTransmitBufferName(name);
-        linTransmitBufferName.append(".Lin.");
-        linTransmitBufferName.append(suffixForTransmit);
-        std::string frTransmitBufferName(name);
-        frTransmitBufferName.append(".Flexray.");
-        frTransmitBufferName.append(suffixForTransmit);
+        std::string canTransmitBufferName = name + ".Can." + suffixForTransmit;
+        std::string ethTransmitBufferName = name + ".Eth." + suffixForTransmit;
+        std::string linTransmitBufferName = name + ".Lin." + suffixForTransmit;
+        std::string frTransmitBufferName = name + ".Flexray." + suffixForTransmit;
 
-        std::string canReceiveBufferName(name);
-        canReceiveBufferName.append(".Can.");
-        canReceiveBufferName.append(suffixForReceive);
-        std::string ethReceiveBufferName(name);
-        ethReceiveBufferName.append(".Eth.");
-        ethReceiveBufferName.append(suffixForReceive);
-        std::string linReceiveBufferName(name);
-        linReceiveBufferName.append(".Lin.");
-        linReceiveBufferName.append(suffixForReceive);
-        std::string frReceiveBufferName(name);
-        frReceiveBufferName.append(".Flexray.");
-        frReceiveBufferName.append(suffixForReceive);
+        std::string canReceiveBufferName = name + ".Can." + suffixForReceive;
+        std::string ethReceiveBufferName = name + ".Eth." + suffixForReceive;
+        std::string linReceiveBufferName = name + ".Lin." + suffixForReceive;
+        std::string frReceiveBufferName = name + ".Flexray." + suffixForReceive;
 
         CheckResult(_canTransmitBuffer->Initialize(coSimType, canTransmitBufferName, canControllers));
         CheckResult(_ethTransmitBuffer->Initialize(coSimType, ethTransmitBufferName, ethControllers));

@@ -47,21 +47,15 @@ namespace {
 }
 
 [[nodiscard]] Result GetFullNamedEventName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Event." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullNamedMutexName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullSharedMemoryName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.SharedMemory." + name, fullName);
 }
 
 }  // namespace

@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -213,10 +214,9 @@ public:
                 return Result::Ok;
         }
 
-        std::string message = "Unknown terminate reason '";
-        message.append(format_as(terminateReason));
-        message.append("'.");
-        Logger::Instance().LogError(message);
+        std::ostringstream oss;
+        oss << "Unknown terminate reason '" << terminateReason << "'.";
+        Logger::Instance().LogError(oss.str());
         return Result::Error;
     }
 
@@ -470,10 +470,9 @@ private:
     [[nodiscard]] Result LocalConnect() {
         CheckResult(TryConnectToLocalChannel(_serverName, _channel));
         if (!_channel) {
-            std::string message = "Could not connect to local dSPACE VEOS CoSim server '";
-            message.append(_serverName);
-            message.append("'.");
-            Logger::Instance().LogTrace(message);
+            std::ostringstream oss;
+            oss << "Could not connect to local dSPACE VEOS CoSim server '" << _serverName << "'.";
+            Logger::Instance().LogTrace(oss.str());
             return Result::Error;
         }
 
@@ -483,31 +482,20 @@ private:
 
     [[nodiscard]] Result RemoteConnect() {
         if (_remotePort == 0) {
-            std::string message = "Obtaining TCP port of dSPACE VEOS CoSim server '";
-            message.append(_serverName);
-            message.append("' at ");
-            message.append(_remoteIpAddress);
-            message.append(" ...");
-            Logger::Instance().LogInfo(message);
+            std::ostringstream oss;
+            oss << "Obtaining TCP port of dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << " ...";
+            Logger::Instance().LogInfo(oss.str());
             CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort), "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
-            std::string message = "Connecting to dSPACE VEOS CoSim server at ";
-            message.append(_remoteIpAddress);
-            message.append(":");
-            message.append(std::to_string(_remotePort));
-            message.append(" ...");
-            Logger::Instance().LogInfo(message);
+            std::ostringstream oss;
+            oss << "Connecting to dSPACE VEOS CoSim server at " << _remoteIpAddress << ':' << _remotePort << " ...";
+            Logger::Instance().LogInfo(oss.str());
         } else {
-            std::string message = "Connecting to dSPACE VEOS CoSim server '";
-            message.append(_serverName);
-            message.append("' at ");
-            message.append(_remoteIpAddress);
-            message.append(":");
-            message.append(std::to_string(_remotePort));
-            message.append(" ...");
-            Logger::Instance().LogInfo(message);
+            std::ostringstream oss;
+            oss << "Connecting to dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << ':' << _remotePort << " ...";
+            Logger::Instance().LogInfo(oss.str());
         }
 
         CheckResult(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel));
@@ -553,27 +541,18 @@ private:
         _frControllersExtern = Convert(_frControllers);
 
         if (_connectionKind == ConnectionKind::Local) {
-            std::string message = "Connected to local dSPACE VEOS CoSim server '";
-            message.append(_serverName);
-            message.append("'.");
-            Logger::Instance().LogInfo(message);
+            std::ostringstream oss;
+            oss << "Connected to local dSPACE VEOS CoSim server '" << _serverName << "'.";
+            Logger::Instance().LogInfo(oss.str());
         } else {
             if (_serverName.empty()) {
-                std::string message = "Connected to dSPACE VEOS CoSim server at ";
-                message.append(_remoteIpAddress);
-                message.append(":");
-                message.append(std::to_string(_remotePort));
-                message.append(".");
-                Logger::Instance().LogInfo(message);
+                std::ostringstream oss;
+                oss << "Connected to dSPACE VEOS CoSim server at " << _remoteIpAddress << ':' << _remotePort << '.';
+                Logger::Instance().LogInfo(oss.str());
             } else {
-                std::string message = "Connected to dSPACE VEOS CoSim server '";
-                message.append(_serverName);
-                message.append("' at ");
-                message.append(_remoteIpAddress);
-                message.append(":");
-                message.append(std::to_string(_remotePort));
-                message.append(".");
-                Logger::Instance().LogInfo(message);
+                std::ostringstream oss;
+                oss << "Connected to dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << ':' << _remotePort << '.';
+                Logger::Instance().LogInfo(oss.str());
             }
         }
 
@@ -897,10 +876,9 @@ private:
     }
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
-        std::string message = "Received unexpected frame '";
-        message.append(format_as(frameKind));
-        message.append("'.");
-        Logger::Instance().LogError(message);
+        std::ostringstream oss;
+        oss << "Received unexpected frame '" << frameKind << "'.";
+        Logger::Instance().LogError(oss.str());
         return Result::Error;
     }
 

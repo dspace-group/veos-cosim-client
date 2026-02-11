@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -1394,7 +1395,9 @@ public:
         return Result::Ok;
     }
 
-    Logger::Instance().LogError("Unsupported protocol version: " + std::to_string(negotiatedVersion) + ".");
+    std::ostringstream oss;
+    oss << "Unsupported protocol version: " << negotiatedVersion << '.';
+    Logger::Instance().LogError(oss.str());
     return Result::Error;
 }
 

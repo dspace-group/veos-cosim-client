@@ -64,8 +64,7 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 using AddressInfoPtr = addrinfo*;
 
 [[nodiscard]] std::string GetLocalPath(const std::string& name) {
-    std::string fileName = "dSPACE.VEOS.CoSim.";
-    fileName.append(name);
+    std::string fileName = "dSPACE.VEOS.CoSim." + name;
 #ifdef _WIN32
     std::filesystem::path tempDir = std::filesystem::temp_directory_path();
     std::filesystem::path fileDir = tempDir / fileName;

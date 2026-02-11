@@ -10,6 +10,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -52,12 +53,9 @@ public:
 
         CheckResult(mutex.Lock());
 
-        std::string dataName(name);
-        dataName.append(".Data");
-        std::string newDataName(name);
-        newDataName.append(".NewData");
-        std::string newSpaceName(name);
-        newSpaceName.append(".NewSpace");
+        std::string dataName = name + ".Data";
+        std::string newDataName = name + ".NewData";
+        std::string newSpaceName = name + ".NewSpace";
 
         constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
 
@@ -171,9 +169,9 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-        std::string writerName(name);
-        writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
-        CheckResult(InitializeBase(writerName, isServer));
+        std::ostringstream oss;
+        oss << name << '.' << counter << '.' << postFix;
+        CheckResult(InitializeBase(oss.str(), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Write");
         return Result::Ok;
@@ -349,9 +347,9 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-        std::string readerName(name);
-        readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
-        CheckResult(InitializeBase(readerName, isServer));
+        std::ostringstream oss;
+        oss << name << '.' << counter << '.' << postFix;
+        CheckResult(InitializeBase(oss.str(), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Read");
         return Result::Ok;

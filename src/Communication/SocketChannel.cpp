@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -302,9 +303,9 @@ public:
     [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override {
         SocketAddress socketAddress{};
         CheckResult(_socket.GetRemoteAddress(socketAddress));
-        remoteAddress = socketAddress.ipAddress;
-        remoteAddress.append(":");
-        remoteAddress.append(std::to_string(socketAddress.port));
+        std::ostringstream oss;
+        oss << socketAddress.ipAddress << ':' << socketAddress.port;
+        remoteAddress = oss.str();
         return Result::Ok;
     }
 

@@ -165,7 +165,7 @@ TEST_F(TestTypes, ValueToString) {
     std::string string = ValueToString(dataType, length, data.data());
 
     // Assert
-    AssertEqHelper("4.200000 0.876000", string);
+    AssertEqHelper("4.2 0.876", string);
 }
 
 TEST_F(TestTypes, SimulationStateToString) {

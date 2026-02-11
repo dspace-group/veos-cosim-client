@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -79,10 +80,9 @@ private:
                 CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
                 return Result::Ok;
             default:
-                std::string message = "Received unexpected frame '";
-                message.append(format_as(frameKind));
-                message.append("'.");
-                Logger::Instance().LogError(message);
+                std::ostringstream oss;
+                oss << "Received unexpected frame '" << frameKind << "'.";
+                Logger::Instance().LogError(oss.str());
                 return Result::Error;
         }
     }
@@ -92,18 +92,16 @@ private:
         CheckResultWithMessage(_protocol->ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            std::string message = "Get '";
-            message.append(name);
-            message.append("'");
-            Logger::Instance().LogTrace(message);
+            std::ostringstream oss;
+            oss << "Get '" << name << "'";
+            Logger::Instance().LogTrace(oss.str());
         }
 
         auto search = _ports.find(name);
         if (search == _ports.end()) {
-            std::string message = "Could not find port for dSPACE VEOS CoSim server '";
-            message.append(name);
-            message.append("'.");
-            CheckResultWithMessage(_protocol->SendError(channel.GetWriter(), message), "Could not send error frame.");
+            std::ostringstream oss;
+            oss << "Could not find port for dSPACE VEOS CoSim server '" << name << "'.";
+            CheckResultWithMessage(_protocol->SendError(channel.GetWriter(), oss.str()), "Could not send error frame.");
             return Result::Ok;
         }
 
@@ -117,11 +115,9 @@ private:
         CheckResultWithMessage(_protocol->ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            std::string message = "Set '";
-            message.append(name);
-            message.append("': ");
-            message.append(std::to_string(port));
-            Logger::Instance().LogTrace(message);
+            std::ostringstream oss;
+            oss << "Set '" << name << "': " << port;
+            Logger::Instance().LogTrace(oss.str());
         }
 
         _ports[name] = port;
@@ -139,10 +135,9 @@ private:
         CheckResultWithMessage(_protocol->ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            std::string message = "Unset '";
-            message.append(name);
-            message.append("'");
-            Logger::Instance().LogTrace(message);
+            std::ostringstream oss;
+            oss << "Unset '" << name << '\'';
+            Logger::Instance().LogTrace(oss.str());
         }
 
         _ports.erase(name);
@@ -162,11 +157,9 @@ private:
             Logger::Instance().LogTrace("PortMapper Ports:");
 
             for (auto& [name, port] : _ports) {
-                std::string message = "  '";
-                message.append(name);
-                message.append("': ");
-                message.append(std::to_string(port));
-                Logger::Instance().LogTrace(message);
+                std::ostringstream oss;
+                oss << "  '" << name << "': " << port;
+                Logger::Instance().LogTrace(oss.str());
             }
         }
     }
@@ -193,12 +186,9 @@ private:
 
 [[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        std::string message = "PortMapperGetPort(ipAddress: '";
-        message.append(ipAddress);
-        message.append("', serverName: '");
-        message.append(serverName);
-        message.append("')");
-        Logger::Instance().LogTrace(message);
+        std::ostringstream oss;
+        oss << "PortMapperGetPort(ipAddress: '" << ipAddress << "', serverName: '" << serverName << "')";
+        Logger::Instance().LogTrace(oss.str());
     }
 
     std::unique_ptr<Channel> channel;
@@ -226,10 +216,9 @@ private:
             return Result::Error;
         }
         default:
-            std::string message = "PortMapperGetPort: Received unexpected frame '";
-            message.append(format_as(frameKind));
-            message.append("'.");
-            Logger::Instance().LogError(message);
+            std::ostringstream oss;
+            oss << "PortMapperGetPort: Received unexpected frame '" << frameKind << "'.";
+            Logger::Instance().LogError(oss.str());
             return Result::Error;
     }
 }
@@ -259,10 +248,9 @@ private:
             return Result::Error;
         }
         default:
-            std::string message = "PortMapperSetPort: Received unexpected frame '";
-            message.append(format_as(frameKind));
-            message.append("'.");
-            Logger::Instance().LogError(message);
+            std::ostringstream oss;
+            oss << "PortMapperSetPort: Received unexpected frame '" << frameKind << "'.";
+            Logger::Instance().LogError(oss.str());
             return Result::Error;
     }
 }
@@ -292,10 +280,9 @@ private:
             return Result::Error;
         }
         default:
-            std::string message = "PortMapperUnsetPort: Received unexpected frame '";
-            message.append(format_as(frameKind));
-            message.append("'.");
-            Logger::Instance().LogError(message);
+            std::ostringstream oss;
+            oss << "PortMapperUnsetPort: Received unexpected frame '" << frameKind << "'.";
+            Logger::Instance().LogError(oss.str());
             return Result::Error;
     }
 }

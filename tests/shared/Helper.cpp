@@ -140,9 +140,7 @@ void ClearLastMessage() {
 
 void SetEnvVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
-    std::string environmentString(name);
-    environmentString.append("=");
-    environmentString.append(value);
+    std::string environmentString = fmt::format("{}={}", name, value);
     (void)_putenv(environmentString.c_str());
 #else
     (void)setenv(name.data(), value.data(), 1);
