@@ -7,6 +7,7 @@
 
 #include <fmt/color.h>
 
+#include "DsVeosCoSim/CoSimTypes.h"
 #include "Protocol.h"
 #include "Socket.h"
 
@@ -47,6 +48,22 @@ std::string LastMessage;
 
 }  // namespace
 
+void LogError(const std::string& message) {
+    OnLogCallback(Severity::Error, message);
+}
+
+void LogWarning(const std::string& message) {
+    OnLogCallback(Severity::Warning, message);
+}
+
+void LogInfo(const std::string& message) {
+    OnLogCallback(Severity::Info, message);
+}
+
+void LogTrace(const std::string& message) {
+    OnLogCallback(Severity::Trace, message);
+}
+
 void InitializeOutput() {
 #if _WIN32
     (void)SetConsoleOutputCP(CP_UTF8);
@@ -62,7 +79,7 @@ void InitializeOutput() {
     }
 #endif
 
-    SetLogCallback(OnLogCallback);
+    Logger::Instance().SetLogCallback(OnLogCallback);
 }
 
 void OnLogCallback(Severity severity, const std::string& message) {
@@ -123,9 +140,7 @@ void ClearLastMessage() {
 
 void SetEnvVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
-    std::string environmentString(name);
-    environmentString.append("=");
-    environmentString.append(value);
+    std::string environmentString = fmt::format("{}={}", name, value);
     (void)_putenv(environmentString.c_str());
 #else
     (void)setenv(name.data(), value.data(), 1);
@@ -157,7 +172,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busBuffer);
 }
@@ -166,7 +181,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busBuffer);
 }
@@ -175,7 +190,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busBuffer);
 }
@@ -184,7 +199,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<FrController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
 }

@@ -62,22 +62,6 @@ void TcpChannelRoundtrip(benchmark::State& state) {
     RunTest(state, std::ref(*acceptedChannel), std::ref(*connectedChannel));
 }
 
-void UdsChannelRoundtrip(benchmark::State& state) {
-    std::string serverName = GenerateString("Server");
-
-    std::unique_ptr<ChannelServer> server;
-    MustBeOk(CreateUdsChannelServer(serverName, server));
-
-    std::unique_ptr<Channel> connectedChannel;
-    MustBeOk(TryConnectToUdsChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
-    std::unique_ptr<Channel> acceptedChannel;
-    MustBeOk(server->TryAccept(acceptedChannel));
-
-    RunTest(state, std::ref(*acceptedChannel), std::ref(*connectedChannel));
-}
-
-#ifdef _WIN32
 void LocalChannelRoundtrip(benchmark::State& state) {
     std::string serverName = GenerateString("Server名前");
     SetEnvVariable("VEOS_COSIM_SPIN_COUNT", "1280");
@@ -93,13 +77,8 @@ void LocalChannelRoundtrip(benchmark::State& state) {
 
     RunTest(state, std::ref(*acceptedChannel), std::ref(*connectedChannel));
 }
-#endif
 
 }  // namespace
 
 BENCHMARK(TcpChannelRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
-BENCHMARK(UdsChannelRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
-
-#ifdef _WIN32
 BENCHMARK(LocalChannelRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
-#endif

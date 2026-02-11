@@ -15,7 +15,7 @@ target_sources(
   ServerRemoteCommunication.cpp
   ServerTcp.cpp
   ServerUdp.cpp
-  ServerUds.cpp
+  ServerLocal.cpp
 )
 
 target_compile_options(

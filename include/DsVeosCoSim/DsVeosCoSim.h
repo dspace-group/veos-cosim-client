@@ -70,7 +70,7 @@ enum {
 };
 
 /**
- * \brief Defines the maximum length of a FLEXRAY message payload.
+ * \brief Defines the maximum length of a FlexRay message payload.
  */
 enum {
     DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH = 254
@@ -608,119 +608,116 @@ enum {
 };
 
 /**
- * \brief Represents an IO signal.
+ * \brief Contains information about an I/O signal.
  */
 typedef struct DsVeosCoSim_IoSignal {
     /**
-     * \brief Unique id of the IO signal.
+     * \brief The unique identifier of the I/O signal.
      */
     DsVeosCoSim_IoSignalId id;
 
     /**
-     * \brief Exact length of a fixed sized IO signal.
-     *        Maximum length of a variable sized IO signal.
+     * \brief The exact length of the I/O signal if it is of fixed length or the maximum length if it is of variable size.
      */
     uint32_t length;
 
     /**
-     * \brief Data type of the IO signal.
+     * \brief The data type of the I/O signal.
      */
     DsVeosCoSim_DataType dataType;
 
     /**
-     * \brief Size kind of the IO signal.
+     * \brief The size kind of the the I/O signal.
      */
     DsVeosCoSim_SizeKind sizeKind;
 
     /**
-     * \brief Name of the IO signal.
+     * \brief The name of the I/O signal.
      */
     const char* name;
 } DsVeosCoSim_IoSignal;
 
 /**
- * \brief Represents a CAN controller.
+ * \brief Contains information about a CAN controller.
  */
 typedef struct DsVeosCoSim_CanController {
     /**
-     * \brief Unique id of the CAN controller.
+     * \brief The unique identifier of the CAN controller.
      */
     DsVeosCoSim_BusControllerId id;
 
     /**
-     * \brief Maximum queue size of the CAN controller.
+     * \brief The maximum queue size of the CAN controller.
      */
     uint32_t queueSize;
 
     /**
-     * \brief Bits per second of the CAN controller.
+     * \brief The baud rate of the CAN controller.
      */
     uint64_t bitsPerSecond;
 
     /**
-     * \brief Bits per second for CAN FD of the CAN controller.
+     * \brief The baud rate of the CAN controller for CAN FD.
      */
     uint64_t flexibleDataRateBitsPerSecond;
 
     /**
-     * \brief Name of the CAN controller.
+     * \brief The name of the CAN controller.
      */
     const char* name;
 
     /**
-     * \brief Name of the CAN channel.
+     * \brief The name of the CAN channel.
      */
     const char* channelName;
 
     /**
-     * \brief Name of the CAN cluster.
+     * \brief The name of the CAN cluster.
      */
     const char* clusterName;
 } DsVeosCoSim_CanController;
 
 /**
- * \brief Represents a CAN message.
+ * \brief Contains information about a CAN message.
  */
 typedef struct DsVeosCoSim_CanMessage {
     /**
-     * \brief The simulation time when the CAN message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the CAN message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the CAN controller.
+     * \brief The ID of the CAN controller over which the CAN message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
-     * \brief CAN message ID.
+     * \brief The CAN message ID.
      */
     uint32_t id;
 
     /**
-     * \brief CAN message flags.
+     * \brief The flags of the CAN message.
      */
     DsVeosCoSim_CanMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the CAN message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The CAN message payload.
      */
     const uint8_t* data;
 } DsVeosCoSim_CanMessage;
 
 /**
- * \brief Represents a CAN message container.
+ * \brief Contains information about a CAN message container.
  */
 typedef struct DsVeosCoSim_CanMessageContainer {
     /**
-     * \brief The simulation time when the CAN message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the CAN message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
@@ -735,78 +732,77 @@ typedef struct DsVeosCoSim_CanMessageContainer {
     uint32_t reserved;
 
     /**
-     * \brief CAN message ID.
+     * \brief The CAN message ID.
      */
     uint32_t id;
 
     /**
-     * \brief CAN message flags.
+     * \brief The flags of the CAN message.
      */
     DsVeosCoSim_CanMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the CAN message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The CAN message payload.
      */
     uint8_t data[DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH];
 } DsVeosCoSim_CanMessageContainer;
 
 /**
- * \brief Represents an ethernet controller.
+ * \brief Contains information about an Ethernet controller.
  */
 typedef struct DsVeosCoSim_EthController {
     /**
-     * \brief Unique id of the ethernet controller.
+     * \brief The unique identifier of the Ethernet controller.
      */
     DsVeosCoSim_BusControllerId id;
 
     /**
-     * \brief Maximum queue size of the ethernet controller.
+     * \brief The maximum queue size of the Ethernet controller.
      */
     uint32_t queueSize;
 
     /**
-     * \brief Bits per second of the ethernet controller.
+     * \brief The baud rate of the Ethernet controller.
      */
     uint64_t bitsPerSecond;
 
     /**
-     * \brief MAC address of the ethernet controller.
+     * \brief The MAC address of the Ethernet controller.
      */
     uint8_t macAddress[DSVEOSCOSIM_ETH_ADDRESS_LENGTH];
 
     /**
-     * \brief Name of the ethernet controller.
+     * \brief The name of the Ethernet controller.
      */
     const char* name;
 
     /**
-     * \brief Name of the ethernet channel.
+     * \brief The name of the Ethernet channel.
      */
     const char* channelName;
 
     /**
-     * \brief Name of the ethernet cluster.
+     * \brief The name of the Ethernet cluster.
      */
     const char* clusterName;
 } DsVeosCoSim_EthController;
 
 /**
- * \brief Represents an ethernet message.
+ * \brief Contains information about an Ethernet message.
  */
 typedef struct DsVeosCoSim_EthMessage {
     /**
-     * \brief The simulation time when the ethernet message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the Ethernet message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the ethernet controller.
+     * \brief The ID of the Ethernet controller over which the Ethernet message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
@@ -816,33 +812,32 @@ typedef struct DsVeosCoSim_EthMessage {
     uint32_t reserved;
 
     /**
-     * \brief Ethernet message flags.
+     * \brief The flags of the Ethernet message.
      */
     DsVeosCoSim_EthMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the Ethernet message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The Ethernet message payload.
      */
     const uint8_t* data;
 } DsVeosCoSim_EthMessage;
 
 /**
- * \brief Represents an ethernet message container.
+ * \brief Contains information about an Ethernet message container.
  */
 typedef struct DsVeosCoSim_EthMessageContainer {
     /**
-     * \brief The simulation time when the ethernet message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the Ethernet message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the ethernet controller.
+     * \brief The ID of the Ethernet controller over which the Ethernet message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
@@ -852,109 +847,107 @@ typedef struct DsVeosCoSim_EthMessageContainer {
     uint32_t reserved;
 
     /**
-     * \brief Ethernet message flags.
+     * \brief The flags of the Ethernet message.
      */
     DsVeosCoSim_EthMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the Ethernet message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The Ethernet message payload.
      */
     uint8_t data[DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH];
 } DsVeosCoSim_EthMessageContainer;
 
 /**
- * \brief Represents an LIN controller.
+ * \brief Contains information about a LIN controller.
  */
 typedef struct DsVeosCoSim_LinController {
     /**
-     * \brief Unique id of the LIN controller.
+     * \brief The unique identifier of the LIN controller.
      */
     DsVeosCoSim_BusControllerId id;
 
     /**
-     * \brief Maximum queue size of the LIN controller.
+     * \brief The maximum queue size of the LIN controller.
      */
     uint32_t queueSize;
 
     /**
-     * \brief Bits per second of the LIN controller.
+     * \brief The baud rate of the LIN controller.
      */
     uint64_t bitsPerSecond;
 
     /**
-     * \brief Specified the type of the LIN controller.
+     * \brief The LIN controller type.
      */
     DsVeosCoSim_LinControllerType type;
 
     /**
-     * \brief Name of the LIN controller.
+     * \brief The name of the LIN controller.
      */
     const char* name;
 
     /**
-     * \brief Name of the LIN channel.
+     * \brief The name of the LIN channel.
      */
     const char* channelName;
 
     /**
-     * \brief Name of the LIN cluster.
+     * \brief The name of the LIN cluster.
      */
     const char* clusterName;
 } DsVeosCoSim_LinController;
 
 /**
- * \brief Represents a LIN message.
+ * \brief Contains information about a LIN message.
  */
 typedef struct DsVeosCoSim_LinMessage {
     /**
-     * \brief The simulation time when the LIN message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the LIN message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the bus controller.
+     * \brief The ID of the LIN controller over which the LIN message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
-     * \brief LIN message ID.
+     * \brief The LIN message ID.
      */
     uint32_t id;
 
     /**
-     * \brief LIN message flags.
+     * \brief The flags of the LIN message.
      */
     DsVeosCoSim_LinMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the LIN message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The LIN message payload.
      */
     const uint8_t* data;
 } DsVeosCoSim_LinMessage;
 
 /**
- * \brief Represents a LIN message container.
+ * \brief Contains information about a LIN message container.
  */
 typedef struct DsVeosCoSim_LinMessageContainer {
     /**
-     * \brief The simulation time when the LIN message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the LIN message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the bus controller.
+     * \brief The ID of the LIN controller over which the LIN message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
@@ -964,109 +957,107 @@ typedef struct DsVeosCoSim_LinMessageContainer {
     uint32_t reserved;
 
     /**
-     * \brief LIN message ID.
+     * \brief The LIN message ID.
      */
     uint32_t id;
 
     /**
-     * \brief LIN message flags.
+     * \brief The flags of the LIN message.
      */
     DsVeosCoSim_LinMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the LIN message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The LIN message payload.
      */
     uint8_t data[DSVEOSCOSIM_LIN_MESSAGE_MAX_LENGTH];
 } DsVeosCoSim_LinMessageContainer;
 
 /**
- * \brief Represents an FLEXRAY controller.
+ * \brief Contains information about a FlexRay controller.
  */
 typedef struct DsVeosCoSim_FrController {
     /**
-     * \brief Unique id of the FLEXRAY controller.
+     * \brief The unique identifier of the FlexRay controller.
      */
     DsVeosCoSim_BusControllerId id;
 
     /**
-     * \brief Maximum queue size of the FLEXRAY controller.
+     * \brief The maximum queue size of the FlexRay controller.
      */
     uint32_t queueSize;
 
     /**
-     * \brief Bits per second of the FLEXRAY controller.
+     * \brief The baud rate of the FlexRay controller.
      */
     uint64_t bitsPerSecond;
 
     /**
-     * \brief Name of the FLEXRAY controller.
+     * \brief The name of the FlexRay controller.
      */
     const char* name;
 
     /**
-     * \brief Name of the FLEXRAY channel.
+     * \brief The name of the FlexRay channel.
      */
     const char* channelName;
 
     /**
-     * \brief Name of the FLEXRAY cluster.
+     * \brief The name of the FlexRay cluster.
      */
     const char* clusterName;
 } DsVeosCoSim_FrController;
 
 /**
- * \brief Represents a FLEXRAY message.
+ * \brief Contains information about a FlexRay message.
  */
 typedef struct DsVeosCoSim_FrMessage {
     /**
-     * \brief The simulation time when the FLEXRAY message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the FlexRay message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the bus controller.
+     * \brief The ID of the FlexRay controller over which the FlexRay message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
     /**
-     * \brief FLEXRAY message ID.
+     * \brief The FlexRay message ID.
      */
     uint32_t id;
 
     /**
-     * \brief FLEXRAY message flags.
+     * \brief The flags of the FlexRay message.
      */
     DsVeosCoSim_FrMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the FlexRay message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The FlexRay message payload.
      */
     const uint8_t* data;
 } DsVeosCoSim_FrMessage;
 
 /**
- * \brief Represents a FLEXRAY message container.
+ * \brief Contains information about a FlexRay message container.
  */
 typedef struct DsVeosCoSim_FrMessageContainer {
     /**
-     * \brief The simulation time when the FLEXRAY message was received.
-     *        For received messages only.
+     * \brief Contains the virtual simulation time at which the FlexRay message was received. Only for received messages.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
     /**
-     * \brief Unique id of the bus controller.
+     * \brief The ID of the FlexRay controller over which the FlexRay message was sent.
      */
     DsVeosCoSim_BusControllerId controllerId;
 
@@ -1076,22 +1067,22 @@ typedef struct DsVeosCoSim_FrMessageContainer {
     uint32_t reserved;
 
     /**
-     * \brief FLEXRAY message ID.
+     * \brief The FlexRay message ID.
      */
     uint32_t id;
 
     /**
-     * \brief FLEXRAY message flags.
+     * \brief The flags of the FlexRay message.
      */
     DsVeosCoSim_FrMessageFlags flags;
 
     /**
-     * \brief Payload length.
+     * \brief The length of the FlexRay message payload in bytes.
      */
     uint32_t length;
 
     /**
-     * \brief Payload.
+     * \brief The FlexRay message payload.
      */
     uint8_t data[DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH];
 } DsVeosCoSim_FrMessageContainer;
@@ -1106,7 +1097,7 @@ typedef void (*DsVeosCoSim_LogCallback)(DsVeosCoSim_Severity severity, const cha
 /**
  * \brief Represents a simulation state changed or step callback function pointer.
  * \param simulationTime    The current simulation time.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simulationTime, void* userData);
 
@@ -1114,7 +1105,7 @@ typedef void (*DsVeosCoSim_SimulationCallback)(DsVeosCoSim_SimulationTime simula
  * \brief Represents a simulation terminated callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param reason            The termination reason.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason, void* userData);
 
@@ -1122,9 +1113,9 @@ typedef void (*DsVeosCoSim_SimulationTerminatedCallback)(DsVeosCoSim_SimulationT
  * \brief Represents an incoming signal changed callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param incomingSignal    The IO signal that changed.
- * \param length            The length of the changed data.
+ * \param length            The length of the changed data in element count.
  * \param value             The changed data.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                           const DsVeosCoSim_IoSignal* incomingSignal,
@@ -1137,7 +1128,7 @@ typedef void (*DsVeosCoSim_IncomingSignalChangedCallback)(DsVeosCoSim_Simulation
  * \param simulationTime    The current simulation time.
  * \param canController     The CAN controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_CanController* canController,
@@ -1149,7 +1140,7 @@ typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \param simulationTime    The current simulation time.
  * \param canController     The CAN controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_CanMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                                 const DsVeosCoSim_CanController* canController,
@@ -1161,7 +1152,7 @@ typedef void (*DsVeosCoSim_CanMessageContainerReceivedCallback)(DsVeosCoSim_Simu
  * \param simulationTime    The current simulation time.
  * \param ethController     The ethernet controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_EthController* ethController,
@@ -1173,7 +1164,7 @@ typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \param simulationTime    The current simulation time.
  * \param ethController     The ethernet controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_EthMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                                 const DsVeosCoSim_EthController* ethController,
@@ -1185,7 +1176,7 @@ typedef void (*DsVeosCoSim_EthMessageContainerReceivedCallback)(DsVeosCoSim_Simu
  * \param simulationTime    The current simulation time.
  * \param linController     The LIN controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                        const DsVeosCoSim_LinController* linController,
@@ -1197,7 +1188,7 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \param simulationTime    The current simulation time.
  * \param linController     The LIN controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                                 const DsVeosCoSim_LinController* linController,
@@ -1209,7 +1200,7 @@ typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_Simu
  * \param simulationTime    The current simulation time.
  * \param frController      The FLEXRAY controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                       const DsVeosCoSim_FrController* frController,
@@ -1221,7 +1212,7 @@ typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(DsVeosCoSim_SimulationTime
  * \param simulationTime    The current simulation time.
  * \param frController      The FLEXRAY controller transmitting the message.
  * \param message           The received message.
- * \param userData          The user data passed via DsVeosCoSim_SetCallbacks.
+ * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_FrMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
                                                                const DsVeosCoSim_FrController* frController,
@@ -1229,100 +1220,86 @@ typedef void (*DsVeosCoSim_FrMessageContainerReceivedCallback)(DsVeosCoSim_Simul
                                                                void* userData);
 
 /**
- * \brief Represents the callbacks that will be fired during the co-simulation.
+ * \brief Contains the callbacks that can be called during the co-simulation.
  */
 typedef struct DsVeosCoSim_Callbacks {
     /**
-     * \brief Will be called when the simulation started in dSPACE VEOS.
+     * \brief Called when the simulation is started in VEOS.
      */
     DsVeosCoSim_SimulationCallback simulationStartedCallback;
 
     /**
-     * \brief Will be called when the simulation stopped in dSPACE VEOS.
+     * \brief Called when the simulation is stopped in VEOS.
      */
     DsVeosCoSim_SimulationCallback simulationStoppedCallback;
 
     /**
-     * \brief Will be called when the simulation terminated in dSPACE VEOS.
+     * \brief Called when the simulation is terminated in VEOS.
      */
     DsVeosCoSim_SimulationTerminatedCallback simulationTerminatedCallback;
 
     /**
-     * \brief Will be called when the simulation paused in dSPACE VEOS.
+     * \brief Called when the simulation is paused in VEOS.
      */
     DsVeosCoSim_SimulationCallback simulationPausedCallback;
 
     /**
-     * \brief Will be called when the simulation continued in dSPACE VEOS.
+     * \brief Called when the simulation is continued in VEOS.
      */
     DsVeosCoSim_SimulationCallback simulationContinuedCallback;
 
     /**
-     * \brief Will be called at the beginning of a simulation step performed by dSPACE VEOS.
+     * \brief Called at the beginning of a simulation step.
      */
     DsVeosCoSim_SimulationCallback simulationBeginStepCallback;
 
     /**
-     * \brief Will be called at the end of a simulation step performed by dSPACE VEOS.
+     * \brief Called at the end of a simulation step.
      */
     DsVeosCoSim_SimulationCallback simulationEndStepCallback;
 
     /**
-     * \brief Will be called when an incoming signal value changed.
+     * \brief Called when an incoming signal value has changed.
      */
     DsVeosCoSim_IncomingSignalChangedCallback incomingSignalChangedCallback;
 
     /**
-     * \brief Will be called when a CAN message was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessage will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a CAN message is received from VEOS.
      */
     DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback;
 
     /**
-     * \brief Will be called when an ethernet message was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessage will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when an Ethernet message is received from VEOS.
      */
     DsVeosCoSim_EthMessageReceivedCallback ethMessageReceivedCallback;
 
     /**
-     * \brief Will be called when a LIN message was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessage will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a LIN message is received from VEOS.
      */
     DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback;
 
     /**
-     * \brief An arbitrary object that will be passed to every callback.
+     * \brief Arbitrary user data to be passed to every callback.
      */
     void* userData;
 
     /**
-     * \brief Will be called when a CAN message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveCanMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a CAN message is received from VEOS.
      */
     DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
 
     /**
-     * \brief Will be called when an ethernet message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveEthMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a LIN message is received from VEOS.
      */
     DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
 
     /**
-     * \brief Will be called when a LIN message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveLinMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when an Ethernet message is received from VEOS.
      */
     DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
 
     /**
-     * \brief Will be called when a FLEXRAY message container was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessageContainer will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a FlexRay message is received from VEOS.
      */
     DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
 
@@ -1335,34 +1312,31 @@ typedef struct DsVeosCoSim_Callbacks {
 } DsVeosCoSim_Callbacks;
 
 /**
- * \brief Represents the data that will be used for establishing the connection.
+ * \brief Contains the data that is required for establishing a connection to VEOS.
  */
 typedef struct DsVeosCoSim_ConnectConfig {
     /**
-     * \brief The IP address of the dSPACE VEOS CoSim server. "127.0.0.1" if not specified.
+     * \brief The IP address of the VEOS CoSim server. Using local communication if not specified.
      */
     const char* remoteIpAddress;
 
     /**
-     * \brief The name of the dSPACE VEOS CoSim server.
-     *        Either the serverName or the remotePort must be specified.
+     * \brief The name of the VEOS CoSim server.
      */
     const char* serverName;
 
     /**
-     * \brief The name of the dSPACE VEOS CoSim Client.
+     * \brief The name of the VEOS CoSim Client.
      */
     const char* clientName;
 
     /**
-     * \brief The TCP port of the dSPACE VEOS CoSim server.
-     *        Either the serverName or the remotePort must be specified.
+     * \brief The TCP port of the VEOS CoSim server.
      */
     uint16_t remotePort;
 
     /**
-     * \brief The port of the dSPACE VEOS CoSim client.
-     *        This value should only be changed if the dSPACE VEOS CoSim communication should be tunneled.
+     * \brief The port of the VEOS CoSim client. Only change this value if tunneled communication is required.
      */
     uint16_t localPort;
 } DsVeosCoSim_ConnectConfig;
@@ -1655,6 +1629,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime);
 
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationState* simulationState);
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64_t* roundTripTimeInNanoseconds);
 
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);

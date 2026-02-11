@@ -79,6 +79,12 @@ public:
         Write(static_cast<TUnderlying>(value));
     }
 
+    void EndWrite() const {
+        if (_size != 0) {
+            throw std::runtime_error("Not all space has been used.");
+        }
+    }
+
 private:
     uint8_t* _data{};
     size_t _size{};
@@ -184,6 +190,12 @@ public:
         Read(reinterpret_cast<TUnderlying&>(value));
     }
 
+    void EndRead() const {
+        if (_size != 0) {
+            throw std::runtime_error("Not all data has been read.");
+        }
+    }
+
 private:
     uint8_t* _data{};
     size_t _size{};
@@ -218,6 +230,8 @@ public:
         using TUnderlying = std::underlying_type_t<TEnum>;
         return Read(reinterpret_cast<TUnderlying&>(value));
     }
+
+    virtual void EndRead() = 0;
 };
 
 class Channel {
@@ -259,20 +273,16 @@ public:
     [[nodiscard]] virtual Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) = 0;
 };
 
-[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel);
-
 [[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
                                             std::unique_ptr<Channel>& connectedChannel);
 
-[[nodiscard]] Result TryConnectToUdsChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel);
-
-[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
-
 [[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& channelServer);
 
-[[nodiscard]] Result CreateUdsChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel);
+
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer);
 
 }  // namespace DsVeosCoSim

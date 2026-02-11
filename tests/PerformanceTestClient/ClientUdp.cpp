@@ -7,7 +7,7 @@
 #include <array>
 #include <string>
 
-#include "CoSimHelper.h"
+#include "Helper.h"
 #include "OsAbstractionTestHelper.h"
 #include "PerformanceTestHelper.h"
 

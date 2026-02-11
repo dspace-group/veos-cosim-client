@@ -3,8 +3,8 @@
 #include <memory>
 #include <thread>
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimServer.h"
+#include "Helper.h"
 #include "PerformanceTestHelper.h"
 #include "PerformanceTestServer.h"
 

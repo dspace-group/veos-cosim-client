@@ -487,11 +487,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     return DsVeosCoSim_Result_Ok;
 }
 
-[[nodiscard]] DsVeosCoSim_Result HostClient(const std::string& host, const std::string& name) {
-    CheckDsVeosCoSimResult(Connect(host, name));
-
-    StartSimulationThread(RunCallbackBasedCoSimulation);
-
+[[nodiscard]] DsVeosCoSim_Result HandleUserInput() {
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
@@ -528,8 +524,35 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
                 break;
         }
     }
+}
 
-    return DsVeosCoSim_Result_Ok;
+[[nodiscard]] DsVeosCoSim_Result HostClient(const std::string& host, const std::string& name) {
+    CheckDsVeosCoSimResult(Connect(host, name));
+
+    StartSimulationThread(RunCallbackBasedCoSimulation);
+
+    bool connected = true;
+
+    std::thread roundTripTimeThread([&] {
+        while (connected) {
+            std::this_thread::sleep_for(1s);
+            int64_t roundTripTimeInNanoseconds{};
+            if (DsVeosCoSim_GetRoundTripTime(Client, &roundTripTimeInNanoseconds) != DsVeosCoSim_Result_Ok) {
+                LogError("Could not get round trip time.");
+                (void)Disconnect();
+            }
+
+            if (roundTripTimeInNanoseconds > 0) {
+                LogTrace("Round trip time: {} ns.", roundTripTimeInNanoseconds);
+            }
+        }
+    });
+
+    DsVeosCoSim_Result result = HandleUserInput();
+    connected = false;
+    roundTripTimeThread.join();
+
+    return result;
 }
 
 }  // namespace

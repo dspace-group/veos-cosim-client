@@ -1,11 +1,10 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <memory>
-#include "Protocol.h"
 #ifdef ALL_BENCHMARK_TESTS
 
 #include <benchmark/benchmark.h>
 
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -13,6 +12,7 @@
 #include "Helper.h"
 #include "IoBuffer.h"
 #include "OsUtilities.h"
+#include "Protocol.h"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -40,16 +40,13 @@ void RunTest(benchmark::State& state,
     IoSignalContainer signal = CreateSignal(DataType::Int8, SizeKind::Fixed);
     signal.length = static_cast<uint32_t>(state.range(0));
 
-    std::shared_ptr<IProtocol> protocol;
-    FactoryResult result = MakeProtocol(DsVeosCoSim::LATEST_VERSION);
-    if (result.error == FactoryError::None && result.protocol) {
-        protocol = std::move(result.protocol);
-    }
+    std::unique_ptr<IProtocol> protocol;
+    MustBeOk(CreateProtocol(DsVeosCoSim::ProtocolVersionLatest, protocol));
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, protocol, writerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
     std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, protocol, readerIoBuffer));
+    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, *protocol, readerIoBuffer));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -96,25 +93,6 @@ void TcpIo(benchmark::State& state) {
     RunTest(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
-void UdsIo(benchmark::State& state) {
-    std::string serverName = GenerateString("Server");
-
-    std::unique_ptr<ChannelServer> server;
-    MustBeOk(CreateUdsChannelServer(serverName, server));
-
-    std::unique_ptr<Channel> connectedChannel;
-    MustBeOk(TryConnectToUdsChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
-    std::unique_ptr<Channel> acceptedChannel;
-    MustBeOk(server->TryAccept(acceptedChannel));
-
-    std::string writerName = GenerateString("BenchmarkIoWriter名前");
-    std::string readerName = GenerateString("BenchmarkIoReader名前");
-
-    RunTest(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
-}
-
-#ifdef _WIN32
 void LocalIo(benchmark::State& state) {
     std::string serverName = GenerateString("Server名前");
 
@@ -127,19 +105,19 @@ void LocalIo(benchmark::State& state) {
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
-    std::string name = GenerateString("BenchmarkIo名前");
-
-    RunTest(state, ConnectionKind::Local, name, name, *connectedChannel, *acceptedChannel);
-}
+    std::string writerName = GenerateString("BenchmarkIoWriter名前");
+#ifdef _WIN32
+    std::string readerName = writerName;  // NOLINT(performance-unnecessary-copy-initialization)
+#else
+    std::string readerName = GenerateString("BenchmarkIoReader名前");
 #endif
+
+    RunTest(state, ConnectionKind::Local, writerName, readerName, *connectedChannel, *acceptedChannel);
+}
 
 }  // namespace
 
 BENCHMARK(TcpIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-BENCHMARK(UdsIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-
-#ifdef _WIN32
 BENCHMARK(LocalIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-#endif
 
 #endif

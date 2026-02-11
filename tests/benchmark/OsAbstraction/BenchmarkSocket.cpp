@@ -69,11 +69,11 @@ void SocketTcpRoundtrip(benchmark::State& state) {
     RunTest(state, *connectedSocket, *acceptedSocket);
 }
 
-void SocketUdsRoundtrip(benchmark::State& state) {
-    std::string path = GenerateString("UdsPath");
+void SocketLocalRoundtrip(benchmark::State& state) {
+    std::string path = GenerateString("LocalPath");
 
     Socket server;
-    MustBeOk(Socket::Create(AddressFamily::Uds, server));
+    MustBeOk(Socket::Create(AddressFamily::Local, server));
     MustBeOk(server.Bind(path));
     MustBeOk(server.Listen());
 
@@ -90,6 +90,6 @@ void SocketUdsRoundtrip(benchmark::State& state) {
 }  // namespace
 
 BENCHMARK(SocketTcpRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-BENCHMARK(SocketUdsRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
+BENCHMARK(SocketLocalRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
 
 #endif

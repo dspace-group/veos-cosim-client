@@ -17,12 +17,12 @@ namespace {
 
 [[nodiscard]] Result Run() {
     Socket serverSocket;
-    CheckResult(Socket::Create(AddressFamily::Uds, serverSocket));
+    CheckResult(Socket::Create(AddressFamily::Local, serverSocket));
 
-    CheckResult(serverSocket.Bind(UdsName));
+    CheckResult(serverSocket.Bind(LocalName));
     CheckResult(serverSocket.Listen());
 
-    LogTrace("Unix Domain Socket server is listening on file {} ...", UdsName);
+    LogTrace("Local server is listening on file {} ...", LocalName);
 
     std::array<char, BufferSize> buffer{};
 
@@ -52,21 +52,21 @@ namespace {
     return Result::Ok;
 }
 
-void UdsServerRun() {
+void LocalServerRun() {
     if (!IsOk(Run())) {
-        LogError("Could not run Unix Domain Socket server.");
+        LogError("Could not run Local server.");
     }
 }
 
 }  // namespace
 
-void StartUdsServer() {
-    std::thread(UdsServerRun).detach();
+void StartLocalServer() {
+    std::thread(LocalServerRun).detach();
 }
 
 #else
 
-void StartUdsServer() {
+void StartLocalServer() {
 }
 
 #endif

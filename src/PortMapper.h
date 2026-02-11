@@ -7,7 +7,6 @@
 #include <string>
 
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Protocol.h"
 
 namespace DsVeosCoSim {
 
@@ -18,8 +17,6 @@ protected:
 public:
     virtual ~PortMapperServer() = default;
 
-    explicit PortMapperServer(const std::shared_ptr<IProtocol>& protocol);
-
     PortMapperServer(const PortMapperServer&) = delete;
     PortMapperServer& operator=(const PortMapperServer&) = delete;
 
@@ -27,12 +24,10 @@ public:
     PortMapperServer& operator=(PortMapperServer&&) = delete;
 };
 
-[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess,
-                                            const std::shared_ptr<IProtocol>& protocol,
-                                            std::unique_ptr<PortMapperServer>& portMapperServer);
+[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer);
 
-[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port, const std::shared_ptr<IProtocol>& protocol);
-[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port, const std::shared_ptr<IProtocol>& protocol);
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name, const std::shared_ptr<IProtocol>& protocol);
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port);
+[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port);
+[[nodiscard]] Result PortMapperUnsetPort(const std::string& name);
 
 }  // namespace DsVeosCoSim

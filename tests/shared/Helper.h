@@ -8,8 +8,7 @@
 
 #include <fmt/format.h>
 
-#include "BusBuffer.h"    // IWYU pragma: keep
-#include "CoSimHelper.h"  // IWYU pragma: keep
+#include "BusBuffer.h"  // IWYU pragma: keep
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Socket.h"
 
@@ -24,22 +23,22 @@ namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t DefaultTimeout = 1000;
 
-#define MustBeOk(result)                                             \
-    do {                                                             \
-        Result _result_ = (result);                                  \
-        if (!IsOk(_result_)) {                                       \
-            LogError("Expected Ok but was {}.", ToString(_result_)); \
-            exit(1);                                                 \
-        }                                                            \
+#define MustBeOk(result)                                   \
+    do {                                                   \
+        Result _result_ = (result);                        \
+        if (!IsOk(_result_)) {                             \
+            LogError("Expected Ok but was {}.", _result_); \
+            exit(1);                                       \
+        }                                                  \
     } while (0)
 
-#define MustBeDisconnected(result)                                             \
-    do {                                                                       \
-        Result _result_ = (result);                                            \
-        if (_result_ != Result::Disconnected) {                                \
-            LogError("Expected Disconnected but was {}.", ToString(_result_)); \
-            exit(1);                                                           \
-        }                                                                      \
+#define MustBeDisconnected(result)                                   \
+    do {                                                             \
+        Result _result_ = (result);                                  \
+        if (_result_ != Result::Disconnected) {                      \
+            LogError("Expected Disconnected but was {}.", _result_); \
+            exit(1);                                                 \
+        }                                                            \
     } while (0)
 
 #define MustBeTrue(result)                            \
@@ -74,6 +73,11 @@ void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcore
     OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
 }
 
+void LogError(const std::string& message);
+void LogWarning(const std::string& message);
+void LogInfo(const std::string& message);
+void LogTrace(const std::string& message);
+
 void InitializeOutput();
 
 void OnLogCallback(Severity severity, const std::string& message);
@@ -95,28 +99,28 @@ void SetEnvVariable(const std::string& name, const std::string& value);
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<CanController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<EthController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<LinController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
                                      const std::string& name,
                                      const std::vector<FrController>& controllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer);
 
 [[nodiscard]] uint8_t GenerateU8();

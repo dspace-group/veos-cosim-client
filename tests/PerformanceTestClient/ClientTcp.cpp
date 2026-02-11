@@ -8,7 +8,6 @@
 #include <optional>
 #include <string>
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Helper.h"
 #include "PerformanceTestHelper.h"

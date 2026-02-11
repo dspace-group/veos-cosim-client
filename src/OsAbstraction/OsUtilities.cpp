@@ -13,7 +13,6 @@
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 
@@ -33,14 +32,14 @@ namespace {
 
     int32_t sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
     if (sizeNeeded <= 0) {
-        LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
         return Result::Error;
     }
 
     utf16String.resize(static_cast<size_t>(sizeNeeded));
     sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), utf16String.data(), sizeNeeded);
     if (sizeNeeded <= 0) {
-        LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
         return Result::Error;
     }
 
@@ -48,21 +47,15 @@ namespace {
 }
 
 [[nodiscard]] Result GetFullNamedEventName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Event.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Event." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullNamedMutexName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.Mutex.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullSharedMemoryName(const std::string& name, std::wstring& fullName) {
-    std::string utf8Name = "Local\\dSPACE.VEOS.CoSim.SharedMemory.";
-    utf8Name.append(name);
-    return Utf8ToWide(utf8Name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.SharedMemory." + name, fullName);
 }
 
 }  // namespace
@@ -105,11 +98,11 @@ Handle::operator void*() const {
             success = false;
             return Result::Ok;
         case WAIT_FAILED: {
-            LogSystemError("Could not wait for handle.", GetLastWindowsError());
+            Logger::Instance().LogSystemError("Could not wait for handle.", GetLastWindowsError());
             return Result::Error;
         }
         default: {
-            LogSystemError("Could not wait for handle. Invalid result.", GetLastWindowsError());
+            Logger::Instance().LogSystemError("Could not wait for handle. Invalid result.", GetLastWindowsError());
             return Result::Error;
         }
     }
@@ -123,7 +116,7 @@ NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
     CheckResult(GetFullNamedEventName(name, fullName));
     Handle handle = CreateEventW(nullptr, FALSE, FALSE, fullName.c_str());
     if (!handle) {
-        LogSystemError("Could not create or open event.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not create or open event.", GetLastWindowsError());
         return Result::Error;
     }
 
@@ -134,7 +127,7 @@ NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
 [[nodiscard]] Result NamedEvent::Set() const {
     BOOL result = SetEvent(_handle);
     if (result == FALSE) {
-        LogSystemError("Could not set event.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not set event.", GetLastWindowsError());
         return Result::Error;
     }
 
@@ -164,7 +157,7 @@ NamedMutex::~NamedMutex() noexcept {
     CheckResult(GetFullNamedMutexName(name, fullName));
     Handle handle = CreateMutexW(nullptr, FALSE, fullName.c_str());
     if (!handle) {
-        LogSystemError("Could not create or open mutex.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not create or open mutex.", GetLastWindowsError());
         return Result::Error;
     }
 
@@ -211,13 +204,13 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     auto sizeLow = static_cast<DWORD>(size);
     Handle handle = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str());
     if (!handle) {
-        LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not create or open shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 
@@ -236,7 +229,7 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
 
     void* data = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
+        Logger::Instance().LogSystemError("Could not map view of shared memory.", GetLastWindowsError());
         return Result::Error;
     }
 

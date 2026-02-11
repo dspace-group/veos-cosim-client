@@ -66,5 +66,3 @@ void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel
 void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
 
 void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
-
-std::shared_ptr<DsVeosCoSim::IProtocol> GetLatestProtocol();

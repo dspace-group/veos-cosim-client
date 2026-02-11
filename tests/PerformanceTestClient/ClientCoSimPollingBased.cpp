@@ -6,9 +6,9 @@
 
 #include <string>
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimClient.h"
 #include "DsVeosCoSim/CoSimTypes.h"
+#include "Helper.h"
 #include "PerformanceTestHelper.h"
 
 using namespace DsVeosCoSim;

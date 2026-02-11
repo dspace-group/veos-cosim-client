@@ -10,7 +10,6 @@
 #include <string>
 #include <utility>
 
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 
 #ifdef _WIN32
@@ -64,9 +63,8 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 using AddressInfoPtr = addrinfo*;
 
-[[nodiscard]] std::string GetUdsPath(const std::string& name) {
-    std::string fileName = "dSPACE.VEOS.CoSim.";
-    fileName.append(name);
+[[nodiscard]] std::string GetLocalPath(const std::string& name) {
+    std::string fileName = "dSPACE.VEOS.CoSim." + name;
 #ifdef _WIN32
     std::filesystem::path tempDir = std::filesystem::temp_directory_path();
     std::filesystem::path fileDir = tempDir / fileName;
@@ -94,7 +92,7 @@ using AddressInfoPtr = addrinfo*;
 
     int32_t errorCode = getaddrinfo(ipAddress.c_str(), portString.c_str(), &hints, &addressInfo);
     if (errorCode != 0) {
-        LogSystemError("Could not get address information.", errorCode);
+        Logger::Instance().LogSystemError("Could not get address information.", errorCode);
         return Result::Error;
     }
 
@@ -107,7 +105,7 @@ using AddressInfoPtr = addrinfo*;
     std::array<char, INET_ADDRSTRLEN> ipAddress{};
     const char* result = inet_ntop(AF_INET, &ipv4Address.sin_addr, ipAddress.data(), INET_ADDRSTRLEN);
     if (!result) {
-        LogSystemError("Could not get address information.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get address information.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -121,7 +119,7 @@ using AddressInfoPtr = addrinfo*;
     std::array<char, INET6_ADDRSTRLEN> ipAddress{};
     const char* result = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
     if (!result) {
-        LogSystemError("Could not get address information.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get address information.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -148,7 +146,7 @@ void CloseSocket(SocketHandle socket) {
 
     int32_t pollResult = Poll(&fdArray, 1, 0);
     if (pollResult < 0) {
-        LogSystemError("Could not poll on socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not poll on socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -168,7 +166,7 @@ void CloseSocket(SocketHandle socket) {
             return Result::Ok;
         }
 
-        LogSystemError("Could not get socket option SO_ERROR.", errorCode);
+        Logger::Instance().LogSystemError("Could not get socket option SO_ERROR.", errorCode);
         return Result::Error;
     }
 
@@ -181,13 +179,13 @@ void CloseSocket(SocketHandle socket) {
     u_long mode = 1;
     int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
-        LogSystemError("Could not switch to non-blocking mode.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not switch to non-blocking mode.", GetLastNetworkError());
         return Result::Error;
     }
 #else
     int32_t result = fcntl(socket, F_SETFL, O_NONBLOCK);
     if (result < 0) {
-        LogSystemError("Could not switch to non-blocking mode.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not switch to non-blocking mode.", GetLastNetworkError());
         return Result::Error;
     }
 #endif
@@ -200,13 +198,13 @@ void CloseSocket(SocketHandle socket) {
     u_long mode = 0;
     int32_t result = ioctlsocket(socket, FIONBIO, &mode);
     if (result != 0) {
-        LogSystemError("Could not switch to blocking mode.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not switch to blocking mode.", GetLastNetworkError());
         return Result::Error;
     }
 #else
     int32_t result = fcntl(socket, F_SETFL, 0);
     if (result < 0) {
-        LogSystemError("Could not switch to blocking mode.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not switch to blocking mode.", GetLastNetworkError());
         return Result::Error;
     }
 #endif
@@ -224,13 +222,13 @@ void CloseSocket(SocketHandle socket) {
 
     int32_t connectResult = connect(socket, socketAddress, sizeOfSocketAddress);
     if (connectResult >= 0) {
-        LogError("Invalid connect result.");
+        Logger::Instance().LogError("Invalid connect result.");
         return Result::Error;
     }
 
     int32_t errorCode = GetLastNetworkError();
     if (errorCode != ErrorCodeWouldBlock) {
-        LogSystemError("Could not connect to socket.", errorCode);
+        Logger::Instance().LogSystemError("Could not connect to socket.", errorCode);
         return Result::Error;
     }
 
@@ -258,14 +256,14 @@ void CloseSocket(SocketHandle socket) {
 
 }  // namespace
 
-[[nodiscard]] const char* ToString(AddressFamily addressFamily) {
+[[nodiscard]] const char* format_as(AddressFamily addressFamily) {
     switch (addressFamily) {
         case AddressFamily::Ipv4:
             return "Ipv4";
         case AddressFamily::Ipv6:
             return "Ipv6";
-        case AddressFamily::Uds:
-            return "Uds";
+        case AddressFamily::Local:
+            return "Local";
     }
 
     return "<Invalid AddressFamily>";
@@ -279,7 +277,7 @@ void CloseSocket(SocketHandle socket) {
 
         int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
         if (errorCode != 0) {
-            LogSystemError("Could not initialize Windows sockets.", errorCode);
+            Logger::Instance().LogSystemError("Could not initialize Windows sockets.", errorCode);
             return Result::Error;
         }
 
@@ -353,7 +351,7 @@ Socket& Socket::operator=(Socket&& other) noexcept {
     return isSupported;
 }
 
-[[nodiscard]] bool Socket::IsUdsSupported() {
+[[nodiscard]] bool Socket::IsLocalSupported() {
     static bool hasValue = false;
     static bool isSupported = false;
 
@@ -410,7 +408,7 @@ void Socket::Close() {
     int32_t flags = 1;
     int32_t result = setsockopt(_socket, IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        LogSystemError("Could not enable IPv6 only.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not enable IPv6 only.", GetLastNetworkError());
         return Result::Error;
     }
 #endif
@@ -430,7 +428,7 @@ void Socket::Close() {
             protocol = IPPROTO_TCP;
             domain = AF_INET6;
             break;
-        case AddressFamily::Uds:
+        case AddressFamily::Local:
             protocol = 0;
             domain = AF_UNIX;
             break;
@@ -438,7 +436,7 @@ void Socket::Close() {
 
     SocketHandle socketHandle = ::socket(domain, SOCK_STREAM, protocol);
     if (socketHandle == InvalidSocket) {
-        LogSystemError("Could not create socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not create socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -452,7 +450,7 @@ void Socket::Close() {
                                         uint32_t timeoutInMilliseconds,
                                         std::optional<Socket>& connectedSocket) {
     if (remotePort == 0) {
-        LogError("Remote port 0 is not valid.");
+        Logger::Instance().LogError("Remote port 0 is not valid.");
         return Result::Error;
     }
 
@@ -501,17 +499,17 @@ void Socket::Close() {
 
 [[nodiscard]] Result Socket::TryConnect(const std::string& name, std::optional<Socket>& connectedSocket) {
     if (name.empty()) {
-        LogError("Empty name is not valid.");
+        Logger::Instance().LogError("Empty name is not valid.");
         return Result::Error;
     }
 
     SocketHandle socket = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if (socket == InvalidSocket) {
-        LogSystemError("Could not create socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not create socket.", GetLastNetworkError());
         return Result::Error;
     }
 
-    std::string path = GetUdsPath(name);
+    std::string path = GetLocalPath(name);
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
@@ -527,13 +525,13 @@ void Socket::Close() {
         return Result::Ok;
     }
 
-    connectedSocket = Socket{socket, AddressFamily::Uds, path};
+    connectedSocket = Socket{socket, AddressFamily::Local, path};
     return Result::Ok;
 }
 
 [[nodiscard]] Result Socket::Bind(uint16_t port, bool enableRemoteAccess) const {
-    if (_addressFamily == AddressFamily::Uds) {
-        LogError("Not supported for address family.");
+    if (_addressFamily == AddressFamily::Local) {
+        Logger::Instance().LogError("Not supported for address family.");
         return Result::Error;
     }
 
@@ -552,7 +550,7 @@ void Socket::Close() {
 
     int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
-        LogSystemError("Could not bind socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not bind socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -570,7 +568,7 @@ void Socket::Close() {
 
     int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
-        LogSystemError("Could not bind socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not bind socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -578,17 +576,17 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::Bind(const std::string& name) {
-    if (_addressFamily != AddressFamily::Uds) {
-        LogError("Not supported for address family.");
+    if (_addressFamily != AddressFamily::Local) {
+        Logger::Instance().LogError("Not supported for address family.");
         return Result::Error;
     }
 
     if (name.empty()) {
-        LogError("Empty name is not valid.");
+        Logger::Instance().LogError("Empty name is not valid.");
         return Result::Error;
     }
 
-    _path = GetUdsPath(name);
+    _path = GetLocalPath(name);
 #ifdef _WIN32
     (void)Unlink(_path.c_str());
 #endif
@@ -603,7 +601,7 @@ void Socket::Close() {
 
     int32_t result = bind(_socket, reinterpret_cast<sockaddr*>(&address), sizeof address);
     if (result != 0) {
-        LogSystemError("Could not bind socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not bind socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -611,15 +609,15 @@ void Socket::Close() {
 }
 
 [[nodiscard]] Result Socket::EnableReuseAddress() const {
-    if (_addressFamily == AddressFamily::Uds) {
-        LogError("Not supported for address family.");
+    if (_addressFamily == AddressFamily::Local) {
+        Logger::Instance().LogError("Not supported for address family.");
         return Result::Error;
     }
 
     int32_t flags = 1;
     int32_t result = setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
-        LogSystemError("Could not enable socket option reuse address.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not enable socket option reuse address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -630,7 +628,7 @@ void Socket::Close() {
     int32_t flags = 1;
     int32_t result = setsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
-        LogSystemError("Could not enable TCP option no delay.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not enable TCP option no delay.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -640,7 +638,7 @@ void Socket::Close() {
 [[nodiscard]] Result Socket::Listen() const {
     int32_t result = listen(_socket, SOMAXCONN);
     if (result != 0) {
-        LogSystemError("Could not listen on socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not listen on socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -656,7 +654,7 @@ void Socket::Close() {
 
     SocketHandle socket = accept(_socket, nullptr, nullptr);
     if (socket == InvalidSocket) {
-        LogSystemError("Could not accept socket.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not accept socket.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -684,7 +682,7 @@ void Socket::Close() {
 
     int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        LogSystemError("Could not get local socket address.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get local socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -701,7 +699,7 @@ void Socket::Close() {
 
     int32_t result = getsockname(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        LogSystemError("Could not get local socket address.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get local socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -731,7 +729,7 @@ void Socket::Close() {
 
     int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        LogSystemError("Could not get remote socket address.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get remote socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -745,7 +743,7 @@ void Socket::Close() {
 
     int32_t result = getpeername(_socket, reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        LogSystemError("Could not get remote socket address.", GetLastNetworkError());
+        Logger::Instance().LogSystemError("Could not get remote socket address.", GetLastNetworkError());
         return Result::Error;
     }
 
@@ -769,7 +767,7 @@ void Socket::Close() {
     }
 
     if (receivedSizeTmp == 0) {
-        LogTrace("Remote endpoint disconnected.");
+        Logger::Instance().LogTrace("Remote endpoint disconnected.");
         return Result::Disconnected;
     }
 
@@ -780,11 +778,11 @@ void Socket::Close() {
         || (errorCode == ErrorCodeBrokenPipe)
 #endif
     ) {
-        LogTrace("Remote endpoint disconnected.");
+        Logger::Instance().LogTrace("Remote endpoint disconnected.");
         return Result::Disconnected;
     }
 
-    LogSystemError("Could not receive from remote endpoint.", errorCode);
+    Logger::Instance().LogSystemError("Could not receive from remote endpoint.", errorCode);
     return Result::Error;
 }
 
@@ -805,7 +803,7 @@ void Socket::Close() {
         }
 
         if (sentSize == 0) {
-            LogTrace("Remote endpoint disconnected.");
+            Logger::Instance().LogTrace("Remote endpoint disconnected.");
             return Result::Disconnected;
         }
 
@@ -816,11 +814,11 @@ void Socket::Close() {
             || (errorCode == ErrorCodeBrokenPipe)
 #endif
         ) {
-            LogTrace("Remote endpoint disconnected.");
+            Logger::Instance().LogTrace("Remote endpoint disconnected.");
             return Result::Disconnected;
         }
 
-        LogSystemError("Could not send to remote endpoint.", errorCode);
+        Logger::Instance().LogSystemError("Could not send to remote endpoint.", errorCode);
         return Result::Error;
     }
 

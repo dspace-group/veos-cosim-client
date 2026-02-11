@@ -4,7 +4,7 @@
 #include <thread>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
+#include "Helper.h"
 #include "OsUtilities.h"
 #include "PerformanceTestHelper.h"
 #include "PerformanceTestServer.h"

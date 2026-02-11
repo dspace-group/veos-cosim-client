@@ -7,16 +7,17 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "Protocol.h"
+#include "ProtocolLogger.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -63,10 +64,9 @@ public:
         for (const auto& controller : controllers) {
             auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                std::string message = "Duplicated controller id ";
-                message.append(ToString(controller.id));
-                message.append(".");
-                LogError(message);
+                std::ostringstream oss;
+                oss << "Duplicated controller id " << controller.id << '.';
+                Logger::Instance().LogError(oss.str());
                 return Result::Error;
             }
 
@@ -171,10 +171,9 @@ protected:
             return Result::Ok;
         }
 
-        std::string message = "Controller id ";
-        message.append(ToString(controllerId));
-        message.append(" is unknown.");
-        LogError(message);
+        std::ostringstream oss;
+        oss << "Controller id " << controllerId << " is unknown.";
+        Logger::Instance().LogError(oss.str());
         return Result::Error;
     }
 
@@ -195,7 +194,7 @@ class RemoteBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMe
 public:
     RemoteBusProtocolBuffer() = default;
 
-    explicit RemoteBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
+    explicit RemoteBusProtocolBuffer(IProtocol& protocol) : _protocol(protocol) {};
     ~RemoteBusProtocolBuffer() override = default;
 
     RemoteBusProtocolBuffer(const RemoteBusProtocolBuffer&) = delete;
@@ -226,10 +225,9 @@ protected:
     [[nodiscard]] Result CheckForSpace(ExtensionPtr extension) {
         if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::string warningMessage = "Transmit buffer for controller '";
-                warningMessage.append(extension->info.name);
-                warningMessage.append("' is full. Messages are dropped.");
-                LogWarning(warningMessage);
+                std::ostringstream oss;
+                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                Logger::Instance().LogWarning(oss.str());
                 extension->warningSent = true;
             }
 
@@ -294,16 +292,16 @@ protected:
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
         size_t count = _messageBuffer.Size();
-        CheckResultWithMessage(_protocol->WriteSize(writer, count), "Could not write count of messages.");
+        CheckResultWithMessage(_protocol.WriteSize(writer, count), "Could not write count of messages.");
 
         for (size_t i = 0; i < count; i++) {
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
-            CheckResultWithMessage(_protocol->WriteMessage(writer, messageContainer), "Could not serialize message.");
+            CheckResultWithMessage(_protocol.WriteMessage(writer, messageContainer), "Could not serialize message.");
         }
 
         for (auto& [controllerId, extension] : Base::_controllers) {
@@ -318,14 +316,14 @@ protected:
                                              const typename Base::MessageCallback& messageCallback,
                                              const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t totalCount{};
-        CheckResultWithMessage(_protocol->ReadSize(reader, totalCount), "Could not read count of messages.");
+        CheckResultWithMessage(_protocol.ReadSize(reader, totalCount), "Could not read count of messages.");
 
         for (size_t i = 0; i < totalCount; i++) {
             TMessageContainer messageContainer{};
-            CheckResultWithMessage(_protocol->ReadMessage(reader, messageContainer), "Could not deserialize message.");
+            CheckResultWithMessage(_protocol.ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};
@@ -345,10 +343,9 @@ protected:
 
             if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
                 if (!extension->warningSent) {
-                    std::string warningMessage = "Receive buffer for controller '";
-                    warningMessage.append(extension->info.name);
-                    warningMessage.append("' is full. Messages are dropped.");
-                    LogWarning(warningMessage);
+                    std::ostringstream oss;
+                    oss << "Receive buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                    Logger::Instance().LogWarning(oss.str());
                     extension->warningSent = true;
                 }
 
@@ -367,7 +364,7 @@ private:
 
     RingBuffer<TMessageContainer> _messageBuffer;
 
-    std::shared_ptr<IProtocol> _protocol;
+    IProtocol& _protocol;
 };
 
 #ifdef _WIN32
@@ -472,7 +469,7 @@ class LocalBusProtocolBuffer final : public BusProtocolBufferBase<TMessage, TMes
 public:
     LocalBusProtocolBuffer() = default;
 
-    explicit LocalBusProtocolBuffer(const std::shared_ptr<IProtocol>& protocol) : _protocol(protocol) {};
+    explicit LocalBusProtocolBuffer(IProtocol& protocol) : _protocol(protocol) {};
     ~LocalBusProtocolBuffer() override = default;
 
     LocalBusProtocolBuffer(const LocalBusProtocolBuffer&) = delete;
@@ -527,10 +524,9 @@ protected:
     [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
         if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::string warningMessage = "Transmit buffer for controller '";
-                warningMessage.append(extension->info.name);
-                warningMessage.append("' is full. Messages are dropped.");
-                LogWarning(warningMessage);
+                std::ostringstream oss;
+                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
+                Logger::Instance().LogWarning(oss.str());
                 extension->warningSent = true;
             }
 
@@ -600,7 +596,7 @@ protected:
     }
 
     [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
-        CheckResultWithMessage(_protocol->WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
+        CheckResultWithMessage(_protocol.WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
         return Result::Ok;
     }
 
@@ -609,7 +605,7 @@ protected:
                                              const typename Base::MessageCallback& messageCallback,
                                              const typename Base::MessageContainerCallback& messageContainerCallback) override {
         size_t receiveCount{};
-        CheckResultWithMessage(_protocol->ReadSize(reader, receiveCount), "Could not read receive count.");
+        CheckResultWithMessage(_protocol.ReadSize(reader, receiveCount), "Could not read receive count.");
         _totalReceiveCount += receiveCount;
 
         if (!messageCallback && !messageContainerCallback) {
@@ -620,7 +616,7 @@ protected:
             TMessageContainer& messageContainer = _messageBuffer->PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(messageContainer.ToString());
+                LogProtocolDataTrace(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};
@@ -648,7 +644,7 @@ private:
     size_t _totalReceiveCount{};
     std::atomic<uint32_t>* _messageCountPerController{};
     ShmRingBuffer<TMessageContainer>* _messageBuffer{};
-    std::shared_ptr<IProtocol> _protocol;
+    IProtocol& _protocol;
 
     SharedMemory _sharedMemory;
 };
@@ -683,8 +679,8 @@ public:
                                     const std::vector<EthController>& ethControllers,
                                     const std::vector<LinController>& linControllers,
                                     const std::vector<FrController>& frControllers,
-                                    const std::shared_ptr<IProtocol>& protocol) {
-        _doFlexrayOperations = protocol->DoFlexRayOperations();
+                                    IProtocol& protocol) {
+        _doFlexrayOperations = protocol.DoFlexRayOperations();
 
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
@@ -715,31 +711,15 @@ public:
         const char* suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
         const char* suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-        std::string canTransmitBufferName(name);
-        canTransmitBufferName.append(".Can.");
-        canTransmitBufferName.append(suffixForTransmit);
-        std::string ethTransmitBufferName(name);
-        ethTransmitBufferName.append(".Eth.");
-        ethTransmitBufferName.append(suffixForTransmit);
-        std::string linTransmitBufferName(name);
-        linTransmitBufferName.append(".Lin.");
-        linTransmitBufferName.append(suffixForTransmit);
-        std::string frTransmitBufferName(name);
-        frTransmitBufferName.append(".Flexray.");
-        frTransmitBufferName.append(suffixForTransmit);
+        std::string canTransmitBufferName = name + ".Can." + suffixForTransmit;
+        std::string ethTransmitBufferName = name + ".Eth." + suffixForTransmit;
+        std::string linTransmitBufferName = name + ".Lin." + suffixForTransmit;
+        std::string frTransmitBufferName = name + ".Flexray." + suffixForTransmit;
 
-        std::string canReceiveBufferName(name);
-        canReceiveBufferName.append(".Can.");
-        canReceiveBufferName.append(suffixForReceive);
-        std::string ethReceiveBufferName(name);
-        ethReceiveBufferName.append(".Eth.");
-        ethReceiveBufferName.append(suffixForReceive);
-        std::string linReceiveBufferName(name);
-        linReceiveBufferName.append(".Lin.");
-        linReceiveBufferName.append(suffixForReceive);
-        std::string frReceiveBufferName(name);
-        frReceiveBufferName.append(".Flexray.");
-        frReceiveBufferName.append(suffixForReceive);
+        std::string canReceiveBufferName = name + ".Can." + suffixForReceive;
+        std::string ethReceiveBufferName = name + ".Eth." + suffixForReceive;
+        std::string linReceiveBufferName = name + ".Lin." + suffixForReceive;
+        std::string frReceiveBufferName = name + ".Flexray." + suffixForReceive;
 
         CheckResult(_canTransmitBuffer->Initialize(coSimType, canTransmitBufferName, canControllers));
         CheckResult(_ethTransmitBuffer->Initialize(coSimType, ethTransmitBufferName, ethControllers));
@@ -887,7 +867,7 @@ private:
                                      const std::vector<EthController>& ethControllers,
                                      const std::vector<LinController>& linControllers,
                                      const std::vector<FrController>& frControllers,
-                                     const std::shared_ptr<IProtocol>& protocol,
+                                     IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
     busBuffer = std::make_unique<BusBufferImpl>();
     CheckResult(dynamic_cast<BusBufferImpl&>(*busBuffer)

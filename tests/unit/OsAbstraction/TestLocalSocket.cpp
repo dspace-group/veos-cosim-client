@@ -13,11 +13,11 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-class TestUdsSocket : public testing::Test {};
+class TestLocalSocket : public testing::Test {};
 
-TEST_F(TestUdsSocket, Create) {
+TEST_F(TestLocalSocket, Create) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
+    constexpr auto addressFamily = AddressFamily::Local;
 
     Socket socket;
 
@@ -28,10 +28,10 @@ TEST_F(TestUdsSocket, Create) {
     AssertTrue(socket.IsValid());
 }
 
-TEST_F(TestUdsSocket, Bind) {
+TEST_F(TestLocalSocket, Bind) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));
@@ -40,10 +40,10 @@ TEST_F(TestUdsSocket, Bind) {
     AssertOk(serverSocket.Bind(path));
 }
 
-TEST_F(TestUdsSocket, Listen) {
+TEST_F(TestLocalSocket, Listen) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));
@@ -53,10 +53,10 @@ TEST_F(TestUdsSocket, Listen) {
     AssertOk(serverSocket.Listen());
 }
 
-TEST_F(TestUdsSocket, ConnectWithoutListening) {
+TEST_F(TestLocalSocket, ConnectWithoutListening) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));
@@ -71,10 +71,10 @@ TEST_F(TestUdsSocket, ConnectWithoutListening) {
     AssertFalse(connectedSocket);
 }
 
-TEST_F(TestUdsSocket, Connect) {
+TEST_F(TestLocalSocket, Connect) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));
@@ -93,10 +93,10 @@ TEST_F(TestUdsSocket, Connect) {
     AssertTrue(connectedSocket);
 }
 
-TEST_F(TestUdsSocket, Accept) {
+TEST_F(TestLocalSocket, Accept) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));
@@ -116,10 +116,10 @@ TEST_F(TestUdsSocket, Accept) {
     AssertTrue(acceptedSocket);
 }
 
-TEST_F(TestUdsSocket, SendAndReceive) {
+TEST_F(TestLocalSocket, SendAndReceive) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Uds;
-    std::string path = GenerateString("UdsPath");
+    constexpr auto addressFamily = AddressFamily::Local;
+    std::string path = GenerateString("LocalPath");
 
     Socket serverSocket;
     ExpectOk(Socket::Create(addressFamily, serverSocket));

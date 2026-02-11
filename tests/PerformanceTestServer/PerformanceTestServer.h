@@ -4,7 +4,7 @@
 
 void StartUdpServer();
 void StartTcpServer();
-void StartUdsServer();
+void StartLocalServer();
 void StartPipeServer();
 void StartEventsServer();
 void StartLocalCommunicationServer();

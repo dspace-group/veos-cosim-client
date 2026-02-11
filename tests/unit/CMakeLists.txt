@@ -7,14 +7,12 @@ add_executable(
 target_sources(
   DsVeosCoSimTest
   PRIVATE
-  Communication/TestLocalChannel.cpp
   Communication/TestTcpChannel.cpp
-  Communication/TestUdsChannel.cpp
   OsAbstraction/TestNamedEvent.cpp
   OsAbstraction/TestNamedMutex.cpp
   OsAbstraction/TestSharedMemory.cpp
   OsAbstraction/TestTcpSocket.cpp
-  OsAbstraction/TestUdsSocket.cpp
+  OsAbstraction/TestLocalSocket.cpp
   Helpers/TestHelper.cpp
   Program.cpp
   TestBusBuffer.cpp
@@ -24,6 +22,20 @@ target_sources(
   TestProtocol.cpp
   TestTypes.cpp
 )
+
+if(WIN32)
+  target_sources(
+    DsVeosCoSimTest
+    PRIVATE
+    Communication/TestLocalChannelWindows.cpp
+  )
+else()
+  target_sources(
+    DsVeosCoSimTest
+    PRIVATE
+    Communication/TestLocalChannelUnix.cpp
+  )
+endif()
 
 target_include_directories(
   DsVeosCoSimTest

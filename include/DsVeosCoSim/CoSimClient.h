@@ -35,6 +35,7 @@ public:
     [[nodiscard]] virtual Result PollCommand(SimulationTime& simulationTime, Command& command) = 0;
     [[nodiscard]] virtual Result FinishCommand() = 0;
     [[nodiscard]] virtual Result SetNextSimulationTime(SimulationTime simulationTime) = 0;
+    [[nodiscard]] virtual Result GetRoundTripTime(std::chrono::nanoseconds& roundTripTime) const = 0;
 
     [[nodiscard]] virtual Result Start() = 0;
     [[nodiscard]] virtual Result Stop() = 0;

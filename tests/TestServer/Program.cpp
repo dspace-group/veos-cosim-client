@@ -359,7 +359,7 @@ void StartSimulationThread() {
             LogInfo("Continued.");
             break;
         default:
-            LogError("Could not start in state {}.", ToString(state));
+            LogError("Could not start in state {}.", state);
             break;
     }
 
@@ -421,7 +421,7 @@ void OnSimulationStarted() {
             LogInfo("Stopped.");
             break;
         default:
-            LogError("Could not stop in state {}.", ToString(state));
+            LogError("Could not stop in state {}.", state);
             break;
     }
 
@@ -471,7 +471,7 @@ void OnSimulationStopped() {
             LogInfo("Paused.");
             break;
         default:
-            LogError("Could not pause in state {}.", ToString(state));
+            LogError("Could not pause in state {}.", state);
             break;
     }
 
@@ -516,7 +516,7 @@ void OnSimulationPaused() {
             LogInfo("Terminated.");
             break;
         default:
-            LogError("Could not terminate in state {}.", ToString(state));
+            LogError("Could not terminate in state {}.", state);
             break;
     }
 
@@ -572,32 +572,32 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
 void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const CanController& controller,
                                    const CanMessageContainer& messageContainer) {
-    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer.ToString());
+    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer);
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const EthController& controller,
                                    const EthMessageContainer& messageContainer) {
-    print(fg(fmt::color::cyan), "{}\n", messageContainer.ToString());
+    print(fg(fmt::color::cyan), "{}\n", messageContainer);
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const LinController& controller,
                                    const LinMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
+    print(fg(fmt::color::lime), "{}\n", messageContainer);
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                   [[maybe_unused]] const FrController& controller,
                                   const FrMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer.ToString());
+    print(fg(fmt::color::lime), "{}\n", messageContainer);
 }
 
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
     LogInfo("Loading ...");
 
     if (State != SimulationState::Unloaded) {
-        LogError("Could not load in state {}.", ToString(State));
+        LogError("Could not load in state {}.", State);
         return Result::Ok;
     }
 

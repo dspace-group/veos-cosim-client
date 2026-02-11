@@ -10,6 +10,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -18,7 +19,6 @@
 #include <emmintrin.h>  // IWYU pragma: keep
 
 #include "Channel.h"
-#include "CoSimHelper.h"
 #include "DsVeosCoSim/CoSimTypes.h"
 #include "Environment.h"
 #include "OsUtilities.h"
@@ -53,12 +53,9 @@ public:
 
         CheckResult(mutex.Lock());
 
-        std::string dataName(name);
-        dataName.append(".Data");
-        std::string newDataName(name);
-        newDataName.append(".NewData");
-        std::string newSpaceName(name);
-        newSpaceName.append(".NewSpace");
+        std::string dataName = name + ".Data";
+        std::string newDataName = name + ".NewData";
+        std::string newSpaceName = name + ".NewSpace";
 
         constexpr size_t totalSize = static_cast<size_t>(BufferSize) + sizeof(Header);
 
@@ -118,14 +115,14 @@ protected:
             if (!_connectionDetected) {
                 _detectionCounter++;
                 if (_detectionCounter == 5000U) {
-                    LogError("Counterpart still not connected after 5 seconds.");
+                    Logger::Instance().LogError("Counterpart still not connected after 5 seconds.");
                     return Result::Error;
                 }
 
                 return Result::Ok;
             }
 
-            LogTrace("Remote endpoint disconnected.");
+            Logger::Instance().LogTrace("Remote endpoint disconnected.");
             return Result::Disconnected;
         }
 
@@ -133,7 +130,7 @@ protected:
             return Result::Ok;
         }
 
-        LogError("Counterpart process is not running anymore.");
+        Logger::Instance().LogError("Counterpart process is not running anymore.");
         return Result::Error;
     }
 
@@ -172,9 +169,9 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-        std::string writerName(name);
-        writerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
-        CheckResult(InitializeBase(writerName, isServer));
+        std::ostringstream oss;
+        oss << name << '.' << counter << '.' << postFix;
+        CheckResult(InitializeBase(oss.str(), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Write");
         return Result::Ok;
@@ -350,9 +347,9 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-        std::string readerName(name);
-        readerName.append(".").append(std::to_string(counter)).append(".").append(postFix);
-        CheckResult(InitializeBase(readerName, isServer));
+        std::ostringstream oss;
+        oss << name << '.' << counter << '.' << postFix;
+        CheckResult(InitializeBase(oss.str(), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Read");
         return Result::Ok;
@@ -420,6 +417,10 @@ public:
         }
 
         return Result::Ok;
+    }
+
+    void EndRead() override {
+        // Currently no action needed. The size of a single frame is stored nowhere
     }
 
 private:

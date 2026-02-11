@@ -15,7 +15,7 @@ int main() {
 
     StartTcpServer();
     StartUdpServer();
-    StartUdsServer();
+    StartLocalServer();
     StartPipeServer();
     StartEventsServer();
     StartLocalCommunicationServer();
