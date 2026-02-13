@@ -80,9 +80,9 @@ public:
             throw std::runtime_error("Ring buffer is empty.");
         }
 
-        --_size;
         T& item = _items[_readIndex];
         _readIndex = (_readIndex + 1) % _items.size();
+        --_size;
         return item;
     }
 

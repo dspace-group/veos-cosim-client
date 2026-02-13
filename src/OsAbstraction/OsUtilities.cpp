@@ -1,12 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#ifdef _WIN32
-
 #include "OsUtilities.h"
+
+#include <string>
+
+#include "Environment.h"
+
+#ifdef _WIN32
 
 #include <cstdint>
 #include <optional>
-#include <string>
 #include <utility>
 
 #include <Windows.h>
@@ -14,9 +17,21 @@
 #include <sysinfoapi.h>  // IWYU pragma: keep
 
 #include "DsVeosCoSim/CoSimTypes.h"
-#include "Environment.h"
+
+#else
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pthread.h>
+#include <sched.h>
+
+#endif
 
 namespace DsVeosCoSim {
+
+#ifdef _WIN32
 
 namespace {
 
@@ -265,15 +280,6 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-void SetThreadAffinity(const std::string& name) {
-    size_t mask{};
-    if (!TryGetAffinityMask(name, mask)) {
-        return;
-    }
-
-    (void)SetThreadAffinityMask(GetCurrentThread(), mask);
-}
-
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
@@ -295,22 +301,16 @@ void SetThreadAffinity(const std::string& name) {
     return message;
 }
 
-}  // namespace DsVeosCoSim
+void SetThreadAffinity(const std::string& name) {
+    size_t mask{};
+    if (!TryGetAffinityMask(name, mask)) {
+        return;
+    }
+
+    (void)SetThreadAffinityMask(GetCurrentThread(), mask);
+}
 
 #else
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#include <string>
-
-#include <pthread.h>
-#include <sched.h>
-
-#include "Environment.h"
-
-namespace DsVeosCoSim {
 
 void SetThreadAffinity(const std::string& name) {
     size_t mask{};
@@ -334,6 +334,6 @@ void SetThreadAffinity(const std::string& name) {
     (void)pthread_setaffinity_np(thread, sizeof(cpuSet), &cpuSet);
 }
 
-}  // namespace DsVeosCoSim
-
 #endif
+
+}  // namespace DsVeosCoSim

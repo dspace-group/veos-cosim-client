@@ -138,15 +138,6 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
     return oss.str();
 }
 
-[[nodiscard]] Result CheckCanMessage(uint32_t length) {
-    if (length > CanMessageMaxLength) {
-        Logger::Instance().LogError("CAN message data exceeds maximum length.");
-        return Result::InvalidArgument;
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] std::string EthControllerToString(BusControllerId controllerId,
                                                 uint32_t queueSize,
                                                 uint64_t bitsPerSecond,
@@ -170,15 +161,6 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
     oss << "ETH Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Length: " << length
         << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
     return oss.str();
-}
-
-[[nodiscard]] Result EthMessageCheck(uint32_t length) {
-    if (length > EthMessageMaxLength) {
-        Logger::Instance().LogError("Ethernet message data exceeds maximum length.");
-        return Result::InvalidArgument;
-    }
-
-    return Result::Ok;
 }
 
 [[nodiscard]] std::string LinControllerToString(BusControllerId controllerId,
@@ -206,15 +188,6 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
     return oss.str();
 }
 
-[[nodiscard]] Result LinMessageCheck(uint32_t length) {
-    if (length > LinMessageMaxLength) {
-        Logger::Instance().LogError("LIN message data exceeds maximum length.");
-        return Result::InvalidArgument;
-    }
-
-    return Result::Ok;
-}
-
 [[nodiscard]] std::string FrControllerToString(BusControllerId controllerId,
                                                uint32_t queueSize,
                                                uint64_t bitsPerSecond,
@@ -237,15 +210,6 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
     oss << "FLEXRAY Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
         << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
     return oss.str();
-}
-
-[[nodiscard]] Result FrMessageCheck(uint32_t length) {
-    if (length > FrMessageMaxLength) {
-        Logger::Instance().LogError("FLEXRAY message data exceeds maximum length.");
-        return Result::InvalidArgument;
-    }
-
-    return Result::Ok;
 }
 
 }  // namespace
@@ -1720,38 +1684,6 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
     }
 
     return controllers;
-}
-
-[[nodiscard]] Result CanMessage::Check() const {
-    return CheckCanMessage(length);
-}
-
-[[nodiscard]] Result CanMessageContainer::Check() const {
-    return CheckCanMessage(length);
-}
-
-[[nodiscard]] Result EthMessage::Check() const {
-    return EthMessageCheck(length);
-}
-
-[[nodiscard]] Result EthMessageContainer::Check() const {
-    return EthMessageCheck(length);
-}
-
-[[nodiscard]] Result LinMessage::Check() const {
-    return LinMessageCheck(length);
-}
-
-[[nodiscard]] Result LinMessageContainer::Check() const {
-    return LinMessageCheck(length);
-}
-
-[[nodiscard]] Result FrMessage::Check() const {
-    return FrMessageCheck(length);
-}
-
-[[nodiscard]] Result FrMessageContainer::Check() const {
-    return FrMessageCheck(length);
 }
 
 void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const {

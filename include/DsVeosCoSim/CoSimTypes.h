@@ -386,7 +386,6 @@ struct CanMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(CanMessageContainer& canMessageContainer) const;
 };
 
@@ -399,7 +398,6 @@ struct CanMessageContainer {
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(CanMessage& canMessage) const;
 };
 
@@ -433,7 +431,6 @@ struct EthMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(EthMessageContainer& ethMessageContainer) const;
 };
 
@@ -445,7 +442,6 @@ struct EthMessageContainer {
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(EthMessage& ethMessage) const;
 };
 
@@ -479,7 +475,6 @@ struct LinMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(LinMessageContainer& linMessageContainer) const;
 };
 
@@ -492,7 +487,6 @@ struct LinMessageContainer {
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(LinMessage& linMessage) const;
 };
 
@@ -524,7 +518,6 @@ struct FrMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(FrMessageContainer& frMessageContainer) const;
 };
 
@@ -537,7 +530,6 @@ struct FrMessageContainer {
     uint32_t length{};
     std::array<uint8_t, FrMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(FrMessage& frMessage) const;
 };
 

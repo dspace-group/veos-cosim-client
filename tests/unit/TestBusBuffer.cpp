@@ -860,6 +860,56 @@ TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessageContainer) {
     AssertEq(sendMessageContainer, receivedMessageContainer);
 }
 
+TYPED_TEST(TestBusBuffer, TransmitAndReceiveMessageContainerSimultaniously) {
+    using TControllerContainer = typename TypeParam::ControllerContainer;
+    using TController = typename TypeParam::Controller;
+    using TMessageContainer = typename TypeParam::MessageContainer;
+
+    CoSimType coSimType = TypeParam::GetCoSimType();
+    ConnectionKind connectionKind = TypeParam::GetConnectionKind();
+
+    // Arrange
+    std::string name = GenerateString("BusBuffer名前");
+
+    TControllerContainer controllerContainer{};
+    FillWithRandom(controllerContainer);
+
+    TController controller = controllerContainer.Convert();
+
+    std::unique_ptr<IProtocol> protocol;
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
+
+    std::unique_ptr<BusBuffer> busBuffer1;
+    ExpectOk(CreateBusBuffer(coSimType, connectionKind, name, {controller}, *protocol, busBuffer1));
+
+    std::unique_ptr<BusBuffer> busBuffer2;
+    ExpectOk(CreateBusBuffer(GetCounterPart(coSimType), connectionKind, GetCounterPart(name, connectionKind), {controller}, *protocol, busBuffer2));
+
+    TMessageContainer sendMessageContainer1{};
+    FillWithRandom(sendMessageContainer1, controller.id);
+
+    ExpectOk(busBuffer1->Transmit(sendMessageContainer1));
+
+    TMessageContainer sendMessageContainer2{};
+    FillWithRandom(sendMessageContainer2, controller.id);
+
+    ExpectOk(busBuffer2->Transmit(sendMessageContainer2));
+
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *busBuffer1, *busBuffer2);
+    TestBusBuffer<TypeParam>::Transfer(connectionKind, *busBuffer2, *busBuffer1);
+
+    TMessageContainer receivedMessageContainer1{};
+    TMessageContainer receivedMessageContainer2{};
+
+    // Act
+    AssertOk(busBuffer2->Receive(receivedMessageContainer1));
+    AssertOk(busBuffer1->Receive(receivedMessageContainer2));
+
+    // Assert
+    AssertEq(sendMessageContainer1, receivedMessageContainer1);
+    AssertEq(sendMessageContainer2, receivedMessageContainer2);
+}
+
 TYPED_TEST(TestBusBuffer, ReceiveTransmittedMessage) {
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;

@@ -2,17 +2,20 @@
 
 #pragma once
 
-#ifdef _WIN32
-
 #include <cstdint>
-#include <optional>
 #include <string>
 
+#ifdef _WIN32
+#include <optional>
+
 #include "DsVeosCoSim/CoSimTypes.h"
+#endif
 
 namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
+
+#ifdef _WIN32
 
 class Handle final {
 public:
@@ -109,23 +112,10 @@ private:
 [[nodiscard]] uint32_t GetCurrentProcessId();
 [[nodiscard]] bool IsProcessRunning(uint32_t processId);
 
-void SetThreadAffinity(const std::string& name);
-
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode);
 
-}  // namespace DsVeosCoSim
-
-#else
-
-#include <cstdint>
-#include <string>
-
-namespace DsVeosCoSim {
-
-[[maybe_unused]] constexpr uint32_t Infinite = UINT32_MAX;
+#endif
 
 void SetThreadAffinity(const std::string& name);
 
 }  // namespace DsVeosCoSim
-
-#endif

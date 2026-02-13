@@ -28,133 +28,68 @@ namespace DsVeosCoSim {
 
 namespace {
 
-class IoPartBufferBase {
+struct IoMetaData {
+    IoSignal info{};
+    size_t dataTypeSize{};
+    size_t totalDataSize{};
+    size_t signalIndex{};
+};
+
+using IoMetaDataPtr = IoMetaData*;
+
+class IoData final {
 protected:
-    struct MetaData {
-        IoSignal info{};
-        size_t dataTypeSize{};
-        size_t totalDataSize{};
-        size_t signalIndex{};
-    };
-
 public:
-    IoPartBufferBase() = default;
-    virtual ~IoPartBufferBase() = default;
+    IoData() = default;
+    ~IoData() noexcept = default;
 
-    IoPartBufferBase(const IoPartBufferBase&) = delete;
-    IoPartBufferBase& operator=(const IoPartBufferBase&) = delete;
+    IoData(const IoData&) = delete;
+    IoData& operator=(const IoData&) = delete;
 
-    IoPartBufferBase(IoPartBufferBase&&) = delete;
-    IoPartBufferBase& operator=(IoPartBufferBase&&) = delete;
+    IoData(IoData&&) = delete;
+    IoData& operator=(IoData&&) = delete;
 
-    [[nodiscard]] virtual Result Initialize(CoSimType coSimType, [[maybe_unused]] const std::string& name, const std::vector<IoSignal>& signals) {
-        _coSimType = coSimType;
-        _changedSignalsQueue = RingBuffer<MetaData*>(signals.size());
+    [[nodiscard]] Result Initialize(const std::vector<IoSignal>& ioSignals) {
         size_t nextSignalIndex = 0;
-        for (const auto& signal : signals) {
-            if (signal.length == 0) {
+        for (const auto& ioSignal : ioSignals) {
+            if (ioSignal.length == 0) {
                 std::ostringstream oss;
-                oss << "Invalid length 0 for IO signal '" << signal.name << "'.";
+                oss << "Invalid length 0 for IO signal '" << ioSignal.name << "'.";
                 Logger::Instance().LogError(oss.str());
                 return Result::Error;
             }
 
-            size_t dataTypeSize = GetDataTypeSize(signal.dataType);
+            size_t dataTypeSize = GetDataTypeSize(ioSignal.dataType);
             if (dataTypeSize == 0) {
                 std::ostringstream oss;
-                oss << "Invalid data type for IO signal '" << signal.name << "'.";
+                oss << "Invalid data type for IO signal '" << ioSignal.name << "'.";
                 Logger::Instance().LogError(oss.str());
                 return Result::Error;
             }
 
-            auto search = _metaDataLookup.find(signal.id);
+            auto search = _metaDataLookup.find(ioSignal.id);
             if (search != _metaDataLookup.end()) {
                 std::ostringstream oss;
-                oss << "Duplicated IO signal id " << signal.id << '.';
+                oss << "Duplicated IO signal id " << ioSignal.id << '.';
                 Logger::Instance().LogError(oss.str());
                 return Result::Error;
             }
 
-            size_t totalDataSize = dataTypeSize * signal.length;
+            size_t totalDataSize = dataTypeSize * ioSignal.length;
 
-            MetaData metaData{};
-            metaData.info = signal;
+            IoMetaData metaData{};
+            metaData.info = ioSignal;
             metaData.dataTypeSize = dataTypeSize;
             metaData.totalDataSize = totalDataSize;
             metaData.signalIndex = nextSignalIndex++;
 
-            _metaDataLookup[signal.id] = metaData;
+            _metaDataLookup[ioSignal.id] = metaData;
         }
 
         return Result::Ok;
     }
 
-    void ClearData() {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            ClearDataInternal();
-            return;
-        }
-
-        ClearDataInternal();
-    }
-
-    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            return WriteInternal(signalId, length, value);
-        }
-
-        return WriteInternal(signalId, length, value);
-    }
-
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            return ReadInternal(signalId, length, value);
-        }
-
-        return ReadInternal(signalId, length, value);
-    }
-
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            return ReadInternal(signalId, length, value);
-        }
-
-        return ReadInternal(signalId, length, value);
-    }
-
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            return SerializeInternal(writer);
-        }
-
-        return SerializeInternal(writer);
-    }
-
-    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        if (_coSimType == CoSimType::Client) {
-            std::lock_guard lock(_mutex);
-            return DeserializeInternal(reader, simulationTime, callbacks);
-        }
-
-        return DeserializeInternal(reader, simulationTime, callbacks);
-    }
-
-protected:
-    virtual void ClearDataInternal() = 0;
-
-    [[nodiscard]] virtual Result WriteInternal(IoSignalId signalId, uint32_t length, const void* value) = 0;
-    [[nodiscard]] virtual Result ReadInternal(IoSignalId signalId, uint32_t& length, void* value) = 0;
-    [[nodiscard]] virtual Result ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) = 0;
-
-    [[nodiscard]] virtual Result SerializeInternal(ChannelWriter& writer) = 0;
-    [[nodiscard]] virtual Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) = 0;
-
-    [[nodiscard]] Result FindMetaData(IoSignalId signalId, MetaData*& metaData) {
+    [[nodiscard]] Result FindMetaData(IoSignalId signalId, IoMetaDataPtr& metaData) {
         auto search = _metaDataLookup.find(signalId);
         if (search != _metaDataLookup.end()) {
             metaData = &search->second;
@@ -167,15 +102,88 @@ protected:
         return Result::Error;
     }
 
-    CoSimType _coSimType{};
-    std::unordered_map<IoSignalId, MetaData> _metaDataLookup;
-    RingBuffer<MetaData*> _changedSignalsQueue;
+    [[nodiscard]] std::unordered_map<IoSignalId, IoMetaData>& GetMetaDataLookup() {
+        return _metaDataLookup;
+    }
 
 private:
+    std::unordered_map<IoSignalId, IoMetaData> _metaDataLookup;
+};
+
+class IIoPart {
+public:
+    IIoPart() = default;
+    virtual ~IIoPart() noexcept = default;
+
+    IIoPart(const IIoPart&) = delete;
+    IIoPart& operator=(const IIoPart&) = delete;
+
+    IIoPart(IIoPart&&) = delete;
+    IIoPart& operator=(IIoPart&&) = delete;
+
+    [[nodiscard]] virtual Result Initialize() = 0;
+    virtual void ClearData() = 0;
+    [[nodiscard]] virtual Result Write(IoSignalId signalId, uint32_t length, const void* value) = 0;
+    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, void* value) = 0;
+    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, const void** value) = 0;
+    [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) = 0;
+    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) = 0;
+};
+
+class LockedIoPart final : public IIoPart {
+public:
+    explicit LockedIoPart(std::unique_ptr<IIoPart> proxiedPart) : _proxiedPart(std::move(proxiedPart)) {
+    }
+
+    ~LockedIoPart() noexcept override = default;
+
+    LockedIoPart(const LockedIoPart&) = delete;
+    LockedIoPart& operator=(const LockedIoPart&) = delete;
+
+    LockedIoPart(LockedIoPart&&) = delete;
+    LockedIoPart& operator=(LockedIoPart&&) = delete;
+
+    [[nodiscard]] Result Initialize() override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Initialize();
+    }
+
+    void ClearData() override {
+        std::lock_guard lock(_mutex);
+        _proxiedPart->ClearData();
+    }
+
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Write(signalId, length, value);
+    }
+
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Read(signalId, length, value);
+    }
+
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Read(signalId, length, value);
+    }
+
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Serialize(writer);
+    }
+
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
+        std::lock_guard lock(_mutex);
+        return _proxiedPart->Deserialize(reader, simulationTime, callbacks);
+    }
+
+private:
+    std::unique_ptr<IIoPart> _proxiedPart;
     std::mutex _mutex;
 };
 
-class RemoteIoPartBuffer final : public IoPartBufferBase {
+class RemoteIoPart final : public IIoPart {
     struct Data {
         uint32_t currentLength{};
         bool isChanged{};
@@ -183,21 +191,21 @@ class RemoteIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    RemoteIoPartBuffer() = delete;
-    ~RemoteIoPartBuffer() override = default;
-    explicit RemoteIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    RemoteIoPart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals) : _protocol(protocol), _ioSignals(ioSignals) {};
+    ~RemoteIoPart() override = default;
 
-    RemoteIoPartBuffer(const RemoteIoPartBuffer&) = delete;
-    RemoteIoPartBuffer& operator=(const RemoteIoPartBuffer&) = delete;
+    RemoteIoPart(const RemoteIoPart&) = delete;
+    RemoteIoPart& operator=(const RemoteIoPart&) = delete;
 
-    RemoteIoPartBuffer(RemoteIoPartBuffer&&) = delete;
-    RemoteIoPartBuffer& operator=(RemoteIoPartBuffer&&) = delete;
+    RemoteIoPart(RemoteIoPart&&) = delete;
+    RemoteIoPart& operator=(RemoteIoPart&&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals) override {
-        CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
-
-        _dataVector.resize(_metaDataLookup.size());
-        for (auto& [signalId, metaData] : _metaDataLookup) {
+    [[nodiscard]] Result Initialize() override {
+        CheckResult(_ioData.Initialize(_ioSignals));
+        std::unordered_map<IoSignalId, IoMetaData>& metaDataLookup = _ioData.GetMetaDataLookup();
+        _changedSignalsQueue = RingBuffer<IoMetaDataPtr>(metaDataLookup.size());
+        _dataVector.resize(metaDataLookup.size());
+        for (auto& [signalId, metaData] : metaDataLookup) {
             Data data{};
             data.buffer.resize(metaData.totalDataSize);
             if (metaData.info.sizeKind == SizeKind::Fixed) {
@@ -210,11 +218,10 @@ public:
         return Result::Ok;
     }
 
-protected:
-    void ClearDataInternal() override {
+    void ClearData() override {
         _changedSignalsQueue.Clear();
 
-        for (auto& [signalId, metaData] : _metaDataLookup) {
+        for (auto& [signalId, metaData] : _ioData.GetMetaDataLookup()) {
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData.signalIndex];
             isChanged = false;
             if (metaData.info.sizeKind == SizeKind::Variable) {
@@ -225,9 +232,9 @@ protected:
         }
     }
 
-    [[nodiscard]] Result WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
         if (metaData->info.sizeKind == SizeKind::Variable) {
@@ -241,7 +248,7 @@ protected:
             if (currentLength != length) {
                 if (!isChanged) {
                     isChanged = true;
-                    _changedSignalsQueue.PushBack(&*metaData);
+                    _changedSignalsQueue.PushBack(metaData);
                 }
             }
 
@@ -266,15 +273,15 @@ protected:
 
         if (!isChanged) {
             isChanged = true;
-            _changedSignalsQueue.PushBack(&*metaData);
+            _changedSignalsQueue.PushBack(metaData);
         }
 
         return Result::Ok;
     }
 
-    [[nodiscard]] Result ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         Data& data = _dataVector[metaData->signalIndex];
 
         length = data.currentLength;
@@ -283,9 +290,9 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         Data& data = _dataVector[metaData->signalIndex];
 
         length = data.currentLength;
@@ -293,14 +300,14 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            MetaData*& metaData = _changedSignalsQueue.PopFront();
+            IoMetaDataPtr& metaData = _changedSignalsQueue.PopFront();
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
             CheckResultWithMessage(_protocol.WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
@@ -321,7 +328,7 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
         CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -329,8 +336,8 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(_protocol.ReadSignalId(reader, signalId), "Could not read signal id.");
 
-            MetaData* metaData{};
-            CheckResult(FindMetaData(signalId, metaData));
+            IoMetaDataPtr metaData{};
+            CheckResult(_ioData.FindMetaData(signalId, metaData));
             Data& data = _dataVector[metaData->signalIndex];
 
             if (metaData->info.sizeKind == SizeKind::Variable) {
@@ -362,17 +369,22 @@ protected:
     }
 
 private:
-    std::vector<Data> _dataVector;
     IProtocol& _protocol;
+    const std::vector<IoSignal>& _ioSignals;
+    IoData _ioData;
+    std::vector<Data> _dataVector;
+    RingBuffer<IoMetaDataPtr> _changedSignalsQueue;
 };
 
 #ifdef _WIN32
 
-class LocalIoPartBuffer final : public IoPartBufferBase {
+class LocalIoPart final : public IIoPart {
     struct DataBuffer {
         uint32_t currentLength{};
         uint8_t data[1]{};
     };
+
+    using DataBufferPtr = DataBuffer*;
 
     struct Data {
         size_t offsetOfDataBufferInShm{};
@@ -381,22 +393,24 @@ class LocalIoPartBuffer final : public IoPartBufferBase {
     };
 
 public:
-    LocalIoPartBuffer() = delete;
-    ~LocalIoPartBuffer() override = default;
-    explicit LocalIoPartBuffer(IProtocol& protocol) : _protocol(protocol) {};
+    ~LocalIoPart() override = default;
+    LocalIoPart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::string name)
+        : _protocol(protocol), _ioSignals(ioSignals), _name(std::move(name)) {};
 
-    LocalIoPartBuffer(const LocalIoPartBuffer&) = delete;
-    LocalIoPartBuffer& operator=(const LocalIoPartBuffer&) = delete;
+    LocalIoPart(const LocalIoPart&) = delete;
+    LocalIoPart& operator=(const LocalIoPart&) = delete;
 
-    LocalIoPartBuffer(LocalIoPartBuffer&&) = delete;
-    LocalIoPartBuffer& operator=(LocalIoPartBuffer&&) = delete;
+    LocalIoPart(LocalIoPart&&) = delete;
+    LocalIoPart& operator=(LocalIoPart&&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType, const std::string& name, const std::vector<IoSignal>& signals) override {
-        CheckResult(IoPartBufferBase::Initialize(coSimType, name, signals));
-        _dataVector.resize(_metaDataLookup.size());
+    [[nodiscard]] Result Initialize() override {
+        CheckResult(_ioData.Initialize(_ioSignals));
+        std::unordered_map<IoSignalId, IoMetaData>& metaDataLookup = _ioData.GetMetaDataLookup();
+        _changedSignalsQueue = RingBuffer<IoMetaDataPtr>(metaDataLookup.size());
+        _dataVector.resize(metaDataLookup.size());
 
         size_t totalSize{};
-        for (auto& [signalId, metaData] : _metaDataLookup) {
+        for (auto& [signalId, metaData] : metaDataLookup) {
             Data data{};
             data.offsetOfDataBufferInShm = totalSize;
             totalSize += sizeof(uint32_t) + metaData.totalDataSize;  // Current length + data buffer
@@ -408,13 +422,13 @@ public:
         }
 
         if (totalSize > 0) {
-            CheckResult(SharedMemory::CreateOrOpen(name, totalSize, _sharedMemory));
+            CheckResult(SharedMemory::CreateOrOpen(_name, totalSize, _sharedMemory));
         }
 
-        for (auto& [signalId, metaData] : _metaDataLookup) {
+        for (auto& [signalId, metaData] : metaDataLookup) {
             Data& data = _dataVector[metaData.signalIndex];
-            DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
-            DataBuffer* backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
+            DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+            DataBufferPtr backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
             if (metaData.info.sizeKind == SizeKind::Fixed) {
                 dataBuffer->currentLength = metaData.info.length;
                 backupDataBuffer->currentLength = metaData.info.length;
@@ -424,16 +438,15 @@ public:
         return Result::Ok;
     }
 
-protected:
-    void ClearDataInternal() override {
+    void ClearData() override {
         _changedSignalsQueue.Clear();
 
-        for (auto& [signalId, metaData] : _metaDataLookup) {
+        for (auto& [signalId, metaData] : _ioData.GetMetaDataLookup()) {
             Data& data = _dataVector[metaData.signalIndex];
             data.isChanged = false;
 
-            DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
-            DataBuffer* backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
+            DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+            DataBufferPtr backupDataBuffer = GetDataBuffer(data.offsetOfBackupDataBufferInShm);
 
             if (data.offsetOfDataBufferInShm > data.offsetOfBackupDataBufferInShm) {
                 FlipBuffers(data);
@@ -449,12 +462,12 @@ protected:
         }
     }
 
-    [[nodiscard]] Result WriteInternal(IoSignalId signalId, uint32_t length, const void* value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         Data& data = _dataVector[metaData->signalIndex];
 
-        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         bool currentLengthChanged{};
         if (metaData->info.sizeKind == SizeKind::Variable) {
@@ -485,7 +498,7 @@ protected:
 
         if (!data.isChanged) {
             data.isChanged = true;
-            _changedSignalsQueue.PushBack(&*metaData);
+            _changedSignalsQueue.PushBack(metaData);
             FlipBuffers(data);
             dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
         }
@@ -498,12 +511,12 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result ReadInternal(IoSignalId signalId, uint32_t& length, void* value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         Data& data = _dataVector[metaData->signalIndex];
 
-        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         length = dataBuffer->currentLength;
         size_t totalSize = metaData->dataTypeSize * length;
@@ -511,30 +524,30 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result ReadInternal(IoSignalId signalId, uint32_t& length, const void** value) override {
-        MetaData* metaData{};
-        CheckResult(FindMetaData(signalId, metaData));
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
+        IoMetaDataPtr metaData{};
+        CheckResult(_ioData.FindMetaData(signalId, metaData));
         Data& data = _dataVector[metaData->signalIndex];
 
-        DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+        DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
         length = dataBuffer->currentLength;
         *value = dataBuffer->data;
         return Result::Ok;
     }
 
-    [[nodiscard]] Result SerializeInternal(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
             return Result::Ok;
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
-            MetaData*& metaData = _changedSignalsQueue.PopFront();
+            IoMetaDataPtr& metaData = _changedSignalsQueue.PopFront();
             Data& data = _dataVector[metaData->signalIndex];
 
             if (IsProtocolTracingEnabled()) {
-                DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+                DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
                 LogProtocolDataTraceSignal(metaData->info.id, dataBuffer->currentLength, metaData->info.dataType, dataBuffer->data);
             }
 
@@ -546,7 +559,7 @@ protected:
         return Result::Ok;
     }
 
-    [[nodiscard]] Result DeserializeInternal(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
         size_t ioSignalChangedCount = 0;
         CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -554,13 +567,13 @@ protected:
             IoSignalId signalId{};
             CheckResultWithMessage(_protocol.ReadSignalId(reader, signalId), "Could not read signal id.");
 
-            MetaData* metaData{};
-            CheckResult(FindMetaData(signalId, metaData));
+            IoMetaDataPtr metaData{};
+            CheckResult(_ioData.FindMetaData(signalId, metaData));
             Data& data = _dataVector[metaData->signalIndex];
 
             FlipBuffers(data);
 
-            DataBuffer* dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
+            DataBufferPtr dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
 
             if (IsProtocolTracingEnabled()) {
                 LogProtocolDataTraceSignal(metaData->info.id, dataBuffer->currentLength, metaData->info.dataType, dataBuffer->data);
@@ -575,17 +588,21 @@ protected:
     }
 
 private:
-    [[nodiscard]] DataBuffer* GetDataBuffer(size_t offset) const {
-        return reinterpret_cast<DataBuffer*>(static_cast<uint8_t*>(_sharedMemory.GetData()) + offset);
+    [[nodiscard]] DataBufferPtr GetDataBuffer(size_t offset) const {
+        return reinterpret_cast<DataBufferPtr>(static_cast<uint8_t*>(_sharedMemory.GetData()) + offset);
     }
 
     static void FlipBuffers(Data& data) {
         std::swap(data.offsetOfDataBufferInShm, data.offsetOfBackupDataBufferInShm);
     }
 
+    IProtocol& _protocol;
+    const std::vector<IoSignal>& _ioSignals;
+    std::string _name;
+    IoData _ioData;
     std::vector<Data> _dataVector;
     SharedMemory _sharedMemory;
-    IProtocol& _protocol;
+    RingBuffer<IoMetaDataPtr> _changedSignalsQueue;
 };
 
 #endif
@@ -607,31 +624,38 @@ public:
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
                                     IProtocol& protocol) {
-        std::string outgoingName = name + ".Outgoing";
-        std::string incomingName = name + ".Incoming";
         const std::vector<IoSignal>* writeSignals = &outgoingSignals;
         const std::vector<IoSignal>* readSignals = &incomingSignals;
         if (coSimType == CoSimType::Server) {
-            std::swap(incomingName, outgoingName);
             writeSignals = &incomingSignals;
             readSignals = &outgoingSignals;
         }
 
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
-            _readBuffer = std::make_unique<LocalIoPartBuffer>(protocol);
-            CheckResult(_readBuffer->Initialize(coSimType, incomingName, *readSignals));
-            _writeBuffer = std::make_unique<LocalIoPartBuffer>(protocol);
-            CheckResult(_writeBuffer->Initialize(coSimType, outgoingName, *writeSignals));
+            std::string outgoingName = name + ".Outgoing";
+            std::string incomingName = name + ".Incoming";
+            if (coSimType == CoSimType::Server) {
+                std::swap(incomingName, outgoingName);
+            }
+
+            _readBuffer = std::make_unique<LocalIoPart>(protocol, *readSignals, incomingName);
+            _writeBuffer = std::make_unique<LocalIoPart>(protocol, *writeSignals, outgoingName);
         } else {
 #endif
-            _readBuffer = std::make_unique<RemoteIoPartBuffer>(protocol);
-            CheckResult(_readBuffer->Initialize(coSimType, incomingName, *readSignals));
-            _writeBuffer = std::make_unique<RemoteIoPartBuffer>(protocol);
-            CheckResult(_writeBuffer->Initialize(coSimType, outgoingName, *writeSignals));
+            _readBuffer = std::make_unique<RemoteIoPart>(protocol, *readSignals);
+            _writeBuffer = std::make_unique<RemoteIoPart>(protocol, *writeSignals);
 #ifdef _WIN32
         }
 #endif
+
+        if (coSimType == CoSimType::Client) {
+            _readBuffer = std::make_unique<LockedIoPart>(std::move(_readBuffer));
+            _writeBuffer = std::make_unique<LockedIoPart>(std::move(_writeBuffer));
+        }
+
+        CheckResult(_readBuffer->Initialize());
+        CheckResult(_writeBuffer->Initialize());
 
         ClearData();
         return Result::Ok;
@@ -663,8 +687,8 @@ public:
     }
 
 private:
-    std::unique_ptr<IoPartBufferBase> _writeBuffer;
-    std::unique_ptr<IoPartBufferBase> _readBuffer;
+    std::unique_ptr<IIoPart> _writeBuffer;
+    std::unique_ptr<IIoPart> _readBuffer;
 };
 
 }  // namespace

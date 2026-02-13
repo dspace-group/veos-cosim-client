@@ -63,6 +63,14 @@ constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
 using AddressInfoPtr = addrinfo*;
 
+struct AddressInfoDeleter {
+    void operator()(addrinfo* addressInfo) {
+        if (addressInfo) {
+            freeaddrinfo(addressInfo);
+        }
+    }
+};
+
 [[nodiscard]] std::string GetLocalPath(const std::string& name) {
     std::string fileName = "dSPACE.VEOS.CoSim." + name;
 #ifdef _WIN32
@@ -221,9 +229,10 @@ void CloseSocket(SocketHandle socket) {
     CheckResult(SwitchToNonBlockingMode(socket));
 
     int32_t connectResult = connect(socket, socketAddress, sizeOfSocketAddress);
-    if (connectResult >= 0) {
-        Logger::Instance().LogError("Invalid connect result.");
-        return Result::Error;
+    if (connectResult == 0) {
+        CheckResult(SwitchToBlockingMode(socket));
+        connectSuccess = true;
+        return Result::Ok;
     }
 
     int32_t errorCode = GetLastNetworkError();
@@ -457,6 +466,8 @@ void Socket::Close() {
     AddressInfoPtr addressInfo{};
     CheckResult(ConvertToInternetAddress(ipAddress, remotePort, addressInfo));
 
+    std::unique_ptr<addrinfo, AddressInfoDeleter> addressInfoGuard(addressInfo);
+
     AddressInfoPtr currentAddressInfo = addressInfo;
 
     while (currentAddressInfo) {
@@ -488,12 +499,10 @@ void Socket::Close() {
             continue;
         }
 
-        freeaddrinfo(addressInfo);
         connectedSocket = std::move(socket);
         return Result::Ok;
     }
 
-    freeaddrinfo(addressInfo);
     return Result::Ok;
 }
 
@@ -513,7 +522,9 @@ void Socket::Close() {
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
-    (void)strncpy(address.sun_path, path.c_str(), sizeof(address.sun_path) - 1);
+    size_t maxLength = sizeof(address.sun_path) - 1;
+    strncpy(address.sun_path, path.c_str(), maxLength);
+    address.sun_path[maxLength] = '\0';
 
 #ifndef _WIN32
     address.sun_path[0] = '\0';
@@ -533,6 +544,10 @@ void Socket::Close() {
     if (_addressFamily == AddressFamily::Local) {
         Logger::Instance().LogError("Not supported for address family.");
         return Result::Error;
+    }
+
+    if ((port != 0) && (port < 1024)) {
+        Logger::Instance().LogWarning("Attempting to bind to privileged port.");
     }
 
     if (_addressFamily == AddressFamily::Ipv4) {
@@ -588,12 +603,14 @@ void Socket::Close() {
 
     _path = GetLocalPath(name);
 #ifdef _WIN32
-    (void)Unlink(_path.c_str());
+    Unlink(_path.c_str());
 #endif
 
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
-    (void)strncpy(address.sun_path, _path.c_str(), sizeof(address.sun_path) - 1);
+    size_t maxLength = sizeof(address.sun_path) - 1;
+    strncpy(address.sun_path, _path.c_str(), maxLength);
+    address.sun_path[maxLength] = '\0';
 
 #ifndef _WIN32
     address.sun_path[0] = '\0';

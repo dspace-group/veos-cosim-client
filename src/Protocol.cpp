@@ -17,6 +17,8 @@ namespace DsVeosCoSim {
 
 namespace {
 
+constexpr size_t MaxStringSize = 65536;
+
 constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + sizeof(DataType) + sizeof(SizeKind);
 constexpr size_t CanControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + sizeof(uint64_t);
 constexpr size_t EthControllerSize = sizeof(BusControllerId) + sizeof(uint32_t) + sizeof(uint64_t) + EthAddressLength;
@@ -39,6 +41,11 @@ public:
     }
 
     [[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) override {
+        if (size > UINT32_MAX) {
+            Logger::Instance().LogError("Size exceeds maximum supported value.");
+            return Result::Error;
+        }
+
         auto intSize = static_cast<uint32_t>(size);
         CheckResultWithMessage(writer.Write(intSize), "Could not write size.");
         return Result::Ok;
@@ -85,7 +92,10 @@ public:
         blockReader.Read(messageContainer.length);
         blockReader.EndRead();
 
-        CheckResult(messageContainer.Check());
+        if (messageContainer.length > CanMessageMaxLength) {
+            Logger::Instance().LogError("CAN message data exceeds maximum length.");
+            return Result::Error;
+        }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
         return Result::Ok;
@@ -115,7 +125,10 @@ public:
         blockReader.Read(messageContainer.length);
         blockReader.EndRead();
 
-        CheckResult(messageContainer.Check());
+        if (messageContainer.length > EthMessageMaxLength) {
+            Logger::Instance().LogError("Ethernet message data exceeds maximum length.");
+            return Result::Error;
+        }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
         return Result::Ok;
@@ -145,7 +158,10 @@ public:
         blockReader.Read(messageContainer.length);
         blockReader.EndRead();
 
-        CheckResult(messageContainer.Check());
+        if (messageContainer.length > LinMessageMaxLength) {
+            Logger::Instance().LogError("LIN message data exceeds maximum length.");
+            return Result::Error;
+        }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
         return Result::Ok;
@@ -925,6 +941,11 @@ protected:
         size_t size{};
         CheckResultWithMessage(ReadSize(reader, size), "Could not read string size.");
 
+        if (size > MaxStringSize) {
+            Logger::Instance().LogError("String size exceeds maximum allowed size.");
+            return Result::Error;
+        }
+
         string.resize(size);
 
         CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
@@ -932,6 +953,11 @@ protected:
     }
 
     [[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
+        if (string.size() > MaxStringSize) {
+            Logger::Instance().LogError("String size exceeds maximum allowed size.");
+            return Result::Error;
+        }
+
         CheckResultWithMessage(WriteSize(writer, string.size()), "Could not write string size.");
         CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
         return Result::Ok;
@@ -1363,7 +1389,10 @@ public:
         blockReader.Read(messageContainer.length);
         blockReader.EndRead();
 
-        CheckResult(messageContainer.Check());
+        if (messageContainer.length > FrMessageMaxLength) {
+            Logger::Instance().LogError("FLEXRAY message data exceeds maximum length.");
+            return Result::Error;
+        }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
         return Result::Ok;
