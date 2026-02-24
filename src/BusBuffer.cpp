@@ -18,7 +18,7 @@
 #include "Protocol.hpp"
 #include "ProtocolLogger.hpp"
 #include "RingBuffer.hpp"
-#include "ShmRingBuffer.hpp"
+#include "RingBufferView.hpp"
 
 #ifdef _WIN32
 #include <atomic>
@@ -266,8 +266,11 @@ public:
             CheckResult(_data.FindController(message.controllerId, extensionPtr));
             CheckResult(CheckForSpace(*extensionPtr));
 
-            TMessageContainer& messageContainer = _messageBuffer.EmplaceBack();
+            TMessageContainer messageContainer{};
             message.WriteTo(messageContainer);
+            if (!_messageBuffer.TryPushBack(std::move(messageContainer))) {
+                return CreateError("Message buffer is full.");
+            }
 
             ++_messageCountPerController[extensionPtr->controllerIndex];
             return CreateOk();
@@ -278,31 +281,42 @@ public:
             CheckResult(_data.FindController(messageContainer.controllerId, extensionPtr));
             CheckResult(CheckForSpace(*extensionPtr));
 
-            _messageBuffer.PushBack(messageContainer);
+            if (!_messageBuffer.TryPushBack(messageContainer)) {
+                return CreateError("Message buffer is full.");
+            }
+
             ++_messageCountPerController[extensionPtr->controllerIndex];
             return CreateOk();
         }
 
+        // Using the same TryPopFront function as in Receive(TMessageContainer& messageContainer)
+        // would move the data to a local messageContainer. After leaving this function, message.data
+        // would be a dangling pointer.
+        // Solution:
+        // - message.data points to the data inside of the buffer
+        // - _messageBuffer.RemoveFront() only advances the read index. The data is still there until it is overwritten eventually.
+        // - -> The CoSim client is responsible of copying the data after receiving the message
         [[nodiscard]] Result Receive(TMessage& message) override {
-            if (_messageBuffer.IsEmpty()) {
+            TMessageContainer* messageContainer = _messageBuffer.TryPeekFront();
+            if (messageContainer == nullptr) {
                 return CreateEmpty();
             }
 
-            TMessageContainer& messageContainer = _messageBuffer.PopFront();
-            messageContainer.WriteTo(message);
+            messageContainer->WriteTo(message);
+
+            // As mentioned above, this does not remove the message container
+            _messageBuffer.RemoveFront();
 
             ControllerExtensionPtr extensionPtr{};
-            CheckResult(_data.FindController(messageContainer.controllerId, extensionPtr));
+            CheckResult(_data.FindController(messageContainer->controllerId, extensionPtr));
             --_messageCountPerController[extensionPtr->controllerIndex];
             return CreateOk();
         }
 
         [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
-            if (_messageBuffer.IsEmpty()) {
+            if (!_messageBuffer.TryPopFront(messageContainer)) {
                 return CreateEmpty();
             }
-
-            messageContainer = _messageBuffer.PopFront();
 
             ControllerExtensionPtr extensionPtr{};
             CheckResult(_data.FindController(messageContainer.controllerId, extensionPtr));
@@ -314,9 +328,8 @@ public:
             size_t count = _messageBuffer.Size();
             CheckResultWithMessage(_protocol.WriteSize(writer, count), "Could not write count of messages.");
 
-            for (size_t i = 0; i < count; i++) {
-                TMessageContainer& messageContainer = _messageBuffer.PopFront();
-
+            TMessageContainer messageContainer{};
+            while (_messageBuffer.TryPopFront(messageContainer)) {
                 if (IsProtocolTracingEnabled()) {
                     LogProtocolDataTrace(format_as(messageContainer));
                 }
@@ -371,7 +384,9 @@ public:
                 }
 
                 ++_messageCountPerController[extensionPtr->controllerIndex];
-                _messageBuffer.PushBack(std::move(messageContainer));
+                if (!_messageBuffer.TryPushBack(std::move(messageContainer))) {
+                    return CreateError("Message buffer is full.");
+                }
             }
 
             return CreateOk();
@@ -419,7 +434,7 @@ public:
 
             size_t totalQueueItemsCountPerBuffer = _data.GetTotalQueueItemsCountPerBuffer();
             size_t sizeOfMessageCountPerController = _data.GetAllControllers().size() * sizeof(std::atomic<uint32_t>);
-            size_t sizeOfRingBuffer = sizeof(ShmRingBuffer<TMessageContainer>) + (totalQueueItemsCountPerBuffer * sizeof(TMessageContainer));
+            size_t sizeOfRingBuffer = sizeof(RingBufferView<TMessageContainer>) + (totalQueueItemsCountPerBuffer * sizeof(TMessageContainer));
 
             size_t sizeOfSharedMemory = 0;
             sizeOfSharedMemory += sizeOfMessageCountPerController;
@@ -431,7 +446,7 @@ public:
             auto* pointerToMessageBuffer = pointerToMessageCountPerController + sizeOfMessageCountPerController;
 
             _messageCountPerController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
-            _messageBuffer = reinterpret_cast<ShmRingBuffer<TMessageContainer>*>(pointerToMessageBuffer);
+            _messageBuffer = reinterpret_cast<RingBufferView<TMessageContainer>*>(pointerToMessageBuffer);
 
             _messageBuffer->Initialize(static_cast<uint32_t>(totalQueueItemsCountPerBuffer));
 
@@ -443,6 +458,7 @@ public:
             _data.ClearData();
 
             _totalReceiveCount = 0;
+            _totalTransmitCount = 0;
 
             for (size_t i = 0; i < _data.GetAllControllers().size(); i++) {
                 _messageCountPerController[i].store(0, std::memory_order_release);
@@ -459,10 +475,12 @@ public:
             std::atomic<uint32_t>& messageCount = _messageCountPerController[extensionPtr->controllerIndex];
             CheckResult(CheckForSpace(messageCount, *extensionPtr));
 
-            TMessageContainer& messageContainer = _messageBuffer->EmplaceBack();
-
+            TMessageContainer messageContainer{};
             message.WriteTo(messageContainer);
+            _messageBuffer->PushBack(messageContainer);
+
             messageCount.fetch_add(1);
+            _totalTransmitCount++;
             return CreateOk();
         }
 
@@ -473,7 +491,9 @@ public:
             CheckResult(CheckForSpace(messageCount, *extensionPtr));
 
             _messageBuffer->PushBack(messageContainer);
+
             messageCount.fetch_add(1);
+            _totalTransmitCount++;
             return CreateOk();
         }
 
@@ -509,7 +529,8 @@ public:
         }
 
         [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
-            CheckResultWithMessage(_protocol.WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
+            CheckResultWithMessage(_protocol.WriteSize(writer, _totalTransmitCount), "Could not write transmit count.");
+            _totalTransmitCount = 0;
             return CreateOk();
         }
 
@@ -571,8 +592,9 @@ public:
         std::string _name;
         Data _data;
         size_t _totalReceiveCount{};
+        size_t _totalTransmitCount{};
         std::atomic<uint32_t>* _messageCountPerController{};
-        ShmRingBuffer<TMessageContainer>* _messageBuffer{};
+        RingBufferView<TMessageContainer>* _messageBuffer{};
         SharedMemory _sharedMemory;
     };
 #endif

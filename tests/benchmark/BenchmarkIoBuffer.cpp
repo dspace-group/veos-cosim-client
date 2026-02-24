@@ -113,9 +113,27 @@ void LocalIo(benchmark::State& state) {
     RunTest(state, ConnectionKind::Local, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
+void LocalOnChannelIo(benchmark::State& state) {
+    std::string serverName = GenerateString("Server名前");
+
+    std::unique_ptr<ChannelServer> server;
+    MustBeOk(CreateLocalChannelServer(serverName, server));
+
+    std::unique_ptr<Channel> connectedChannel;
+    MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
+    std::unique_ptr<Channel> acceptedChannel;
+    MustBeOk(server->TryAccept(acceptedChannel));
+
+    std::string writerName = GenerateString("BenchmarkIoWriter名前");
+    std::string readerName = GenerateString("BenchmarkIoReader名前");
+
+    RunTest(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
+}
+
 }  // namespace
 
-BENCHMARK(TcpIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-BENCHMARK(LocalIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
+BENCHMARK(TcpIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+BENCHMARK(LocalIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+BENCHMARK(LocalOnChannelIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 
 #endif

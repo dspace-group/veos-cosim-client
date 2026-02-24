@@ -5,9 +5,7 @@
 
 #include <deque>
 #include <memory>
-#include <optional>
 #include <string>
-#include <thread>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -124,14 +122,10 @@ protected:
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
-        std::thread thread([&] {
-            AssertOk(readerIoBuffer.Deserialize(reader, GenerateSimulationTime(), {}));
-        });
-
         AssertOk(writerIoBuffer.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        thread.join();
+        AssertOk(readerIoBuffer.Deserialize(reader, GenerateSimulationTime(), {}));
     }
 
     static void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std::deque<EventData> expectedCallbacks) {
@@ -154,14 +148,10 @@ protected:
             expectedCallbacks.pop_front();
         };
 
-        std::thread thread([&] {
-            AssertOk(readerIoBuffer.Deserialize(reader, simulationTime, callbacks));
-        });
-
         AssertOk(writerIoBuffer.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        thread.join();
+        AssertOk(readerIoBuffer.Deserialize(reader, simulationTime, callbacks));
 
         if (!expectedCallbacks.empty()) {
             throw std::runtime_error("Not all expected callbacks were called.");

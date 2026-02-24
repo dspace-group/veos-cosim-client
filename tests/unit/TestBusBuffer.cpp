@@ -7,7 +7,6 @@
 #include <deque>
 #include <memory>
 #include <string>
-#include <thread>
 
 #include "BusBuffer.hpp"
 #include "CoSimTypes.hpp"
@@ -70,14 +69,11 @@ protected:
     void Transfer(ConnectionKind connectionKind, const BusBuffer& senderBusBuffer, const BusBuffer& receiverBusBuffer) {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
-        std::thread thread([&] {
-            AssertOk(receiverBusBuffer.Deserialize(reader, {}, {}));
-        });
 
         AssertOk(senderBusBuffer.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        thread.join();
+        AssertOk(receiverBusBuffer.Deserialize(reader, {}, {}));
     }
 
     void Transfer(ConnectionKind connectionKind,
@@ -138,14 +134,10 @@ protected:
                 };
         }
 
-        std::thread thread([&] {
-            AssertOk(receiverBusBuffer.Deserialize(reader, expectedSimulationTime, callbacks));
-        });
-
         AssertOk(senderBusBuffer.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        thread.join();
+        AssertOk(receiverBusBuffer.Deserialize(reader, expectedSimulationTime, callbacks));
 
         ASSERT_TRUE(expectedCallbacks.empty());
     }
@@ -204,14 +196,10 @@ protected:
             };
         }
 
-        std::thread thread([&] {
-            AssertOk(receiverBusBuffer.Deserialize(reader, expectedSimulationTime, callbacks));
-        });
-
         AssertOk(senderBusBuffer.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        thread.join();
+        AssertOk(receiverBusBuffer.Deserialize(reader, expectedSimulationTime, callbacks));
 
         ASSERT_TRUE(expectedCallbacks.empty());
     }
@@ -250,10 +238,10 @@ struct Param {
     }
 };
 
-// #define SINGLE_TEST
+//#define SINGLE_TEST
 
 #ifdef SINGLE_TEST
-using Parameters = Types<Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Client, ConnectionKind::Local>>;
+using Parameters = Types<Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Server, ConnectionKind::Remote>>;
 #else
 using Parameters = Types<Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Client, ConnectionKind::Local>,
                          Param<CanControllerContainer, CanController, CanMessageContainer, CanMessage, CoSimType::Server, ConnectionKind::Remote>,

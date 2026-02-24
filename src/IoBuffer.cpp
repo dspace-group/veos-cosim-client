@@ -232,7 +232,9 @@ public:
             if (currentLength != length) {
                 if (!isChanged) {
                     isChanged = true;
-                    _changedSignalsQueue.PushBack(metaData);
+                    if (!_changedSignalsQueue.TryPushBack(metaData)) {
+                        return CreateError("Changed signals queue is full.");
+                    }
                 }
             }
 
@@ -254,7 +256,9 @@ public:
 
         if (!isChanged) {
             isChanged = true;
-            _changedSignalsQueue.PushBack(metaData);
+            if (!_changedSignalsQueue.TryPushBack(metaData)) {
+                return CreateError("Changed signals queue is full.");
+            }
         }
 
         return CreateOk();
@@ -283,12 +287,9 @@ public:
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
-        if (_changedSignalsQueue.IsEmpty()) {
-            return CreateOk();
-        }
 
-        while (!_changedSignalsQueue.IsEmpty()) {
-            IoMetaDataPtr& metaData = _changedSignalsQueue.PopFront();
+        IoMetaDataPtr metaData{};
+        while (_changedSignalsQueue.TryPopFront(metaData)) {
             auto& [currentLength, isChanged, buffer] = _dataVector[metaData->signalIndex];
 
             CheckResultWithMessage(_protocol.WriteSignalId(writer, metaData->info.id), "Could not write signal id.");
@@ -470,7 +471,10 @@ public:
 
         if (!data.isChanged) {
             data.isChanged = true;
-            _changedSignalsQueue.PushBack(metaData);
+            if (!_changedSignalsQueue.TryPushBack(metaData)) {
+                return CreateError("Changed signals queue is full.");
+            }
+
             FlipBuffers(data);
             dataBuffer = GetDataBuffer(data.offsetOfDataBufferInShm);
         }
@@ -510,12 +514,9 @@ public:
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
-        if (_changedSignalsQueue.IsEmpty()) {
-            return CreateOk();
-        }
 
-        while (!_changedSignalsQueue.IsEmpty()) {
-            IoMetaDataPtr& metaData = _changedSignalsQueue.PopFront();
+        IoMetaDataPtr metaData{};
+        while (_changedSignalsQueue.TryPopFront(metaData)) {
             Data& data = _dataVector[metaData->signalIndex];
 
             if (IsProtocolTracingEnabled()) {

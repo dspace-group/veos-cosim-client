@@ -734,6 +734,7 @@ void SetThreadAffinity(const std::string& name) {
     if (!TryGetAffinityMask(name, mask)) {
         return;
     }
+
     int maxCpuCount = static_cast<int>(sizeof(size_t) * 8);
     cpu_set_t cpuSet{};
     CPU_ZERO(&cpuSet);
@@ -743,6 +744,7 @@ void SetThreadAffinity(const std::string& name) {
             CPU_SET(cpuId, &cpuSet);
         }
     }
+
     pthread_t thread = pthread_self();
     (void)pthread_setaffinity_np(thread, sizeof(cpuSet), &cpuSet);
 }

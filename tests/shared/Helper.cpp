@@ -330,7 +330,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 
 void FillWithRandom(CanControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.flexibleDataRateBitsPerSecond = GenerateU64();
     controller.name = GenerateString("CanController名前\xF0\x9F\x98\x80");
@@ -340,7 +340,7 @@ void FillWithRandom(CanControllerContainer& controller) {
 
 void FillWithRandom(EthControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     FillWithRandomData(controller.macAddress.data(), EthAddressLength);
     controller.name = GenerateString("EthController名前\xF0\x9F\x98\x80");
@@ -350,7 +350,7 @@ void FillWithRandom(EthControllerContainer& controller) {
 
 void FillWithRandom(LinControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
     controller.name = GenerateString("LinController名前\xF0\x9F\x98\x80");
@@ -360,7 +360,7 @@ void FillWithRandom(LinControllerContainer& controller) {
 
 void FillWithRandom(FrControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.name = GenerateString("FrController名前\xF0\x9F\x98\x80");
     controller.channelName = GenerateString("FrChannel名前\xF0\x9F\x98\x80");

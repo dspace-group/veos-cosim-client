@@ -179,17 +179,17 @@ void LocalOnChannelMessages(benchmark::State& state) {
 
 }  // namespace
 
-BENCHMARK_TEMPLATE(TcpMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalOnChannelMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalOnChannelMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalOnChannelMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalOnChannelMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(TcpMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(TcpMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(TcpMessages, FrBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalMessages, FrBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, FrBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 
 #endif
