@@ -50,26 +50,18 @@ private:
     void RunPortMapperServer() {
         constexpr uint32_t timeoutInMilliseconds = 100U;
         while (!_stopEvent.Wait(timeoutInMilliseconds)) {
-            std::unique_ptr<Channel> channel;
-            Result result = _server->TryAccept(channel);
-            if (IsOk(result)) {
-                OnClientConnected(*channel);
-                continue;
+            Result result = CheckForClient();
+            if (IsError(result)) {
+                return;
             }
-
-            if (IsNotConnected(result)) {
-                continue;
-            }
-
-            return;
         }
     }
 
-    void OnClientConnected(Channel& channel) {
-        Result result = HandleClient(channel);
-        if (!IsOk(result)) {
-            Logger::Instance().LogTrace(Format("Port mapper client disconnected unexpectedly. Error result: {}.", result));
-        }
+    [[nodiscard]] Result CheckForClient() {
+        std::unique_ptr<Channel> channel;
+        CheckResult(_server->TryAccept(channel));
+        CheckResultWithMessage(HandleClient(*channel), Format("Port mapper client disconnected unexpectedly."));
+        return CreateOk();
     }
 
     [[nodiscard]] Result HandleClient(Channel& channel) {
