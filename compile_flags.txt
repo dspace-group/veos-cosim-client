@@ -4,7 +4,6 @@
 -DWIN32_LEAN_AND_MEAN
 -D_CRT_SECURE_NO_WARNINGS
 -DDSVEOSCOSIM_ENABLE_TRACING
--DALL_COMMUNICATION_TESTS
 -DALL_BENCHMARK_TESTS
 -Wall
 -Wextra
@@ -21,5 +20,7 @@
 third_party/benchmark/include
 -isystem
 third_party/fmt/include
+-isystem
+third_party/googletest/googlemock/include
 -isystem
 third_party/googletest/googletest/include

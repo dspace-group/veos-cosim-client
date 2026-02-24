@@ -7,35 +7,23 @@ add_executable(
 target_sources(
   DsVeosCoSimTest
   PRIVATE
-  # Communication/TestTcpChannel.cpp
-  # OsAbstraction/TestNamedEvent.cpp
-  # OsAbstraction/TestNamedMutex.cpp
-  # OsAbstraction/TestSharedMemory.cpp
-  # OsAbstraction/TestTcpSocket.cpp
-  # OsAbstraction/TestLocalSocket.cpp
+  Communication/TestLocalChannel.cpp
+  Communication/TestTcpChannel.cpp
+  OsAbstraction/TestLocalSocket.cpp
+  OsAbstraction/TestNamedEvent.cpp
+  OsAbstraction/TestNamedLock.cpp
+  OsAbstraction/TestSharedMemory.cpp
+  OsAbstraction/TestShmPipe.cpp
+  OsAbstraction/TestTcpSocket.cpp
   Helpers/TestHelper.cpp
   Program.cpp
   TestBusBuffer.cpp
-  # TestCoSim.cpp
+  TestCoSim.cpp
   TestIoBuffer.cpp
-  # TestPortMapper.cpp
-  # TestProtocol.cpp
-  # TestTypes.cpp
+  TestPortMapper.cpp
+  TestProtocol.cpp
+  TestTypes.cpp
 )
-
-# if(WIN32)
-#   target_sources(
-#     DsVeosCoSimTest
-#     PRIVATE
-#     Communication/TestLocalChannelWindows.cpp
-#   )
-# else()
-#   target_sources(
-#     DsVeosCoSimTest
-#     PRIVATE
-#     Communication/TestLocalChannelUnix.cpp
-#   )
-# endif()
 
 target_include_directories(
   DsVeosCoSimTest
@@ -53,5 +41,6 @@ target_link_libraries(
   DsVeosCoSimTest
   DsVeosCoSim
   shared
+  GTest::gmock
   GTest::gtest
 )

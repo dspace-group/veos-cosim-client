@@ -1,59 +1,51 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestServer.hpp"
 
 #include <array>
 #include <thread>
 
-#include "Helper.h"
-#include "OsAbstractionTestHelper.h"
-#include "PerformanceTestHelper.h"
+#include "Error.hpp"
+#include "Helper.hpp"
+#include "OsAbstractionTestHelper.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
+
+Result RunForConnected(PipeClient& client) {
+    std::array<char, FrameSize> buffer{};
+
+    while (true) {
+        CheckResult(client.Read(buffer.data(), FrameSize));
+        CheckResult(client.Write(buffer.data(), FrameSize));
+    }
+}
 
 [[nodiscard]] Result Run() {
     LogTrace("Pipe server is listening on pipe {} ...", PipeName);
 
-    std::array<char, BufferSize> buffer{};
-
     while (true) {
-        Pipe pipe;
-        CheckResult(pipe.Initialize(PipeName));
-        CheckResult(pipe.Accept());
+        PipeClient client;
+        CheckResult(PipeClient::Accept(PipeName, client));
 
-        while (true) {
-            if (!IsOk(pipe.Read(buffer.data(), BufferSize))) {
-                break;
-            }
-
-            if (!IsOk(pipe.Write(buffer.data(), BufferSize))) {
-                break;
-            }
-        }
+        RunForConnected(client);
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
-void PipeServerRun() {
+void PipeServer() {
     if (!IsOk(Run())) {
-        LogError("Could not run pipe server.");
+        LogError("Could not run Pipe Server.");
     }
 }
 
 }  // namespace
 
 void StartPipeServer() {
-    std::thread(PipeServerRun).detach();
+    std::thread(PipeServer).detach();
 }
 
-#else
-
-void StartPipeServer() {
-}
-
-#endif  // ALL_COMMUNICATION_TESTS
+}  // namespace DsVeosCoSim

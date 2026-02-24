@@ -8,88 +8,79 @@
 #include <thread>
 #include <vector>
 
-#include "Helper.h"
-#include "Socket.h"
+#include "Helper.hpp"
+#include "Socket.hpp"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-void CounterPart(const Socket& socket, const bool& stopThread, size_t size) {
+void CounterPart(const SocketClient& client, const bool& stopThread, size_t size) {
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
-    MustBeOk(ReceiveComplete(socket, buffer.data(), buffer.size()));
+    MustBeOk(ReceiveComplete(client, buffer.data(), buffer.size()));
 
     while (!stopThread) {
-        MustBeOk(socket.Send(buffer.data(), buffer.size()));
-        MustBeOk(ReceiveComplete(socket, buffer.data(), buffer.size()));
+        MustBeOk(client.Send(buffer.data(), buffer.size()));
+        MustBeOk(ReceiveComplete(client, buffer.data(), buffer.size()));
     }
 }
 
-void RunTest(benchmark::State& state, Socket& socket1, const Socket& socket2) {
+void RunTest(benchmark::State& state, SocketClient& client1, const SocketClient& client2) {
     auto size = static_cast<size_t>(state.range(0));
 
     std::vector<uint8_t> buffer;
     buffer.resize(size);
 
     bool stopThread{};
-    std::thread thread(CounterPart, std::ref(socket1), std::ref(stopThread), size);
+    std::thread thread(CounterPart, std::ref(client1), std::ref(stopThread), size);
 
     for (auto _ : state) {
-        MustBeOk(socket2.Send(buffer.data(), buffer.size()));
-        MustBeOk(ReceiveComplete(socket2, buffer.data(), buffer.size()));
+        MustBeOk(client2.Send(buffer.data(), buffer.size()));
+        MustBeOk(ReceiveComplete(client2, buffer.data(), buffer.size()));
     }
 
     stopThread = true;
-    MustBeOk(socket2.Send(buffer.data(), buffer.size()));
+    MustBeOk(client2.Send(buffer.data(), buffer.size()));
 
     thread.join();
 }
 
 void SocketTcpRoundtrip(benchmark::State& state) {
-    Socket server;
-    MustBeOk(Socket::Create(AddressFamily::Ipv4, server));
-    MustBeOk(server.EnableReuseAddress());
-    MustBeOk(server.Bind(0, false));
+    SocketListener listener;
+    MustBeOk(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
+
     uint16_t port{};
-    MustBeOk(server.GetLocalPort(port));
-    MustBeOk(server.Listen());
+    MustBeOk(listener.GetLocalPort(port));
 
-    std::optional<Socket> connectedSocket;
-    MustBeOk(Socket::TryConnect("127.0.0.1", port, 0, DefaultTimeout, connectedSocket));
-    MustBeTrue(connectedSocket);
-    MustBeOk(connectedSocket->EnableNoDelay());
+    SocketClient connectClient;
+    MustBeOk(SocketClient::TryConnect("127.0.0.1", port, 0, 1000, connectClient));
 
-    std::optional<Socket> acceptedSocket;
-    MustBeOk(server.TryAccept(acceptedSocket));
-    MustBeTrue(acceptedSocket);
-    MustBeOk(acceptedSocket->EnableNoDelay());
+    SocketClient acceptClient;
+    MustBeOk(listener.TryAccept(acceptClient));
 
-    RunTest(state, *connectedSocket, *acceptedSocket);
+    RunTest(state, connectClient, acceptClient);
 }
 
 void SocketLocalRoundtrip(benchmark::State& state) {
     std::string path = GenerateString("LocalPath");
 
-    Socket server;
-    MustBeOk(Socket::Create(AddressFamily::Local, server));
-    MustBeOk(server.Bind(path));
-    MustBeOk(server.Listen());
+    SocketListener listener;
+    MustBeOk(SocketListener::Create(path, listener));
 
-    std::optional<Socket> connectedSocket;
-    MustBeOk(Socket::TryConnect(path, connectedSocket));
-    MustBeTrue(connectedSocket);
-    std::optional<Socket> acceptedSocket;
-    MustBeOk(server.TryAccept(acceptedSocket));
-    MustBeTrue(acceptedSocket);
+    SocketClient connectClient;
+    MustBeOk(SocketClient::TryConnect(path, connectClient));
 
-    RunTest(state, *connectedSocket, *acceptedSocket);
+    SocketClient acceptClient;
+    MustBeOk(listener.TryAccept(acceptClient));
+
+    RunTest(state, connectClient, acceptClient);
 }
 
 }  // namespace
 
-BENCHMARK(SocketTcpRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
-BENCHMARK(SocketLocalRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000);
+BENCHMARK(SocketTcpRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+BENCHMARK(SocketLocalRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 
 #endif

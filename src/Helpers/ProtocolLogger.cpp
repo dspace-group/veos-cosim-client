@@ -1,32 +1,32 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "ProtocolLogger.h"
+#include "ProtocolLogger.hpp"
 
 #include <cstdint>
-#include <sstream>
 #include <string>
+#include <string_view>  // IWYU pragma: keep
 #include <vector>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.hpp"
+#include "Format.hpp"
+#include "Logger.hpp"
 
 namespace DsVeosCoSim {
 
-void LogProtocolBeginTrace(const std::string& message) {
-    std::ostringstream oss;
-    oss << "PROT BEGIN " << message;
-    Logger::Instance().LogTrace(oss.str());
+namespace {
+
+void LogProtocolBeginTrace(std::string_view message) {
+    Logger::Instance().LogTrace(Format("PROT BEGIN {}", message));
 }
 
-void LogProtocolEndTrace(const std::string& message) {
-    std::ostringstream oss;
-    oss << "PROT END   " << message;
-    Logger::Instance().LogTrace(oss.str());
+void LogProtocolEndTrace(std::string_view message) {
+    Logger::Instance().LogTrace(Format("PROT END   {}", message));
 }
 
-void LogProtocolDataTrace(const std::string& message) {
-    std::ostringstream oss;
-    oss << "PROT DATA  " << message;
-    Logger::Instance().LogTrace(oss.str());
+}  // namespace
+
+void LogProtocolDataTrace(std::string_view message) {
+    Logger::Instance().LogTrace(Format("PROT DATA  {}", message));
 }
 
 void LogProtocolBeginTraceReceiveHeader() {
@@ -34,9 +34,7 @@ void LogProtocolBeginTraceReceiveHeader() {
 }
 
 void LogProtocolEndTraceReceiveHeader(FrameKind frameKind) {
-    std::ostringstream oss;
-    oss << "ReceiveHeader(FrameKind: " << frameKind << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReceiveHeader(FrameKind: {})", frameKind));
 }
 
 void LogProtocolBeginTraceSendOk() {
@@ -47,10 +45,8 @@ void LogProtocolEndTraceSendOk() {
     LogProtocolEndTrace("SendOk()");
 }
 
-void LogProtocolBeginTraceSendError(const std::string& errorMessage) {
-    std::ostringstream oss;
-    oss << "SendError(ErrorMessage: \"" << errorMessage << "\")";
-    LogProtocolBeginTrace(oss.str());
+void LogProtocolBeginTraceSendError(std::string_view errorMessage) {
+    LogProtocolBeginTrace(Format(R"(SendError(ErrorMessage: "{}"))", errorMessage));
 }
 
 void LogProtocolEndTraceSendError() {
@@ -61,16 +57,12 @@ void LogProtocolBeginTraceReadError() {
     LogProtocolBeginTrace("ReadError()");
 }
 
-void LogProtocolEndTraceReadError(const std::string& errorMessage) {
-    std::ostringstream oss;
-    oss << "ReadError(ErrorMessage: \"" << errorMessage << "\")";
-    LogProtocolEndTrace(oss.str());
+void LogProtocolEndTraceReadError(std::string_view errorMessage) {
+    LogProtocolEndTrace(Format(R"(ReadError(ErrorMessage: "{}"))", errorMessage));
 }
 
-void LogProtocolBeginTraceSendPing(std::chrono::nanoseconds roundTripTime) {
-    std::ostringstream oss;
-    oss << "SendPing(RoundTripTime: " << roundTripTime << ')';
-    LogProtocolBeginTrace(oss.str());
+void LogProtocolBeginTraceSendPing(SimulationTime roundTripTime) {
+    LogProtocolBeginTrace(Format("SendPing(RoundTripTime: {})", roundTripTime));
 }
 
 void LogProtocolEndTraceSendPing() {
@@ -81,16 +73,12 @@ void LogProtocolBeginTraceReadPing() {
     LogProtocolBeginTrace("ReadPing()");
 }
 
-void LogProtocolEndTraceReadPing(std::chrono::nanoseconds roundTripTime) {
-    std::ostringstream oss;
-    oss << "ReadPing(RoundTripTime: " << roundTripTime << ')';
-    LogProtocolEndTrace(oss.str());
+void LogProtocolEndTraceReadPing(SimulationTime roundTripTime) {
+    LogProtocolEndTrace(Format("ReadPing(RoundTripTime: {})", roundTripTime));
 }
 
 void LogProtocolBeginTraceSendPingOk(Command command) {
-    std::ostringstream oss;
-    oss << "SendPingOk(Command: " << command << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendPingOk(Command: {})", command));
 }
 
 void LogProtocolEndTraceSendPingOk() {
@@ -102,16 +90,12 @@ void LogProtocolBeginTraceReadPingOk() {
 }
 
 void LogProtocolEndTraceReadPingOk(Command command) {
-    std::ostringstream oss;
-    oss << "ReadPingOk(Command: " << command << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadPingOk(Command: {})", command));
 }
 
 void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
-    std::ostringstream oss;
-    oss << "SendConnect(ProtocolVersion: " << protocolVersion << ", ClientMode: " << clientMode << ", ServerName: \"" << serverName << "\", ClientName: \""
-        << clientName << "\")";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(
+        Format(R"(SendConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))", protocolVersion, clientMode, serverName, clientName));
 }
 
 void LogProtocolEndTraceSendConnect() {
@@ -123,10 +107,8 @@ void LogProtocolBeginTraceReadConnect() {
 }
 
 void LogProtocolEndTraceReadConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
-    std::ostringstream oss;
-    oss << "ReadConnect(ProtocolVersion: " << protocolVersion << ", ClientMode: " << clientMode << ", ServerName: \"" << serverName << "\", ClientName: \""
-        << clientName << "\")";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(
+        Format(R"(ReadConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))", protocolVersion, clientMode, serverName, clientName));
 }
 
 void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
@@ -139,12 +121,19 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
                                         const std::vector<EthControllerContainer>& ethControllers,
                                         const std::vector<LinControllerContainer>& linControllers,
                                         const std::vector<FrControllerContainer>& frControllers) {
-    std::ostringstream oss;
-    oss << "SendConnectOk(ProtocolVersion: " << protocolVersion << ", ClientMode: " << clientMode << ", StepSize: " << stepSize
-        << " s, SimulationState: " << simulationState << ", IncomingSignals: " << incomingSignals << ", OutgoingSignals: " << outgoingSignals
-        << ", CanControllers: " << canControllers << ", EthControllers: " << ethControllers << ", LinControllers: " << linControllers
-        << ", FrControllers: " << frControllers << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(
+        Format("SendConnectOk(ProtocolVersion: {}, ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, "
+               "CanControllers: {}, EthControllers: {}, LinControllers: {}, FrControllers: {})",
+               protocolVersion,
+               clientMode,
+               stepSize,
+               simulationState,
+               incomingSignals,
+               outgoingSignals,
+               canControllers,
+               ethControllers,
+               linControllers,
+               frControllers));
 }
 
 void LogProtocolEndTraceSendConnectOk() {
@@ -156,9 +145,7 @@ void LogProtocolBeginTraceReadConnectOk() {
 }
 
 void LogProtocolEndTraceReadConnectOkVersion(uint32_t protocolVersion) {
-    std::ostringstream oss;
-    oss << "ReadConnectOk(ProtocolVersion: " << protocolVersion << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadConnectOk(ProtocolVersion: {})", protocolVersion));
 }
 
 void LogProtocolEndTraceReadConnectOk(Mode clientMode,
@@ -170,17 +157,22 @@ void LogProtocolEndTraceReadConnectOk(Mode clientMode,
                                       const std::vector<EthControllerContainer>& ethControllers,
                                       const std::vector<LinControllerContainer>& linControllers,
                                       const std::vector<FrControllerContainer>& frControllers) {
-    std::ostringstream oss;
-    oss << "ClientMode: " << clientMode << ", StepSize: " << stepSize << " s, SimulationState: " << simulationState << ", IncomingSignals: " << incomingSignals
-        << ", OutgoingSignals: " << outgoingSignals << ", CanControllers: " << canControllers << ", EthControllers: " << ethControllers
-        << ", LinControllers: " << linControllers << ", FrControllers: " << frControllers << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(
+        Format("ReadConnectOk(ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: {}, "
+               "EthControllers: {}, LinControllers: {}, FrControllers: {})",
+               clientMode,
+               stepSize,
+               simulationState,
+               incomingSignals,
+               outgoingSignals,
+               canControllers,
+               ethControllers,
+               linControllers,
+               frControllers));
 }
 
 void LogProtocolBeginTraceSendStart(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "SendStart(SimulationTime: " << simulationTime << " s)";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendStart(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolEndTraceSendStart() {
@@ -192,15 +184,11 @@ void LogProtocolBeginTraceReadStart() {
 }
 
 void LogProtocolEndTraceReadStart(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "ReadStart(SimulationTime: " << simulationTime << " s)";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadStart(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolBeginTraceSendStop(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "SendStop(SimulationTime: " << simulationTime << " s)";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendStop(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolEndTraceSendStop() {
@@ -212,15 +200,11 @@ void LogProtocolBeginTraceReadStop() {
 }
 
 void LogProtocolEndTraceReadStop(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "ReadStop(SimulationTime: " << simulationTime << " s)";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadStop(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolBeginTraceSendTerminate(SimulationTime simulationTime, TerminateReason reason) {
-    std::ostringstream oss;
-    oss << "SendTerminate(SimulationTime: " << simulationTime << " s, Reason: " << reason << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendTerminate(SimulationTime: {} s, Reason: {})", simulationTime, reason));
 }
 
 void LogProtocolEndTraceSendTerminate() {
@@ -232,15 +216,11 @@ void LogProtocolBeginTraceReadTerminate() {
 }
 
 void LogProtocolEndTraceReadTerminate(SimulationTime simulationTime, TerminateReason reason) {
-    std::ostringstream oss;
-    oss << "ReadTerminate(SimulationTime: " << simulationTime << " s, Reason: " << reason << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadTerminate(SimulationTime: {} s, Reason: {})", simulationTime, reason));
 }
 
 void LogProtocolBeginTraceSendPause(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "SendPause(SimulationTime: " << simulationTime << " s)";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendPause(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolEndTraceSendPause() {
@@ -252,15 +232,11 @@ void LogProtocolBeginTraceReadPause() {
 }
 
 void LogProtocolEndTraceReadPause(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "ReadPause(SimulationTime: " << simulationTime << " s)";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadPause(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolBeginTraceSendContinue(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "SendContinue(SimulationTime: " << simulationTime << " s)";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendContinue(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolEndTraceSendContinue() {
@@ -272,15 +248,11 @@ void LogProtocolBeginTraceReadContinue() {
 }
 
 void LogProtocolEndTraceReadContinue(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "ReadContinue(SimulationTime: " << simulationTime << " s)";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadContinue(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolBeginTraceSendStep(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "SendStep(SimulationTime: " << simulationTime << " s)";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendStep(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolEndTraceSendStep() {
@@ -292,15 +264,11 @@ void LogProtocolBeginTraceReadStep() {
 }
 
 void LogProtocolEndTraceReadStep(SimulationTime simulationTime) {
-    std::ostringstream oss;
-    oss << "ReadStep(SimulationTime: " << simulationTime << " s)";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadStep(SimulationTime: {} s)", simulationTime));
 }
 
 void LogProtocolBeginTraceSendStepOk(SimulationTime simulationTime, Command command) {
-    std::ostringstream oss;
-    oss << "SendStepOk(NextSimulationTime: " << simulationTime << " s, Command: " << command << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendStepOk(NextSimulationTime: {} s, Command: {})", simulationTime, command));
 }
 
 void LogProtocolEndTraceSendStepOk() {
@@ -312,15 +280,11 @@ void LogProtocolBeginTraceReadStepOk() {
 }
 
 void LogProtocolEndTraceReadStepOk(SimulationTime simulationTime, Command command) {
-    std::ostringstream oss;
-    oss << "ReadStepOk(NextSimulationTime: " << simulationTime << " s, Command: " << command << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadStepOk(NextSimulationTime: {} s, Command: {})", simulationTime, command));
 }
 
 void LogProtocolBeginTraceSendSetPort(const std::string& serverName, uint16_t port) {
-    std::ostringstream oss;
-    oss << "SendSetPort(ServerName: \"" << serverName << "\", Port: " << port << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format(R"(SendSetPort(ServerName: "{}", Port: {}))", serverName, port));
 }
 
 void LogProtocolEndTraceSendSetPort() {
@@ -332,15 +296,11 @@ void LogProtocolBeginTraceReadSetPort() {
 }
 
 void LogProtocolEndTraceReadSetPort(const std::string& serverName, uint16_t port) {
-    std::ostringstream oss;
-    oss << "ReadSetPort(ServerName: \"" << serverName << "\", Port: " << port << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format(R"(ReadSetPort(ServerName: "{}", Port: {}))", serverName, port));
 }
 
 void LogProtocolBeginTraceSendUnsetPort(const std::string& serverName) {
-    std::ostringstream oss;
-    oss << "SendUnsetPort(ServerName: \"" << serverName << "\")";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format(R"(SendUnsetPort(ServerName: "{}"))", serverName));
 }
 
 void LogProtocolEndTraceSendUnsetPort() {
@@ -352,15 +312,11 @@ void LogProtocolBeginTraceReadUnsetPort() {
 }
 
 void LogProtocolEndTraceReadUnsetPort(const std::string& serverName) {
-    std::ostringstream oss;
-    oss << "ReadUnsetPort(ServerName: \"" << serverName << "\")";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format(R"(ReadUnsetPort(ServerName: "{}"))", serverName));
 }
 
 void LogProtocolBeginTraceSendGetPort(const std::string& serverName) {
-    std::ostringstream oss;
-    oss << "SendGetPort(ServerName: \"" << serverName << "\")";
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format(R"(SendGetPort(ServerName: "{}"))", serverName));
 }
 
 void LogProtocolEndTraceSendGetPort() {
@@ -372,15 +328,11 @@ void LogProtocolBeginTraceReadGetPort() {
 }
 
 void LogProtocolEndTraceReadGetPort(const std::string& serverName) {
-    std::ostringstream oss;
-    oss << "ReadGetPort(ServerName: \"" << serverName << "\")";
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format(R"(ReadGetPort(ServerName: "{}"))", serverName));
 }
 
 void LogProtocolBeginTraceSendGetPortOk(uint16_t port) {
-    std::ostringstream oss;
-    oss << "SendGetPortOk(Port: " << port << ')';
-    LogProtocolBeginTrace(oss.str());
+    LogProtocolBeginTrace(Format("SendGetPortOk(Port: {}", port));
 }
 
 void LogProtocolEndTraceSendGetPortOk() {
@@ -392,15 +344,11 @@ void LogProtocolBeginTraceReadGetPortOk() {
 }
 
 void LogProtocolEndTraceReadGetPortOk(uint16_t port) {
-    std::ostringstream oss;
-    oss << "ReadGetPortOk(Port: " << port << ')';
-    LogProtocolEndTrace(oss.str());
+    LogProtocolEndTrace(Format("ReadGetPortOk(Port: {})", port));
 }
 
 void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data) {
-    std::ostringstream oss;
-    oss << "Signal { Id: " << signalId << ", Length: " << length << ", Data: " << ValueToString(dataType, length, data) << " }";
-    LogProtocolDataTrace(oss.str());
+    LogProtocolDataTrace(Format("Signal { Id: {}, Length: {}, Data: {} }", signalId, length, ValueToString(dataType, length, data)));
 }
 
 }  // namespace DsVeosCoSim

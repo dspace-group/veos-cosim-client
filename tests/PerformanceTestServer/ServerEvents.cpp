@@ -1,58 +1,68 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.h"
+#include "PerformanceTestServer.hpp"
 
-#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
+#ifdef _WIN32
 
 #include <array>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestHelper.h"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
 [[nodiscard]] Result Run() {
     LogTrace("Events server listening on SHM {} ...", ShmName);
 
-    std::array<char, BufferSize> buffer{};
-
     NamedEvent beginEvent;
     CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
+
     NamedEvent endEvent;
     CheckResult(NamedEvent::CreateOrOpen(EndEventName, endEvent));
+
     SharedMemory sharedMemory;
-    CheckResult(SharedMemory::CreateOrOpen(ShmName, BufferSize, sharedMemory));
+    CheckResult(SharedMemory::CreateOrOpen(ShmName, FrameSize, sharedMemory));
+
+    std::array<char, FrameSize> buffer{};
 
     while (true) {
         CheckResult(beginEvent.Wait());
-        (void)memcpy(buffer.data(), sharedMemory.GetData(), BufferSize);
+
+        (void)memcpy(buffer.data(), sharedMemory.GetData(), FrameSize);
         buffer[0]++;
-        (void)memcpy(sharedMemory.GetData(), buffer.data(), BufferSize);
+        (void)memcpy(sharedMemory.GetData(), buffer.data(), FrameSize);
+
         CheckResult(endEvent.Set());
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
-void EventsServerRun() {
+void EventsServer() {
     if (!IsOk(Run())) {
-        LogError("Could not run events server.");
+        LogError("Could not run Events Server.");
     }
 }
 
 }  // namespace
 
 void StartEventsServer() {
-    std::thread(EventsServerRun).detach();
+    std::thread(EventsServer).detach();
 }
+
+}  // namespace DsVeosCoSim
 
 #else
 
+namespace DsVeosCoSim {
+
 void StartEventsServer() {
 }
+
+}  // namespace DsVeosCoSim
 
 #endif

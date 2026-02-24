@@ -1,27 +1,27 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "IoBuffer.h"
+#include "IoBuffer.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Environment.h"
-#include "Protocol.h"
-#include "ProtocolLogger.h"
-#include "RingBuffer.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "Format.hpp"
+#include "Protocol.hpp"
+#include "ProtocolLogger.hpp"
+#include "RingBuffer.hpp"
 
 #ifdef _WIN32
-#include "OsUtilities.h"
+#include "OsUtilities.hpp"
 #endif
 
 namespace DsVeosCoSim {
@@ -38,7 +38,6 @@ struct IoMetaData {
 using IoMetaDataPtr = IoMetaData*;
 
 class IoData final {
-protected:
 public:
     IoData() = default;
     ~IoData() noexcept = default;
@@ -53,26 +52,17 @@ public:
         size_t nextSignalIndex = 0;
         for (const auto& ioSignal : ioSignals) {
             if (ioSignal.length == 0) {
-                std::ostringstream oss;
-                oss << "Invalid length 0 for IO signal '" << ioSignal.name << "'.";
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Invalid length 0 for IO signal '{}'.", ioSignal.name));
             }
 
             size_t dataTypeSize = GetDataTypeSize(ioSignal.dataType);
             if (dataTypeSize == 0) {
-                std::ostringstream oss;
-                oss << "Invalid data type for IO signal '" << ioSignal.name << "'.";
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Invalid data type for IO signal '{}'.", ioSignal.name));
             }
 
             auto search = _metaDataLookup.find(ioSignal.id);
             if (search != _metaDataLookup.end()) {
-                std::ostringstream oss;
-                oss << "Duplicated IO signal id " << ioSignal.id << '.';
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Duplicated IO signal id {}.", ioSignal.id));
             }
 
             size_t totalDataSize = dataTypeSize * ioSignal.length;
@@ -86,20 +76,17 @@ public:
             _metaDataLookup[ioSignal.id] = metaData;
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result FindMetaData(IoSignalId signalId, IoMetaDataPtr& metaData) {
         auto search = _metaDataLookup.find(signalId);
         if (search != _metaDataLookup.end()) {
             metaData = &search->second;
-            return Result::Ok;
+            return CreateOk();
         }
 
-        std::ostringstream oss;
-        oss << "IO signal id " << signalId << " is unknown.";
-        Logger::Instance().LogError(oss.str());
-        return Result::Error;
+        return CreateError(Format("IO signal id {} is unknown.", signalId));
     }
 
     [[nodiscard]] std::unordered_map<IoSignalId, IoMetaData>& GetMetaDataLookup() {
@@ -192,7 +179,7 @@ class RemoteIoPart final : public IIoPart {
 
 public:
     RemoteIoPart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals) : _protocol(protocol), _ioSignals(ioSignals) {};
-    ~RemoteIoPart() override = default;
+    ~RemoteIoPart() noexcept override = default;
 
     RemoteIoPart(const RemoteIoPart&) = delete;
     RemoteIoPart& operator=(const RemoteIoPart&) = delete;
@@ -215,7 +202,7 @@ public:
             _dataVector[metaData.signalIndex] = data;
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     void ClearData() override {
@@ -239,10 +226,7 @@ public:
 
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
             }
 
             if (currentLength != length) {
@@ -255,10 +239,7 @@ public:
             currentLength = length;
         } else {
             if (length != metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of fixed sized IO signal '" << metaData->info.name << "' must be " << metaData->info.length << " but was " << length << '.';
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length));
             }
         }
 
@@ -266,7 +247,7 @@ public:
 
         int32_t compareResult = memcmp(buffer.data(), value, totalSize);
         if (compareResult == 0) {
-            return Result::Ok;
+            return CreateOk();
         }
 
         (void)memcpy(buffer.data(), value, totalSize);
@@ -276,7 +257,7 @@ public:
             _changedSignalsQueue.PushBack(metaData);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
@@ -287,7 +268,7 @@ public:
         length = data.currentLength;
         size_t totalSize = metaData->dataTypeSize * length;
         (void)memcpy(value, data.buffer.data(), totalSize);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
@@ -297,13 +278,13 @@ public:
 
         length = data.currentLength;
         *value = data.buffer.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
-            return Result::Ok;
+            return CreateOk();
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
@@ -325,7 +306,7 @@ public:
             }
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
@@ -344,10 +325,7 @@ public:
                 uint32_t length = 0;
                 CheckResultWithMessage(_protocol.ReadLength(reader, length), "Could not read signal length.");
                 if (length > metaData->info.length) {
-                    std::ostringstream oss;
-                    oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                    Logger::Instance().LogError(oss.str());
-                    return Result::Error;
+                    return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
                 }
 
                 data.currentLength = length;
@@ -365,7 +343,7 @@ public:
             }
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
 private:
@@ -393,7 +371,7 @@ class LocalIoPart final : public IIoPart {
     };
 
 public:
-    ~LocalIoPart() override = default;
+    ~LocalIoPart() noexcept override = default;
     LocalIoPart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::string name)
         : _protocol(protocol), _ioSignals(ioSignals), _name(std::move(name)) {};
 
@@ -435,7 +413,7 @@ public:
             }
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     void ClearData() override {
@@ -472,19 +450,13 @@ public:
         bool currentLengthChanged{};
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
             }
 
             currentLengthChanged = dataBuffer->currentLength != length;
         } else {
             if (length != metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of fixed sized IO signal '" << metaData->info.name << "' must be " << metaData->info.length << " but was " << length << '.';
-                Logger::Instance().LogError(oss.str());
-                return Result::Error;
+                return CreateError(Format("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length));
             }
         }
 
@@ -493,7 +465,7 @@ public:
         bool dataChanged = memcmp(dataBuffer->data, value, totalSize) != 0;
 
         if (!currentLengthChanged && !dataChanged) {
-            return Result::Ok;
+            return CreateOk();
         }
 
         if (!data.isChanged) {
@@ -508,7 +480,7 @@ public:
             (void)memcpy(dataBuffer->data, value, totalSize);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
@@ -521,7 +493,7 @@ public:
         length = dataBuffer->currentLength;
         size_t totalSize = metaData->dataTypeSize * length;
         (void)memcpy(value, dataBuffer->data, totalSize);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
@@ -533,13 +505,13 @@ public:
 
         length = dataBuffer->currentLength;
         *value = dataBuffer->data;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
         if (_changedSignalsQueue.IsEmpty()) {
-            return Result::Ok;
+            return CreateOk();
         }
 
         while (!_changedSignalsQueue.IsEmpty()) {
@@ -556,7 +528,7 @@ public:
             data.isChanged = false;
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
@@ -584,12 +556,12 @@ public:
             }
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
 private:
     [[nodiscard]] DataBufferPtr GetDataBuffer(size_t offset) const {
-        return reinterpret_cast<DataBufferPtr>(static_cast<uint8_t*>(_sharedMemory.GetData()) + offset);
+        return reinterpret_cast<DataBufferPtr>(_sharedMemory.GetData() + offset);
     }
 
     static void FlipBuffers(Data& data) {
@@ -610,7 +582,7 @@ private:
 class IoBufferImpl final : public IoBuffer {
 public:
     IoBufferImpl() = default;
-    ~IoBufferImpl() override = default;
+    ~IoBufferImpl() noexcept override = default;
 
     IoBufferImpl(const IoBufferImpl&) = delete;
     IoBufferImpl& operator=(const IoBufferImpl&) = delete;
@@ -658,7 +630,7 @@ public:
         CheckResult(_writeBuffer->Initialize());
 
         ClearData();
-        return Result::Ok;
+        return CreateOk();
     }
 
     void ClearData() const override {
@@ -703,7 +675,7 @@ private:
     auto tmpIoBuffer = std::make_unique<IoBufferImpl>();
     CheckResult(tmpIoBuffer->Initialize(coSimType, connectionKind, name, incomingSignals, outgoingSignals, protocol));
     ioBuffer = std::move(tmpIoBuffer);
-    return Result::Ok;
+    return CreateOk();
 }
 
 }  // namespace DsVeosCoSim

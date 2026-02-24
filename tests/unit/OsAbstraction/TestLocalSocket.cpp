@@ -1,148 +1,324 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <optional>
-#include <string>
+#include <fmt/format.h>
 
 #include <gtest/gtest.h>
 
-#include "Helper.h"
-#include "Socket.h"
-#include "TestHelper.h"
+#include <string>
+
+#include "Helper.hpp"
+#include "Socket.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
+[[nodiscard]] std::string GenerateName() {
+    return GenerateString("LocalPath");
+}
+
+void EstablishConnection(const std::string& name, SocketClient& connectClient, SocketClient& acceptClient) {
+    SocketListener listener;
+    AssertOk(SocketListener::Create(name, listener));
+
+    AssertOk(SocketClient::TryConnect(name, connectClient));
+
+    AssertOk(listener.TryAccept(acceptClient));
+}
+
 class TestLocalSocket : public testing::Test {};
 
-TEST_F(TestLocalSocket, Create) {
+TEST_F(TestLocalSocket, CreateListenerShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
+    std::string name = GenerateName();
 
-    Socket socket;
+    SocketListener listener;
 
     // Act
-    AssertOk(Socket::Create(addressFamily, socket));
+    Result result = SocketListener::Create(name, listener);
 
     // Assert
-    AssertTrue(socket.IsValid());
+    AssertOk(result);
 }
 
-TEST_F(TestLocalSocket, Bind) {
+TEST_F(TestLocalSocket, ConnectToListeningSocketShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
+    SocketListener listener;
+    AssertOk(SocketListener::Create(name, listener));
+
+    SocketClient client;
+
+    // Act
+    Result result = SocketClient::TryConnect(name, client);
+
+    // Assert
+    AssertOk(result);
+}
+
+TEST_F(TestLocalSocket, ConnectWithoutListeningShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    {
+        SocketListener listener;
+        AssertOk(SocketListener::Create(name, listener));
+    }
+
+    SocketClient client;
+
+    // Act
+    Result result = SocketClient::TryConnect(name, client);
+
+    // Assert
+    AssertNotConnected(result);
+}
+
+TEST_F(TestLocalSocket, AcceptWithoutConnectShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(name, listener));
+
+    SocketClient client;
+
+    // Act
+    Result result = listener.TryAccept(client);
+
+    // Assert
+    AssertNotConnected(result);
+}
+
+TEST_F(TestLocalSocket, AcceptAfterStopShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(name, listener));
+
+    listener.Stop();
+
+    SocketClient client;
+
+    // Act
+    Result result = listener.TryAccept(client);
+
+    // Assert
+    AssertError(result);
+}
+
+TEST_F(TestLocalSocket, AcceptWithConnectShouldWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(name, listener));
+
+    SocketClient connectClient;
+    AssertOk(SocketClient::TryConnect(name, connectClient));
+
+    SocketClient acceptClient;
+
+    // Act
+    Result result = listener.TryAccept(acceptClient);
+
+    // Assert
+    AssertOk(result);
+}
+
+TEST_F(TestLocalSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
     // Act and assert
-    AssertOk(serverSocket.Bind(path));
+    TestSendAndReceive(connectClient, acceptClient);
 }
 
-TEST_F(TestLocalSocket, Listen) {
+TEST_F(TestLocalSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(path));
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
     // Act and assert
-    AssertOk(serverSocket.Listen());
+    TestSendAndReceive(acceptClient, connectClient);
 }
 
-TEST_F(TestLocalSocket, ConnectWithoutListening) {
+TEST_F(TestLocalSocket, PingPongBeginningWithConnectClientShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(path));
-
-    std::optional<Socket> connectedSocket;
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
     // Act and assert
-    AssertOk(Socket::TryConnect(path, connectedSocket));
-
-    // Assert
-    AssertFalse(connectedSocket);
+    TestPingPong(connectClient, acceptClient);
 }
 
-TEST_F(TestLocalSocket, Connect) {
+TEST_F(TestLocalSocket, PingPongBeginningWithAcceptClientShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(path));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
-    Socket clientSocket;
-    ExpectOk(Socket::Create(addressFamily, clientSocket));
-
-    std::optional<Socket> connectedSocket;
-
-    // Act
-    AssertOk(Socket::TryConnect(path, connectedSocket));
-
-    // Assert
-    AssertTrue(connectedSocket);
+    // Act and assert
+    TestPingPong(acceptClient, connectClient);
 }
 
-TEST_F(TestLocalSocket, Accept) {
+TEST_F(TestLocalSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(path));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
-    std::optional<Socket> clientSocket;
-    ExpectOk(Socket::TryConnect(path, clientSocket));
-    ExpectTrue(clientSocket);
-
-    std::optional<Socket> acceptedSocket;
-
-    // Act
-    AssertOk(serverSocket.TryAccept(acceptedSocket));
-
-    // Assert
-    AssertTrue(acceptedSocket);
+    // Act and assert
+    TestManyElements(connectClient, acceptClient);
 }
 
-TEST_F(TestLocalSocket, SendAndReceive) {
+TEST_F(TestLocalSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
     // Arrange
-    constexpr auto addressFamily = AddressFamily::Local;
-    std::string path = GenerateString("LocalPath");
+    std::string name = GenerateName();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(path));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
-    std::optional<Socket> clientSocket;
-    ExpectOk(Socket::TryConnect(path, clientSocket));
-    ExpectTrue(clientSocket);
+    // Act and assert
+    TestManyElements(acceptClient, connectClient);
+}
 
-    std::optional<Socket> acceptedSocket;
-    ExpectOk(serverSocket.TryAccept(acceptedSocket));
-    ExpectTrue(acceptedSocket);
+TEST_F(TestLocalSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
+    // Arrange
+    std::string name = GenerateName();
 
-    uint32_t sendValue = GenerateU32();
-    uint32_t receiveValue = 0;
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
 
-    // Act
-    AssertOk(clientSocket->Send(&sendValue, sizeof(sendValue)));
-    AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    // Act and assert
+    TestBigElement(connectClient, acceptClient);
+}
 
-    // Assert
-    AssertEq(sendValue, receiveValue);
+TEST_F(TestLocalSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestBigElement(acceptClient, connectClient);
+}
+
+TEST_F(TestLocalSocket, SendOnDisconnectedConnectClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnect(connectClient);
+}
+
+TEST_F(TestLocalSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnect(acceptClient);
+}
+
+TEST_F(TestLocalSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+}
+
+TEST_F(TestLocalSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+}
+
+TEST_F(TestLocalSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnect(connectClient);
+}
+
+TEST_F(TestLocalSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnect(acceptClient);
+}
+
+TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+}
+
+TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(name, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
 }
 
 }  // namespace

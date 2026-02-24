@@ -3,37 +3,36 @@
 #include <array>
 #include <string>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestClient.h"
-#include "PerformanceTestHelper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestClient.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
 [[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel(host, CommunicationPort, 0, DefaultTimeout, channel));
-    CheckBoolResult(channel);
 
     SetThreadAffinity(std::to_string(CommunicationPort));
 
-    std::array<char, BufferSize> buffer{};
+    std::array<char, FrameSize> buffer{};
 
     connectedEvent.Set();
 
     while (!isStopped) {
-        CheckResult(channel->GetWriter().Write(buffer.data(), BufferSize));
+        CheckResult(channel->GetWriter().Write(buffer.data(), FrameSize));
         CheckResult(channel->GetWriter().EndWrite());
 
-        CheckResult(channel->GetReader().Read(buffer.data(), BufferSize));
+        CheckResult(channel->GetReader().Read(buffer.data(), FrameSize));
 
         counter++;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void RemoteCommunicationClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
@@ -49,3 +48,5 @@ void RunRemoteCommunicationTest(const std::string& host) {  // NOLINT(misc-use-i
     RunPerformanceTest(RemoteCommunicationClientRun, host);
     LogTrace("");
 }
+
+}  // namespace DsVeosCoSim

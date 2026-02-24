@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "Socket.h"
-#include "TestHelper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "Socket.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -23,31 +23,27 @@ struct Param {
 [[nodiscard]] std::vector<Param> GetValues() {
     std::vector<Param> values;
 
-    if (Socket::IsIpv4Supported()) {
+    if (IsIpv4SocketSupported()) {
         values.push_back(Param{AddressFamily::Ipv4});
     }
 
-    if (Socket::IsIpv6Supported()) {
+    if (IsIpv6SocketSupported()) {
         values.push_back(Param{AddressFamily::Ipv6});
     }
 
     return values;
 }
 
-[[nodiscard]] std::unique_ptr<ChannelServer> CreateServer() {
+void EstablishConnection(const Param& param, std::unique_ptr<Channel>& connectChannel, std::unique_ptr<Channel>& acceptChannel) {
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
+
     std::unique_ptr<ChannelServer> server;
-    ExpectOk(CreateTcpChannelServer(0, true, server));
-    ExpectTrue(server);
+    AssertOk(CreateTcpChannelServer(0, true, server));
+    uint16_t port = server->GetLocalPort();
 
-    return server;
-}
+    AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectChannel));
 
-[[nodiscard]] std::unique_ptr<Channel> ConnectToServer(const char* ipAddress, uint16_t port) {
-    std::unique_ptr<Channel> connectedChannel;
-    ExpectOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectedChannel));
-    ExpectTrue(connectedChannel);
-
-    return connectedChannel;
+    AssertOk(server->TryAccept(acceptChannel));
 }
 
 class TestTcpChannel : public testing::TestWithParam<Param> {};
@@ -61,24 +57,25 @@ TEST_F(TestTcpChannel, StartServer) {
     std::unique_ptr<ChannelServer> server;
 
     // Act
-    AssertOk(CreateTcpChannelServer(0, true, server));
+    Result result = CreateTcpChannelServer(0, true, server);
 
     // Assert
-    AssertTrue(server);
+    AssertOk(result);
+    ASSERT_TRUE(server);
 }
 
 TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
     // Arrange
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
 
     // Act
     uint16_t port = server->GetLocalPort();
 
     // Assert
-    AssertNotEq(static_cast<uint16_t>(0), port);
+    ASSERT_NE(static_cast<uint16_t>(0), port);
 }
 
-#ifdef _WIN32
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
     Param param = GetParam();
@@ -87,48 +84,51 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
     uint16_t port{};
 
     {
-        std::unique_ptr<ChannelServer> server = CreateServer();
+        std::unique_ptr<ChannelServer> server;
+        AssertOk(CreateTcpChannelServer(0, true, server));
         port = server->GetLocalPort();
     }
 
-    std::unique_ptr<Channel> connectedChannel;
+    std::unique_ptr<Channel> connectChannel;
 
     // Act
-    AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, 0, connectedChannel));
+    Result result = TryConnectToTcpChannel(ipAddress, port, 0, 0, connectChannel);
 
     // Assert
-    AssertFalse(connectedChannel);
+    AssertNotConnected(result);
 }
-#endif
 
 TEST_P(TestTcpChannel, Connect) {
     // Arrange
     Param param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
     uint16_t port = server->GetLocalPort();
 
-    std::unique_ptr<Channel> connectedChannel;
+    std::unique_ptr<Channel> connectChannel;
 
     // Act
-    AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectedChannel));
+    Result result = TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectChannel);
 
     // Assert
-    AssertTrue(connectedChannel);
+    AssertOk(result);
+    ASSERT_TRUE(connectChannel);
 }
 
 TEST_P(TestTcpChannel, AcceptWithoutConnect) {
     // Arrange
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
 
-    std::unique_ptr<Channel> acceptedChannel;
+    std::unique_ptr<Channel> acceptChannel;
 
     // Act
-    AssertOk(server->TryAccept(acceptedChannel));
+    Result result = server->TryAccept(acceptChannel);
 
     // Assert
-    AssertFalse(acceptedChannel);
+    AssertNotConnected(result);
 }
 
 TEST_P(TestTcpChannel, Accept) {
@@ -136,70 +136,92 @@ TEST_P(TestTcpChannel, Accept) {
     Param param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
     uint16_t port = server->GetLocalPort();
 
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
+    std::unique_ptr<Channel> connectChannel;
+    AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectChannel));
 
-    std::unique_ptr<Channel> acceptedChannel;
+    std::unique_ptr<Channel> acceptChannel;
 
     // Act
-    AssertOk(server->TryAccept(acceptedChannel));
+    Result result = server->TryAccept(acceptChannel);
 
     // Assert
-    AssertTrue(acceptedChannel);
+    AssertOk(result);
+    ASSERT_TRUE(acceptChannel);
 }
 
 TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
-
-    std::string connectedChannelRemoteAddress;
-    std::string acceptedChannelRemoteAddress;
+    std::string acceptChannelRemoteAddress;
 
     // Act
-    AssertOk(connectedChannel->GetRemoteAddress(connectedChannelRemoteAddress));
-    AssertOk(acceptedChannel->GetRemoteAddress(acceptedChannelRemoteAddress));
+    Result result = acceptChannel->GetRemoteAddress(acceptChannelRemoteAddress);
 
     // Assert
-    AssertNotEqHelper(connectedChannelRemoteAddress, acceptedChannelRemoteAddress);
+    AssertOk(result);
+    ASSERT_STRNE(acceptChannelRemoteAddress.c_str(), "");
+}
+
+TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses) {
+    // Arrange
+    Param param = GetParam();
+
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
+
+    std::string connectChannelRemoteAddress;
+
+    // Act
+    Result result = connectChannel->GetRemoteAddress(connectChannelRemoteAddress);
+
+    // Assert
+    AssertOk(result);
+    ASSERT_STRNE(connectChannelRemoteAddress.c_str(), "");
 }
 
 TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
     // Arrange
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
     uint16_t port = server->GetLocalPort();
 
-    std::unique_ptr<Channel> connectedChannel;
+    std::unique_ptr<Channel> connectChannel;
 
     // Act
-    AssertOk(TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout, connectedChannel));
+    Result result = TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout, connectChannel);
 
     // Assert
-    AssertTrue(connectedChannel);
+    AssertOk(result);
+    ASSERT_TRUE(connectChannel);
 }
 
 TEST_F(TestTcpChannel, AcceptClientWithHostName) {
     // Arrange
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
     uint16_t port = server->GetLocalPort();
 
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer("localhost", port);
+    std::unique_ptr<Channel> connectChannel;
+    AssertOk(TryConnectToTcpChannel("localhost", port, 0, DefaultTimeout, connectChannel));
 
-    std::unique_ptr<Channel> acceptedChannel;
+    std::unique_ptr<Channel> acceptChannel;
 
     // Act
-    AssertOk(server->TryAccept(acceptedChannel));
+    Result result = server->TryAccept(acceptChannel);
 
     // Assert
-    AssertTrue(acceptedChannel);
+    AssertOk(result);
+    ASSERT_TRUE(acceptChannel);
 }
 
 TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
@@ -207,204 +229,168 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     Param param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
+    std::unique_ptr<ChannelServer> server;
+    AssertOk(CreateTcpChannelServer(0, true, server));
     uint16_t port = server->GetLocalPort();
 
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
+    std::unique_ptr<Channel> connectChannel;
+    AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeout, connectChannel));
 
     // After disconnect, the server should still be able to accept it, because that is the nature of sockets
-    connectedChannel->Disconnect();
+    connectChannel->Disconnect();
 
-    std::unique_ptr<Channel> acceptedChannel;
+    std::unique_ptr<Channel> acceptChannel;
 
     // Act
-    AssertOk(server->TryAccept(acceptedChannel));
+    Result result = server->TryAccept(acceptChannel);
 
     // Assert
-    AssertTrue(acceptedChannel);
+    AssertOk(result);
+    ASSERT_TRUE(acceptChannel);
 }
 
 TEST_P(TestTcpChannel, WriteUInt16ToChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestWriteUInt16ToChannel(connectedChannel);
+    TestWriteUInt16ToChannel(connectChannel);
 }
 
 TEST_P(TestTcpChannel, WriteUInt32ToChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestWriteUInt32ToChannel(connectedChannel);
-    AssertOk(connectedChannel->GetWriter().EndWrite());
+    TestWriteUInt32ToChannel(connectChannel);
 }
 
 TEST_P(TestTcpChannel, WriteUInt64ToChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestWriteUInt64ToChannel(connectedChannel);
-    AssertOk(connectedChannel->GetWriter().EndWrite());
+    TestWriteUInt64ToChannel(connectChannel);
 }
 
 TEST_P(TestTcpChannel, WriteBufferToChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestWriteBufferToChannel(connectedChannel);
-    AssertOk(connectedChannel->GetWriter().EndWrite());
+    TestWriteBufferToChannel(connectChannel);
 }
 
 TEST_P(TestTcpChannel, ReadUInt16FromChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestReadUInt16FromChannel(connectedChannel, acceptedChannel);
+    TestReadUInt16FromChannel(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, ReadUInt32FromChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestReadUInt32FromChannel(connectedChannel, acceptedChannel);
+    TestReadUInt32FromChannel(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, ReadUInt64FromChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestReadUInt64FromChannel(connectedChannel, acceptedChannel);
+    TestReadUInt64FromChannel(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, ReadBufferFromChannel) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestReadBufferFromChannel(connectedChannel, acceptedChannel);
+    TestReadBufferFromChannel(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, PingPong) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestPingPong(connectedChannel, acceptedChannel);
+    TestPingPong(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestSendTwoFramesAtOnce(connectedChannel, acceptedChannel);
+    TestSendTwoFramesAtOnce(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, Stream) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestStream(connectedChannel, acceptedChannel);
+    TestStream(connectChannel, acceptChannel);
 }
 
 TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     // Arrange
     Param param = GetParam();
-    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
-    std::unique_ptr<ChannelServer> server = CreateServer();
-    uint16_t port = server->GetLocalPort();
-
-    std::unique_ptr<Channel> connectedChannel = ConnectToServer(ipAddress, port);
-    std::unique_ptr<Channel> acceptedChannel = AcceptFromServer(server);
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(param, connectChannel, acceptChannel);
 
     // Act and assert
-    TestBigElement(connectedChannel, acceptedChannel);
+    TestBigElement(connectChannel, acceptChannel);
 }
 
 }  // namespace

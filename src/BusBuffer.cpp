@@ -1,29 +1,29 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "BusBuffer.h"
+#include "BusBuffer.hpp"
 
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Environment.h"
-#include "Protocol.h"
-#include "ProtocolLogger.h"
-#include "RingBuffer.h"
-#include "ShmRingBuffer.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "Format.hpp"
+#include "Protocol.hpp"
+#include "ProtocolLogger.hpp"
+#include "RingBuffer.hpp"
+#include "ShmRingBuffer.hpp"
 
 #ifdef _WIN32
 #include <atomic>
 
-#include "OsUtilities.h"
+#include "OsUtilities.hpp"
 #endif
 
 namespace DsVeosCoSim {
@@ -105,10 +105,7 @@ public:
             for (const auto& controller : controllers) {
                 auto search = _controllers.find(controller.id);
                 if (search != _controllers.end()) {
-                    std::ostringstream oss;
-                    oss << "Duplicated controller id " << controller.id << '.';
-                    Logger::Instance().LogError(oss.str());
-                    return Result::Error;
+                    return CreateError(Format("Duplicated controller id {}.", controller.id));
                 }
 
                 ControllerExtension extension{};
@@ -118,7 +115,7 @@ public:
                 _totalQueueItemsCountPerBuffer += controller.queueSize;
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         void ClearData() {
@@ -131,13 +128,10 @@ public:
             auto search = _controllers.find(controllerId);
             if (search != _controllers.end()) {
                 extensionPtr = &search->second;
-                return Result::Ok;
+                return CreateOk();
             }
 
-            std::ostringstream oss;
-            oss << "Controller id " << controllerId << " is unknown.";
-            Logger::Instance().LogError(oss.str());
-            return Result::Error;
+            return CreateError(Format("Controller id {} is unknown.", controllerId));
         }
 
         [[nodiscard]] std::unordered_map<BusControllerId, ControllerExtension>& GetAllControllers() {
@@ -254,7 +248,7 @@ public:
             size_t totalQueueItemsCountPerBuffer = _data.GetTotalQueueItemsCountPerBuffer();
             _messageCountPerController.resize(_data.GetAllControllers().size());
             _messageBuffer = RingBuffer<TMessageContainer>(totalQueueItemsCountPerBuffer);
-            return Result::Ok;
+            return CreateOk();
         }
 
         void ClearData() override {
@@ -276,7 +270,7 @@ public:
             message.WriteTo(messageContainer);
 
             ++_messageCountPerController[extensionPtr->controllerIndex];
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override {
@@ -286,12 +280,12 @@ public:
 
             _messageBuffer.PushBack(messageContainer);
             ++_messageCountPerController[extensionPtr->controllerIndex];
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Receive(TMessage& message) override {
             if (_messageBuffer.IsEmpty()) {
-                return Result::Empty;
+                return CreateEmpty();
             }
 
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
@@ -300,12 +294,12 @@ public:
             ControllerExtensionPtr extensionPtr{};
             CheckResult(_data.FindController(messageContainer.controllerId, extensionPtr));
             --_messageCountPerController[extensionPtr->controllerIndex];
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
             if (_messageBuffer.IsEmpty()) {
-                return Result::Empty;
+                return CreateEmpty();
             }
 
             messageContainer = _messageBuffer.PopFront();
@@ -313,7 +307,7 @@ public:
             ControllerExtensionPtr extensionPtr{};
             CheckResult(_data.FindController(messageContainer.controllerId, extensionPtr));
             --_messageCountPerController[extensionPtr->controllerIndex];
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
@@ -334,7 +328,7 @@ public:
                 _messageCountPerController[extension.controllerIndex] = 0;
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Deserialize(ChannelReader& reader,
@@ -369,9 +363,7 @@ public:
 
                 if (_messageCountPerController[extensionPtr->controllerIndex] == extensionPtr->info.queueSize) {
                     if (!extensionPtr->receiveWarningSent) {
-                        std::ostringstream oss;
-                        oss << "Receive buffer for controller '" << extensionPtr->info.name << "' is full. Messages are dropped.";
-                        Logger::Instance().LogWarning(oss.str());
+                        Logger::Instance().LogWarning(Format("Receive buffer for controller '{}' is full. Messages are dropped.", extensionPtr->info.name));
                         extensionPtr->receiveWarningSent = true;
                     }
 
@@ -382,23 +374,21 @@ public:
                 _messageBuffer.PushBack(std::move(messageContainer));
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
     private:
         [[nodiscard]] Result CheckForSpace(ControllerExtension& extension) {
             if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
                 if (!extension.transmitWarningSent) {
-                    std::ostringstream oss;
-                    oss << "Transmit buffer for controller '" << extension.info.name << "' is full. Messages are dropped.";
-                    Logger::Instance().LogWarning(oss.str());
+                    Logger::Instance().LogWarning(Format("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name));
                     extension.transmitWarningSent = true;
                 }
 
-                return Result::Full;
+                return CreateFull();
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         IProtocol& _protocol;
@@ -437,7 +427,7 @@ public:
 
             CheckResult(SharedMemory::CreateOrOpen(_name, sizeOfSharedMemory, _sharedMemory));
 
-            auto* pointerToMessageCountPerController = static_cast<uint8_t*>(_sharedMemory.GetData());
+            auto* pointerToMessageCountPerController = _sharedMemory.GetData();
             auto* pointerToMessageBuffer = pointerToMessageCountPerController + sizeOfMessageCountPerController;
 
             _messageCountPerController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
@@ -446,7 +436,7 @@ public:
             _messageBuffer->Initialize(static_cast<uint32_t>(totalQueueItemsCountPerBuffer));
 
             ClearData();
-            return Result::Ok;
+            return CreateOk();
         }
 
         void ClearData() override {
@@ -473,7 +463,7 @@ public:
 
             message.WriteTo(messageContainer);
             messageCount.fetch_add(1);
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override {
@@ -484,12 +474,12 @@ public:
 
             _messageBuffer->PushBack(messageContainer);
             messageCount.fetch_add(1);
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Receive(TMessage& message) override {
             if (_totalReceiveCount == 0) {
-                return Result::Empty;
+                return CreateEmpty();
             }
 
             TMessageContainer& messageContainer = _messageBuffer->PopFront();
@@ -500,12 +490,12 @@ public:
             std::atomic<uint32_t>& receiveCount = _messageCountPerController[extensionPtr->controllerIndex];
             receiveCount.fetch_sub(1);
             _totalReceiveCount--;
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
             if (_totalReceiveCount == 0) {
-                return Result::Empty;
+                return CreateEmpty();
             }
 
             messageContainer = _messageBuffer->PopFront();
@@ -515,12 +505,12 @@ public:
             std::atomic<uint32_t>& receiveCount = _messageCountPerController[extensionPtr->controllerIndex];
             receiveCount.fetch_sub(1);
             _totalReceiveCount--;
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
             CheckResultWithMessage(_protocol.WriteSize(writer, _messageBuffer->Size()), "Could not write transmit count.");
-            return Result::Ok;
+            return CreateOk();
         }
 
         [[nodiscard]] Result Deserialize(ChannelReader& reader,
@@ -532,7 +522,7 @@ public:
             _totalReceiveCount += receiveCount;
 
             if (!messageCallback && !messageContainerCallback) {
-                return Result::Ok;
+                return CreateOk();
             }
 
             while (_totalReceiveCount > 0) {
@@ -560,23 +550,21 @@ public:
                 }
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
     private:
         [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ControllerExtension& extension) {
             if (messageCount.load(std::memory_order_acquire) == extension.info.queueSize) {
                 if (!extension.transmitWarningSent) {
-                    std::ostringstream oss;
-                    oss << "Transmit buffer for controller '" << extension.info.name << "' is full. Messages are dropped.";
-                    Logger::Instance().LogWarning(oss.str());
+                    Logger::Instance().LogWarning(Format("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name));
                     extension.transmitWarningSent = true;
                 }
 
-                return Result::Full;
+                return CreateFull();
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         IProtocol& _protocol;
@@ -630,7 +618,7 @@ public:
             CheckResult(_transmitBuffer->Initialize(controllers));
             CheckResult(_receiveBuffer->Initialize(controllers));
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         void ClearData() const {
@@ -672,13 +660,10 @@ public:
     private:
         [[nodiscard]] static Result CheckMessageLength(uint32_t length) {
             if (length > TBus::MessageMaxLength) {
-                std::ostringstream oss;
-                oss << TBus::DisplayName << " message data exceeds maximum length.";
-                Logger::Instance().LogError(oss.str());
-                return Result::InvalidArgument;
+                return CreateInvalidArgument(Format("{} message data exceeds maximum length.", TBus::DisplayName));
             }
 
-            return Result::Ok;
+            return CreateOk();
         }
 
         std::unique_ptr<IPart> _transmitBuffer;
@@ -715,7 +700,7 @@ public:
         CheckResult(_linBuffer->Initialize(coSimType, connectionKind, name, linControllers, protocol));
         CheckResult(_frBuffer->Initialize(coSimType, connectionKind, name, frControllers, protocol));
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     ~BusBufferImpl() override = default;
@@ -806,7 +791,7 @@ public:
             CheckResultWithMessage(_frBuffer->Serialize(writer), "Could not transmit FlexRay messages.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const override {
@@ -826,7 +811,7 @@ public:
                 "Could not receive FlexRay messages.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
 private:
@@ -849,10 +834,10 @@ private:
                                      const std::vector<FrController>& frControllers,
                                      IProtocol& protocol,
                                      std::unique_ptr<BusBuffer>& busBuffer) {
-    busBuffer = std::make_unique<BusBufferImpl>();
-    CheckResult(dynamic_cast<BusBufferImpl&>(*busBuffer)
-                    .Initialize(coSimType, connectionKind, name, canControllers, ethControllers, linControllers, frControllers, protocol));
-    return Result::Ok;
+    auto busBufferTmp = std::make_unique<BusBufferImpl>();
+    CheckResult(busBufferTmp->Initialize(coSimType, connectionKind, name, canControllers, ethControllers, linControllers, frControllers, protocol));
+    busBuffer = std::move(busBufferTmp);
+    return CreateOk();
 }
 
 }  // namespace DsVeosCoSim

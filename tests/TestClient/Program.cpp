@@ -1,5 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -11,7 +12,7 @@
 #include <fmt/color.h>
 
 #include "DsVeosCoSim/DsVeosCoSim.h"
-#include "Helper.h"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;
@@ -543,7 +544,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
             }
 
             if (roundTripTimeInNanoseconds > 0) {
-                LogTrace("Round trip time: {} ns.", roundTripTimeInNanoseconds);
+                LogTrace("Round trip time: {} ns.", DsVeosCoSim_SimulationTimeToString(roundTripTimeInNanoseconds));
             }
         }
     });

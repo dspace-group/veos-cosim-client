@@ -1,17 +1,17 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <gtest/gtest.h>
-
 #include <array>
-#include <chrono>
 #include <string>
 
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
-#include "TestHelper.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
+using namespace testing;
 
 namespace {
 
@@ -31,29 +31,29 @@ TEST_F(TestTypes, DataToString) {
     std::string string = DataToString(data.data(), data.size(), separator);
 
     // Assert
-    AssertEqHelper("de/af", string);
+    ASSERT_STREQ("de/af", string.c_str());
 }
 
 TEST_F(TestTypes, SimulationTimeToString) {
     // Arrange
-    SimulationTime simulationTime = 42ns;
+    SimulationTime simulationTime{42};
 
     // Act
     std::string string = format_as(simulationTime);
 
     // Assert
-    AssertEqHelper("0.000000042", string);
+    ASSERT_STREQ("0.000000042", string.c_str());
 }
 
 TEST_F(TestTypes, ResultToString) {
     // Arrange
-    Result result = Result::Disconnected;
+    Result result = CreateError();
 
     // Act
     const char* string = format_as(result);
 
     // Assert
-    AssertEqHelper("Disconnected", string);
+    ASSERT_STREQ("Error", string);
 }
 
 TEST_F(TestTypes, CoSimTypeToString) {
@@ -64,7 +64,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
     const char* string = format_as(coSimType);
 
     // Assert
-    AssertEqHelper("Server", string);
+    ASSERT_STREQ("Server", string);
 }
 
 TEST_F(TestTypes, ConnectionKindToString) {
@@ -75,7 +75,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
     const char* string = format_as(connectionKind);
 
     // Assert
-    AssertEqHelper("Remote", string);
+    ASSERT_STREQ("Remote", string);
 }
 
 TEST_F(TestTypes, CommandToString) {
@@ -86,7 +86,7 @@ TEST_F(TestTypes, CommandToString) {
     const char* string = format_as(command);
 
     // Assert
-    AssertEqHelper("Start", string);
+    ASSERT_STREQ("Start", string);
 }
 
 TEST_F(TestTypes, SeverityToString) {
@@ -97,7 +97,7 @@ TEST_F(TestTypes, SeverityToString) {
     const char* string = format_as(severity);
 
     // Assert
-    AssertEqHelper("Warning", string);
+    ASSERT_STREQ("Warning", string);
 }
 
 TEST_F(TestTypes, TerminateReasonToString) {
@@ -108,7 +108,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
     const char* string = format_as(terminateReason);
 
     // Assert
-    AssertEqHelper("Finished", string);
+    ASSERT_STREQ("Finished", string);
 }
 
 TEST_F(TestTypes, ConnectionStateToString) {
@@ -119,7 +119,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
     const char* string = format_as(connectionState);
 
     // Assert
-    AssertEqHelper("Disconnected", string);
+    ASSERT_STREQ("Disconnected", string);
 }
 
 TEST_F(TestTypes, GetDataTypeSize) {
@@ -130,7 +130,7 @@ TEST_F(TestTypes, GetDataTypeSize) {
     size_t size = GetDataTypeSize(dataType);
 
     // Assert
-    AssertEq(8, size);
+    ASSERT_EQ(8, size);
 }
 
 TEST_F(TestTypes, DataTypeToString) {
@@ -141,7 +141,7 @@ TEST_F(TestTypes, DataTypeToString) {
     const char* string = format_as(dataType);
 
     // Assert
-    AssertEqHelper("Float64", string);
+    ASSERT_STREQ("Float64", string);
 }
 
 TEST_F(TestTypes, SizeKindToString) {
@@ -152,20 +152,20 @@ TEST_F(TestTypes, SizeKindToString) {
     const char* string = format_as(sizeKind);
 
     // Assert
-    AssertEqHelper("Variable", string);
+    ASSERT_STREQ("Variable", string);
 }
 
 TEST_F(TestTypes, ValueToString) {
     // Arrange
     DataType dataType = DataType::Float64;
-    uint32_t length = 2;
-    std::vector<double> data{4.2, 0.876};
+    uint32_t length = 3;
+    std::vector<double> data{4.2, 0.000789, 200};
 
     // Act
     std::string string = ValueToString(dataType, length, data.data());
 
     // Assert
-    AssertEqHelper("4.2 0.876", string);
+    ASSERT_STREQ("4.2 0.000789 200", string.c_str());
 }
 
 TEST_F(TestTypes, SimulationStateToString) {
@@ -176,7 +176,7 @@ TEST_F(TestTypes, SimulationStateToString) {
     const char* string = format_as(simulationState);
 
     // Assert
-    AssertEqHelper("Stopped", string);
+    ASSERT_STREQ("Stopped", string);
 }
 
 TEST_F(TestTypes, ModeToString) {
@@ -187,7 +187,7 @@ TEST_F(TestTypes, ModeToString) {
     const char* string = format_as(mode);
 
     // Assert
-    AssertEqHelper("<Unused>", string);
+    ASSERT_STREQ("<Unused>", string);
 }
 
 TEST_F(TestTypes, IoSignalIdToString) {
@@ -198,7 +198,7 @@ TEST_F(TestTypes, IoSignalIdToString) {
     std::string string = format_as(signalId);
 
     // Assert
-    AssertEqHelper("86", string);
+    ASSERT_STREQ("86", string.c_str());
 }
 
 TEST_F(TestTypes, IoSignalToString) {
@@ -209,14 +209,14 @@ TEST_F(TestTypes, IoSignalToString) {
     signal.id = static_cast<IoSignalId>(42);
     signal.length = 43;
     signal.dataType = DataType::UInt16;
-    signal.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signal.sizeKind = SizeKind::Variable;
     signal.name = name.c_str();
 
     // Act
     std::string string = format_as(signal);
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
+    ASSERT_STREQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string.c_str());
 }
 
 TEST_F(TestTypes, IoSignalContainerToString) {
@@ -225,14 +225,14 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     signalContainer.id = static_cast<IoSignalId>(42);
     signalContainer.length = 43;
     signalContainer.dataType = DataType::UInt16;
-    signalContainer.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signalContainer.sizeKind = SizeKind::Variable;
     signalContainer.name = "MySignal";
 
     // Act
     std::string string = format_as(signalContainer);
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
+    ASSERT_STREQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string.c_str());
 }
 
 TEST_F(TestTypes, IoSignalContainerConvert) {
@@ -241,7 +241,7 @@ TEST_F(TestTypes, IoSignalContainerConvert) {
     signalContainer.id = static_cast<IoSignalId>(42);
     signalContainer.length = 43;
     signalContainer.dataType = DataType::UInt16;
-    signalContainer.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signalContainer.sizeKind = SizeKind::Variable;
     signalContainer.name = "MySignal";
 
     IoSignal expectedSignal{};
@@ -255,7 +255,7 @@ TEST_F(TestTypes, IoSignalContainerConvert) {
     IoSignal actualSignal = signalContainer.Convert();
 
     // Assert
-    AssertEq(expectedSignal, actualSignal);
+    ASSERT_EQ(expectedSignal, actualSignal);
 }
 
 TEST_F(TestTypes, IoDataToString) {
@@ -266,7 +266,7 @@ TEST_F(TestTypes, IoDataToString) {
     signal.id = static_cast<IoSignalId>(42);
     signal.length = 43;
     signal.dataType = DataType::UInt16;
-    signal.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signal.sizeKind = SizeKind::Variable;
     signal.name = name.c_str();
 
     uint32_t length = 1;
@@ -276,7 +276,7 @@ TEST_F(TestTypes, IoDataToString) {
     std::string string = IoDataToString(signal, length, &data);
 
     // Assert
-    AssertEq("IO Data { Id: 42, Length: 1, Data: 65432 }", string);
+    ASSERT_STREQ("IO Data { Id: 42, Length: 1, Data: 65432 }", string.c_str());
 }
 
 TEST_F(TestTypes, SignalContainersToString) {
@@ -285,14 +285,14 @@ TEST_F(TestTypes, SignalContainersToString) {
     signalContainer1.id = static_cast<IoSignalId>(42);
     signalContainer1.length = 43;
     signalContainer1.dataType = DataType::UInt16;
-    signalContainer1.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signalContainer1.sizeKind = SizeKind::Variable;
     signalContainer1.name = "MySignal1";
 
     IoSignalContainer signalContainer2{};
     signalContainer2.id = static_cast<IoSignalId>(44);
     signalContainer2.length = 45;
     signalContainer2.dataType = DataType::Bool;
-    signalContainer2.sizeKind = DsVeosCoSim::SizeKind::Fixed;
+    signalContainer2.sizeKind = SizeKind::Fixed;
     signalContainer2.name = "MySignal2";
 
     std::vector<IoSignalContainer> signalContainers = {signalContainer1, signalContainer2};
@@ -301,10 +301,10 @@ TEST_F(TestTypes, SignalContainersToString) {
     std::string string = format_as(signalContainers);
 
     // Assert
-    AssertEq(
-        "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: "
-        "44, Length: 45, DataType: Bool, SizeKind: Fixed, Name: \"MySignal2\" }]",
-        string);
+    ASSERT_STREQ(
+        "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: 44, Length: 45, DataType: Bool, "
+        "SizeKind: Fixed, Name: \"MySignal2\" }]",
+        string.c_str());
 }
 
 TEST_F(TestTypes, SignalContainersConvert) {
@@ -313,14 +313,14 @@ TEST_F(TestTypes, SignalContainersConvert) {
     signalContainer1.id = static_cast<IoSignalId>(42);
     signalContainer1.length = 43;
     signalContainer1.dataType = DataType::UInt16;
-    signalContainer1.sizeKind = DsVeosCoSim::SizeKind::Variable;
+    signalContainer1.sizeKind = SizeKind::Variable;
     signalContainer1.name = "MySignal1";
 
     IoSignalContainer signalContainer2{};
     signalContainer2.id = static_cast<IoSignalId>(44);
     signalContainer2.length = 45;
     signalContainer2.dataType = DataType::Bool;
-    signalContainer2.sizeKind = DsVeosCoSim::SizeKind::Fixed;
+    signalContainer2.sizeKind = SizeKind::Fixed;
     signalContainer2.name = "MySignal2";
 
     std::vector<IoSignalContainer> signalContainers = {signalContainer1, signalContainer2};
@@ -345,7 +345,7 @@ TEST_F(TestTypes, SignalContainersConvert) {
     std::vector<IoSignal> actualContainers = Convert(signalContainers);
 
     // Assert
-    AssertEqHelper<IoSignal>(expectedSignals, actualContainers);
+    ASSERT_THAT(actualContainers, ContainerEq(expectedSignals));
 }
 
 TEST_F(TestTypes, BusControllerIdToString) {
@@ -356,7 +356,7 @@ TEST_F(TestTypes, BusControllerIdToString) {
     std::string string = format_as(controllerId);
 
     // Assert
-    AssertEqHelper("123", string);
+    ASSERT_STREQ("123", string.c_str());
 }
 
 TEST_F(TestTypes, BusMessageIdToString) {
@@ -367,7 +367,7 @@ TEST_F(TestTypes, BusMessageIdToString) {
     std::string string = format_as(messageId);
 
     // Assert
-    AssertEqHelper("234", string);
+    ASSERT_STREQ("234", string.c_str());
 }
 
 TEST_F(TestTypes, CanMessageFlagsToString) {
@@ -378,7 +378,7 @@ TEST_F(TestTypes, CanMessageFlagsToString) {
     std::string string = format_as(flags);
 
     // Assert
-    AssertEqHelper("Loopback,Error", string);
+    ASSERT_STREQ("Loopback,Error", string.c_str());
 }
 
 TEST_F(TestTypes, CanControllerToString) {
@@ -400,10 +400,10 @@ TEST_F(TestTypes, CanControllerToString) {
     std::string string = format_as(controller);
 
     // Assert
-    AssertEqHelper(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", "
-        "ChannelName: \"channelName\", ClusterName: \"clusterName\" }",
-        string);
+    ASSERT_STREQ(
+        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string.c_str());
 }
 
 TEST_F(TestTypes, CanControllerContainerToString) {
@@ -421,10 +421,10 @@ TEST_F(TestTypes, CanControllerContainerToString) {
     std::string string = format_as(controllerContainer);
 
     // Assert
-    AssertEqHelper(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", "
-        "ChannelName: \"channelName\", ClusterName: \"clusterName\" }",
-        string);
+    ASSERT_STREQ(
+        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string.c_str());
 }
 
 TEST_F(TestTypes, CanControllerContainerConvert) {
@@ -451,7 +451,7 @@ TEST_F(TestTypes, CanControllerContainerConvert) {
     CanController actualController = controllerContainer.Convert();
 
     // Assert
-    AssertEq(expectedController, actualController);
+    ASSERT_EQ(expectedController, actualController);
 }
 
 // Add more tests

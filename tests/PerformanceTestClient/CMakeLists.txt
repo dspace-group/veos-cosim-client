@@ -11,11 +11,12 @@ target_sources(
   ClientCoSimPollingBased.cpp
   ClientEvents.cpp
   ClientLocalCommunication.cpp
+  ClientLocalSocket.cpp
   ClientPipe.cpp
   ClientRemoteCommunication.cpp
-  ClientTcp.cpp
-  ClientUdp.cpp
-  ClientLocal.cpp
+  ClientShmPipe.cpp
+  ClientTcpSocket.cpp
+  ClientUdpSocket.cpp
   PerformanceTestClient.cpp
   Program.cpp
 )
@@ -30,12 +31,6 @@ target_compile_options(
   PerformanceTestClient
   PRIVATE
   ${DSVEOSCOSIM_WARNINGS}
-)
-
-target_compile_definitions(
-  PerformanceTestClient
-  PRIVATE
-  ALL_COMMUNICATION_TESTS
 )
 
 target_link_libraries(

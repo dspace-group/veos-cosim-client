@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -43,7 +43,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 
     if (canMessageReceivedCallback) {
         newCallbacks.canMessageReceivedCallback = [=](SimulationTime simulationTime, const CanController& canController, const CanMessage& message) {
-            canMessageReceivedCallback(simulationTime.count(),
+            canMessageReceivedCallback(simulationTime.nanoseconds,
                                        reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
                                        reinterpret_cast<const DsVeosCoSim_CanMessage*>(&message),
                                        userData);
@@ -53,7 +53,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
     if (canMessageContainerReceivedCallback) {
         newCallbacks.canMessageContainerReceivedCallback =
             [=](SimulationTime simulationTime, const CanController& canController, const CanMessageContainer& messageContainer) {
-                canMessageContainerReceivedCallback(simulationTime.count(),
+                canMessageContainerReceivedCallback(simulationTime.nanoseconds,
                                                     reinterpret_cast<const DsVeosCoSim_CanController*>(&canController),
                                                     reinterpret_cast<const DsVeosCoSim_CanMessageContainer*>(&messageContainer),
                                                     userData);
@@ -62,7 +62,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 
     if (ethMessageReceivedCallback) {
         newCallbacks.ethMessageReceivedCallback = [=](SimulationTime simulationTime, const EthController& ethController, const EthMessage& message) {
-            ethMessageReceivedCallback(simulationTime.count(),
+            ethMessageReceivedCallback(simulationTime.nanoseconds,
                                        reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
                                        reinterpret_cast<const DsVeosCoSim_EthMessage*>(&message),
                                        userData);
@@ -72,7 +72,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
     if (ethMessageContainerReceivedCallback) {
         newCallbacks.ethMessageContainerReceivedCallback =
             [=](SimulationTime simulationTime, const EthController& ethController, const EthMessageContainer& messageContainer) {
-                ethMessageContainerReceivedCallback(simulationTime.count(),
+                ethMessageContainerReceivedCallback(simulationTime.nanoseconds,
                                                     reinterpret_cast<const DsVeosCoSim_EthController*>(&ethController),
                                                     reinterpret_cast<const DsVeosCoSim_EthMessageContainer*>(&messageContainer),
                                                     userData);
@@ -81,7 +81,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 
     if (linMessageReceivedCallback) {
         newCallbacks.linMessageReceivedCallback = [=](SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
-            linMessageReceivedCallback(simulationTime.count(),
+            linMessageReceivedCallback(simulationTime.nanoseconds,
                                        reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
                                        reinterpret_cast<const DsVeosCoSim_LinMessage*>(&message),
                                        userData);
@@ -91,7 +91,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
     if (linMessageContainerReceivedCallback) {
         newCallbacks.linMessageContainerReceivedCallback =
             [=](SimulationTime simulationTime, const LinController& linController, const LinMessageContainer& messageContainer) {
-                linMessageContainerReceivedCallback(simulationTime.count(),
+                linMessageContainerReceivedCallback(simulationTime.nanoseconds,
                                                     reinterpret_cast<const DsVeosCoSim_LinController*>(&linController),
                                                     reinterpret_cast<const DsVeosCoSim_LinMessageContainer*>(&messageContainer),
                                                     userData);
@@ -100,7 +100,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 
     if (frMessageReceivedCallback) {
         newCallbacks.frMessageReceivedCallback = [=](SimulationTime simulationTime, const FrController& frController, const FrMessage& message) {
-            frMessageReceivedCallback(simulationTime.count(),
+            frMessageReceivedCallback(simulationTime.nanoseconds,
                                       reinterpret_cast<const DsVeosCoSim_FrController*>(&frController),
                                       reinterpret_cast<const DsVeosCoSim_FrMessage*>(&message),
                                       userData);
@@ -110,7 +110,7 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
     if (frMessageContainerReceivedCallback) {
         newCallbacks.frMessageContainerReceivedCallback =
             [=](SimulationTime simulationTime, const FrController& frController, const FrMessageContainer& messageContainer) {
-                frMessageContainerReceivedCallback(simulationTime.count(),
+                frMessageContainerReceivedCallback(simulationTime.nanoseconds,
                                                    reinterpret_cast<const DsVeosCoSim_FrController*>(&frController),
                                                    reinterpret_cast<const DsVeosCoSim_FrMessageContainer*>(&messageContainer),
                                                    userData);
@@ -119,59 +119,79 @@ void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& c
 
     if (incomingSignalChangedCallback) {
         newCallbacks.incomingSignalChangedCallback = [=](SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value) {
-            incomingSignalChangedCallback(simulationTime.count(), reinterpret_cast<const DsVeosCoSim_IoSignal*>(&ioSignal), length, value, userData);
+            incomingSignalChangedCallback(simulationTime.nanoseconds, reinterpret_cast<const DsVeosCoSim_IoSignal*>(&ioSignal), length, value, userData);
         };
     }
 
     if (simulationStartedCallback) {
         newCallbacks.simulationStartedCallback = [=](SimulationTime simulationTime) {
-            simulationStartedCallback(simulationTime.count(), userData);
+            simulationStartedCallback(simulationTime.nanoseconds, userData);
         };
     }
 
     if (simulationStoppedCallback) {
         newCallbacks.simulationStoppedCallback = [=](SimulationTime simulationTime) {
-            simulationStoppedCallback(simulationTime.count(), userData);
+            simulationStoppedCallback(simulationTime.nanoseconds, userData);
         };
     }
 
     if (simulationPausedCallback) {
         newCallbacks.simulationPausedCallback = [=](SimulationTime simulationTime) {
-            simulationPausedCallback(simulationTime.count(), userData);
+            simulationPausedCallback(simulationTime.nanoseconds, userData);
         };
     }
 
     if (simulationContinuedCallback) {
         newCallbacks.simulationContinuedCallback = [=](SimulationTime simulationTime) {
-            simulationContinuedCallback(simulationTime.count(), userData);
+            simulationContinuedCallback(simulationTime.nanoseconds, userData);
         };
     }
 
     if (simulationTerminatedCallback) {
         newCallbacks.simulationTerminatedCallback = [=](SimulationTime simulationTime, TerminateReason reason) {
-            simulationTerminatedCallback(simulationTime.count(), static_cast<DsVeosCoSim_TerminateReason>(reason), userData);
+            simulationTerminatedCallback(simulationTime.nanoseconds, static_cast<DsVeosCoSim_TerminateReason>(reason), userData);
         };
     }
 
     if (simulationBeginStepCallback) {
         newCallbacks.simulationBeginStepCallback = [=](SimulationTime simulationTime) {
-            simulationBeginStepCallback(simulationTime.count(), userData);
+            simulationBeginStepCallback(simulationTime.nanoseconds, userData);
         };
     }
 
     if (simulationEndStepCallback) {
         newCallbacks.simulationEndStepCallback = [=](SimulationTime simulationTime) {
-            simulationEndStepCallback(simulationTime.count(), userData);
+            simulationEndStepCallback(simulationTime.nanoseconds, userData);
         };
     }
+}
+
+[[nodiscard]] DsVeosCoSim_Result Convert(Result result) {
+    switch (result.kind) {
+        case ResultKind::Ok:
+            return DsVeosCoSim_Result_Ok;
+        case ResultKind::Error:
+        case ResultKind::Timeout:
+            return DsVeosCoSim_Result_Error;
+        case ResultKind::NotConnected:
+            return DsVeosCoSim_Result_Disconnected;
+        case ResultKind::Empty:
+            return DsVeosCoSim_Result_Empty;
+        case ResultKind::Full:
+            return DsVeosCoSim_Result_Full;
+        case ResultKind::InvalidArgument:
+            return DsVeosCoSim_Result_InvalidArgument;
+    }
+
+    return DsVeosCoSim_Result_Error;
 }
 
 }  // namespace
 
 void DsVeosCoSim_SetLogCallback(DsVeosCoSim_LogCallback logCallback) {
-    Logger::Instance().SetLogCallback([=](Severity severity, const std::string& message) {
+    Logger::Instance().SetLogCallback([=](Severity severity, std::string_view message) {
         if (logCallback) {
-            logCallback(static_cast<DsVeosCoSim_Severity>(severity), message.c_str());
+            logCallback(static_cast<DsVeosCoSim_Severity>(severity), message.data());
         }
     });
 }
@@ -216,7 +236,7 @@ DsVeosCoSim_Result DsVeosCoSim_Connect(DsVeosCoSim_Handle handle, DsVeosCoSim_Co
     config.remotePort = connectConfig.remotePort;
     config.localPort = connectConfig.localPort;
 
-    return static_cast<DsVeosCoSim_Result>(client->Connect(config));
+    return Convert(client->Connect(config));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_Disconnect(DsVeosCoSim_Handle handle) {
@@ -235,7 +255,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle, DsV
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetConnectionState(*reinterpret_cast<ConnectionState*>(connectionState)));
+    return Convert(client->GetConnectionState(*reinterpret_cast<ConnectionState*>(connectionState)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks) {
@@ -246,7 +266,7 @@ DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle h
     Callbacks newCallbacks{};
     InitializeCallbacks(newCallbacks, callbacks);
 
-    return static_cast<DsVeosCoSim_Result>(client->RunCallbackBasedCoSimulation(newCallbacks));
+    return Convert(client->RunCallbackBasedCoSimulation(newCallbacks));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks) {
@@ -257,7 +277,7 @@ DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle 
     Callbacks newCallbacks{};
     InitializeCallbacks(newCallbacks, callbacks);
 
-    return static_cast<DsVeosCoSim_Result>(client->StartPollingBasedCoSimulation(newCallbacks));
+    return Convert(client->StartPollingBasedCoSimulation(newCallbacks));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime, DsVeosCoSim_Command* command) {
@@ -267,7 +287,7 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle, DsVeosCoSi
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->PollCommand(*reinterpret_cast<SimulationTime*>(simulationTime), *reinterpret_cast<Command*>(command)));
+    return Convert(client->PollCommand(*reinterpret_cast<SimulationTime*>(simulationTime), *reinterpret_cast<Command*>(command)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {
@@ -275,7 +295,7 @@ DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->FinishCommand());
+    return Convert(client->FinishCommand());
 }
 
 DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime simulationTime) {
@@ -283,7 +303,7 @@ DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle handle, 
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->SetNextSimulationTime(SimulationTime(simulationTime)));
+    return Convert(client->SetNextSimulationTime(SimulationTime{simulationTime}));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* stepSize) {
@@ -292,7 +312,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle handle, DsVeosCoSi
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetStepSize(*reinterpret_cast<SimulationTime*>(stepSize)));
+    return Convert(client->GetStepSize(*reinterpret_cast<SimulationTime*>(stepSize)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle handle, uint32_t* incomingSignalsCount, const DsVeosCoSim_IoSignal** incomingSignals) {
@@ -302,7 +322,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle handle, uin
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetIncomingSignals(*incomingSignalsCount, *reinterpret_cast<const IoSignal**>(incomingSignals)));
+    return Convert(client->GetIncomingSignals(*incomingSignalsCount, *reinterpret_cast<const IoSignal**>(incomingSignals)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle, DsVeosCoSim_IoSignalId incomingSignalId, uint32_t* length, void* value) {
@@ -312,7 +332,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle handle, DsV
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Read(static_cast<IoSignalId>(incomingSignalId), *length, value));
+    return Convert(client->Read(static_cast<IoSignalId>(incomingSignalId), *length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle, uint32_t* outgoingSignalsCount, const DsVeosCoSim_IoSignal** outgoingSignals) {
@@ -322,7 +342,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle handle, uin
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetOutgoingSignals(*outgoingSignalsCount, *reinterpret_cast<const IoSignal**>(outgoingSignals)));
+    return Convert(client->GetOutgoingSignals(*outgoingSignalsCount, *reinterpret_cast<const IoSignal**>(outgoingSignals)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle, DsVeosCoSim_IoSignalId outgoingSignalId, uint32_t length, const void* value) {
@@ -333,7 +353,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle handle, Ds
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Write(static_cast<IoSignalId>(outgoingSignalId), length, value));
+    return Convert(client->Write(static_cast<IoSignalId>(outgoingSignalId), length, value));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle, uint32_t* canControllersCount, const DsVeosCoSim_CanController** canControllers) {
@@ -343,7 +363,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle handle, uint
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetCanControllers(*canControllersCount, *reinterpret_cast<const CanController**>(canControllers)));
+    return Convert(client->GetCanControllers(*canControllersCount, *reinterpret_cast<const CanController**>(canControllers)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessage* message) {
@@ -352,7 +372,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<CanMessage&>(*message)));
+    return Convert(client->Receive(reinterpret_cast<CanMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_CanMessageContainer* messageContainer) {
@@ -361,7 +381,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle han
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<CanMessageContainer&>(*messageContainer)));
+    return Convert(client->Receive(reinterpret_cast<CanMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessage* message) {
@@ -370,7 +390,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle handle, con
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const CanMessage&>(*message)));
+    return Convert(client->Transmit(reinterpret_cast<const CanMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessageContainer* messageContainer) {
@@ -379,7 +399,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle ha
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const CanMessageContainer&>(*messageContainer)));
+    return Convert(client->Transmit(reinterpret_cast<const CanMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle, uint32_t* ethControllersCount, const DsVeosCoSim_EthController** ethControllers) {
@@ -389,7 +409,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle, uint
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetEthControllers(*ethControllersCount, *reinterpret_cast<const EthController**>(ethControllers)));
+    return Convert(client->GetEthControllers(*ethControllersCount, *reinterpret_cast<const EthController**>(ethControllers)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessage* message) {
@@ -398,7 +418,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<EthMessage&>(*message)));
+    return Convert(client->Receive(reinterpret_cast<EthMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessageContainer* messageContainer) {
@@ -407,7 +427,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle han
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<EthMessageContainer&>(*messageContainer)));
+    return Convert(client->Receive(reinterpret_cast<EthMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessage* message) {
@@ -416,7 +436,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, con
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const EthMessage&>(*message)));
+    return Convert(client->Transmit(reinterpret_cast<const EthMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessageContainer* messageContainer) {
@@ -425,7 +445,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle ha
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const EthMessageContainer&>(*messageContainer)));
+    return Convert(client->Transmit(reinterpret_cast<const EthMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle, uint32_t* linControllersCount, const DsVeosCoSim_LinController** linControllers) {
@@ -435,7 +455,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle handle, uint
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetLinControllers(*linControllersCount, *reinterpret_cast<const LinController**>(linControllers)));
+    return Convert(client->GetLinControllers(*linControllersCount, *reinterpret_cast<const LinController**>(linControllers)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessage* message) {
@@ -444,7 +464,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle handle, DsVe
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<LinMessage&>(*message)));
+    return Convert(client->Receive(reinterpret_cast<LinMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessageContainer* messageContainer) {
@@ -453,7 +473,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle han
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<LinMessageContainer&>(*messageContainer)));
+    return Convert(client->Receive(reinterpret_cast<LinMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessage* message) {
@@ -462,7 +482,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle handle, con
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const LinMessage&>(*message)));
+    return Convert(client->Transmit(reinterpret_cast<const LinMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessageContainer* messageContainer) {
@@ -471,7 +491,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle ha
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const LinMessageContainer&>(*messageContainer)));
+    return Convert(client->Transmit(reinterpret_cast<const LinMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetFrControllers(DsVeosCoSim_Handle handle, uint32_t* frControllersCount, const DsVeosCoSim_FrController** frControllers) {
@@ -481,7 +501,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetFrControllers(DsVeosCoSim_Handle handle, uint3
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetFrControllers(*frControllersCount, *reinterpret_cast<const FrController**>(frControllers)));
+    return Convert(client->GetFrControllers(*frControllersCount, *reinterpret_cast<const FrController**>(frControllers)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessage* message) {
@@ -490,7 +510,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle handle, DsVeo
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<FrMessage&>(*message)));
+    return Convert(client->Receive(reinterpret_cast<FrMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessageContainer* messageContainer) {
@@ -499,7 +519,7 @@ DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle hand
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Receive(reinterpret_cast<FrMessageContainer&>(*messageContainer)));
+    return Convert(client->Receive(reinterpret_cast<FrMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_FrMessage* message) {
@@ -508,7 +528,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle handle, cons
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const FrMessage&>(*message)));
+    return Convert(client->Transmit(reinterpret_cast<const FrMessage&>(*message)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_FrMessageContainer* messageContainer) {
@@ -517,7 +537,7 @@ DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessageContainer(DsVeosCoSim_Handle han
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Transmit(reinterpret_cast<const FrMessageContainer&>(*messageContainer)));
+    return Convert(client->Transmit(reinterpret_cast<const FrMessageContainer&>(*messageContainer)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle handle) {
@@ -525,7 +545,7 @@ DsVeosCoSim_Result DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle handle) {
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Start());
+    return Convert(client->Start());
 }
 
 DsVeosCoSim_Result DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle handle) {
@@ -533,7 +553,7 @@ DsVeosCoSim_Result DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle handle) {
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Stop());
+    return Convert(client->Stop());
 }
 
 DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(DsVeosCoSim_Handle handle) {
@@ -541,7 +561,7 @@ DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(DsVeosCoSim_Handle handle) {
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Pause());
+    return Convert(client->Pause());
 }
 
 DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(DsVeosCoSim_Handle handle) {
@@ -549,7 +569,7 @@ DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(DsVeosCoSim_Handle handle) {
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Continue());
+    return Convert(client->Continue());
 }
 
 DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_TerminateReason terminateReason) {
@@ -557,7 +577,7 @@ DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle, Ds
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->Terminate(static_cast<TerminateReason>(terminateReason)));
+    return Convert(client->Terminate(static_cast<TerminateReason>(terminateReason)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime) {
@@ -566,7 +586,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handl
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetCurrentSimulationTime(*reinterpret_cast<SimulationTime*>(simulationTime)));
+    return Convert(client->GetCurrentSimulationTime(*reinterpret_cast<SimulationTime*>(simulationTime)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationState* simulationState) {
@@ -575,7 +595,7 @@ DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsV
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetSimulationState(*reinterpret_cast<SimulationState*>(simulationState)));
+    return Convert(client->GetSimulationState(*reinterpret_cast<SimulationState*>(simulationState)));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64_t* roundTripTimeInNanoseconds) {
@@ -584,11 +604,32 @@ DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64
 
     auto* client = static_cast<CoSimClient*>(handle);
 
-    return static_cast<DsVeosCoSim_Result>(client->GetRoundTripTime(*reinterpret_cast<std::chrono::nanoseconds*>(roundTripTimeInNanoseconds)));
+    SimulationTime roundTripTime{};
+
+    DsVeosCoSim_Result result = Convert(client->GetRoundTripTime(roundTripTime));
+    *roundTripTimeInNanoseconds = roundTripTime.nanoseconds;
+    return result;
 }
 
 const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result) {
-    return format_as(static_cast<Result>(result));
+    switch (result) {
+        case DsVeosCoSim_Result_Ok:
+            return "Ok";
+        case DsVeosCoSim_Result_Error:
+            return "Error";
+        case DsVeosCoSim_Result_Empty:
+            return "Empty";
+        case DsVeosCoSim_Result_Full:
+            return "Full";
+        case DsVeosCoSim_Result_InvalidArgument:
+            return "InvalidArgument";
+        case DsVeosCoSim_Result_Disconnected:
+            return "Disconnected";
+        case DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_:
+            break;
+    }
+
+    return "<Invalid Result>";
 }
 
 const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command) {
@@ -700,7 +741,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSi
 }
 
 std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return format_as(SimulationTime(simulationTime));
+    return format_as(SimulationTime{simulationTime});
 }
 
 std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal) {
@@ -792,14 +833,6 @@ static_assert(EthAddressLength == DSVEOSCOSIM_ETH_ADDRESS_LENGTH);
 static_assert(sizeof(void*) == sizeof(DsVeosCoSim_Handle));
 
 static_assert(sizeof(SimulationTime) == sizeof(DsVeosCoSim_SimulationTime));
-
-static_assert(sizeof(Result) == sizeof(DsVeosCoSim_Result));
-static_assert(static_cast<int>(Result::Ok) == DsVeosCoSim_Result_Ok);
-static_assert(static_cast<int>(Result::Error) == DsVeosCoSim_Result_Error);
-static_assert(static_cast<int>(Result::Empty) == DsVeosCoSim_Result_Empty);
-static_assert(static_cast<int>(Result::Full) == DsVeosCoSim_Result_Full);
-static_assert(static_cast<int>(Result::InvalidArgument) == DsVeosCoSim_Result_InvalidArgument);
-static_assert(static_cast<int>(Result::Disconnected) == DsVeosCoSim_Result_Disconnected);
 
 static_assert(sizeof(CoSimType) == sizeof(uint32_t));
 

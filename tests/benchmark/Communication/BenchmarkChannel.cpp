@@ -6,8 +6,8 @@
 #include <thread>
 #include <vector>
 
-#include "Channel.h"
-#include "Helper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -55,7 +55,6 @@ void TcpChannelRoundtrip(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToTcpChannel("127.0.0.1", port, 0, DefaultTimeout, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
@@ -63,7 +62,7 @@ void TcpChannelRoundtrip(benchmark::State& state) {
 }
 
 void LocalChannelRoundtrip(benchmark::State& state) {
-    std::string serverName = GenerateString("Server名前");
+    std::string serverName = GenerateString("LocalChannel");
     SetEnvVariable("VEOS_COSIM_SPIN_COUNT", "1280");
 
     std::unique_ptr<ChannelServer> server;
@@ -71,7 +70,6 @@ void LocalChannelRoundtrip(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 

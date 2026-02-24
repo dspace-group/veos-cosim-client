@@ -1,7 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Helper.h"
-#include "PerformanceTestClient.h"
+#include "Helper.hpp"
+#include "PerformanceTestClient.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -11,18 +11,19 @@ int main(int argc, char* argv[]) {
     }
 
     if (argc > 1) {
-        RunTcpTest(argv[1]);
-        RunUdpTest(argv[1]);
+        RunTcpSocketTest(argv[1]);
+        RunUdpSocketTest(argv[1]);
 
         RunRemoteCommunicationTest(argv[1]);
         RunCoSimCallbackTest(argv[1]);
         RunCoSimPollingTest(argv[1]);
     } else {
-        RunTcpTest("127.0.0.1");
-        RunUdpTest("127.0.0.1");
-        RunLocalTest();
-        RunPipeTest();
+        RunTcpSocketTest("127.0.0.1");
+        RunUdpSocketTest("127.0.0.1");
+        RunLocalSocketTest();
         RunEventsTest();
+        RunPipeTest();
+        RunShmPipeTest();
 
         RunRemoteCommunicationTest("127.0.0.1");
         RunLocalCommunicationTest();

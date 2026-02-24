@@ -9,6 +9,7 @@ target_sources(
   PRIVATE
   Communication/BenchmarkChannel.cpp
   OsAbstraction/BenchmarkNamedEvent.cpp
+  OsAbstraction/BenchmarkShmPipe.cpp
   OsAbstraction/BenchmarkSocket.cpp
   BenchmarkBusBuffer.cpp
   BenchmarkCoSim.cpp

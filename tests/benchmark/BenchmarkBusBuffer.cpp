@@ -8,29 +8,52 @@
 #include <string>
 #include <thread>
 
-#include "BusBuffer.h"
-#include "Channel.h"
-#include "Event.h"
-#include "Helper.h"
-#include "OsUtilities.h"
+#include "BusBuffer.hpp"
+#include "Channel.hpp"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
 
 namespace {
 
-using CanTypes = std::tuple<CanControllerContainer, CanController, CanMessageContainer, CanMessage>;
-using EthTypes = std::tuple<EthControllerContainer, EthController, EthMessageContainer, EthMessage>;
-using LinTypes = std::tuple<LinControllerContainer, LinController, LinMessageContainer, LinMessage>;
-using FrTypes = std::tuple<FrControllerContainer, FrController, FrMessageContainer, FrMessage>;
+struct CanBus {
+    using Message = CanMessage;
+    using MessageContainer = CanMessageContainer;
+    using ControllerContainer = CanControllerContainer;
+    static constexpr uint32_t MessageMaxLength = CanMessageMaxLength;
+};
 
-template <typename TypeParam>
+struct EthBus {
+    using Message = EthMessage;
+    using MessageContainer = EthMessageContainer;
+    using ControllerContainer = EthControllerContainer;
+    static constexpr uint32_t MessageMaxLength = EthMessageMaxLength;
+};
+
+struct LinBus {
+    using Message = LinMessage;
+    using MessageContainer = LinMessageContainer;
+    using ControllerContainer = LinControllerContainer;
+    static constexpr uint32_t MessageMaxLength = LinMessageMaxLength;
+};
+
+struct FrBus {
+    using Message = FrMessage;
+    using MessageContainer = FrMessageContainer;
+    using ControllerContainer = FrControllerContainer;
+    static constexpr uint32_t MessageMaxLength = FrMessageMaxLength;
+};
+
+template <typename TBus>
 void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channel, bool& stopThread, Event& endEvent) {
-    using TMessageExtern = std::tuple_element_t<3, TypeParam>;
+    using TMessage = typename TBus::Message;
 
     while (!stopThread) {
-        TMessageExtern receiveMessage{};
-        MustBeOk(receiverBusBuffer.Deserialize(channel.GetReader(), 0ns, {}));
+        TMessage receiveMessage{};
+        MustBeOk(receiverBusBuffer.Deserialize(channel.GetReader(), SimulationTime{}, {}));
 
         for (size_t i = 0; i < count; i++) {
             MustBeOk(receiverBusBuffer.Receive(receiveMessage));
@@ -40,20 +63,20 @@ void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channe
     }
 }
 
-template <typename TypeParam>
+template <typename TBus>
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
              const std::string& writerName,
              const std::string& readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
-    using TController = std::tuple_element_t<0, TypeParam>;
-    using TMessageContainer = std::tuple_element_t<2, TypeParam>;
+    using TControllerContainer = typename TBus::ControllerContainer;
+    using TMessageContainer = typename TBus::MessageContainer;
 
     std::unique_ptr<IProtocol> protocol;
-    MustBeOk(CreateProtocol(DsVeosCoSim::ProtocolVersionLatest, protocol));
+    MustBeOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
-    TController controller{};
+    TControllerContainer controller{};
     FillWithRandom(controller);
 
     std::unique_ptr<BusBuffer> transmitterBusBuffer;
@@ -66,10 +89,11 @@ void RunTest(benchmark::State& state,
     bool stopThread{};
     Event endEvent;
 
-    std::thread thread(ReceiveMessages<TypeParam>, count, std::ref(*receiverBusBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
+    std::thread thread(ReceiveMessages<TBus>, count, std::ref(*receiverBusBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
 
     TMessageContainer sendMessage{};
     FillWithRandom(sendMessage, controller.id);
+    sendMessage.length = TBus::MessageMaxLength;
 
     for (auto _ : state) {
         for (size_t i = 0; i < count; i++) {
@@ -79,7 +103,7 @@ void RunTest(benchmark::State& state,
         MustBeOk(transmitterBusBuffer->Serialize(senderChannel.GetWriter()));
         MustBeOk(senderChannel.GetWriter().EndWrite());
 
-        MustBeTrue(endEvent.Wait(Infinite));
+        (void)endEvent.Wait(Infinite);
     }
 
     stopThread = true;
@@ -96,7 +120,7 @@ void RunTest(benchmark::State& state,
     thread.join();
 }
 
-template <typename TypeParam>
+template <typename TBus>
 void TcpMessages(benchmark::State& state) {
     std::unique_ptr<ChannelServer> server;
     MustBeOk(CreateTcpChannelServer(0, false, server));
@@ -104,17 +128,16 @@ void TcpMessages(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToTcpChannel("127.0.0.1", port, 0, DefaultTimeout, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
     std::string writerName = GenerateString("BenchmarkBusWriter名前");
     std::string readerName = GenerateString("BenchmarkBusReader名前");
 
-    RunTest<TypeParam>(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
+    RunTest<TBus>(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
-template <typename TypeParam>
+template <typename TBus>
 void LocalMessages(benchmark::State& state) {
     std::string serverName = GenerateString("Server");
 
@@ -123,7 +146,6 @@ void LocalMessages(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
@@ -134,18 +156,40 @@ void LocalMessages(benchmark::State& state) {
     std::string readerName = GenerateString("BenchmarkBusReader名前");
 #endif
 
-    RunTest<TypeParam>(state, ConnectionKind::Local, writerName, readerName, *connectedChannel, *acceptedChannel);
+    RunTest<TBus>(state, ConnectionKind::Local, writerName, readerName, *connectedChannel, *acceptedChannel);
+}
+
+template <typename TBus>
+void LocalOnChannelMessages(benchmark::State& state) {
+    std::string serverName = GenerateString("Server");
+
+    std::unique_ptr<ChannelServer> server;
+    MustBeOk(CreateLocalChannelServer(serverName, server));
+
+    std::unique_ptr<Channel> connectedChannel;
+    MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
+    std::unique_ptr<Channel> acceptedChannel;
+    MustBeOk(server->TryAccept(acceptedChannel));
+
+    std::string writerName = GenerateString("BenchmarkBusWriter名前");
+    std::string readerName = GenerateString("BenchmarkBusReader名前");
+
+    RunTest<TBus>(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
 }  // namespace
 
-BENCHMARK_TEMPLATE(TcpMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(TcpMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, CanTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, EthTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, LinTypes)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK_TEMPLATE(LocalMessages, FrTypes)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(TcpMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, CanBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, EthBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, LinBus)->Arg(1)->Arg(10)->Arg(100);
+BENCHMARK_TEMPLATE(LocalOnChannelMessages, FrBus)->Arg(1)->Arg(10)->Arg(100);
 
 #endif

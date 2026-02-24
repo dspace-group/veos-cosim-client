@@ -1,17 +1,16 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Protocol.h"
+#include "Protocol.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Environment.h"
-#include "ProtocolLogger.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "ProtocolLogger.hpp"
 
 namespace DsVeosCoSim {
 
@@ -37,55 +36,54 @@ public:
         uint32_t intSize{};
         CheckResultWithMessage(reader.Read(intSize), "Could not read size.");
         size = static_cast<size_t>(intSize);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) override {
         if (size > UINT32_MAX) {
-            Logger::Instance().LogError("Size exceeds maximum supported value.");
-            return Result::Error;
+            return CreateError("Size exceeds maximum supported value.");
         }
 
         auto intSize = static_cast<uint32_t>(size);
         CheckResultWithMessage(writer.Write(intSize), "Could not write size.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadLength(ChannelReader& reader, uint32_t& length) override {
         CheckResultWithMessage(reader.Read(length), "Could not read length.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteLength(ChannelWriter& writer, uint32_t length) override {
         CheckResultWithMessage(writer.Write(length), "Could not write length.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadData(ChannelReader& reader, void* data, size_t size) override {
         CheckResultWithMessage(reader.Read(data, size), "Could not read data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteData(ChannelWriter& writer, const void* data, size_t size) override {
         CheckResultWithMessage(writer.Write(data, size), "Could not write data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadSignalId(ChannelReader& reader, IoSignalId& signalId) override {
         CheckResultWithMessage(reader.Read(signalId), "Could not read signal id.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteSignalId(ChannelWriter& writer, IoSignalId signalId) override {
         CheckResultWithMessage(writer.Write(signalId), "Could not write signal id.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadMessage(ChannelReader& reader, CanMessageContainer& messageContainer) override {
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(CanMessageSize, blockReader), "Could not read block for CanMessageContainer.");
 
-        blockReader.Read(messageContainer.timestamp);
+        blockReader.Read(messageContainer.timestamp.nanoseconds);
         blockReader.Read(messageContainer.controllerId);
         blockReader.Read(messageContainer.id);
         blockReader.Read(messageContainer.flags);
@@ -93,65 +91,63 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > CanMessageMaxLength) {
-            Logger::Instance().LogError("CAN message data exceeds maximum length.");
-            return Result::Error;
+            return CreateError("CAN message data exceeds maximum length.");
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const CanMessageContainer& messageContainer) override {
         BlockWriter blockWriter;
         CheckResultWithMessage(writer.Reserve(CanMessageSize + messageContainer.length, blockWriter), "Could not reserve memory for CanMessageContainer.");
 
-        blockWriter.Write(messageContainer.timestamp);
+        blockWriter.Write(messageContainer.timestamp.nanoseconds);
         blockWriter.Write(messageContainer.controllerId);
         blockWriter.Write(messageContainer.id);
         blockWriter.Write(messageContainer.flags);
         blockWriter.Write(messageContainer.length);
         blockWriter.Write(messageContainer.data.data(), messageContainer.length);
         blockWriter.EndWrite();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadMessage(ChannelReader& reader, EthMessageContainer& messageContainer) override {
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(EthMessageSize, blockReader), "Could not read block for EthMessageContainer.");
 
-        blockReader.Read(messageContainer.timestamp);
+        blockReader.Read(messageContainer.timestamp.nanoseconds);
         blockReader.Read(messageContainer.controllerId);
         blockReader.Read(messageContainer.flags);
         blockReader.Read(messageContainer.length);
         blockReader.EndRead();
 
         if (messageContainer.length > EthMessageMaxLength) {
-            Logger::Instance().LogError("Ethernet message data exceeds maximum length.");
-            return Result::Error;
+            return CreateError("Ethernet message data exceeds maximum length.");
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const EthMessageContainer& messageContainer) override {
         BlockWriter blockWriter;
         CheckResultWithMessage(writer.Reserve(EthMessageSize + messageContainer.length, blockWriter), "Could not reserve memory for EthMessageContainer.");
 
-        blockWriter.Write(messageContainer.timestamp);
+        blockWriter.Write(messageContainer.timestamp.nanoseconds);
         blockWriter.Write(messageContainer.controllerId);
         blockWriter.Write(messageContainer.flags);
         blockWriter.Write(messageContainer.length);
         blockWriter.Write(messageContainer.data.data(), messageContainer.length);
         blockWriter.EndWrite();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadMessage(ChannelReader& reader, LinMessageContainer& messageContainer) override {
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(LinMessageSize, blockReader), "Could not read block for LinMessageContainer.");
 
-        blockReader.Read(messageContainer.timestamp);
+        blockReader.Read(messageContainer.timestamp.nanoseconds);
         blockReader.Read(messageContainer.controllerId);
         blockReader.Read(messageContainer.id);
         blockReader.Read(messageContainer.flags);
@@ -159,36 +155,35 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > LinMessageMaxLength) {
-            Logger::Instance().LogError("LIN message data exceeds maximum length.");
-            return Result::Error;
+            return CreateError("LIN message data exceeds maximum length.");
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const LinMessageContainer& messageContainer) override {
         BlockWriter blockWriter;
         CheckResultWithMessage(writer.Reserve(LinMessageSize + messageContainer.length, blockWriter), "Could not reserve memory for LinMessageContainer.");
 
-        blockWriter.Write(messageContainer.timestamp);
+        blockWriter.Write(messageContainer.timestamp.nanoseconds);
         blockWriter.Write(messageContainer.controllerId);
         blockWriter.Write(messageContainer.id);
         blockWriter.Write(messageContainer.flags);
         blockWriter.Write(messageContainer.length);
         blockWriter.Write(messageContainer.data.data(), messageContainer.length);
         blockWriter.EndWrite();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadMessage([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] FrMessageContainer& messageContainer) override {
         // V1 does not have this functionality
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteMessage([[maybe_unused]] ChannelWriter& writer, [[maybe_unused]] const FrMessageContainer& messageContainer) override {
         // V1 does not have this functionality
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) override {
@@ -202,13 +197,11 @@ public:
             LogProtocolEndTraceReceiveHeader(frameKind);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadOk(ChannelReader& reader) override {
-        reader.EndRead();
-
-        return Result::Ok;
+        return reader.EndRead();
     }
 
     [[nodiscard]] Result SendOk(ChannelWriter& writer) override {
@@ -223,7 +216,7 @@ public:
             LogProtocolEndTraceSendOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage) override {
@@ -232,13 +225,13 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadError(errorMessage);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) override {
@@ -254,14 +247,14 @@ public:
             LogProtocolEndTraceSendError();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result ReadPing([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] std::chrono::nanoseconds& roundTripTime) override {
-        return Result::Ok;
+    [[nodiscard]] Result ReadPing([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] SimulationTime& roundTripTime) override {
+        return CreateOk();
     }
 
-    [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
+    [[nodiscard]] Result SendPing(ChannelWriter& writer, SimulationTime roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolBeginTraceSendPing(roundTripTime);
         }
@@ -273,7 +266,7 @@ public:
             LogProtocolEndTraceSendPing();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command) override {
@@ -282,13 +275,13 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(command), "Could not read command.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolEndTraceReadPingOk(command);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command) override {
@@ -311,7 +304,7 @@ public:
             LogProtocolEndTraceSendPingOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadConnect(ChannelReader& reader,
@@ -334,13 +327,13 @@ public:
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnect(protocolVersion, clientMode, serverName, clientName);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendConnect(ChannelWriter& writer,
@@ -370,7 +363,7 @@ public:
             LogProtocolEndTraceSendConnect();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadConnectOkVersion(ChannelReader& reader, uint32_t& protocolVersion) override {
@@ -380,7 +373,7 @@ public:
             LogProtocolEndTraceReadConnectOkVersion(protocolVersion);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadConnectOk(ChannelReader& reader,
@@ -403,7 +396,7 @@ public:
         CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for ConnectOk frame.");
 
         blockReader.Read(clientMode);
-        blockReader.Read(stepSize);
+        blockReader.Read(stepSize.nanoseconds);
         blockReader.Read(simulationState);
         blockReader.EndRead();
 
@@ -412,7 +405,7 @@ public:
         CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnectOk(clientMode,
@@ -426,7 +419,7 @@ public:
                                              frControllers);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
@@ -460,7 +453,7 @@ public:
         blockWriter.Write(FrameKind::ConnectOk);
         blockWriter.Write(protocolVersion);
         blockWriter.Write(clientMode);
-        blockWriter.Write(stepSize);
+        blockWriter.Write(stepSize.nanoseconds);
         blockWriter.Write(simulationState);
         blockWriter.EndWrite();
 
@@ -475,7 +468,7 @@ public:
             LogProtocolEndTraceSendConnectOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime) override {
@@ -483,14 +476,14 @@ public:
             LogProtocolBeginTraceReadStart();
         }
 
-        CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
-        reader.EndRead();
+        CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStart(simulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime) override {
@@ -504,7 +497,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Start frame.");
 
         blockWriter.Write(FrameKind::Start);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -513,7 +506,7 @@ public:
             LogProtocolEndTraceSendStart();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) override {
@@ -521,14 +514,14 @@ public:
             LogProtocolBeginTraceReadStop();
         }
 
-        CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
-        reader.EndRead();
+        CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStop(simulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) override {
@@ -542,7 +535,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Stop frame.");
 
         blockWriter.Write(FrameKind::Stop);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -551,7 +544,7 @@ public:
             LogProtocolEndTraceSendStop();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) override {
@@ -564,17 +557,17 @@ public:
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for Terminate frame.");
 
-        blockReader.Read(simulationTime);
+        blockReader.Read(simulationTime.nanoseconds);
         blockReader.Read(reason);
         blockReader.EndRead();
 
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadTerminate(simulationTime, reason);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) override {
@@ -588,7 +581,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Terminate frame.");
 
         blockWriter.Write(FrameKind::Terminate);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.Write(reason);
         blockWriter.EndWrite();
 
@@ -598,7 +591,7 @@ public:
             LogProtocolEndTraceSendTerminate();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) override {
@@ -606,14 +599,14 @@ public:
             LogProtocolBeginTraceReadPause();
         }
 
-        CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
-        reader.EndRead();
+        CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadPause(simulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) override {
@@ -627,7 +620,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Pause frame.");
 
         blockWriter.Write(FrameKind::Pause);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -636,7 +629,7 @@ public:
             LogProtocolEndTraceSendPause();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) override {
@@ -644,14 +637,14 @@ public:
             LogProtocolBeginTraceReadContinue();
         }
 
-        CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
-        reader.EndRead();
+        CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadContinue(simulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime) override {
@@ -665,7 +658,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Continue frame.");
 
         blockWriter.Write(FrameKind::Continue);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -674,7 +667,7 @@ public:
             LogProtocolEndTraceSendContinue();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadStep(ChannelReader& reader,
@@ -686,7 +679,7 @@ public:
             LogProtocolBeginTraceReadStep();
         }
 
-        CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
+        CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
 
         if (callbacks.simulationBeginStepCallback) {
             callbacks.simulationBeginStepCallback(simulationTime);
@@ -694,13 +687,13 @@ public:
 
         CheckResultWithMessage(deserializeIoData(reader, simulationTime, callbacks), "Could not read IO buffer data.");
         CheckResultWithMessage(deserializeBusMessages(reader, simulationTime, callbacks), "Could not read bus buffer data.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStep(simulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendStep(ChannelWriter& writer,
@@ -717,7 +710,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Step frame.");
 
         blockWriter.Write(FrameKind::Step);
-        blockWriter.Write(simulationTime);
+        blockWriter.Write(simulationTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(serializeIoData(writer), "Could not write IO buffer data.");
@@ -728,7 +721,7 @@ public:
             LogProtocolEndTraceSendStep();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadStepOk(ChannelReader& reader,
@@ -746,7 +739,7 @@ public:
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for StepOk frame.");
 
-        blockReader.Read(nextSimulationTime);
+        blockReader.Read(nextSimulationTime.nanoseconds);
         blockReader.Read(command);
         blockReader.EndRead();
 
@@ -756,13 +749,13 @@ public:
 
         CheckResultWithMessage(deserializeIoData(reader, nextSimulationTime, callbacks), "Could not read IO buffer data.");
         CheckResultWithMessage(deserializeBusMessages(reader, nextSimulationTime, callbacks), "Could not read bus buffer data.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStepOk(nextSimulationTime, command);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendStepOk(ChannelWriter& writer,
@@ -780,7 +773,7 @@ public:
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for StepOk frame.");
 
         blockWriter.Write(FrameKind::StepOk);
-        blockWriter.Write(nextSimulationTime);
+        blockWriter.Write(nextSimulationTime.nanoseconds);
         blockWriter.Write(command);
         blockWriter.EndWrite();
 
@@ -792,7 +785,7 @@ public:
             LogProtocolEndTraceSendStepOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) override {
@@ -802,13 +795,13 @@ public:
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         CheckResultWithMessage(reader.Read(port), "Could not read port.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadSetPort(serverName, port);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) override {
@@ -825,7 +818,7 @@ public:
             LogProtocolEndTraceSendSetPort();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) override {
@@ -834,13 +827,13 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadUnsetPort(serverName);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) override {
@@ -856,7 +849,7 @@ public:
             LogProtocolEndTraceSendUnsetPort();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName) override {
@@ -865,13 +858,13 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadGetPort(serverName);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) override {
@@ -887,7 +880,7 @@ public:
             LogProtocolEndTraceSendGetPort();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) override {
@@ -896,13 +889,13 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(port), "Could not read port.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadGetPortOk(port);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port) override {
@@ -925,7 +918,7 @@ public:
             LogProtocolEndTraceSendGetPortOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] uint32_t GetVersion() override {
@@ -942,25 +935,23 @@ protected:
         CheckResultWithMessage(ReadSize(reader, size), "Could not read string size.");
 
         if (size > MaxStringSize) {
-            Logger::Instance().LogError("String size exceeds maximum allowed size.");
-            return Result::Error;
+            return CreateError("String size exceeds maximum allowed size.");
         }
 
         string.resize(size);
 
         CheckResultWithMessage(reader.Read(string.data(), size), "Could not read string data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
         if (string.size() > MaxStringSize) {
-            Logger::Instance().LogError("String size exceeds maximum allowed size.");
-            return Result::Error;
+            return CreateError("String size exceeds maximum allowed size.");
         }
 
         CheckResultWithMessage(WriteSize(writer, string.size()), "Could not write string size.");
         CheckResultWithMessage(writer.Write(string.data(), string.size()), "Could not write string data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadIoSignalInfo(ChannelReader& reader, IoSignalContainer& signal) {
@@ -974,7 +965,7 @@ protected:
         blockReader.EndRead();
 
         CheckResultWithMessage(ReadString(reader, signal.name), "Could not read name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteIoSignalInfo(ChannelWriter& writer, const IoSignalContainer& signal) {
@@ -988,7 +979,7 @@ protected:
         blockWriter.EndWrite();
 
         CheckResultWithMessage(WriteString(writer, signal.name), "Could not write name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadIoSignalInfos(ChannelReader& reader, std::vector<IoSignalContainer>& signals) {
@@ -1001,7 +992,7 @@ protected:
             CheckResultWithMessage(ReadIoSignalInfo(reader, signals[i]), "Could not read signal info.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteIoSignalInfos(ChannelWriter& writer, const std::vector<IoSignalContainer>& signals) {
@@ -1011,7 +1002,7 @@ protected:
             CheckResultWithMessage(WriteIoSignalInfo(writer, signal), "Could not write signal info.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, CanControllerContainer& controller) {
@@ -1027,7 +1018,7 @@ protected:
         CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
         CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
         CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const CanControllerContainer& controller) {
@@ -1043,7 +1034,7 @@ protected:
         CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
         CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
         CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<CanControllerContainer>& controllers) {
@@ -1056,7 +1047,7 @@ protected:
             CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<CanControllerContainer>& controllers) {
@@ -1066,7 +1057,7 @@ protected:
             CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, EthControllerContainer& controller) {
@@ -1082,7 +1073,7 @@ protected:
         CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
         CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
         CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const EthControllerContainer& controller) {
@@ -1098,7 +1089,7 @@ protected:
         CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
         CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
         CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<EthControllerContainer>& controllers) {
@@ -1111,7 +1102,7 @@ protected:
             CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<EthControllerContainer>& controllers) {
@@ -1121,7 +1112,7 @@ protected:
             CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfo(ChannelReader& reader, LinControllerContainer& controller) {
@@ -1137,7 +1128,7 @@ protected:
         CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
         CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
         CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const LinControllerContainer& controller) {
@@ -1153,7 +1144,7 @@ protected:
         CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
         CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
         CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<LinControllerContainer>& controllers) {
@@ -1166,7 +1157,7 @@ protected:
             CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<LinControllerContainer>& controllers) {
@@ -1176,7 +1167,7 @@ protected:
             CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 };
 
@@ -1202,7 +1193,7 @@ public:
         CheckResultWithMessage(reader.ReadBlock(size, blockReader), "Could not read block for ConnectOk frame.");
 
         blockReader.Read(clientMode);
-        blockReader.Read(stepSize);
+        blockReader.Read(stepSize.nanoseconds);
         blockReader.Read(simulationState);
         blockReader.EndRead();
 
@@ -1212,7 +1203,7 @@ public:
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
-        reader.EndRead();
+        CheckResult(reader.EndRead());
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnectOk(clientMode,
@@ -1226,7 +1217,7 @@ public:
                                              frControllers);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendConnectOk(ChannelWriter& writer,
@@ -1261,7 +1252,7 @@ public:
         blockWriter.Write(FrameKind::ConnectOk);
         blockWriter.Write(protocolVersion);
         blockWriter.Write(clientMode);
-        blockWriter.Write(stepSize);
+        blockWriter.Write(stepSize.nanoseconds);
         blockWriter.Write(simulationState);
         blockWriter.EndWrite();
 
@@ -1277,25 +1268,25 @@ public:
             LogProtocolEndTraceSendConnectOk();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result ReadPing(ChannelReader& reader, std::chrono::nanoseconds& roundTripTime) override {
+    [[nodiscard]] Result ReadPing(ChannelReader& reader, SimulationTime& roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolBeginTraceReadPing();
         }
 
-        CheckResultWithMessage(reader.Read(roundTripTime), "Could not read round trip time.");
-        reader.EndRead();
+        CheckResultWithMessage(reader.Read(roundTripTime.nanoseconds), "Could not read round trip time.");
+        CheckResult(reader.EndRead());
 
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolEndTraceReadPing(roundTripTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
+    [[nodiscard]] Result SendPing(ChannelWriter& writer, SimulationTime roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolBeginTraceSendPing(roundTripTime);
         }
@@ -1305,7 +1296,7 @@ public:
         BlockWriter blockWriter;
         CheckResultWithMessage(writer.Reserve(size, blockWriter), "Could not reserve memory for Ping frame.");
         blockWriter.Write(FrameKind::Ping);
-        blockWriter.Write(roundTripTime);
+        blockWriter.Write(roundTripTime.nanoseconds);
         blockWriter.EndWrite();
 
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
@@ -1314,7 +1305,7 @@ public:
             LogProtocolEndTraceSendPing();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] uint32_t GetVersion() override {
@@ -1337,7 +1328,7 @@ public:
         CheckResultWithMessage(ReadString(reader, controller.name), "Could not read name.");
         CheckResultWithMessage(ReadString(reader, controller.channelName), "Could not read channel name.");
         CheckResultWithMessage(ReadString(reader, controller.clusterName), "Could not read cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfo(ChannelWriter& writer, const FrControllerContainer& controller) {
@@ -1352,7 +1343,7 @@ public:
         CheckResultWithMessage(WriteString(writer, controller.name), "Could not write name.");
         CheckResultWithMessage(WriteString(writer, controller.channelName), "Could not write channel name.");
         CheckResultWithMessage(WriteString(writer, controller.clusterName), "Could not write cluster name.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadControllerInfos(ChannelReader& reader, std::vector<FrControllerContainer>& controllers) {
@@ -1365,7 +1356,7 @@ public:
             CheckResultWithMessage(ReadControllerInfo(reader, controllers[i]), "Could not read controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteControllerInfos(ChannelWriter& writer, const std::vector<FrControllerContainer>& controllers) {
@@ -1375,14 +1366,14 @@ public:
             CheckResultWithMessage(WriteControllerInfo(writer, controller), "Could not write controller.");
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result ReadMessage(ChannelReader& reader, FrMessageContainer& messageContainer) override {
         BlockReader blockReader;
         CheckResultWithMessage(reader.ReadBlock(FrMessageSize, blockReader), "Could not read block for FrMessageContainer.");
 
-        blockReader.Read(messageContainer.timestamp);
+        blockReader.Read(messageContainer.timestamp.nanoseconds);
         blockReader.Read(messageContainer.controllerId);
         blockReader.Read(messageContainer.id);
         blockReader.Read(messageContainer.flags);
@@ -1390,44 +1381,40 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > FrMessageMaxLength) {
-            Logger::Instance().LogError("FLEXRAY message data exceeds maximum length.");
-            return Result::Error;
+            return CreateError("FLEXRAY message data exceeds maximum length.");
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result WriteMessage(ChannelWriter& writer, const FrMessageContainer& messageContainer) override {
         BlockWriter blockWriter;
         CheckResultWithMessage(writer.Reserve(FrMessageSize + messageContainer.length, blockWriter), "Could not reserve memory for FrMessageContainer.");
 
-        blockWriter.Write(messageContainer.timestamp);
+        blockWriter.Write(messageContainer.timestamp.nanoseconds);
         blockWriter.Write(messageContainer.controllerId);
         blockWriter.Write(messageContainer.id);
         blockWriter.Write(messageContainer.flags);
         blockWriter.Write(messageContainer.length);
         blockWriter.Write(messageContainer.data.data(), messageContainer.length);
         blockWriter.EndWrite();
-        return Result::Ok;
+        return CreateOk();
     }
 };
 
 [[nodiscard]] Result CreateProtocol(uint32_t negotiatedVersion, std::unique_ptr<IProtocol>& protocol) {
     if (negotiatedVersion >= ProtocolVersion2) {
         protocol = std::make_unique<ProtocolV2>();
-        return Result::Ok;
+        return CreateOk();
     }
 
     if (negotiatedVersion >= ProtocolVersion1) {
         protocol = std::make_unique<ProtocolV1>();
-        return Result::Ok;
+        return CreateOk();
     }
 
-    std::ostringstream oss;
-    oss << "Unsupported protocol version: " << negotiatedVersion << '.';
-    Logger::Instance().LogError(oss.str());
-    return Result::Error;
+    return CreateError("Unsupported protocol version.");
 }
 
 }  // namespace DsVeosCoSim

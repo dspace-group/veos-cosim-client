@@ -3,12 +3,12 @@
 #include <memory>
 #include <thread>
 
-#include "DsVeosCoSim/CoSimServer.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
-#include "PerformanceTestServer.h"
+#include "CoSimServer.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
@@ -41,11 +41,11 @@ namespace {
             SimulationTime nextSimulationTime{};
             CheckResult(server->Step(simulationTime, nextSimulationTime));
 
-            ++simulationTime;
+            ++simulationTime.nanoseconds;
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void CoSimServerRun() {
@@ -59,3 +59,5 @@ void CoSimServerRun() {
 void StartCoSimServer() {
     std::thread(CoSimServerRun).detach();
 }
+
+}  // namespace DsVeosCoSim

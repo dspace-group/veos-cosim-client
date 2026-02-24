@@ -4,13 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include <optional>
 #include <string>
 #include <vector>
 
-#include "Helper.h"
-#include "Socket.h"
-#include "TestHelper.h"
+#include "Helper.hpp"
+#include "Socket.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -24,17 +23,29 @@ struct Param {
 [[nodiscard]] std::vector<Param> GetValues() {
     std::vector<Param> values;
 
-    if (Socket::IsIpv4Supported()) {
+    if (IsIpv4SocketSupported()) {
         values.push_back(Param{AddressFamily::Ipv4, true});
         values.push_back(Param{AddressFamily::Ipv4, false});
     }
 
-    if (Socket::IsIpv6Supported()) {
+    if (IsIpv6SocketSupported()) {
         values.push_back(Param{AddressFamily::Ipv6, true});
         values.push_back(Param{AddressFamily::Ipv6, false});
     }
 
     return values;
+}
+
+void EstablishConnection(const Param& param, SocketClient& connectClient, SocketClient& acceptClient) {
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    uint16_t port{};
+    AssertOk(listener.GetLocalPort(port));
+
+    AssertOk(SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0, connectClient));
+
+    AssertOk(listener.TryAccept(acceptClient));
 }
 
 class TestTcpSocket : public testing::TestWithParam<Param> {};
@@ -44,209 +55,359 @@ INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetValues()), [](con
     return fmt::format("{}_{}", info.param.addressFamily, access);
 });
 
-TEST_P(TestTcpSocket, Create) {
+TEST_P(TestTcpSocket, CreateSocketShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket socket;
+    SocketListener listener;
 
-    // Act and assert
-    AssertOk(Socket::Create(param.addressFamily, socket));
+    // Act
+    Result result = SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener);
+
+    // Assert
+    AssertOk(result);
 }
 
-TEST_P(TestTcpSocket, Bind) {
+TEST_P(TestTcpSocket, LocalPortIsNotZero) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-
-    // Act and assert
-    AssertOk(serverSocket.Bind(0, param.enableRemoteAccess));
-}
-
-TEST_P(TestTcpSocket, LocalPortIsNotZeroAfterBind) {
-    // Arrange
-    Param param = GetParam();
-
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     uint16_t localPort{};
 
     // Act
-    AssertOk(serverSocket.GetLocalPort(localPort));
+    Result result = listener.GetLocalPort(localPort);
 
     // Assert
-    AssertNotEq(static_cast<uint16_t>(0), localPort);
+    AssertOk(result);
+    ASSERT_NE(localPort, 0U);
 }
 
-TEST_P(TestTcpSocket, Listen) {
+TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    uint16_t localPort{};
+    AssertOk(listener.GetLocalPort(localPort));
+
+    SocketClient client;
+
+    // Act
+    Result result = SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, client);
+
+    // Assert
+    AssertOk(result);
+}
+
+TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    uint16_t localPort{};
+
+    {
+        SocketListener listener;
+        AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+        AssertOk(listener.GetLocalPort(localPort));
+    }
+
+    SocketClient client;
+
+    // Act
+    Result result = SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, client);
+
+    // Assert
+    AssertNotConnected(result);
+}
+
+TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    SocketClient client;
+
+    // Act
+    Result result = listener.TryAccept(client);
+
+    // Assert
+    AssertNotConnected(result);
+}
+
+TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    listener.Stop();
+
+    SocketClient client;
+
+    // Act
+    Result result = listener.TryAccept(client);
+
+    // Assert
+    AssertError(result);
+}
+
+TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    uint16_t localPort{};
+    AssertOk(listener.GetLocalPort(localPort));
+
+    SocketClient connectClient;
+    AssertOk(SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, connectClient));
+
+    SocketClient acceptClient;
+
+    // Act
+    Result result = listener.TryAccept(acceptClient);
+
+    // Assert
+    AssertOk(result);
+}
+
+TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::string connectClientRemoteAddress;
+
+    // Act
+    Result result = connectClient.GetRemoteAddress(connectClientRemoteAddress);
+
+    // Assert
+    AssertOk(result);
+    ASSERT_STRNE(connectClientRemoteAddress.c_str(), "");
+}
+
+TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::string acceptClientRemoteAddress;
+
+    // Act
+    Result result = acceptClient.GetRemoteAddress(acceptClientRemoteAddress);
+
+    // Assert
+    AssertOk(result);
+    ASSERT_STRNE(acceptClientRemoteAddress.c_str(), "");
+}
+
+TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
     // Act and assert
-    AssertOk(serverSocket.Listen());
+    TestSendAndReceive(connectClient, acceptClient);
 }
 
-#ifdef _WIN32
-TEST_P(TestTcpSocket, ConnectWithoutListening) {
+TEST_P(TestTcpSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    uint16_t port{};
-    ExpectOk(serverSocket.GetLocalPort(port));
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> connectedSocket;
-
-    // Act
-    AssertOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0, connectedSocket));
-
-    // Assert
-    AssertFalse(connectedSocket);
+    // Act and assert
+    TestSendAndReceive(acceptClient, connectClient);
 }
-#endif
 
-TEST_P(TestTcpSocket, Connect) {
+TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    uint16_t port{};
-    ExpectOk(serverSocket.GetLocalPort(port));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> connectedSocket;
-
-    // Act
-    AssertOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, 0, connectedSocket));
-
-    // Assert
-    AssertTrue(connectedSocket);
+    // Act and assert
+    TestPingPong(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, AcceptWithoutConnect) {
+TEST_P(TestTcpSocket, PingPongBeginningWithAcceptClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> acceptedSocket;
-
-    // Act
-    AssertOk(serverSocket.TryAccept(acceptedSocket));
-
-    // Assert
-    AssertFalse(acceptedSocket);
+    // Act and assert
+    TestPingPong(acceptClient, connectClient);
 }
 
-TEST_P(TestTcpSocket, Accept) {
+TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    uint16_t port{};
-    ExpectOk(serverSocket.GetLocalPort(port));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> connectedSocket;
-    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
-    ExpectTrue(connectedSocket);
-
-    std::optional<Socket> acceptedSocket;
-
-    // Act
-    AssertOk(serverSocket.TryAccept(acceptedSocket));
-
-    // Assert
-    AssertTrue(acceptedSocket);
+    // Act and assert
+    TestManyElements(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, PortsAfterConnectAndAccept) {
+TEST_P(TestTcpSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    uint16_t port{};
-    ExpectOk(serverSocket.GetLocalPort(port));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> connectedSocket;
-    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
-    ExpectTrue(connectedSocket);
-
-    std::optional<Socket> acceptedSocket;
-    ExpectOk(serverSocket.TryAccept(acceptedSocket));
-    ExpectTrue(acceptedSocket);
-
-    uint16_t connectedSocketLocalPort{};
-#ifdef _WIN32
-    SocketAddress remoteAddressForAcceptedSocket;
-    SocketAddress remoteAddressForConnectedSocket;
-    uint16_t localPort{};
-#endif
-
-    // Act
-    AssertOk(connectedSocket->GetLocalPort(connectedSocketLocalPort));
-#ifdef _WIN32
-    AssertOk(acceptedSocket->GetRemoteAddress(remoteAddressForAcceptedSocket));
-    AssertOk(acceptedSocket->GetLocalPort(localPort));
-    AssertOk(connectedSocket->GetRemoteAddress(remoteAddressForConnectedSocket));
-#endif
-
-    // Assert
-    AssertNotEq(connectedSocketLocalPort, port);
-#ifdef _WIN32
-    AssertEq(connectedSocketLocalPort, remoteAddressForAcceptedSocket.port);
-    AssertEq(localPort, remoteAddressForConnectedSocket.port);
-#endif
+    // Act and assert
+    TestManyElements(acceptClient, connectClient);
 }
 
-TEST_P(TestTcpSocket, SendAndReceive) {
+TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     // Arrange
     Param param = GetParam();
 
-    Socket serverSocket;
-    ExpectOk(Socket::Create(param.addressFamily, serverSocket));
-    ExpectOk(serverSocket.Bind(0, param.enableRemoteAccess));
-    uint16_t port{};
-    ExpectOk(serverSocket.GetLocalPort(port));
-    ExpectOk(serverSocket.Listen());
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    std::optional<Socket> connectedSocket;
-    ExpectOk(Socket::TryConnect(GetLoopBackAddress(param.addressFamily), port, 0, DefaultTimeout, connectedSocket));
-    ExpectTrue(connectedSocket);
+    // Act and assert
+    TestBigElement(connectClient, acceptClient);
+}
 
-    std::optional<Socket> acceptedSocket;
-    ExpectOk(serverSocket.TryAccept(acceptedSocket));
-    ExpectTrue(acceptedSocket);
+TEST_P(TestTcpSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
+    // Arrange
+    Param param = GetParam();
 
-    uint32_t sendValue = GenerateU32();
-    uint32_t receiveValue = 0;
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
 
-    // Act
-    AssertOk(connectedSocket->Send(&sendValue, sizeof(sendValue)));
-    AssertOk(ReceiveComplete(*acceptedSocket, &receiveValue, sizeof(receiveValue)));
+    // Act and assert
+    TestBigElement(acceptClient, connectClient);
+}
 
-    // Assert
-    AssertEq(sendValue, receiveValue);
+TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnect(connectClient);
+}
+
+TEST_P(TestTcpSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnect(acceptClient);
+}
+
+TEST_P(TestTcpSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+}
+
+TEST_P(TestTcpSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+}
+
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnect(connectClient);
+}
+
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnect(acceptClient);
+}
+
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+}
+
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act and assert
+    TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
 }
 
 }  // namespace

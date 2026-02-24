@@ -6,11 +6,11 @@
 
 #include <thread>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimServer.h"
-#include "Event.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimServer.hpp"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;

@@ -8,11 +8,11 @@
 #include <string>
 #include <thread>
 
-#include "Event.h"
-#include "Helper.h"
-#include "IoBuffer.h"
-#include "OsUtilities.h"
-#include "Protocol.h"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "IoBuffer.hpp"
+#include "OsUtilities.hpp"
+#include "Protocol.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -25,7 +25,7 @@ void Receive(const IoSignalContainer& signal, const IoBuffer& readerIoBuffer, Ch
     uint32_t readLength{};
 
     while (!stopThread) {
-        MustBeOk(readerIoBuffer.Deserialize(channel.GetReader(), 0ns, {}));
+        MustBeOk(readerIoBuffer.Deserialize(channel.GetReader(), {}, {}));
         MustBeOk(readerIoBuffer.Read(signal.id, readLength, readValue.data()));
         endEvent.Set();
     }
@@ -41,7 +41,7 @@ void RunTest(benchmark::State& state,
     signal.length = static_cast<uint32_t>(state.range(0));
 
     std::unique_ptr<IProtocol> protocol;
-    MustBeOk(CreateProtocol(DsVeosCoSim::ProtocolVersionLatest, protocol));
+    MustBeOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
     std::unique_ptr<IoBuffer> writerIoBuffer;
     MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
@@ -83,7 +83,6 @@ void TcpIo(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToTcpChannel("127.0.0.1", port, 0, DefaultTimeout, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 
@@ -101,7 +100,6 @@ void LocalIo(benchmark::State& state) {
 
     std::unique_ptr<Channel> connectedChannel;
     MustBeOk(TryConnectToLocalChannel(serverName, connectedChannel));
-    MustBeTrue(connectedChannel);
     std::unique_ptr<Channel> acceptedChannel;
     MustBeOk(server->TryAccept(acceptedChannel));
 

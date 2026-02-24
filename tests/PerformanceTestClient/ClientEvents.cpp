@@ -1,49 +1,54 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
+#include "PerformanceTestClient.hpp"
 
-#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
+#ifdef _WIN32
 
 #include <array>
 #include <cstdint>
 #include <string>
 
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestHelper.h"
+#include "Error.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
 [[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     NamedEvent beginEvent;
     CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
+
     NamedEvent endEvent;
     CheckResult(NamedEvent::CreateOrOpen(EndEventName, endEvent));
-    SharedMemory sharedMemory;
-    CheckResult(SharedMemory::CreateOrOpen(ShmName, BufferSize, sharedMemory));
 
-    std::array<char, BufferSize> buffer{};
+    SharedMemory sharedMemory;
+    CheckResult(SharedMemory::TryOpenExisting(ShmName, FrameSize, sharedMemory));
+
+    std::array<char, FrameSize> buffer{};
 
     connectedEvent.Set();
 
     while (!isStopped) {
-        (void)memcpy(sharedMemory.GetData(), buffer.data(), BufferSize);
+        (void)memcpy(sharedMemory.GetData(), buffer.data(), FrameSize);
+
         CheckResult(beginEvent.Set());
         CheckResult(endEvent.Wait());
-        (void)memcpy(buffer.data(), sharedMemory.GetData(), BufferSize);
+
+        (void)memcpy(buffer.data(), sharedMemory.GetData(), FrameSize);
         buffer[0]++;
 
         counter++;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
-void EventsClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void EventsTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
-        LogError("Could not run events client.");
+        LogError("Could not run Events Client.");
     }
 }
 
@@ -51,13 +56,19 @@ void EventsClientRun(const std::string& host, Event& connectedEvent, uint64_t& c
 
 void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
-    RunPerformanceTest(EventsClientRun, "");
+    RunPerformanceTest(EventsTest, "");
     LogTrace("");
 }
 
+}  // namespace DsVeosCoSim
+
 #else
+
+namespace DsVeosCoSim {
 
 void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
 }
+
+}  // namespace DsVeosCoSim
 
 #endif

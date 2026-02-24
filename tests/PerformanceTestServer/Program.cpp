@@ -2,9 +2,8 @@
 
 #include <future>
 
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestServer.h"
+#include "Helper.hpp"
+#include "PerformanceTestServer.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -13,11 +12,12 @@ int main() {
         return 1;
     }
 
-    StartTcpServer();
-    StartUdpServer();
-    StartLocalServer();
-    StartPipeServer();
     StartEventsServer();
+    StartLocalSocketServer();
+    StartPipeServer();
+    StartShmPipeServer();
+    StartTcpSocketServer();
+    StartUdpSocketServer();
     StartLocalCommunicationServer();
     StartRemoteCommunicationServer();
     StartCoSimServer();

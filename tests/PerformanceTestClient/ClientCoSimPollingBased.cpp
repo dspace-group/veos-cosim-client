@@ -1,17 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <string>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
@@ -48,15 +46,14 @@ namespace {
             case Command::Continue:
                 break;
             default:
-                LogError("Invalid command.");
-                return Result::Error;
+                return CreateError("Invalid command.");
         }
 
         CheckResult(coSimClient->FinishCommand());
     }
 
     coSimClient->Disconnect();
-    return Result::Ok;
+    return CreateOk();
 }
 
 void CoSimClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
@@ -78,9 +75,4 @@ void RunCoSimPollingTest(const std::string& host) {  // NOLINT(misc-use-internal
     LogTrace("");
 }
 
-#else
-
-void RunCoSimPollingTest([[maybe_unused]] const std::string& host) {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif  // ALL_COMMUNICATION_TESTS
+}  // namespace DsVeosCoSim

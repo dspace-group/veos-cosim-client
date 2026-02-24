@@ -11,23 +11,18 @@ target_sources(
   ServerCoSim.cpp
   ServerEvents.cpp
   ServerLocalCommunication.cpp
+  ServerLocalSocket.cpp
   ServerPipe.cpp
   ServerRemoteCommunication.cpp
-  ServerTcp.cpp
-  ServerUdp.cpp
-  ServerLocal.cpp
+  ServerShmPipe.cpp
+  ServerTcpSocket.cpp
+  ServerUdpSocket.cpp
 )
 
 target_compile_options(
   PerformanceTestServer
   PRIVATE
   ${DSVEOSCOSIM_WARNINGS}
-)
-
-target_compile_definitions(
-  PerformanceTestServer
-  PRIVATE
-  ALL_COMMUNICATION_TESTS
 )
 
 target_link_libraries(

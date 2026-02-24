@@ -10,9 +10,9 @@
 
 #include <fmt/color.h>
 
-#include "DsVeosCoSim/CoSimServer.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
+#include "CoSimServer.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono;
@@ -102,14 +102,14 @@ public:
             while (!_stopBackgroundThreadFlag) {
                 std::this_thread::sleep_for(1s);
                 std::lock_guard lock(_mutex);
-                std::chrono::nanoseconds roundTripTime{};
+                SimulationTime roundTripTime{};
                 if (!IsOk(_server->BackgroundService(roundTripTime))) {
                     LogError("Error in background task.");
                     return;
                 }
 
-                if (roundTripTime.count() > 0) {
-                    LogTrace("Round trip time: {} ns.", roundTripTime.count());
+                if (roundTripTime.nanoseconds > 0) {
+                    LogTrace("Round trip time: {} ns.", roundTripTime);
                 }
             }
         });
@@ -243,11 +243,11 @@ void SwitchSendingFrMessages() {
 }
 
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
-    static SimulationTime lastHalfSecond = -1s;
+    static SimulationTime lastHalfSecond{-1};
     static int64_t counter = 0;
-    SimulationTime currentHalfSecond = simulationTime / 500000000;
-    if (currentHalfSecond == lastHalfSecond) {
-        return Result::Ok;
+    SimulationTime currentHalfSecond{simulationTime.nanoseconds / 500000000};
+    if (currentHalfSecond.nanoseconds == lastHalfSecond.nanoseconds) {
+        return CreateOk();
     }
 
     lastHalfSecond = currentHalfSecond;
@@ -283,7 +283,7 @@ void SwitchSendingFrMessages() {
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 [[nodiscard]] Result DoSimulation() {
@@ -296,16 +296,16 @@ void SwitchSendingFrMessages() {
         SimulationTime nextSimulationTime{};
         CheckResult(Server->Step(CurrentTime, nextSimulationTime));
 
-        if (nextSimulationTime > CurrentTime) {
+        if (nextSimulationTime.nanoseconds > CurrentTime.nanoseconds) {
             CurrentTime = nextSimulationTime;
         } else {
-            CurrentTime += 1ms;
+            CurrentTime.nanoseconds += 1000000;
         }
     }
 
     Server->StartBackgroundThread();
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void StopSimulationThread() {
@@ -342,7 +342,7 @@ void StartSimulationThread() {
         case SimulationState::Stopped:
             LogInfo("Starting ...");
 
-            CurrentTime = 0ns;
+            CurrentTime.nanoseconds = 0;
             CheckResult(Server->Start(CurrentTime));
             State = SimulationState::Running;
             StartSimulationThread();
@@ -363,7 +363,7 @@ void StartSimulationThread() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationStarted() {
@@ -372,7 +372,7 @@ void OnSimulationStarted() {
     SimulationState state = State;
     switch (state) {
         case SimulationState::Stopped:
-            CurrentTime = 0ns;
+            CurrentTime.nanoseconds = 0;
             if (!IsOk(Server->Start(CurrentTime))) {
                 LogError("Could not start.");
                 return;
@@ -425,7 +425,7 @@ void OnSimulationStarted() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationStopped() {
@@ -475,7 +475,7 @@ void OnSimulationStopped() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationPaused() {
@@ -520,7 +520,7 @@ void OnSimulationPaused() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationTerminated() {
@@ -598,13 +598,13 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
 
     if (State != SimulationState::Unloaded) {
         LogError("Could not load in state {}.", State);
-        return Result::Ok;
+        return CreateOk();
     }
 
     CoSimServerConfig config{};
     config.serverName = name;
     config.isClientOptional = isClientOptional;
-    config.stepSize = 1ms;
+    config.stepSize.nanoseconds = 1000000;
     config.startPortMapper = true;
     config.simulationStartedCallback = OnSimulationStartedCallback;
     config.simulationStoppedCallback = OnSimulationStoppedCallback;
@@ -630,7 +630,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     Server->StartBackgroundThread();
 
     LogInfo("Loaded.");
-    return Result::Ok;
+    return CreateOk();
 }
 
 void UnloadSimulation() {
@@ -650,7 +650,7 @@ void UnloadSimulation() {
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
-                return Result::Ok;
+                return CreateOk();
             case 'l':
                 CheckResult(LoadSimulation(isClientOptional, name));
                 break;
@@ -690,7 +690,7 @@ void UnloadSimulation() {
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 }  // namespace

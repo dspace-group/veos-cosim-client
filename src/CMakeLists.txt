@@ -18,6 +18,7 @@ target_sources(
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
   Helpers/Environment.cpp
+  Helpers/Logger.cpp
   Helpers/ProtocolLogger.cpp
   OsAbstraction/OsUtilities.cpp
   OsAbstraction/Socket.cpp

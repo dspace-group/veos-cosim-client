@@ -1,12 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Environment.h"
+#include "Environment.hpp"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <cstdlib>
-#include <sstream>
 #include <string>
+
+#include "Format.hpp"
 
 namespace DsVeosCoSim {
 
@@ -65,16 +66,6 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
-    size_t intValue{};
-    if (TryGetDecimalValue(name, intValue)) {
-        spinCount = static_cast<uint32_t>(intValue);
-        return true;
-    }
-
-    return false;
-}
-
 }  // namespace
 
 [[nodiscard]] bool IsProtocolTracingEnabled() {
@@ -107,43 +98,10 @@ namespace {
     return port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction) {
-    constexpr uint32_t defaultSpinCount = 0;
-    constexpr char environmentVariableName[] = "VEOS_COSIM_SPIN_COUNT";
-
-    uint32_t spinCount{};
-
-    std::ostringstream directionFullName;
-    directionFullName << environmentVariableName << '_' << name << '.' << part << '.' << direction;
-    if (TryGetSpinCount(directionFullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    std::ostringstream partFullName;
-    partFullName << environmentVariableName << '_' << name << '.' << part;
-    if (TryGetSpinCount(partFullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetSpinCount(fullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    if (TryGetSpinCount(environmentVariableName, spinCount)) {
-        return spinCount;
-    }
-
-    return defaultSpinCount;
-}
-
 [[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetHexValue(fullName.str(), mask)) {
+    if (TryGetHexValue(Format("{}_{}", environmentVariableName, name), mask)) {
         return true;
     }
 

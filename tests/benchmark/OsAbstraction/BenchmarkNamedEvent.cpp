@@ -9,8 +9,8 @@
 #include <string>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
 
 using namespace DsVeosCoSim;
 

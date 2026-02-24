@@ -7,9 +7,9 @@
 #include <string>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "TestHelper.h"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -21,169 +21,153 @@ namespace {
 
 class TestNamedEvent : public testing::Test {};
 
+TEST_F(TestNamedEvent, CreateShouldWork) {
+    // Arrange
+    std::string name = GenerateName();
+
+    NamedEvent event;
+
+    // Act and assert
+    Result result = NamedEvent::CreateOrOpen(name, event);
+
+    // Assert
+    AssertOk(result);
+}
+
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event));
 
-    // Act and assert
-    AssertOk(event.Set());
-    AssertOk(event.Wait());
+    NamedEvent event;
+    AssertOk(NamedEvent::CreateOrOpen(name, event));
+
+    // Act
+    Result setResult = event.Set();
+    Result waitResult = event.Wait();
+
+    // Assert
+    AssertOk(setResult);
+    AssertOk(waitResult);
 }
 
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEventWithTimeout) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event));
-    ExpectOk(event.Set());
 
-    bool waitSignaled{};
+    NamedEvent event;
+    AssertOk(NamedEvent::CreateOrOpen(name, event));
+
+    AssertOk(event.Set());
 
     // Act
-    AssertOk(event.Wait(1, waitSignaled));
+    Result result = event.Wait(1);
 
     // Assert
-    AssertTrue(waitSignaled);
+    AssertOk(result);
 }
 
 TEST_F(TestNamedEvent, WaitTwiceOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event));
 
-    bool waitSignaled1{};
-    bool waitSignaled2{};
+    NamedEvent event;
+    AssertOk(NamedEvent::CreateOrOpen(name, event));
+
+    AssertOk(event.Set());
+
+    AssertOk(event.Wait(1));
 
     // Act
-    AssertOk(event.Set());
-    AssertOk(event.Wait(1, waitSignaled1));
-    AssertOk(event.Wait(1, waitSignaled2));
+    Result result = event.Wait(1);
 
     // Assert
-    AssertTrue(waitSignaled1);
-    AssertFalse(waitSignaled2);
+    AssertTimeout(result);
 }
 
 TEST_F(TestNamedEvent, SetTwiceOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event));
 
-    bool waitSignaled1{};
-    bool waitSignaled2{};
+    NamedEvent event;
+    AssertOk(NamedEvent::CreateOrOpen(name, event));
+
+    AssertOk(event.Set());
 
     // Act
-    AssertOk(event.Set());
-    AssertOk(event.Set());
-    AssertOk(event.Wait(1, waitSignaled1));
-    AssertOk(event.Wait(1, waitSignaled2));
+    Result setResult = event.Set();  // Second set
+    Result waitResult1 = event.Wait(1);
+    Result waitResult2 = event.Wait(1);
 
     // Assert
-    AssertTrue(waitSignaled1);
-    AssertFalse(waitSignaled2);
+    AssertOk(setResult);
+    AssertOk(waitResult1);
+    AssertTimeout(waitResult2);  // Second signal should be false
 }
 
 TEST_F(TestNamedEvent, WaitWithoutSetOnNamedEvent) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event));
 
-    bool waitSignaled{};
+    NamedEvent event;
+    AssertOk(NamedEvent::CreateOrOpen(name, event));
 
     // Act
-    AssertOk(event.Wait(1, waitSignaled));
+    Result result = event.Wait(1);
 
     // Assert
-    AssertFalse(waitSignaled);
+    AssertTimeout(result);
 }
 
 TEST_F(TestNamedEvent, SetAndWaitOnDifferentNamedEvents) {
     // Arrange
     std::string name = GenerateName();
-    NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
-    NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
 
-    // Act and assert
-    AssertOk(event1.Set());
-    AssertOk(event2.Wait());
+    NamedEvent event1;
+    AssertOk(NamedEvent::CreateOrOpen(name, event1));
+
+    NamedEvent event2;
+    AssertOk(NamedEvent::CreateOrOpen(name, event2));
+
+    // Act
+    Result setResult = event1.Set();
+    Result waitResult = event2.Wait();
+
+    // Assert
+    AssertOk(setResult);
+    AssertOk(waitResult);
 }
 
-TEST_F(TestNamedEvent, ResetOnSettingNamedEvents) {
-    // Arrange
-    std::string name = GenerateName();
+void WaitAndSet(const std::string& name1, const std::string& name2) {
     NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
+    AssertOk(NamedEvent::CreateOrOpen(name1, event1));
+
     NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
+    AssertOk(NamedEvent::CreateOrOpen(name2, event2));
 
-    // Act and assert
-    for (int32_t i = 0; i < 10; i++) {
-        AssertOk(event1.Set());
-        AssertOk(event2.Wait());
-    }
-}
-
-TEST_F(TestNamedEvent, ResetOnWaitingNamedEvents) {
-    // Arrange
-    std::string name = GenerateName();
-    NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
-    NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
-
-    // Act and assert
-    for (int32_t i = 0; i < 10; i++) {
-        AssertOk(event1.Set());
-        AssertOk(event2.Wait());
-    }
-}
-
-TEST_F(TestNamedEvent, NoResetOnNamedEvents) {
-    // Arrange
-    std::string name = GenerateName();
-    NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event1));
-    NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(name, event2));
-
-    // Act and assert
-    for (int32_t i = 0; i < 10; i++) {
-        AssertOk(event1.Set());
-        AssertOk(event2.Wait());
-    }
-}
-
-void WaitAndSet(const std::string& eventName1, const std::string& eventName2) {
-    NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(eventName1, event1));
-    NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(eventName2, event2));
-
-    ExpectOk(event1.Wait());
-    ExpectOk(event2.Set());
+    AssertOk(event1.Wait());
+    AssertOk(event2.Set());
 }
 
 TEST_F(TestNamedEvent, SetAndWaitInDifferentThreads) {
     // Arrange
-    std::string firstName = GenerateName();
-    std::string secondName = GenerateName();
+    std::string name1 = GenerateName();
+    std::string name2 = GenerateName();
+
     NamedEvent event1;
-    ExpectOk(NamedEvent::CreateOrOpen(firstName, event1));
+    AssertOk(NamedEvent::CreateOrOpen(name1, event1));
+
     NamedEvent event2;
-    ExpectOk(NamedEvent::CreateOrOpen(secondName, event2));
+    AssertOk(NamedEvent::CreateOrOpen(name2, event2));
 
-    std::thread thread(WaitAndSet, firstName, secondName);
+    std::thread thread(WaitAndSet, name1, name2);
 
-    // Act and assert
-    AssertOk(event1.Set());
-    AssertOk(event2.Wait());
+    // Act
+    Result setResult = event1.Set();
+    Result waitResult = event2.Wait();
+
+    // Assert
+    AssertOk(setResult);
+    AssertOk(waitResult);
 
     // Cleanup
     thread.join();

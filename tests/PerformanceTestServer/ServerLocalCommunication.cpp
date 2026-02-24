@@ -4,15 +4,26 @@
 #include <chrono>
 #include <thread>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestHelper.h"
-#include "PerformanceTestServer.h"
+#include "Channel.hpp"
+#include "Error.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
+
+Result RunForConnected(Channel& channel) {
+    std::array<char, FrameSize> buffer{};
+
+    while (true) {
+        CheckResult(channel.GetReader().Read(buffer.data(), FrameSize));
+        CheckResult(channel.GetWriter().Write(buffer.data(), FrameSize));
+        CheckResult(channel.GetWriter().EndWrite());
+    }
+}
 
 [[nodiscard]] Result Run() {
     LogTrace("Local communication server is listening ...");
@@ -22,36 +33,27 @@ namespace {
 
     SetThreadAffinity(LocalChannelName);
 
-    std::array<char, BufferSize> buffer{};
-
     while (true) {
         std::unique_ptr<Channel> acceptedChannel;
 
         while (true) {
-            CheckResult(server->TryAccept(acceptedChannel));
-            if (acceptedChannel) {
+            Result result = server->TryAccept(acceptedChannel);
+            if (IsOk(result)) {
                 break;
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            if (IsNotConnected(result)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
+            return result;
         }
 
-        while (true) {
-            if (!IsOk(acceptedChannel->GetReader().Read(buffer.data(), BufferSize))) {
-                break;
-            }
-
-            if (!IsOk(acceptedChannel->GetWriter().Write(buffer.data(), BufferSize))) {
-                break;
-            }
-
-            if (!IsOk(acceptedChannel->GetWriter().EndWrite())) {
-                break;
-            }
-        }
+        RunForConnected(*acceptedChannel);
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void LocalCommunicationServerRun() {
@@ -65,3 +67,5 @@ void LocalCommunicationServerRun() {
 void StartLocalCommunicationServer() {
     std::thread(LocalCommunicationServerRun).detach();
 }
+
+}  // namespace DsVeosCoSim

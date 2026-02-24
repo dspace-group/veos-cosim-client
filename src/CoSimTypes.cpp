@@ -1,46 +1,18 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.hpp"
 
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <iomanip>
-#include <ios>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include "OsUtilities.h"
+#include "Format.hpp"
 
 namespace DsVeosCoSim {
 
 namespace {
-
-[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
-    std::ostringstream oss;
-    oss << "Error code: " << errorCode << ". ";
-
-#if _WIN32
-    oss << GetEnglishErrorMessage(errorCode);
-#else
-    oss << std::system_category().message(errorCode);
-#endif
-
-    return oss.str();
-}
-
-}  // namespace
-
-namespace {
-
-[[nodiscard]] bool Equals(const std::string& first, const std::string& second) {
-    if (first.length() != second.length()) {
-        return false;
-    }
-
-    return strcmp(first.c_str(), second.c_str()) == 0;
-}
 
 [[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) {
     const auto* expectedBytes = static_cast<const uint8_t*>(expected);
@@ -65,51 +37,48 @@ template <typename T, size_t TSize>
     return true;
 }
 
-void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t index, const void* value) {
+void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value) {
     switch (dataType) {
         case DataType::Bool:
-            oss << static_cast<const uint8_t*>(value)[index];
+            string.append(format_as(static_cast<const uint8_t*>(value)[index]));
             return;
         case DataType::Int8:
-            oss << static_cast<const int8_t*>(value)[index];
+            string.append(format_as(static_cast<const int8_t*>(value)[index]));
             return;
         case DataType::Int16:
-            oss << static_cast<const int16_t*>(value)[index];
+            string.append(format_as(static_cast<const int16_t*>(value)[index]));
             return;
         case DataType::Int32:
-            oss << static_cast<const int32_t*>(value)[index];
+            string.append(format_as(static_cast<const int32_t*>(value)[index]));
             return;
         case DataType::Int64:
-            oss << static_cast<const int64_t*>(value)[index];
+            string.append(format_as(static_cast<const int64_t*>(value)[index]));
             return;
         case DataType::UInt8:
-            oss << static_cast<const uint8_t*>(value)[index];
+            string.append(format_as(static_cast<const uint8_t*>(value)[index]));
             return;
         case DataType::UInt16:
-            oss << static_cast<const uint16_t*>(value)[index];
+            string.append(format_as(static_cast<const uint16_t*>(value)[index]));
             return;
         case DataType::UInt32:
-            oss << static_cast<const uint32_t*>(value)[index];
+            string.append(format_as(static_cast<const uint32_t*>(value)[index]));
             return;
         case DataType::UInt64:
-            oss << static_cast<const uint64_t*>(value)[index];
+            string.append(format_as(static_cast<const uint64_t*>(value)[index]));
             return;
         case DataType::Float32:
-            oss << static_cast<const float*>(value)[index];
+            string.append(format_as(static_cast<const float*>(value)[index]));
             return;
         case DataType::Float64:
-            oss << static_cast<const double*>(value)[index];
+            string.append(format_as(static_cast<const double*>(value)[index]));
             return;
     }
 
-    oss << "<Invalid DataType>";
+    string.append("<Invalid DataType>");
 }
 
 [[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, const std::string& name) {
-    std::ostringstream oss;
-    oss << "IO Signal { Id: " << signalId << ", Length: " << length << ", DataType: " << dataType << ", SizeKind: " << sizeKind << ", Name: \"" << name
-        << "\" }";
-    return oss.str();
+    return Format(R"(IO Signal { Id: {}, Length: {}, DataType: {}, SizeKind: {}, Name: "{}" })", signalId, length, dataType, sizeKind, name);
 }
 
 [[nodiscard]] std::string CanControllerToString(BusControllerId controllerId,
@@ -119,11 +88,15 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "CAN Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond
-        << ", FlexibleDataRateBitsPerSecond: " << flexibleDataRateBitsPerSecond << ", Name: \"" << name << "\", ChannelName: \"" << channelName
-        << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return Format(
+        R"(CAN Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, FlexibleDataRateBitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
+        controllerId,
+        queueSize,
+        bitsPerSecond,
+        flexibleDataRateBitsPerSecond,
+        name,
+        channelName,
+        clusterName);
 }
 
 [[nodiscard]] std::string CanMessageToString(SimulationTime timestamp,
@@ -132,10 +105,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              CanMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "CAN Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return Format(R"(CAN Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} })",
+                  timestamp,
+                  controllerId,
+                  messageId,
+                  length,
+                  DataToString(data, length, '-'),
+                  flags);
 }
 
 [[nodiscard]] std::string EthControllerToString(BusControllerId controllerId,
@@ -145,11 +121,14 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "ETH Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", MacAddress: ["
-        << DataToString(macAddress.data(), sizeof(macAddress), ':') << "], Name: \"" << name << "\", ChannelName: \"" << channelName << "\", ClusterName: \""
-        << clusterName << "\" }";
-    return oss.str();
+    return Format(R"(ETH Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, MacAddress: [{}], Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
+                  controllerId,
+                  queueSize,
+                  bitsPerSecond,
+                  DataToString(macAddress.data(), sizeof(macAddress), ':'),
+                  name,
+                  channelName,
+                  clusterName);
 }
 
 [[nodiscard]] std::string EthMessageToString(SimulationTime timestamp,
@@ -157,10 +136,12 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              EthMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "ETH Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return Format("ETH Message { Timestamp: {}, ControllerId: {}, Length: {}, Data: {}, Flags: {} }",
+                  format_as(timestamp),
+                  controllerId,
+                  length,
+                  DataToString(data, length, '-'),
+                  flags);
 }
 
 [[nodiscard]] std::string LinControllerToString(BusControllerId controllerId,
@@ -170,10 +151,14 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "LIN Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Type: " << type << ", Name: \""
-        << name << "\", ChannelName: \"" << channelName << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return Format(R"(LIN Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, Type: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
+                  controllerId,
+                  queueSize,
+                  bitsPerSecond,
+                  type,
+                  name,
+                  channelName,
+                  clusterName);
 }
 
 [[nodiscard]] std::string LinMessageToString(SimulationTime timestamp,
@@ -182,10 +167,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              LinMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "LIN Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return Format("LIN Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }",
+                  format_as(timestamp),
+                  controllerId,
+                  messageId,
+                  length,
+                  DataToString(data, length, '-'),
+                  flags);
 }
 
 [[nodiscard]] std::string FrControllerToString(BusControllerId controllerId,
@@ -194,10 +182,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                const std::string& name,
                                                const std::string& channelName,
                                                const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "FLEXRAY Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Name: \"" << name
-        << "\", ChannelName: \"" << channelName << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return Format(R"(FLEXRAY Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
+                  controllerId,
+                  queueSize,
+                  bitsPerSecond,
+                  name,
+                  channelName,
+                  clusterName);
 }
 
 [[nodiscard]] std::string FrMessageToString(SimulationTime timestamp,
@@ -206,53 +197,19 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                             uint32_t length,
                                             const uint8_t* data,
                                             FrMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "FLEXRAY Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return Format("FLEXRAY Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }",
+                  format_as(timestamp),
+                  controllerId,
+                  messageId,
+                  length,
+                  DataToString(data, length, '-'),
+                  flags);
 }
 
 }  // namespace
 
-void Logger::SetLogCallback(LogCallback logCallback) {
-    _logCallback = std::move(logCallback);
-}
-
-void Logger::LogError(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Error, message);
-    }
-}
-
-void Logger::LogWarning(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Warning, message);
-    }
-}
-
-void Logger::LogInfo(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Info, message);
-    }
-}
-
-void Logger::LogTrace(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Trace, message);
-    }
-}
-
-void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
-    if (auto logCallback = _logCallback; logCallback) {
-        std::ostringstream oss;
-        oss << message << " " << GetSystemErrorMessage(errorCode);
-        logCallback(Severity::Error, oss.str());
-    }
-}
-
 [[nodiscard]] std::string format_as(SimulationTime simulationTime) {
-    int64_t nanoseconds = simulationTime.count();
-    std::string str = std::to_string(nanoseconds);
+    std::string str = std::to_string(simulationTime.nanoseconds);
 
     size_t length = str.size();
     if (length < 10) {
@@ -270,25 +227,6 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     }
 
     return str;
-}
-
-[[nodiscard]] const char* format_as(Result result) {
-    switch (result) {
-        case Result::Ok:
-            return "Ok";
-        case Result::Error:
-            return "Error";
-        case Result::Empty:
-            return "Empty";
-        case Result::Full:
-            return "Full";
-        case Result::InvalidArgument:
-            return "InvalidArgument";
-        case Result::Disconnected:
-            return "Disconnected";
-    }
-
-    return "<Invalid Result>";
 }
 
 [[nodiscard]] const char* format_as(CoSimType coSimType) {
@@ -336,21 +274,6 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
     }
 
     return "<Invalid Command>";
-}
-
-[[nodiscard]] const char* format_as(Severity severity) {
-    switch (severity) {
-        case Severity::Error:
-            return "Error";
-        case Severity::Warning:
-            return "Warning";
-        case Severity::Info:
-            return "Info";
-        case Severity::Trace:
-            return "Trace";
-    }
-
-    return "<Invalid Severity>";
 }
 
 [[nodiscard]] const char* format_as(TerminateReason terminateReason) {
@@ -460,33 +383,32 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Error)) {
-        oss << ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Drop)) {
-        oss << ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::ExtendedId)) {
-        oss << ",ExtendedId";
+        str.append(",ExtendedId");
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::BitRateSwitch)) {
-        oss << ",BitRateSwitch";
+        str.append(",BitRateSwitch");
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::FlexibleDataRateFormat)) {
-        oss << ",FlexibleDataRateFormat";
+        str.append(",FlexibleDataRateFormat");
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -495,21 +417,20 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Error)) {
-        oss << ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Drop)) {
-        oss << ",Drop";
+        str.append(",Drop");
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -518,57 +439,56 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Error)) {
-        oss << ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Drop)) {
-        oss << ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Header)) {
-        oss << ",Header";
+        str.append(",Header");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Response)) {
-        oss << ",Response";
+        str.append(",Response");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::WakeEvent)) {
-        oss << ",WakeEvent";
+        str.append(",WakeEvent");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::SleepEvent)) {
-        oss << ",SleepEvent";
+        str.append(",SleepEvent");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::EnhancedChecksum)) {
-        oss << ",EnhancedChecksum";
+        str.append(",EnhancedChecksum");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::TransferOnce)) {
-        oss << ",TransferOnce";
+        str.append(",TransferOnce");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::ParityFailure)) {
-        oss << ",ParityFailure";
+        str.append(",ParityFailure");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Collision)) {
-        oss << ",Collision";
+        str.append(",Collision");
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::NoResponse)) {
-        oss << ",NoResponse";
+        str.append(",NoResponse");
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -577,49 +497,48 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str.append(",Loopback");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Error)) {
-        oss << ",Error";
+        str.append(",Error");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Drop)) {
-        oss << ",Drop";
+        str.append(",Drop");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Startup)) {
-        oss << ",Startup";
+        str.append(",Startup");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::SyncFrame)) {
-        oss << ",SyncFrame";
+        str.append(",SyncFrame");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::NullFrame)) {
-        oss << ",NullFrame";
+        str.append(",NullFrame");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::PayloadPreamble)) {
-        oss << ",PayloadPreamble";
+        str.append(",PayloadPreamble");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::TransferOnce)) {
-        oss << ",TransferOnce";
+        str.append(",TransferOnce");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::ChannelA)) {
-        oss << ",ChannelA";
+        str.append(",ChannelA");
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::ChannelB)) {
-        oss << ",ChannelB";
+        str.append(",ChannelB");
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -787,279 +706,111 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
-    std::ostringstream oss;
-    oss << '[';
+    std::string str;
+    str.append("[");
 
     bool first = true;
     for (const IoSignalContainer& signalContainer : ioSignalContainers) {
         if (first) {
             first = false;
         } else {
-            oss << ", ";
+            str.append(", ");
         }
 
-        oss << signalContainer;
+        str.append(format_as(signalContainer));
     }
 
-    oss << ']';
+    str.append("]");
 
-    return oss.str();
+    return str;
 }
 
 [[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
+    std::string str;
+    str.append("[");
 
     bool first = true;
     for (const CanControllerContainer& canControllerContainer : canControllerContainers) {
         if (first) {
             first = false;
         } else {
-            oss << ", ";
+            str.append(", ");
         }
 
-        oss << canControllerContainer;
+        str.append(format_as(canControllerContainer));
     }
 
-    oss << ']';
+    str.append("]");
 
-    return oss.str();
+    return str;
 }
 
 [[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
+    std::string str;
+    str.append("[");
 
     bool first = true;
     for (const EthControllerContainer& ethControllerContainer : ethControllerContainers) {
         if (first) {
             first = false;
         } else {
-            oss << ", ";
+            str.append(", ");
         }
 
-        oss << ethControllerContainer;
+        str.append(format_as(ethControllerContainer));
     }
 
-    oss << ']';
+    str.append("]");
 
-    return oss.str();
+    return str;
 }
 
 [[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
+    std::string str;
+    str.append("[");
 
     bool first = true;
     for (const LinControllerContainer& linControllerContainer : linControllerContainers) {
         if (first) {
             first = false;
         } else {
-            oss << ", ";
+            str.append(", ");
         }
 
-        oss << linControllerContainer;
+        str.append(format_as(linControllerContainer));
     }
 
-    oss << ']';
+    str.append("]");
 
-    return oss.str();
+    return str;
 }
 
 [[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
+    std::string str;
+    str.append("[");
 
     bool first = true;
     for (const FrControllerContainer& frControllerContainer : frControllerContainers) {
         if (first) {
             first = false;
         } else {
-            oss << ", ";
+            str.append(", ");
         }
 
-        oss << frControllerContainer;
+        str.append(format_as(frControllerContainer));
     }
 
-    oss << ']';
+    str.append("]");
 
-    return oss.str();
+    return str;
 }
 
-std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
-    return stream << format_as(simulationTime);
+[[nodiscard]] bool operator==(SimulationTime first, SimulationTime second) {
+    return first.nanoseconds == second.nanoseconds;
 }
 
-std::ostream& operator<<(std::ostream& stream, Result result) {
-    return stream << format_as(result);
-}
-
-std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
-    return stream << format_as(coSimType);
-}
-
-std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
-    return stream << format_as(connectionKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, Command command) {
-    return stream << format_as(command);
-}
-
-std::ostream& operator<<(std::ostream& stream, Severity severity) {
-    return stream << format_as(severity);
-}
-
-std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
-    return stream << format_as(terminateReason);
-}
-
-std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
-    return stream << format_as(connectionState);
-}
-
-std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
-    return stream << format_as(simulationState);
-}
-
-std::ostream& operator<<(std::ostream& stream, Mode mode) {
-    return stream << format_as(mode);
-}
-
-std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
-    return stream << format_as(ioSignalId);
-}
-
-std::ostream& operator<<(std::ostream& stream, DataType dataType) {
-    return stream << format_as(dataType);
-}
-
-std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
-    return stream << format_as(sizeKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
-    return stream << format_as(busControllerId);
-}
-
-std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
-    return stream << format_as(busMessageId);
-}
-
-std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
-    return stream << format_as(linControllerType);
-}
-
-std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
-    return stream << format_as(canMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
-    return stream << format_as(ethMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
-    return stream << format_as(linMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
-    return stream << format_as(frMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
-    return stream << format_as(frameKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
-    return stream << format_as(ioSignal);
-}
-
-std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
-    return stream << format_as(ioSignalContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
-    return stream << format_as(canController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
-    return stream << format_as(canControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
-    return stream << format_as(canMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
-    return stream << format_as(canMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
-    return stream << format_as(ethController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
-    return stream << format_as(ethControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
-    return stream << format_as(ethMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
-    return stream << format_as(ethMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
-    return stream << format_as(linController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
-    return stream << format_as(frControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
-    return stream << format_as(linMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
-    return stream << format_as(linMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
-    return stream << format_as(frController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
-    return stream << format_as(frControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
-    return stream << format_as(frMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
-    return stream << format_as(frMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
-    return stream << format_as(ioSignalContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
-    return stream << format_as(canControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
-    return stream << format_as(ethControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
-    return stream << format_as(linControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
-    return stream << format_as(frControllerContainers);
+[[nodiscard]] bool operator!=(SimulationTime first, SimulationTime second) {
+    return first.nanoseconds != second.nanoseconds;
 }
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) {
@@ -1103,7 +854,7 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
         return false;
     }
 
-    if (Equals(first.name, second.name)) {
+    if (first.name != second.name) {
         return false;
     }
 
@@ -1159,15 +910,15 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
         return false;
     }
 
-    if (!Equals(first.name, second.name)) {
+    if (first.name != second.name) {
         return false;
     }
 
-    if (!Equals(first.channelName, second.channelName)) {
+    if (first.channelName != second.channelName) {
         return false;
     }
 
-    if (!Equals(first.clusterName, second.clusterName)) {
+    if (first.clusterName != second.clusterName) {
         return false;
     }
 
@@ -1279,15 +1030,15 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
         return false;
     }
 
-    if (!Equals(first.name, second.name)) {
+    if (first.name != second.name) {
         return false;
     }
 
-    if (!Equals(first.channelName, second.channelName)) {
+    if (first.channelName != second.channelName) {
         return false;
     }
 
-    if (!Equals(first.clusterName, second.clusterName)) {
+    if (first.clusterName != second.clusterName) {
         return false;
     }
 
@@ -1391,15 +1142,15 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
         return false;
     }
 
-    if (!Equals(first.name, second.name)) {
+    if (first.name != second.name) {
         return false;
     }
 
-    if (!Equals(first.channelName, second.channelName)) {
+    if (first.channelName != second.channelName) {
         return false;
     }
 
-    if (!Equals(first.clusterName, second.clusterName)) {
+    if (first.clusterName != second.clusterName) {
         return false;
     }
 
@@ -1503,15 +1254,15 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerCon
         return false;
     }
 
-    if (!Equals(first.name, second.name)) {
+    if (first.name != second.name) {
         return false;
     }
 
-    if (!Equals(first.channelName, second.channelName)) {
+    if (first.channelName != second.channelName) {
         return false;
     }
 
-    if (!Equals(first.clusterName, second.clusterName)) {
+    if (first.clusterName != second.clusterName) {
         return false;
     }
 
@@ -1779,35 +1530,46 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 }
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value) {
-    std::ostringstream oss;
+    std::string str;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {
-            oss << " ";
+            str.append(" ");
         }
 
-        DataTypeValueToString(oss, dataType, i, value);
+        DataTypeValueToString(str, dataType, i, value);
     }
 
-    return oss.str();
+    return str;
 }
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
-    std::ostringstream oss;
-    oss << "IO Data { Id: " << ioSignal.id << ", Length: " << length << ", Data: " << ValueToString(ioSignal.dataType, length, value) << " }";
-    return oss.str();
+    return Format("IO Data { Id: {}, Length: {}, Data: {} }", ioSignal.id, length, ValueToString(ioSignal.dataType, length, value));
 }
 
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator) {
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0');
-    for (uint32_t i = 0; i < dataLength; i++) {
-        oss << std::setw(2) << static_cast<int32_t>(data[i]);
-        if ((i < (dataLength - 1)) && (separator != 0)) {
-            oss << separator;
-        }
+    if ((data == nullptr) || (dataLength == 0)) {
+        return {};
     }
 
-    return oss.str();
+    static constexpr char HexCharacters[] = "0123456789abcdef";
+
+    bool useSeparator = (separator != 0);
+    size_t separatorsCount = useSeparator && (dataLength > 1) ? dataLength - 1 : 0;
+
+    std::string str;
+    str.reserve((dataLength * 2) + separatorsCount);
+
+    for (size_t i = 0; i < dataLength; ++i) {
+        if (useSeparator && (i > 0)) {
+            str.push_back(separator);
+        }
+
+        uint8_t value = data[i];
+        str.push_back(HexCharacters[(value >> 4) & 0x0F]);
+        str.push_back(HexCharacters[value & 0x0F]);
+    }
+
+    return str;
 }
 
 }  // namespace DsVeosCoSim

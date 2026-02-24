@@ -1,16 +1,16 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
+#include "PerformanceTestClient.hpp"
 
 #include <chrono>
 #include <cstdint>
 #include <string>
 #include <thread>
 
-#include "Event.h"
-#include "Helper.h"
+#include "Event.hpp"
+#include "Helper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& host) {
     Event connected;
@@ -40,3 +40,5 @@ void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& 
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
+
+}  // namespace DsVeosCoSim

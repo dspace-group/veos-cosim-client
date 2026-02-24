@@ -1,35 +1,27 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <algorithm>
-#include <array>
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
 #include <memory>
-#include <optional>
-#include <stdexcept>
-#include <sstream>
 #include <string>
-#include <type_traits>
 #include <utility>
 
-#include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Socket.h"
+#include "Channel.hpp"
+#include "Error.hpp"
+#include "Socket.hpp"
 
 namespace DsVeosCoSim {
 
 namespace {
 
-constexpr int32_t HeaderSize = 4;
-constexpr int32_t BufferSize = 65536;
-constexpr int32_t ReadPacketSize = 1024;
+constexpr int32_t DefaultReadPacketSize = 1024;
 
 class SocketChannelWriter final : public ChannelWriter {
 public:
-    explicit SocketChannelWriter(Socket& socket) : _socket(socket) {
+    explicit SocketChannelWriter(SocketClient& client) : _client(client) {
     }
 
-    ~SocketChannelWriter() override = default;
+    ~SocketChannelWriter() noexcept override = default;
 
     SocketChannelWriter(const SocketChannelWriter&) = delete;
     SocketChannelWriter& operator=(const SocketChannelWriter&) = delete;
@@ -37,115 +29,22 @@ public:
     SocketChannelWriter(SocketChannelWriter&&) = delete;
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
-    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) override {
-        auto sizeToReserve = static_cast<int32_t>(size);
-        if (BufferSize - _writeIndex < sizeToReserve) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < sizeToReserve) {
-                throw std::runtime_error("No more space available.");
-            }
-        }
-
-        blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
-        _writeIndex += sizeToReserve;
-
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Write(uint16_t value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        if (BufferSize - _writeIndex < size) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < size) {
-                throw std::runtime_error("No more space available.");
-            }
-        }
-
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
-        _writeIndex += size;
-
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Write(uint32_t value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        if (BufferSize - _writeIndex < size) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < size) {
-                throw std::runtime_error("No more space available.");
-            }
-        }
-
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
-        _writeIndex += size;
-
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Write(uint64_t value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        if (BufferSize - _writeIndex < size) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < size) {
-                throw std::runtime_error("No more space available.");
-            }
-        }
-
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
-        _writeIndex += size;
-
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Write(const void* source, size_t size) override {
-        const auto* bufferPointer = static_cast<const uint8_t*>(source);
-        auto sizeToCopy = static_cast<int32_t>(size);
-
-        while (sizeToCopy > 0) {
-            if (BufferSize == _writeIndex) {
-                CheckResult(EndWrite());
-                continue;
-            }
-
-            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, BufferSize - _writeIndex);
-            (void)memcpy(&_writeBuffer[static_cast<size_t>(_writeIndex)], bufferPointer, static_cast<size_t>(sizeOfChunkToCopy));
-            _writeIndex += sizeOfChunkToCopy;
-            bufferPointer += sizeOfChunkToCopy;
-            sizeToCopy -= sizeOfChunkToCopy;
-        }
-
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result EndWrite() override {
-        uint8_t* sourcePtr = _writeBuffer.data();
-
-        // Write header
-        *reinterpret_cast<int32_t*>(sourcePtr) = _writeIndex;
-
-        CheckResult(_socket.Send(sourcePtr, static_cast<size_t>(_writeIndex)));
-
-        _writeIndex = HeaderSize;
-        return Result::Ok;
+protected:
+    [[nodiscard]] Result Send(const uint8_t* buffer, size_t size) override {
+        return _client.Send(buffer, size);
     }
 
 private:
-    Socket& _socket;
-
-    int32_t _writeIndex = HeaderSize;
-    std::array<uint8_t, BufferSize> _writeBuffer{};
+    SocketClient& _client;
 };
 
 class SocketChannelReader final : public ChannelReader {
 public:
-    explicit SocketChannelReader(Socket& socket) : _socket(socket) {
+    explicit SocketChannelReader(SocketClient& client) : _client(client) {
+        _defaultSizeToRead = DefaultReadPacketSize;
     }
 
-    ~SocketChannelReader() override = default;
+    ~SocketChannelReader() noexcept override = default;
 
     SocketChannelReader(const SocketChannelReader&) = delete;
     SocketChannelReader& operator=(const SocketChannelReader&) = delete;
@@ -153,146 +52,21 @@ public:
     SocketChannelReader(SocketChannelReader&&) = delete;
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
 
-    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) override {
-        auto blockSize = static_cast<int32_t>(size);
-        while (_endFrameIndex - _readIndex < blockSize) {
-            CheckResult(BeginRead());
-        }
-
-        blockReader = BlockReader(&_readBuffer[static_cast<size_t>(_readIndex)], size);
-        _readIndex += blockSize;
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Read(uint16_t& value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        while (_endFrameIndex - _readIndex < size) {
-            CheckResult(BeginRead());
-        }
-
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
-        _readIndex += size;
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Read(uint32_t& value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        while (_endFrameIndex - _readIndex < size) {
-            CheckResult(BeginRead());
-        }
-
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
-        _readIndex += size;
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Read(uint64_t& value) override {
-        auto size = static_cast<int32_t>(sizeof(value));
-        while (_endFrameIndex - _readIndex < size) {
-            CheckResult(BeginRead());
-        }
-
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
-        _readIndex += size;
-        return Result::Ok;
-    }
-
-    [[nodiscard]] Result Read(void* destination, size_t size) override {
-        auto* bufferPointer = static_cast<uint8_t*>(destination);
-        auto sizeToCopy = static_cast<int32_t>(size);
-
-        while (sizeToCopy > 0) {
-            if (_endFrameIndex <= _readIndex) {
-                CheckResult(BeginRead());
-                continue;
-            }
-
-            int32_t sizeOfChunkToCopy = std::min(sizeToCopy, _endFrameIndex - _readIndex);
-            (void)memcpy(bufferPointer, &_readBuffer[static_cast<size_t>(_readIndex)], static_cast<size_t>(sizeOfChunkToCopy));
-            _readIndex += sizeOfChunkToCopy;
-            bufferPointer += sizeOfChunkToCopy;
-            sizeToCopy -= sizeOfChunkToCopy;
-        }
-
-        return Result::Ok;
-    }
-
-    void EndRead() override {
-        if (_readIndex != _endFrameIndex) {
-            throw std::runtime_error("Not all data has been read.");
-        }
+protected:
+    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override {
+        return _client.Receive(destination, size, receivedSize);
     }
 
 private:
-    [[nodiscard]] Result BeginRead() {
-        _readIndex = HeaderSize;
-        int32_t sizeToRead = ReadPacketSize;
-        bool readHeader = true;
-
-        // Did we read more than one frame the last time?
-        if (_writeIndex > _endFrameIndex) {
-            int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            (void)memcpy(_readBuffer.data(), &_readBuffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
-
-            _writeIndex = bytesToMove;
-
-            // Did we read at least HeaderSize bytes more?
-            if (bytesToMove >= HeaderSize) {
-                readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
-
-                // Did we read at least an entire second frame?
-                if (_writeIndex >= _endFrameIndex) {
-                    return Result::Ok;
-                }
-
-                sizeToRead = _endFrameIndex - _writeIndex;
-            }
-        } else {
-            _writeIndex = 0;
-        }
-
-        while (sizeToRead > 0) {
-            size_t receivedSize{};
-            CheckResult(_socket.Receive(&_readBuffer[static_cast<size_t>(_writeIndex)], static_cast<size_t>(sizeToRead), receivedSize));
-
-            sizeToRead -= static_cast<int32_t>(receivedSize);
-            _writeIndex += static_cast<int32_t>(receivedSize);
-
-            if (readHeader && (_writeIndex >= HeaderSize)) {
-                readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(_readBuffer.data());
-
-                if (_endFrameIndex > BufferSize) {
-                    Logger::Instance().LogError("Protocol error. The buffer size is too small.");
-                    return Result::Error;
-                }
-
-                if (_writeIndex >= _endFrameIndex) {
-                    return Result::Ok;
-                }
-
-                sizeToRead = _endFrameIndex - _writeIndex;
-            }
-        }
-
-        return Result::Ok;
-    }
-
-    Socket& _socket;
-
-    int32_t _readIndex = HeaderSize;
-    int32_t _writeIndex{};
-    int32_t _endFrameIndex{};
-    std::array<uint8_t, BufferSize> _readBuffer{};
+    SocketClient& _client;
 };
 
 class SocketChannel final : public Channel {
 public:
-    explicit SocketChannel(Socket socket) : _socket(std::move(socket)), _writer(_socket), _reader(_socket) {
+    explicit SocketChannel(SocketClient client) : _client(std::move(client)), _writer(_client), _reader(_client) {
     }
 
-    ~SocketChannel() override = default;
+    ~SocketChannel() noexcept override = default;
 
     SocketChannel(const SocketChannel&) = delete;
     SocketChannel& operator=(const SocketChannel&) = delete;
@@ -301,16 +75,11 @@ public:
     SocketChannel& operator=(SocketChannel&&) = delete;
 
     [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override {
-        SocketAddress socketAddress{};
-        CheckResult(_socket.GetRemoteAddress(socketAddress));
-        std::ostringstream oss;
-        oss << socketAddress.ipAddress << ':' << socketAddress.port;
-        remoteAddress = oss.str();
-        return Result::Ok;
+        return _client.GetRemoteAddress(remoteAddress);
     }
 
     void Disconnect() override {
-        _socket.Shutdown();
+        _client.Disconnect();
     }
 
     [[nodiscard]] ChannelWriter& GetWriter() override {
@@ -322,7 +91,7 @@ public:
     }
 
 private:
-    Socket _socket;
+    SocketClient _client;
 
     SocketChannelWriter _writer;
     SocketChannelReader _reader;
@@ -330,11 +99,11 @@ private:
 
 class TcpChannelServer final : public ChannelServer {
 public:
-    TcpChannelServer(Socket listenSocketIpv4, Socket listenSocketIpv6, uint16_t port)
-        : _listenSocketIpv4(std::move(listenSocketIpv4)), _listenSocketIpv6(std::move(listenSocketIpv6)), _port(port) {
+    TcpChannelServer(SocketListener listenerIpv4, SocketListener listenerIpv6, uint16_t port)
+        : _listenerIpv4(std::move(listenerIpv4)), _listenerIpv6(std::move(listenerIpv6)), _port(port) {
     }
 
-    ~TcpChannelServer() override = default;
+    ~TcpChannelServer() noexcept override = default;
 
     TcpChannelServer(const TcpChannelServer&) = delete;
     TcpChannelServer& operator=(const TcpChannelServer&) = delete;
@@ -346,33 +115,33 @@ public:
         return _port;
     }
 
-    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) override {
-        if (_listenSocketIpv4.IsValid()) {
-            std::optional<Socket> acceptedSocket{};
-            CheckResult(_listenSocketIpv4.TryAccept(acceptedSocket));
-            if (acceptedSocket) {
-                CheckResult(acceptedSocket->EnableNoDelay());
-                acceptedChannel = std::make_unique<SocketChannel>(std::move(*acceptedSocket));
-                return Result::Ok;
+    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override {
+        if (_listenerIpv4.IsRunning()) {
+            SocketClient client{};
+            Result result = _listenerIpv4.TryAccept(client);
+            if (IsOk(result)) {
+                channel = std::make_unique<SocketChannel>(std::move(client));
+                return CreateOk();
+            }
+
+            if (!IsNotConnected(result)) {
+                return result;
             }
         }
 
-        if (_listenSocketIpv6.IsValid()) {
-            std::optional<Socket> acceptedSocket{};
-            CheckResult(_listenSocketIpv6.TryAccept(acceptedSocket));
-            if (acceptedSocket) {
-                CheckResult(acceptedSocket->EnableNoDelay());
-                acceptedChannel = std::make_unique<SocketChannel>(std::move(*acceptedSocket));
-                return Result::Ok;
-            }
+        if (_listenerIpv6.IsRunning()) {
+            SocketClient client{};
+            CheckResult(_listenerIpv6.TryAccept(client));
+            channel = std::make_unique<SocketChannel>(std::move(client));
+            return CreateOk();
         }
 
-        return Result::Ok;
+        return CreateNotConnected();
     }
 
 private:
-    Socket _listenSocketIpv4;
-    Socket _listenSocketIpv6;
+    SocketListener _listenerIpv4;
+    SocketListener _listenerIpv6;
     uint16_t _port{};
 };
 
@@ -380,10 +149,10 @@ private:
 
 class LocalChannelServer final : public ChannelServer {
 public:
-    explicit LocalChannelServer(Socket socket) : _listenSocket(std::move(socket)) {
+    explicit LocalChannelServer(SocketListener listener) : _listener(std::move(listener)) {
     }
 
-    ~LocalChannelServer() override = default;
+    ~LocalChannelServer() noexcept override = default;
 
     LocalChannelServer(const LocalChannelServer&) = delete;
     LocalChannelServer& operator=(const LocalChannelServer&) = delete;
@@ -395,19 +164,15 @@ public:
         return {};
     }
 
-    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& acceptedChannel) override {
-        std::optional<Socket> acceptedSocket{};
-        CheckResult(_listenSocket.TryAccept(acceptedSocket));
-
-        if (acceptedSocket) {
-            acceptedChannel = std::make_unique<SocketChannel>(std::move(*acceptedSocket));
-        }
-
-        return Result::Ok;
+    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override {
+        SocketClient client;
+        CheckResult(_listener.TryAccept(client));
+        channel = std::make_unique<SocketChannel>(std::move(client));
+        return CreateOk();
     }
 
 private:
-    Socket _listenSocket;
+    SocketListener _listener;
 };
 
 #endif
@@ -418,77 +183,60 @@ private:
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
-                                            std::unique_ptr<Channel>& connectedChannel) {
+                                            std::unique_ptr<Channel>& channel) {
     CheckResult(StartupNetwork());
 
-    std::optional<Socket> connectedSocket{};
-    CheckResult(Socket::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds, connectedSocket));
-    if (connectedSocket) {
-        CheckResult(connectedSocket->EnableNoDelay());
-        connectedChannel = std::make_unique<SocketChannel>(std::move(*connectedSocket));
-    }
-
-    return Result::Ok;
+    SocketClient client{};
+    CheckResult(SocketClient::TryConnect(remoteIpAddress, remotePort, localPort, timeoutInMilliseconds, client));
+    channel = std::make_unique<SocketChannel>(std::move(client));
+    return CreateOk();
 }
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& server) {
     CheckResult(StartupNetwork());
 
-    Socket listenSocketIpv4;
-    if (Socket::IsIpv4Supported()) {
-        CheckResult(Socket::Create(AddressFamily::Ipv4, listenSocketIpv4));
-        CheckResult(listenSocketIpv4.EnableReuseAddress());
-        CheckResult(listenSocketIpv4.Bind(port, enableRemoteAccess));
-        CheckResult(listenSocketIpv4.GetLocalPort(port));
-        CheckResult(listenSocketIpv4.Listen());
+    SocketListener listenerIpv4;
+    if (IsIpv4SocketSupported()) {
+        CheckResult(SocketListener::Create(AddressFamily::Ipv4, port, enableRemoteAccess, listenerIpv4));
+        CheckResult(listenerIpv4.GetLocalPort(port));
     }
 
-    Socket listenSocketIpv6;
-    if (Socket::IsIpv6Supported()) {
-        CheckResult(Socket::Create(AddressFamily::Ipv6, listenSocketIpv6));
-        CheckResult(listenSocketIpv6.EnableIpv6Only());
-        CheckResult(listenSocketIpv6.EnableReuseAddress());
-        CheckResult(listenSocketIpv6.Bind(port, enableRemoteAccess));
-        CheckResult(listenSocketIpv6.GetLocalPort(port));
-        CheckResult(listenSocketIpv6.Listen());
+    SocketListener listenerIpv6;
+    if (IsIpv6SocketSupported()) {
+        CheckResult(SocketListener::Create(AddressFamily::Ipv6, port, enableRemoteAccess, listenerIpv6));
+        CheckResult(listenerIpv6.GetLocalPort(port));
     }
 
-    channelServer = std::make_unique<TcpChannelServer>(std::move(listenSocketIpv4), std::move(listenSocketIpv6), port);
-    return Result::Ok;
+    server = std::make_unique<TcpChannelServer>(std::move(listenerIpv4), std::move(listenerIpv6), port);
+    return CreateOk();
 }
 
 #ifndef _WIN32
 
-[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& connectedChannel) {
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsLocalSupported()) {
-        return Result::Ok;
+        return CreateOk();
     }
 
-    std::optional<Socket> connectedSocket{};
-    CheckResult(Socket::TryConnect(name, connectedSocket));
-    if (connectedSocket) {
-        connectedChannel = std::make_unique<SocketChannel>(std::move(*connectedSocket));
-    }
-
-    return Result::Ok;
+    SocketClient client{};
+    CheckResult(SocketClient::TryConnect(name, client));
+    channel = std::make_unique<SocketChannel>(std::move(client));
+    return CreateOk();
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& channelServer) {
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server) {
     CheckResult(StartupNetwork());
 
     if (!Socket::IsLocalSupported()) {
-        return Result::Ok;
+        return CreateOk();
     }
 
-    Socket listenSocket;
-    CheckResult(Socket::Create(AddressFamily::Local, listenSocket));
-    CheckResult(listenSocket.Bind(name));
-    CheckResult(listenSocket.Listen());
-
-    channelServer = std::make_unique<LocalChannelServer>(std::move(listenSocket));
-    return Result::Ok;
+    SocketListener listener;
+    CheckResult(SocketListener::Create(name, listener));
+    server = std::make_unique<LocalChannelServer>(std::move(listener));
+    return CreateOk();
 }
 
 #endif

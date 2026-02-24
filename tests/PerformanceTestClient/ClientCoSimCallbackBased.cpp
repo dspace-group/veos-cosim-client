@@ -2,13 +2,13 @@
 
 #include <string>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestClient.h"
-#include "PerformanceTestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestClient.hpp"
+#include "PerformanceTestHelper.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
@@ -40,7 +40,8 @@ namespace {
 }
 
 void CoSimClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsDisconnected(Run(host, connectedEvent, counter, isStopped))) {
+    Result result = Run(host, connectedEvent, counter, isStopped);
+    if (!IsNotConnected(result)) {
         LogError("Could not run CoSim callback client.");
     }
 }
@@ -57,3 +58,5 @@ void RunCoSimCallbackTest(const std::string& host) {  // NOLINT(misc-use-interna
     RunPerformanceTest(CoSimClientRun, host);
     LogTrace("");
 }
+
+}  // namespace DsVeosCoSim
