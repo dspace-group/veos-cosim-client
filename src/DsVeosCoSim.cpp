@@ -1023,3 +1023,28 @@ static_assert(offsetof(LinMessageContainer, id) == offsetof(DsVeosCoSim_LinMessa
 static_assert(offsetof(LinMessageContainer, flags) == offsetof(DsVeosCoSim_LinMessageContainer, flags));
 static_assert(offsetof(LinMessageContainer, length) == offsetof(DsVeosCoSim_LinMessageContainer, length));
 static_assert(offsetof(LinMessageContainer, data) == offsetof(DsVeosCoSim_LinMessageContainer, data));
+
+static_assert(sizeof(FrController) == sizeof(DsVeosCoSim_FrController));
+static_assert(offsetof(FrController, id) == offsetof(DsVeosCoSim_FrController, id));
+static_assert(offsetof(FrController, queueSize) == offsetof(DsVeosCoSim_FrController, queueSize));
+static_assert(offsetof(FrController, bitsPerSecond) == offsetof(DsVeosCoSim_FrController, bitsPerSecond));
+static_assert(offsetof(FrController, name) == offsetof(DsVeosCoSim_FrController, name));
+static_assert(offsetof(FrController, channelName) == offsetof(DsVeosCoSim_FrController, channelName));
+static_assert(offsetof(FrController, clusterName) == offsetof(DsVeosCoSim_FrController, clusterName));
+
+static_assert(sizeof(FrMessage) == sizeof(DsVeosCoSim_FrMessage));
+static_assert(offsetof(FrMessage, timestamp) == offsetof(DsVeosCoSim_FrMessage, timestamp));
+static_assert(offsetof(FrMessage, controllerId) == offsetof(DsVeosCoSim_FrMessage, controllerId));
+static_assert(offsetof(FrMessage, id) == offsetof(DsVeosCoSim_FrMessage, id));
+static_assert(offsetof(FrMessage, flags) == offsetof(DsVeosCoSim_FrMessage, flags));
+static_assert(offsetof(FrMessage, length) == offsetof(DsVeosCoSim_FrMessage, length));
+static_assert(offsetof(FrMessage, data) == offsetof(DsVeosCoSim_FrMessage, data));
+
+static_assert(sizeof(FrMessageContainer) == sizeof(DsVeosCoSim_FrMessageContainer));
+static_assert(offsetof(FrMessageContainer, timestamp) == offsetof(DsVeosCoSim_FrMessageContainer, timestamp));
+static_assert(offsetof(FrMessageContainer, controllerId) == offsetof(DsVeosCoSim_FrMessageContainer, controllerId));
+static_assert(offsetof(FrMessageContainer, reserved) == offsetof(DsVeosCoSim_FrMessageContainer, reserved));
+static_assert(offsetof(FrMessageContainer, id) == offsetof(DsVeosCoSim_FrMessageContainer, id));
+static_assert(offsetof(FrMessageContainer, flags) == offsetof(DsVeosCoSim_FrMessageContainer, flags));
+static_assert(offsetof(FrMessageContainer, length) == offsetof(DsVeosCoSim_FrMessageContainer, length));
+static_assert(offsetof(FrMessageContainer, data) == offsetof(DsVeosCoSim_FrMessageContainer, data));

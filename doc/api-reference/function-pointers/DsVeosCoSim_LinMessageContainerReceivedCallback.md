@@ -31,7 +31,7 @@ If the buffer is full, new messages are discarded.
 ```c
 typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(
     DsVeosCoSim_SimulationTime simulationTime,
-    const DsVeosCoSim_LinController* ethController,
+    const DsVeosCoSim_LinController* linController,
     const DsVeosCoSim_LinMessageContainer* messageContainer,
     void* userData
 );
@@ -43,7 +43,7 @@ typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(
 
 The current simulation time.
 
-> const [DsVeosCoSim_LinController](../structures/DsVeosCoSim_LinController.md)* ethController
+> const [DsVeosCoSim_LinController](../structures/DsVeosCoSim_LinController.md)* linController
 
 The LIN controller that sent the message.
 

@@ -31,7 +31,7 @@ If the buffer is full, new messages are discarded.
 ```c
 typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(
     DsVeosCoSim_SimulationTime simulationTime,
-    const DsVeosCoSim_FrController* ethController,
+    const DsVeosCoSim_FrController* frController,
     const DsVeosCoSim_FrMessage* message,
     void* userData
 );
@@ -43,7 +43,7 @@ typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(
 
 The current simulation time.
 
-> const [DsVeosCoSim_FrController](../structures/DsVeosCoSim_FrController.md)* ethController
+> const [DsVeosCoSim_FrController](../structures/DsVeosCoSim_FrController.md)* frController
 
 The FlexRay controller that sent the message.
 
