@@ -62,15 +62,15 @@ constexpr size_t ServerSharedMemorySize = 4;
 }
 
 [[nodiscard]] Result GetFullNamedEventName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Event." + name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.Event." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullTestNamedLockName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.Mutex." + name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.Mutex." + name, fullName);
 }
 
 [[nodiscard]] Result GetFullSharedMemoryName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim.SharedMemory." + name, fullName);
+    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.SharedMemory." + name, fullName);
 }
 
 // Spin wait with exponential backoff
