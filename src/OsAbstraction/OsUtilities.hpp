@@ -128,7 +128,6 @@ public:
     }
 
     [[nodiscard]] uint8_t* GetData() const;
-    [[nodiscard]] size_t GetSize() const;
 
     [[nodiscard]] bool IsValid() const;
 

@@ -93,6 +93,7 @@ void FormatImpl(std::string& out, const char* fmt, T&& value, Args&&... args) {
         fmt++;
     }
 
+    // This is a "high-level" assert. Hopefully, this will never be reached
     throw std::runtime_error("Too many arguments");
 }
 

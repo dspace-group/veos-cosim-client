@@ -34,6 +34,7 @@ public:
     void Write(uint16_t value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more space available.");
         }
 
@@ -45,6 +46,7 @@ public:
     void Write(uint32_t value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more space available.");
         }
 
@@ -56,6 +58,7 @@ public:
     void Write(uint64_t value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more space available.");
         }
 
@@ -66,6 +69,7 @@ public:
 
     void Write(const void* source, size_t size) {
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more space available.");
         }
 
@@ -86,6 +90,7 @@ public:
 
     void EndWrite() const {
         if (_size != 0) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("Not all space has been used.");
         }
     }
@@ -239,6 +244,7 @@ public:
     void Read(uint16_t& value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more data available.");
         }
 
@@ -250,6 +256,7 @@ public:
     void Read(uint32_t& value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more data available.");
         }
 
@@ -261,6 +268,7 @@ public:
     void Read(uint64_t& value) {
         size_t size = sizeof(value);
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more data available.");
         }
 
@@ -271,6 +279,7 @@ public:
 
     void Read(void* destination, size_t size) {
         if (size > _size) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("No more data available.");
         }
 
@@ -291,6 +300,7 @@ public:
 
     void EndRead() const {
         if (_size != 0) {
+            // This is a "high-level" assert. Hopefully, this will never be reached
             throw std::runtime_error("Not all data has been read.");
         }
     }
@@ -387,13 +397,11 @@ public:
         return Read(reinterpret_cast<TUnderlying&>(value));
     }
 
-    [[nodiscard]] Result EndRead() const {
-        // This should not happen. It's just an assert, that works for release as well
+    void EndRead() const {
         if (_readIndex != _endFrameIndex) {
-            return CreateError("Not all data has been read.");
+            // This is a "high-level" assert. Hopefully, this will never be reached
+            throw std::runtime_error("Not all data has been read.");
         }
-
-        return CreateOk();
     }
 
 protected:

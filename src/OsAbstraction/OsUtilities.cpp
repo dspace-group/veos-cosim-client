@@ -3,7 +3,6 @@
 #include "OsUtilities.hpp"
 
 #include <atomic>
-#include <stdexcept>
 #include <string>
 
 #ifdef _WIN32
@@ -174,7 +173,7 @@ void NamedEvent::Close() {
 
 [[nodiscard]] Result NamedEvent::Set() const {
     if (!IsValid()) {
-        throw std::runtime_error("Not initialized.");
+        return CreateError("Not initialized.");
     }
 
     BOOL result = SetEvent(_handle.Get());
@@ -299,19 +298,7 @@ void SharedMemory::Close() {
 }
 
 [[nodiscard]] uint8_t* SharedMemory::GetData() const {
-    if (!IsValid()) {
-        throw std::runtime_error("SharedMemory is not valid.");
-    }
-
     return static_cast<uint8_t*>(_data);
-}
-
-[[nodiscard]] size_t SharedMemory::GetSize() const {
-    if (!IsValid()) {
-        throw std::runtime_error("SharedMemory is not valid.");
-    }
-
-    return _size;
 }
 
 [[nodiscard]] bool SharedMemory::IsValid() const {

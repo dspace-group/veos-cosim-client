@@ -10,6 +10,7 @@
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
+#include "Error.hpp"
 #include "ProtocolLogger.hpp"
 
 namespace DsVeosCoSim {
@@ -201,7 +202,8 @@ public:
     }
 
     [[nodiscard]] Result ReadOk(ChannelReader& reader) override {
-        return reader.EndRead();
+        reader.EndRead();
+        return CreateOk();
     }
 
     [[nodiscard]] Result SendOk(ChannelWriter& writer) override {
@@ -225,7 +227,7 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadError(errorMessage);
@@ -275,7 +277,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(command), "Could not read command.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolEndTraceReadPingOk(command);
@@ -327,7 +329,7 @@ public:
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         CheckResultWithMessage(ReadString(reader, clientName), "Could not read client name.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnect(protocolVersion, clientMode, serverName, clientName);
@@ -405,7 +407,7 @@ public:
         CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnectOk(clientMode,
@@ -477,7 +479,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStart(simulationTime);
@@ -515,7 +517,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStop(simulationTime);
@@ -561,7 +563,7 @@ public:
         blockReader.Read(reason);
         blockReader.EndRead();
 
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadTerminate(simulationTime, reason);
@@ -600,7 +602,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadPause(simulationTime);
@@ -638,7 +640,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(simulationTime.nanoseconds), "Could not read simulation time.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadContinue(simulationTime);
@@ -687,7 +689,7 @@ public:
 
         CheckResultWithMessage(deserializeIoData(reader, simulationTime, callbacks), "Could not read IO buffer data.");
         CheckResultWithMessage(deserializeBusMessages(reader, simulationTime, callbacks), "Could not read bus buffer data.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStep(simulationTime);
@@ -749,7 +751,7 @@ public:
 
         CheckResultWithMessage(deserializeIoData(reader, nextSimulationTime, callbacks), "Could not read IO buffer data.");
         CheckResultWithMessage(deserializeBusMessages(reader, nextSimulationTime, callbacks), "Could not read bus buffer data.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadStepOk(nextSimulationTime, command);
@@ -795,7 +797,7 @@ public:
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         CheckResultWithMessage(reader.Read(port), "Could not read port.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadSetPort(serverName, port);
@@ -827,7 +829,7 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadUnsetPort(serverName);
@@ -858,7 +860,7 @@ public:
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadGetPort(serverName);
@@ -889,7 +891,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(port), "Could not read port.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadGetPortOk(port);
@@ -1203,7 +1205,7 @@ public:
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
             LogProtocolEndTraceReadConnectOk(clientMode,
@@ -1277,7 +1279,7 @@ public:
         }
 
         CheckResultWithMessage(reader.Read(roundTripTime.nanoseconds), "Could not read round trip time.");
-        CheckResult(reader.EndRead());
+        reader.EndRead();
 
         if (IsProtocolPingTracingEnabled()) {
             LogProtocolEndTraceReadPing(roundTripTime);

@@ -75,7 +75,7 @@ TEST_P(TestProtocol, SendAndReceiveSize) {
     // Assert
     size_t receiveSize{};
     AssertOk(_protocol->ReadSize(_receiverChannel->GetReader(), receiveSize));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendSize, receiveSize);
 }
 
@@ -92,7 +92,7 @@ TEST_P(TestProtocol, SendAndReceiveLength) {
     // Assert
     uint32_t receiveLength{};
     AssertOk(_protocol->ReadLength(_receiverChannel->GetReader(), receiveLength));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendLength, receiveLength);
 }
 
@@ -109,7 +109,7 @@ TEST_P(TestProtocol, SendAndReceiveSignalId) {
     // Assert
     IoSignalId receiveSignalId{};
     AssertOk(_protocol->ReadSignalId(_receiverChannel->GetReader(), receiveSignalId));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendSignalId, receiveSignalId);
 }
 
@@ -127,7 +127,7 @@ TEST_P(TestProtocol, SendAndReceiveCanMessageContainer) {
     // Assert
     CanMessageContainer receiveCanMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveCanMessageContainer));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendCanMessageContainer, receiveCanMessageContainer);
 }
 
@@ -145,7 +145,7 @@ TEST_P(TestProtocol, SendAndReceiveEthMessageContainer) {
     // Assert
     EthMessageContainer receiveEthMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveEthMessageContainer));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendEthMessageContainer, receiveEthMessageContainer);
 }
 
@@ -163,7 +163,7 @@ TEST_P(TestProtocol, SendAndReceiveLinMessageContainer) {
     // Assert
     LinMessageContainer receiveLinMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveLinMessageContainer));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendLinMessageContainer, receiveLinMessageContainer);
 }
 
@@ -181,7 +181,7 @@ TEST_P(TestProtocol, SendAndReceiveFrMessageContainer) {
     // Assert
     FrMessageContainer receiveFrMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveFrMessageContainer));
-    AssertOk(_receiverChannel->GetReader().EndRead());
+    _receiverChannel->GetReader().EndRead();
     ASSERT_EQ(sendFrMessageContainer, receiveFrMessageContainer);
 }
 
