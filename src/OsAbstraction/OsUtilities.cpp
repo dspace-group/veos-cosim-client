@@ -2,11 +2,13 @@
 
 #include "OsUtilities.hpp"
 
-#include <atomic>
 #include <string>
+
+#include "Environment.hpp"
 
 #ifdef _WIN32
 
+#include <atomic>
 #include <cstdint>
 #include <utility>
 
@@ -14,8 +16,6 @@
 #undef min
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
-
-#include "Environment.hpp"
 #include "Error.hpp"
 
 #else

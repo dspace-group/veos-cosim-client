@@ -216,7 +216,7 @@ private:
 [[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel) {
     CheckResult(StartupNetwork());
 
-    if (!Socket::IsLocalSupported()) {
+    if (!IsLocalSocketSupported()) {
         return CreateOk();
     }
 
@@ -229,7 +229,7 @@ private:
 [[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server) {
     CheckResult(StartupNetwork());
 
-    if (!Socket::IsLocalSupported()) {
+    if (!IsLocalSocketSupported()) {
         return CreateOk();
     }
 

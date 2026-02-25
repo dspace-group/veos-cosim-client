@@ -10,17 +10,22 @@
 
 #include "Error.hpp"
 #include "Logger.hpp"
-#include "OsUtilities.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32
+
 #include <Windows.h>
 #include <conio.h>
+
+#include "OsUtilities.hpp"
+
 #else
+
 #include <termios.h>
 #include <unistd.h>
 
 #include <cstdlib>
+
 #endif
 
 namespace DsVeosCoSim {
@@ -67,7 +72,7 @@ void LogTrace(const std::string& message) {
 }
 
 void InitializeOutput() {
-#if _WIN32
+#ifdef _WIN32
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
@@ -178,6 +183,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
     return CreateOk();
 }
 
+#ifdef _WIN32
 [[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
 
@@ -191,6 +197,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 
     return CreateOk();
 }
+#endif
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
@@ -245,7 +252,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 [[nodiscard]] uint32_t GenerateU32() {
     static bool first = true;
     if (first) {
-        srand(static_cast<uint32_t>(std::time({})));  // NOLINT
+        srand(static_cast<uint32_t>(time({})));  // NOLINT
         first = false;
     }
 

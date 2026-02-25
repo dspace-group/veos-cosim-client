@@ -1,6 +1,5 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <chrono>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -13,6 +12,12 @@
 #include "CoSimServer.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+
+#ifdef _WIN32
+
+#include <chrono>
+
+#endif
 
 using namespace DsVeosCoSim;
 using namespace std::chrono;

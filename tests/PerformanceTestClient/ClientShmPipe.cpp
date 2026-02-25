@@ -2,6 +2,8 @@
 
 #include "PerformanceTestClient.hpp"
 
+#ifdef _WIN32
+
 #include <array>
 #include <cstdint>
 #include <string>
@@ -48,3 +50,14 @@ void RunShmPipeTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 }  // namespace DsVeosCoSim
+
+#else
+
+namespace DsVeosCoSim {
+
+void RunShmPipeTest() {  // NOLINT(misc-use-internal-linkage)
+}
+
+}  // namespace DsVeosCoSim
+
+#endif

@@ -3,8 +3,10 @@
 #include "Logger.hpp"
 
 #ifdef _WIN32
+
 #include <Windows.h>
 #undef min
+
 #endif
 
 namespace DsVeosCoSim {
@@ -25,6 +27,7 @@ namespace DsVeosCoSim {
 }
 
 #ifdef _WIN32
+
 [[nodiscard]] std::string Logger::GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
@@ -45,6 +48,7 @@ namespace DsVeosCoSim {
 
     return message;
 }
+
 #endif
 
 }  // namespace DsVeosCoSim

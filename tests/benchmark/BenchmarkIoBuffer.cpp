@@ -1,7 +1,5 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#ifdef ALL_BENCHMARK_TESTS
-
 #include <benchmark/benchmark.h>
 
 #include <memory>
@@ -135,5 +133,3 @@ void LocalOnChannelIo(benchmark::State& state) {
 BENCHMARK(TcpIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 BENCHMARK(LocalIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 BENCHMARK(LocalOnChannelIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
-
-#endif

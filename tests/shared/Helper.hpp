@@ -12,9 +12,14 @@
 #include "CoSimTypes.hpp"
 #include "Error.hpp"  // IWYU pragma: keep
 #include "Logger.hpp"
-#include "OsUtilities.hpp"
 #include "Protocol.hpp"
 #include "Socket.hpp"
+
+#ifdef _WIN32
+
+#include "OsUtilities.hpp"
+
+#endif
 
 namespace DsVeosCoSim {
 
@@ -74,7 +79,12 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 [[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily);
 
 [[nodiscard]] Result ReceiveComplete(const SocketClient& client, void* buffer, size_t length);
+
+#ifdef _WIN32
+
 [[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length);
+
+#endif
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,

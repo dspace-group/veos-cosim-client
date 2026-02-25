@@ -1,7 +1,5 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#ifdef ALL_BENCHMARK_TESTS
-
 #include <benchmark/benchmark.h>
 
 #include <chrono>  // IWYU pragma: keep
@@ -191,5 +189,3 @@ BENCHMARK_TEMPLATE(LocalOnChannelMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->A
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, FrBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
-
-#endif

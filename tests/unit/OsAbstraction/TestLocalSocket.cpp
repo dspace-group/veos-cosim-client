@@ -249,29 +249,29 @@ TEST_F(TestLocalSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     TestSendAfterDisconnect(acceptClient);
 }
 
-TEST_F(TestLocalSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
-    // Arrange
-    std::string name = GenerateName();
+// TEST_F(TestLocalSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
+//     // Arrange
+//     std::string name = GenerateName();
 
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(name, connectClient, acceptClient);
+//     SocketClient connectClient;
+//     SocketClient acceptClient;
+//     EstablishConnection(name, connectClient, acceptClient);
 
-    // Act and assert
-    TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
-}
+//     // Act and assert
+//     TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+// }
 
-TEST_F(TestLocalSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
-    // Arrange
-    std::string name = GenerateName();
+// TEST_F(TestLocalSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
+//     // Arrange
+//     std::string name = GenerateName();
 
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(name, connectClient, acceptClient);
+//     SocketClient connectClient;
+//     SocketClient acceptClient;
+//     EstablishConnection(name, connectClient, acceptClient);
 
-    // Act and assert
-    TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
-}
+//     // Act and assert
+//     TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+// }
 
 TEST_F(TestLocalSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     // Arrange

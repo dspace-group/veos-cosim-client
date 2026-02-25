@@ -2,6 +2,8 @@
 
 #include "PerformanceTestServer.hpp"
 
+#ifdef _WIN32
+
 #include <array>
 #include <thread>
 
@@ -65,3 +67,14 @@ void StartShmPipeServer() {
 }
 
 }  // namespace DsVeosCoSim
+
+#else
+
+namespace DsVeosCoSim {
+
+void StartShmPipeServer() {  // NOLINT(misc-use-internal-linkage)
+}
+
+}  // namespace DsVeosCoSim
+
+#endif

@@ -23,12 +23,6 @@ target_compile_options(
   ${DSVEOSCOSIM_WARNINGS}
 )
 
-target_compile_definitions(
-  DsVeosCoSimBenchmark
-  PRIVATE
-  ALL_BENCHMARK_TESTS
-)
-
 target_link_libraries(
   DsVeosCoSimBenchmark
   DsVeosCoSim

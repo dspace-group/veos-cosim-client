@@ -8,8 +8,13 @@
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "OsUtilities.hpp"
 #include "Socket.hpp"
+
+#ifdef _WIN32
+
+#include "OsUtilities.hpp"
+
+#endif
 
 namespace DsVeosCoSim {
 
@@ -33,6 +38,8 @@ void TestManyElements(SocketClient& client1, SocketClient& client2);
 void TestBigElement(SocketClient& client1, SocketClient& client2);
 void TestPingPong(SocketClient& client1, SocketClient& client2);
 
+#ifdef _WIN32
+
 void TestSendAfterDisconnect(ShmPipeClient& client);
 void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2);
 void TestReceiveAfterDisconnect(ShmPipeClient& client);
@@ -42,6 +49,8 @@ void TestSendAndReceive(ShmPipeClient& client1, ShmPipeClient& client2);
 void TestManyElements(ShmPipeClient& client1, ShmPipeClient& client2);
 void TestBigElement(ShmPipeClient& client1, ShmPipeClient& client2);
 void TestPingPong(ShmPipeClient& client1, ShmPipeClient& client2);
+
+#endif
 
 void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel);
 void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel);

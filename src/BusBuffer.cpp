@@ -18,12 +18,14 @@
 #include "Protocol.hpp"
 #include "ProtocolLogger.hpp"
 #include "RingBuffer.hpp"
-#include "RingBufferView.hpp"
 
 #ifdef _WIN32
+
 #include <atomic>
 
 #include "OsUtilities.hpp"
+#include "RingBufferView.hpp"
+
 #endif
 
 namespace DsVeosCoSim {
@@ -34,7 +36,9 @@ struct CanBus {
     using Message = CanMessage;
     using MessageContainer = CanMessageContainer;
     using Controller = CanController;
+#ifdef _WIN32
     static constexpr const char* ShmNamePart = ".Can.";
+#endif
     static constexpr const char* DisplayName = "CAN";
     static constexpr uint32_t MessageMaxLength = CanMessageMaxLength;
 };
@@ -43,7 +47,9 @@ struct EthBus {
     using Message = EthMessage;
     using MessageContainer = EthMessageContainer;
     using Controller = EthController;
+#ifdef _WIN32
     static constexpr const char* ShmNamePart = ".Eth.";
+#endif
     static constexpr const char* DisplayName = "ETH";
     static constexpr uint32_t MessageMaxLength = EthMessageMaxLength;
 };
@@ -52,7 +58,9 @@ struct LinBus {
     using Message = LinMessage;
     using MessageContainer = LinMessageContainer;
     using Controller = LinController;
+#ifdef _WIN32
     static constexpr const char* ShmNamePart = ".Lin.";
+#endif
     static constexpr const char* DisplayName = "LIN";
     static constexpr uint32_t MessageMaxLength = LinMessageMaxLength;
 };
@@ -61,7 +69,9 @@ struct FrBus {
     using Message = FrMessage;
     using MessageContainer = FrMessageContainer;
     using Controller = FrController;
+#ifdef _WIN32
     static constexpr const char* ShmNamePart = ".Fr.";
+#endif
     static constexpr const char* DisplayName = "FlexRay";
     static constexpr uint32_t MessageMaxLength = FrMessageMaxLength;
 };
@@ -612,7 +622,7 @@ public:
 
         [[nodiscard]] Result Initialize(CoSimType coSimType,
                                         [[maybe_unused]] ConnectionKind connectionKind,
-                                        const std::string& name,
+                                        [[maybe_unused]] const std::string& name,
                                         const std::vector<TController>& controllers,
                                         IProtocol& protocol) {
 #ifdef _WIN32

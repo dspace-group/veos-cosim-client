@@ -3,7 +3,7 @@
 #pragma once
 
 #include <array>
-#include <charconv>
+#include <cstdint>
 #include <functional>
 #include <string>
 

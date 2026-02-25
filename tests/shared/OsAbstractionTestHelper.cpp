@@ -7,15 +7,17 @@
 #include "Socket.hpp"
 
 #include <fmt/format.h>
-#include <winsock2.h>
 
 #ifdef _WIN32
+
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #include <Windows.h>
 #undef min
 #pragma comment(lib, "Ws2_32.lib")
+
 #else
+
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -27,14 +29,19 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+
 #endif
 
 #ifdef _WIN32
+
 using SocketLength = int32_t;
 #define CAST(expression) (expression)
+
 #else
+
 using SocketLength = socklen_t;
 #define CAST(expression) static_cast<int32_t>(expression)
+
 #endif
 
 using namespace DsVeosCoSim;
@@ -75,9 +82,9 @@ void Shutdown(const SocketHandle& socketHandle) {
 [[nodiscard]] Result CreatePipe(const std::string& name, PipeClient::pipe_t& pipe) {
     mkfifo(name.data(), 0666);
 
-    pipe = open(name.data(), O_RDWR | O_CLOEXEC);
+    pipe = open(name.data(), O_RDWR | O_CLOEXEC);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (pipe < 0) {
-        return Error("Could not open pipe.");
+        return CreateError("Could not open pipe.");
     }
 
     return CreateOk();
@@ -171,13 +178,15 @@ UdpSocket::~UdpSocket() noexcept {
 }
 
 #ifdef _WIN32
+
 constexpr uint32_t PipeBufferSize = 65536;
+
 #endif
 
 PipeClient::~PipeClient() noexcept {
 #ifndef _WIN32
-    close(_pipe1);
-    close(_pipe2);
+    close(_writePipe);
+    close(_readPipe);
 #endif
 }
 
@@ -213,15 +222,15 @@ PipeClient::~PipeClient() noexcept {
     client._pipe = std::move(pipe);
     return CreateOk();
 #else
-    Result<pipe_t> firstPipeResult = CreatePipe(GetFirstPipePath(name));
-    CheckResult(firstPipeResult);
+    pipe_t writePipe{};
+    CheckResult(CreatePipe(GetFirstPipePath(name), writePipe));
 
-    Result<pipe_t> secondPipeResult = CreatePipe(GetSecondPipePath(name));
-    CheckResult(secondPipeResult);
+    pipe_t readPipe{};
+    CheckResult(CreatePipe(GetSecondPipePath(name), readPipe));
 
     client = PipeClient();
-    client._writePipe = firstPipeResult.Get();
-    client._readPipe = secondPipeResult.Get();
+    client._writePipe = writePipe;
+    client._readPipe = readPipe;
     return CreateOk();
 #endif
 }
@@ -251,16 +260,16 @@ PipeClient::~PipeClient() noexcept {
     client._pipe = std::move(pipe);
     return CreateOk();
 #else
-    Result<pipe_t> firstPipeResult = CreatePipe(GetFirstPipePath(name));
-    CheckResult(firstPipeResult);
+    pipe_t readPipe{};
+    CheckResult(CreatePipe(GetFirstPipePath(name), readPipe));
 
-    Result<pipe_t> secondPipeResult = CreatePipe(GetSecondPipePath(name));
-    CheckResult(secondPipeResult);
+    pipe_t writePipe{};
+    CheckResult(CreatePipe(GetSecondPipePath(name), writePipe));
 
     client = PipeClient();
-    client._readPipe = firstPipeResult.Get();
-    client._writePipe = secondPipeResult.Get();
-    return client;
+    client._writePipe = writePipe;
+    client._readPipe = readPipe;
+    return CreateOk();
 #endif
 }
 
@@ -276,7 +285,7 @@ PipeClient::~PipeClient() noexcept {
 #else
     ssize_t length = write(_writePipe, source, size);
     if (length != static_cast<ssize_t>(size)) {
-        return Error();
+        return CreateError();
     }
 
     return CreateOk();
@@ -295,7 +304,7 @@ PipeClient::~PipeClient() noexcept {
 #else
     ssize_t length = read(_readPipe, destination, size);
     if (length != static_cast<ssize_t>(size)) {
-        return Error();
+        return CreateError();
     }
 
     return CreateOk();

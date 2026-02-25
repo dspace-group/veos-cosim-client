@@ -7,8 +7,13 @@
 #include <string>
 
 #include "Error.hpp"
-#include "OsUtilities.hpp"
 #include "Socket.hpp"
+
+#ifdef _WIN32
+
+#include "OsUtilities.hpp"
+
+#endif
 
 // #include "CoSimTypes.hpp"
 

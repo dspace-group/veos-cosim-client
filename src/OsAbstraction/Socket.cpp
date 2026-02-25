@@ -5,19 +5,27 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <filesystem>
-#include <optional>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 
 #include "Error.hpp"
 
 #ifdef _WIN32
+
+#include <filesystem>
+#include <optional>
+
 #include <WS2tcpip.h>
 #include <afunix.h>
 #include <winsock2.h>
 #undef min
+
 #else
+
+#include <cerrno>
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -34,7 +42,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include <cerrno>
 #endif
 
 namespace DsVeosCoSim {
@@ -161,7 +168,7 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
         return CreateError("Could not get socket flags.", GetLastNetworkError());
     }
 
-    int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags | O_NONBLOCK);
+    int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags | O_NONBLOCK);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (result < 0) {
         return CreateError("Could not switch to non-blocking mode.", GetLastNetworkError());
     }
@@ -183,7 +190,7 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
         return CreateError("Could not get socket flags.", GetLastNetworkError());
     }
 
-    int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags & ~O_NONBLOCK);
+    int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags & ~O_NONBLOCK);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (result < 0) {
         return CreateError("Could not switch to blocking mode.", GetLastNetworkError());
     }
@@ -292,7 +299,7 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     int32_t flags = 1;
     int32_t result = setsockopt(socketHandle.Get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        return Error("Could not enable IPv6 only.", GetLastNetworkError());
+        return CreateError("Could not enable IPv6 only.", GetLastNetworkError());
     }
 #endif
 

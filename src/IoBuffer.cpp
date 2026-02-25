@@ -593,7 +593,7 @@ public:
 
     [[nodiscard]] Result Initialize(CoSimType coSimType,
                                     [[maybe_unused]] ConnectionKind connectionKind,
-                                    const std::string& name,
+                                    [[maybe_unused]] const std::string& name,
                                     const std::vector<IoSignal>& incomingSignals,
                                     const std::vector<IoSignal>& outgoingSignals,
                                     IProtocol& protocol) {

@@ -7,6 +7,12 @@
 #include <string>
 #include <string_view>
 
+#ifndef _WIN32
+
+#include <system_error>
+
+#endif
+
 namespace DsVeosCoSim {
 
 enum class Severity : uint32_t {
@@ -62,11 +68,13 @@ public:
         if (auto logCallback = _logCallback; logCallback) {
             std::string fullMessage(message);
             fullMessage.append(" Error code: ").append(std::to_string(errorCode)).append(". ");
-#if _WIN32
+
+#ifdef _WIN32
             fullMessage.append(GetEnglishErrorMessage(errorCode));
 #else
             fullMessage.append(std::system_category().message(errorCode));
 #endif
+
             logCallback(Severity::Error, fullMessage);
         }
     }

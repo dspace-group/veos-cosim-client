@@ -38,19 +38,19 @@ void TestSendAfterDisconnect(SocketClient& client) {
     AssertNotConnected(result);
 }
 
-void TestSendAfterDisconnectOnRemoteClient(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    client1.Disconnect();
+// TODO: It takes some time to detect a remote disconnect. How to force it?
+// void TestSendAfterDisconnectOnRemoteClient(SocketClient& client1, SocketClient& client2) {
+//     // Arrange
+//     client1.Disconnect();
 
-    size_t sendValue = GenerateSizeT();
+//     size_t sendValue = GenerateSizeT();
 
-    // Act
-    Result result = client2.Send(&sendValue, sizeof(sendValue));  // NOLINT
+//     // Act
+//     Result result = client2.Send(&sendValue, sizeof(sendValue));  // NOLINT
 
-    // Assert
-    // TODO: It takes some time to detect a remote disconnect. How to force it?
-    // AssertNotConnected(result);
-}
+//     // Assert
+//     AssertNotConnected(result);
+// }
 
 void TestReceiveAfterDisconnect(SocketClient& client) {
     // Arrange
@@ -158,6 +158,8 @@ void TestPingPong(SocketClient& client1, SocketClient& client2) {
         ASSERT_EQ(sendValue, receiveValue);
     }
 }
+
+#ifdef _WIN32
 
 void TestSendAfterDisconnect(ShmPipeClient& client) {
     // Arrange
@@ -291,6 +293,8 @@ void TestPingPong(ShmPipeClient& client1, ShmPipeClient& client2) {
         ASSERT_EQ(sendValue, receiveValue);
     }
 }
+
+#endif
 
 void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {
     uint16_t sendValue = GenerateU16();

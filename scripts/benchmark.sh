@@ -10,7 +10,7 @@ config=$1
 
 echo Running benchmarks for $config ...
 
-filePath=$baseDir/tmplin/$config/benchmark/DsVeosCoSimBenchmark
+filePath=$baseDir/tmplin/$config/tests/benchmark/DsVeosCoSimBenchmark
 if [ -z "$filePath" ]; then
     echo Could not find file "$filePath".
     exit 1

@@ -2,11 +2,16 @@
 
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <string>
 
+#ifdef _WIN32
+
+#include <atomic>
+
 #include "Error.hpp"
+
+#endif
 
 namespace DsVeosCoSim {
 

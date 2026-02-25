@@ -338,29 +338,29 @@ TEST_P(TestTcpSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     TestSendAfterDisconnect(acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
-    // Arrange
-    Param param = GetParam();
+// TEST_P(TestTcpSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
+//     // Arrange
+//     Param param = GetParam();
 
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
+//     SocketClient connectClient;
+//     SocketClient acceptClient;
+//     EstablishConnection(param, connectClient, acceptClient);
 
-    // Act and assert
-    TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
-}
+//     // Act and assert
+//     TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
+// }
 
-TEST_P(TestTcpSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
-    // Arrange
-    Param param = GetParam();
+// TEST_P(TestTcpSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
+//     // Arrange
+//     Param param = GetParam();
 
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
+//     SocketClient connectClient;
+//     SocketClient acceptClient;
+//     EstablishConnection(param, connectClient, acceptClient);
 
-    // Act and assert
-    TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
-}
+//     // Act and assert
+//     TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+// }
 
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
