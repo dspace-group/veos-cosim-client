@@ -5,11 +5,11 @@
 #include <thread>
 
 #include "Channel.hpp"
-#include "Error.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PerformanceTestHelper.hpp"
 #include "PerformanceTestServer.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

@@ -24,5 +24,9 @@ if (-not (Test-Path $filePath)) {
 }
 
 & "$filePath"
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "Running tests for $config failed."
+  exit 1
+}
 
 Write-Host "Running tests for $config finished successfully." -ForegroundColor Blue

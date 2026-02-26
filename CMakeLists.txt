@@ -51,9 +51,25 @@ if(BUILD_SHARED_LIBS)
   set(DSVEOSCOSIM_TYPE SHARED)
 endif()
 
+find_package(fmt QUIET)
+
+if(NOT fmt_FOUND)
+  message(STATUS "fmt not found, using bundled version")
+  add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
+endif()
+
 add_subdirectory(src)
 
 if(DSVEOSCOSIM_BUILD_TESTS)
+  set(INSTALL_GTEST OFF)
+  set(gtest_force_shared_crt ON)
+  add_subdirectory(third_party/googletest EXCLUDE_FROM_ALL)
+
+  set(BENCHMARK_ENABLE_INSTALL OFF)
+  set(BENCHMARK_INSTALL_DOCS OFF)
+  set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+  set(BENCHMARK_USE_BUNDLED_GTEST OFF)
+  add_subdirectory(third_party/benchmark EXCLUDE_FROM_ALL)
+
   add_subdirectory(tests)
-  add_subdirectory(third_party)
 endif()

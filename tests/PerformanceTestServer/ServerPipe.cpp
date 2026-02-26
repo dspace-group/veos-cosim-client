@@ -5,10 +5,10 @@
 #include <array>
 #include <thread>
 
-#include "Error.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsAbstractionTestHelper.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

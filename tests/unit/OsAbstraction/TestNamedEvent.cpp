@@ -2,10 +2,10 @@
 
 #ifdef _WIN32
 
-#include <gtest/gtest.h>
-
 #include <string>
 #include <thread>
+
+#include <gtest/gtest.h>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"

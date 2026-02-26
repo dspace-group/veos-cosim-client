@@ -1,10 +1,10 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <benchmark/benchmark.h>
-
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <benchmark/benchmark.h>
 
 #include "Channel.hpp"
 #include "Helper.hpp"

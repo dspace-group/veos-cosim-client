@@ -8,107 +8,110 @@
 #include <vector>
 
 #include "CoSimTypes.hpp"
-#include "Format.hpp"
 #include "Logger.hpp"
 
 namespace DsVeosCoSim {
 
 namespace {
 
-void LogProtocolBeginTrace(std::string_view message) {
-    Logger::Instance().LogTrace(Format("PROT BEGIN {}", message));
-}
-
-void LogProtocolEndTrace(std::string_view message) {
-    Logger::Instance().LogTrace(Format("PROT END   {}", message));
-}
+constexpr std::string_view ProtocolBegin = "PROT BEGIN";
+constexpr std::string_view ProtocolEnd = "PROT END  ";
+constexpr std::string_view ProtocolData = "PROT DATA ";
 
 }  // namespace
 
 void LogProtocolDataTrace(std::string_view message) {
-    Logger::Instance().LogTrace(Format("PROT DATA  {}", message));
+    LogTrace("{} {}", ProtocolData, message);
 }
 
 void LogProtocolBeginTraceReceiveHeader() {
-    LogProtocolBeginTrace("ReceiveHeader()");
+    LogTrace("{} ReceiveHeader()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReceiveHeader(FrameKind frameKind) {
-    LogProtocolEndTrace(Format("ReceiveHeader(FrameKind: {})", frameKind));
+    LogTrace("{} ReceiveHeader(FrameKind: {})", ProtocolEnd, frameKind);
 }
 
 void LogProtocolBeginTraceSendOk() {
-    LogProtocolBeginTrace("SendOk()");
+    LogTrace("{} SendOk()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceSendOk() {
-    LogProtocolEndTrace("SendOk()");
+    LogTrace("{} SendOk()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceSendError(std::string_view errorMessage) {
-    LogProtocolBeginTrace(Format(R"(SendError(ErrorMessage: "{}"))", errorMessage));
+    LogTrace(R"({} SendError(ErrorMessage: "{}"))", ProtocolBegin, errorMessage);
 }
 
 void LogProtocolEndTraceSendError() {
-    LogProtocolEndTrace("SendError()");
+    LogTrace("{} SendError()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadError() {
-    LogProtocolBeginTrace("ReadError()");
+    LogTrace("{} ReadError()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadError(std::string_view errorMessage) {
-    LogProtocolEndTrace(Format(R"(ReadError(ErrorMessage: "{}"))", errorMessage));
+    LogTrace(R"({} ReadError(ErrorMessage: "{}"))", ProtocolEnd, errorMessage);
 }
 
 void LogProtocolBeginTraceSendPing(SimulationTime roundTripTime) {
-    LogProtocolBeginTrace(Format("SendPing(RoundTripTime: {})", roundTripTime));
+    LogTrace("{} SendPing(RoundTripTime: {})", ProtocolBegin, roundTripTime);
 }
 
 void LogProtocolEndTraceSendPing() {
-    LogProtocolEndTrace("SendPing()");
+    LogTrace("{} SendPing()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadPing() {
-    LogProtocolBeginTrace("ReadPing()");
+    LogTrace("{} ReadPing()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadPing(SimulationTime roundTripTime) {
-    LogProtocolEndTrace(Format("ReadPing(RoundTripTime: {})", roundTripTime));
+    LogTrace("{} ReadPing(RoundTripTime: {})", ProtocolEnd, roundTripTime);
 }
 
 void LogProtocolBeginTraceSendPingOk(Command command) {
-    LogProtocolBeginTrace(Format("SendPingOk(Command: {})", command));
+    LogTrace("{} SendPingOk(Command: {})", ProtocolBegin, command);
 }
 
 void LogProtocolEndTraceSendPingOk() {
-    LogProtocolEndTrace("SendPingOk()");
+    LogTrace("{} SendPingOk()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadPingOk() {
-    LogProtocolBeginTrace("ReadPingOk()");
+    LogTrace("{} ReadPingOk()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadPingOk(Command command) {
-    LogProtocolEndTrace(Format("ReadPingOk(Command: {})", command));
+    LogTrace("{} ReadPingOk(Command: {})", ProtocolEnd, command);
 }
 
 void LogProtocolBeginTraceSendConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
-    LogProtocolBeginTrace(
-        Format(R"(SendConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))", protocolVersion, clientMode, serverName, clientName));
+    LogTrace(R"({} SendConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
+             ProtocolBegin,
+             protocolVersion,
+             clientMode,
+             serverName,
+             clientName);
 }
 
 void LogProtocolEndTraceSendConnect() {
-    LogProtocolEndTrace("SendConnect()");
+    LogTrace("{} SendConnect()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadConnect() {
-    LogProtocolBeginTrace("ReadConnect()");
+    LogTrace("{} ReadConnect()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadConnect(uint32_t protocolVersion, Mode clientMode, const std::string& serverName, const std::string& clientName) {
-    LogProtocolEndTrace(
-        Format(R"(ReadConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))", protocolVersion, clientMode, serverName, clientName));
+    LogTrace(R"({} ReadConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
+             ProtocolEnd,
+             protocolVersion,
+             clientMode,
+             serverName,
+             clientName);
 }
 
 void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
@@ -121,31 +124,32 @@ void LogProtocolBeginTraceSendConnectOk(uint32_t protocolVersion,
                                         const std::vector<EthControllerContainer>& ethControllers,
                                         const std::vector<LinControllerContainer>& linControllers,
                                         const std::vector<FrControllerContainer>& frControllers) {
-    LogProtocolBeginTrace(
-        Format("SendConnectOk(ProtocolVersion: {}, ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, "
-               "CanControllers: {}, EthControllers: {}, LinControllers: {}, FrControllers: {})",
-               protocolVersion,
-               clientMode,
-               stepSize,
-               simulationState,
-               incomingSignals,
-               outgoingSignals,
-               canControllers,
-               ethControllers,
-               linControllers,
-               frControllers));
+    LogTrace(
+        "{} SendConnectOk(ProtocolVersion: {}, ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: "
+        "{}, EthControllers: {}, LinControllers: {}, FrControllers: {})",
+        ProtocolBegin,
+        protocolVersion,
+        clientMode,
+        stepSize,
+        simulationState,
+        incomingSignals,
+        outgoingSignals,
+        canControllers,
+        ethControllers,
+        linControllers,
+        frControllers);
 }
 
 void LogProtocolEndTraceSendConnectOk() {
-    LogProtocolEndTrace("SendConnectOk()");
+    LogTrace("{} SendConnectOk()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadConnectOk() {
-    LogProtocolBeginTrace("ReadConnectOk()");
+    LogTrace("{} ReadConnectOk()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadConnectOkVersion(uint32_t protocolVersion) {
-    LogProtocolEndTrace(Format("ReadConnectOk(ProtocolVersion: {})", protocolVersion));
+    LogTrace("{} ReadConnectOk(ProtocolVersion: {})", ProtocolEnd, protocolVersion);
 }
 
 void LogProtocolEndTraceReadConnectOk(Mode clientMode,
@@ -157,198 +161,199 @@ void LogProtocolEndTraceReadConnectOk(Mode clientMode,
                                       const std::vector<EthControllerContainer>& ethControllers,
                                       const std::vector<LinControllerContainer>& linControllers,
                                       const std::vector<FrControllerContainer>& frControllers) {
-    LogProtocolEndTrace(
-        Format("ReadConnectOk(ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: {}, "
-               "EthControllers: {}, LinControllers: {}, FrControllers: {})",
-               clientMode,
-               stepSize,
-               simulationState,
-               incomingSignals,
-               outgoingSignals,
-               canControllers,
-               ethControllers,
-               linControllers,
-               frControllers));
+    LogTrace(
+        "{} ReadConnectOk(ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: {}, EthControllers: "
+        "{}, LinControllers: {}, FrControllers: {})",
+        ProtocolEnd,
+        clientMode,
+        stepSize,
+        simulationState,
+        incomingSignals,
+        outgoingSignals,
+        canControllers,
+        ethControllers,
+        linControllers,
+        frControllers);
 }
 
 void LogProtocolBeginTraceSendStart(SimulationTime simulationTime) {
-    LogProtocolBeginTrace(Format("SendStart(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} SendStart(SimulationTime: {} s)", ProtocolBegin, simulationTime);
 }
 
 void LogProtocolEndTraceSendStart() {
-    LogProtocolEndTrace("SendStart()");
+    LogTrace("{} SendStart()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadStart() {
-    LogProtocolBeginTrace("ReadStart()");
+    LogTrace("{} ReadStart()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadStart(SimulationTime simulationTime) {
-    LogProtocolEndTrace(Format("ReadStart(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} ReadStart(SimulationTime: {} s)", ProtocolEnd, simulationTime);
 }
 
 void LogProtocolBeginTraceSendStop(SimulationTime simulationTime) {
-    LogProtocolBeginTrace(Format("SendStop(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} SendStop(SimulationTime: {} s)", ProtocolBegin, simulationTime);
 }
 
 void LogProtocolEndTraceSendStop() {
-    LogProtocolEndTrace("SendStop()");
+    LogTrace("{} SendStop()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadStop() {
-    LogProtocolBeginTrace("ReadStop()");
+    LogTrace("{} ReadStop()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadStop(SimulationTime simulationTime) {
-    LogProtocolEndTrace(Format("ReadStop(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} ReadStop(SimulationTime: {} s)", ProtocolEnd, simulationTime);
 }
 
 void LogProtocolBeginTraceSendTerminate(SimulationTime simulationTime, TerminateReason reason) {
-    LogProtocolBeginTrace(Format("SendTerminate(SimulationTime: {} s, Reason: {})", simulationTime, reason));
+    LogTrace("{} SendTerminate(SimulationTime: {} s, Reason: {})", ProtocolBegin, simulationTime, reason);
 }
 
 void LogProtocolEndTraceSendTerminate() {
-    LogProtocolEndTrace("SendTerminate()");
+    LogTrace("{} SendTerminate()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadTerminate() {
-    LogProtocolBeginTrace("ReadTerminate()");
+    LogTrace("{} ReadTerminate()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadTerminate(SimulationTime simulationTime, TerminateReason reason) {
-    LogProtocolEndTrace(Format("ReadTerminate(SimulationTime: {} s, Reason: {})", simulationTime, reason));
+    LogTrace("{} ReadTerminate(SimulationTime: {} s, Reason: {})", ProtocolEnd, simulationTime, reason);
 }
 
 void LogProtocolBeginTraceSendPause(SimulationTime simulationTime) {
-    LogProtocolBeginTrace(Format("SendPause(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} SendPause(SimulationTime: {} s)", ProtocolBegin, simulationTime);
 }
 
 void LogProtocolEndTraceSendPause() {
-    LogProtocolEndTrace("SendPause()");
+    LogTrace("{} SendPause()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadPause() {
-    LogProtocolBeginTrace("ReadPause()");
+    LogTrace("{} ReadPause()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadPause(SimulationTime simulationTime) {
-    LogProtocolEndTrace(Format("ReadPause(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} ReadPause(SimulationTime: {} s)", ProtocolEnd, simulationTime);
 }
 
 void LogProtocolBeginTraceSendContinue(SimulationTime simulationTime) {
-    LogProtocolBeginTrace(Format("SendContinue(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} SendContinue(SimulationTime: {} s)", ProtocolBegin, simulationTime);
 }
 
 void LogProtocolEndTraceSendContinue() {
-    LogProtocolEndTrace("SendContinue()");
+    LogTrace("{} SendContinue()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadContinue() {
-    LogProtocolBeginTrace("ReadContinue()");
+    LogTrace("{} ReadContinue()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadContinue(SimulationTime simulationTime) {
-    LogProtocolEndTrace(Format("ReadContinue(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} ReadContinue(SimulationTime: {} s)", ProtocolEnd, simulationTime);
 }
 
 void LogProtocolBeginTraceSendStep(SimulationTime simulationTime) {
-    LogProtocolBeginTrace(Format("SendStep(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} SendStep(SimulationTime: {} s)", ProtocolBegin, simulationTime);
 }
 
 void LogProtocolEndTraceSendStep() {
-    LogProtocolEndTrace("SendStep()");
+    LogTrace("{} SendStep()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadStep() {
-    LogProtocolBeginTrace("ReadStep()");
+    LogTrace("{} ReadStep()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadStep(SimulationTime simulationTime) {
-    LogProtocolEndTrace(Format("ReadStep(SimulationTime: {} s)", simulationTime));
+    LogTrace("{} ReadStep(SimulationTime: {} s)", ProtocolEnd, simulationTime);
 }
 
 void LogProtocolBeginTraceSendStepOk(SimulationTime simulationTime, Command command) {
-    LogProtocolBeginTrace(Format("SendStepOk(NextSimulationTime: {} s, Command: {})", simulationTime, command));
+    LogTrace("{} SendStepOk(NextSimulationTime: {} s, Command: {})", ProtocolBegin, simulationTime, command);
 }
 
 void LogProtocolEndTraceSendStepOk() {
-    LogProtocolEndTrace("SendStepOk()");
+    LogTrace("{} SendStepOk()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadStepOk() {
-    LogProtocolBeginTrace("ReadStepOk()");
+    LogTrace("{} ReadStepOk()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadStepOk(SimulationTime simulationTime, Command command) {
-    LogProtocolEndTrace(Format("ReadStepOk(NextSimulationTime: {} s, Command: {})", simulationTime, command));
+    LogTrace("{} ReadStepOk(NextSimulationTime: {} s, Command: {})", ProtocolEnd, simulationTime, command);
 }
 
 void LogProtocolBeginTraceSendSetPort(const std::string& serverName, uint16_t port) {
-    LogProtocolBeginTrace(Format(R"(SendSetPort(ServerName: "{}", Port: {}))", serverName, port));
+    LogTrace(R"({} SendSetPort(ServerName: "{}", Port: {}))", ProtocolBegin, serverName, port);
 }
 
 void LogProtocolEndTraceSendSetPort() {
-    LogProtocolEndTrace("SendSetPort()");
+    LogTrace("{} SendSetPort()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadSetPort() {
-    LogProtocolBeginTrace("ReadSetPort()");
+    LogTrace("{} ReadSetPort()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadSetPort(const std::string& serverName, uint16_t port) {
-    LogProtocolEndTrace(Format(R"(ReadSetPort(ServerName: "{}", Port: {}))", serverName, port));
+    LogTrace(R"({} ReadSetPort(ServerName: "{}", Port: {}))", ProtocolEnd, serverName, port);
 }
 
 void LogProtocolBeginTraceSendUnsetPort(const std::string& serverName) {
-    LogProtocolBeginTrace(Format(R"(SendUnsetPort(ServerName: "{}"))", serverName));
+    LogTrace(R"({} SendUnsetPort(ServerName: "{}"))", ProtocolBegin, serverName);
 }
 
 void LogProtocolEndTraceSendUnsetPort() {
-    LogProtocolEndTrace("SendUnsetPort()");
+    LogTrace("{} SendUnsetPort()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadUnsetPort() {
-    LogProtocolBeginTrace("ReadUnsetPort()");
+    LogTrace("{} ReadUnsetPort()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadUnsetPort(const std::string& serverName) {
-    LogProtocolEndTrace(Format(R"(ReadUnsetPort(ServerName: "{}"))", serverName));
+    LogTrace(R"({} ReadUnsetPort(ServerName: "{}"))", ProtocolEnd, serverName);
 }
 
 void LogProtocolBeginTraceSendGetPort(const std::string& serverName) {
-    LogProtocolBeginTrace(Format(R"(SendGetPort(ServerName: "{}"))", serverName));
+    LogTrace(R"({} SendGetPort(ServerName: "{}"))", ProtocolBegin, serverName);
 }
 
 void LogProtocolEndTraceSendGetPort() {
-    LogProtocolEndTrace("SendGetPort()");
+    LogTrace("{} SendGetPort()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadGetPort() {
-    LogProtocolBeginTrace("ReadGetPort()");
+    LogTrace("{} ReadGetPort()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadGetPort(const std::string& serverName) {
-    LogProtocolEndTrace(Format(R"(ReadGetPort(ServerName: "{}"))", serverName));
+    LogTrace(R"({} ReadGetPort(ServerName: "{}"))", ProtocolEnd, serverName);
 }
 
 void LogProtocolBeginTraceSendGetPortOk(uint16_t port) {
-    LogProtocolBeginTrace(Format("SendGetPortOk(Port: {}", port));
+    LogTrace("{} SendGetPortOk(Port: {}", ProtocolBegin, port);
 }
 
 void LogProtocolEndTraceSendGetPortOk() {
-    LogProtocolEndTrace("SendGetPortOk()");
+    LogTrace("{} SendGetPortOk()", ProtocolEnd);
 }
 
 void LogProtocolBeginTraceReadGetPortOk() {
-    LogProtocolBeginTrace("ReadGetPortOk()");
+    LogTrace("{} ReadGetPortOk()", ProtocolBegin);
 }
 
 void LogProtocolEndTraceReadGetPortOk(uint16_t port) {
-    LogProtocolEndTrace(Format("ReadGetPortOk(Port: {})", port));
+    LogTrace("{} ReadGetPortOk(Port: {})", ProtocolEnd, port);
 }
 
 void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data) {
-    LogProtocolDataTrace(Format("Signal { Id: {}, Length: {}, Data: {} }", signalId, length, ValueToString(dataType, length, data)));
+    LogTrace("{} Signal {{ Id: {}, Length: {}, Data: {} }}", ProtocolData, signalId, length, ValueToString(dataType, length, data));
 }
 
 }  // namespace DsVeosCoSim

@@ -11,10 +11,11 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
-#include "Format.hpp"
 #include "Protocol.hpp"
 #include "ProtocolLogger.hpp"
 #include "RingBuffer.hpp"
@@ -115,7 +116,8 @@ public:
             for (const auto& controller : controllers) {
                 auto search = _controllers.find(controller.id);
                 if (search != _controllers.end()) {
-                    return CreateError(Format("Duplicated controller id {}.", controller.id));
+                    LogError("Duplicated controller id {}.", controller.id);
+                    return CreateError();
                 }
 
                 ControllerExtension extension{};
@@ -141,7 +143,8 @@ public:
                 return CreateOk();
             }
 
-            return CreateError(Format("Controller id {} is unknown.", controllerId));
+            LogError("Controller id {} is unknown.", controllerId);
+            return CreateError();
         }
 
         [[nodiscard]] std::unordered_map<BusControllerId, ControllerExtension>& GetAllControllers() {
@@ -279,7 +282,8 @@ public:
             TMessageContainer messageContainer{};
             message.WriteTo(messageContainer);
             if (!_messageBuffer.TryPushBack(std::move(messageContainer))) {
-                return CreateError("Message buffer is full.");
+                LogError("Message buffer is full.");
+                return CreateError();
             }
 
             ++_messageCountPerController[extensionPtr->controllerIndex];
@@ -292,7 +296,8 @@ public:
             CheckResult(CheckForSpace(*extensionPtr));
 
             if (!_messageBuffer.TryPushBack(messageContainer)) {
-                return CreateError("Message buffer is full.");
+                LogError("Message buffer is full.");
+                return CreateError();
             }
 
             ++_messageCountPerController[extensionPtr->controllerIndex];
@@ -386,7 +391,7 @@ public:
 
                 if (_messageCountPerController[extensionPtr->controllerIndex] == extensionPtr->info.queueSize) {
                     if (!extensionPtr->receiveWarningSent) {
-                        Logger::Instance().LogWarning(Format("Receive buffer for controller '{}' is full. Messages are dropped.", extensionPtr->info.name));
+                        LogWarning("Receive buffer for controller '{}' is full. Messages are dropped.", extensionPtr->info.name);
                         extensionPtr->receiveWarningSent = true;
                     }
 
@@ -395,7 +400,8 @@ public:
 
                 ++_messageCountPerController[extensionPtr->controllerIndex];
                 if (!_messageBuffer.TryPushBack(std::move(messageContainer))) {
-                    return CreateError("Message buffer is full.");
+                    LogError("Message buffer is full.");
+                    return CreateError();
                 }
             }
 
@@ -406,7 +412,7 @@ public:
         [[nodiscard]] Result CheckForSpace(ControllerExtension& extension) {
             if (_messageCountPerController[extension.controllerIndex] == extension.info.queueSize) {
                 if (!extension.transmitWarningSent) {
-                    Logger::Instance().LogWarning(Format("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name));
+                    LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name);
                     extension.transmitWarningSent = true;
                 }
 
@@ -588,7 +594,7 @@ public:
         [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ControllerExtension& extension) {
             if (messageCount.load(std::memory_order_acquire) == extension.info.queueSize) {
                 if (!extension.transmitWarningSent) {
-                    Logger::Instance().LogWarning(Format("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name));
+                    LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", extension.info.name);
                     extension.transmitWarningSent = true;
                 }
 
@@ -630,8 +636,8 @@ public:
                 const char* suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
                 const char* suffixForReceive = coSimType == CoSimType::Client ? "Receive" : "Transmit";
 
-                std::string transmitBufferName = name + TBus::ShmNamePart + suffixForTransmit;
-                std::string receiveBufferName = name + TBus::ShmNamePart + suffixForReceive;
+                std::string transmitBufferName = fmt::format("{}{}{}", name, TBus::ShmNamePart, suffixForTransmit);
+                std::string receiveBufferName = fmt::format("{}{}{}", name, TBus::ShmNamePart, suffixForReceive);
 
                 _transmitBuffer = std::make_unique<LocalPartImpl>(protocol, transmitBufferName);
                 _receiveBuffer = std::make_unique<LocalPartImpl>(protocol, receiveBufferName);
@@ -692,7 +698,8 @@ public:
     private:
         [[nodiscard]] static Result CheckMessageLength(uint32_t length) {
             if (length > TBus::MessageMaxLength) {
-                return CreateInvalidArgument(Format("{} message data exceeds maximum length.", TBus::DisplayName));
+                LogError("{} message data exceeds maximum length.", TBus::DisplayName);
+                return CreateInvalidArgument();
             }
 
             return CreateOk();

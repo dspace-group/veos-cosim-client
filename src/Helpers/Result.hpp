@@ -2,10 +2,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <string_view>
-
-#include "Logger.hpp"
+#include "Logger.hpp"  // IWYU pragma: keep
 
 namespace DsVeosCoSim {
 
@@ -71,16 +68,6 @@ constexpr Result CreateError() noexcept {
     return {ResultKind::Error};
 }
 
-inline Result CreateError(std::string_view message) {
-    Logger::Instance().LogError(message);
-    return {ResultKind::Error};
-}
-
-inline Result CreateError(std::string_view message, int32_t errorCode) {
-    Logger::Instance().LogError(message, errorCode);
-    return {ResultKind::Error};
-}
-
 constexpr Result CreateTimeout() noexcept {
     return {ResultKind::Timeout};
 }
@@ -89,13 +76,7 @@ constexpr Result CreateNotConnected() noexcept {
     return {ResultKind::NotConnected};
 }
 
-inline Result CreateNotConnected(std::string_view message) noexcept {
-    Logger::Instance().LogTrace(message);
-    return {ResultKind::NotConnected};
-}
-
-inline Result CreateInvalidArgument(std::string_view message) noexcept {
-    Logger::Instance().LogError(message);
+constexpr Result CreateInvalidArgument() noexcept {
     return {ResultKind::InvalidArgument};
 }
 
@@ -115,13 +96,13 @@ constexpr Result CreateFull() noexcept {
         }                       \
     } while (false)
 
-#define CheckResultWithMessage(expr, message)     \
-    do {                                          \
-        auto _result_ = (expr);                   \
-        if (!IsOk(_result_)) {                    \
-            Logger::Instance().LogTrace(message); \
-            return _result_;                      \
-        }                                         \
+#define CheckResultWithMessage(expr, message) \
+    do {                                      \
+        auto _result_ = (expr);               \
+        if (!IsOk(_result_)) {                \
+            LogTrace(message);                \
+            return _result_;                  \
+        }                                     \
     } while (false)
 
 }  // namespace DsVeosCoSim

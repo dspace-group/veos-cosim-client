@@ -1,9 +1,11 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <gtest/gtest.h>
-
 #include <string>
 #include <thread>
+
+#include <fmt/format.h>
+
+#include <gtest/gtest.h>
 
 #include "CoSimClient.hpp"
 #include "CoSimServer.hpp"
@@ -75,12 +77,7 @@ auto ConnectionKinds = testing::Values(ConnectionKind::Local, ConnectionKind::Re
     return connectConfig;
 }
 
-class TestCoSim : public testing::TestWithParam<ConnectionKind> {
-protected:
-    void SetUp() override {
-        ClearLastMessage();
-    }
-};
+class TestCoSim : public testing::TestWithParam<ConnectionKind> {};
 
 INSTANTIATE_TEST_SUITE_P(, TestCoSim, ConnectionKinds, [](const testing::TestParamInfo<ConnectionKind>& info) {
     return fmt::format("{}", info.param);

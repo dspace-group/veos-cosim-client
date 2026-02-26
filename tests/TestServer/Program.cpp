@@ -7,11 +7,11 @@
 #include <thread>
 #include <vector>
 
-#include <fmt/color.h>
-
 #include "CoSimServer.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
+#include "Result.hpp"
 
 #ifdef _WIN32
 
@@ -111,10 +111,6 @@ public:
                 if (!IsOk(_server->BackgroundService(roundTripTime))) {
                     LogError("Error in background task.");
                     return;
-                }
-
-                if (roundTripTime.nanoseconds > 0) {
-                    LogTrace("Round trip time: {} ns.", roundTripTime);
                 }
             }
         });
@@ -248,14 +244,14 @@ void SwitchSendingFrMessages() {
 }
 
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
-    static SimulationTime lastHalfSecond{-1};
+    static SimulationTime lastSecond{-1};
     static int64_t counter = 0;
-    SimulationTime currentHalfSecond{simulationTime.nanoseconds / 500000000};
-    if (currentHalfSecond.nanoseconds == lastHalfSecond.nanoseconds) {
+    SimulationTime currentSecond{simulationTime.nanoseconds / 500'000'000};
+    if (currentSecond.nanoseconds == lastSecond.nanoseconds) {
         return CreateOk();
     }
 
-    lastHalfSecond = currentHalfSecond;
+    lastSecond = currentSecond;
     counter++;
 
     if (SendIoData && ((counter % 5) == 0)) {
@@ -577,25 +573,25 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
 void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const CanController& controller,
                                    const CanMessageContainer& messageContainer) {
-    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer);
+    LogCanMessage(format_as(messageContainer));
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const EthController& controller,
                                    const EthMessageContainer& messageContainer) {
-    print(fg(fmt::color::cyan), "{}\n", messageContainer);
+    LogEthMessage(format_as(messageContainer));
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const LinController& controller,
                                    const LinMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer);
+    LogLinMessage(format_as(messageContainer));
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                   [[maybe_unused]] const FrController& controller,
                                   const FrMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer);
+    LogFrMessage(format_as(messageContainer));
 }
 
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {

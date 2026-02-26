@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "Channel.hpp"
-#include "Error.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 namespace DsVeosCoSim {

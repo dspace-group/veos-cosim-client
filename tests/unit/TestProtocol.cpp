@@ -3,7 +3,10 @@
 #include <memory>
 #include <string>
 
+#include <fmt/format.h>
+
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -305,16 +308,16 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
 
     // Act
     AssertOk(_protocol->SendConnectOk(_senderChannel->GetWriter(),
-                                       sendProtocolVersion,
-                                       sendMode,
-                                       sendStepSize,
-                                       sendSimulationState,
-                                       sendIncomingSignals,
-                                       sendOutgoingSignals,
-                                       sendCanControllers,
-                                       sendEthControllers,
-                                       sendLinControllers,
-                                       sendFrControllers));
+                                      sendProtocolVersion,
+                                      sendMode,
+                                      sendStepSize,
+                                      sendSimulationState,
+                                      sendIncomingSignals,
+                                      sendOutgoingSignals,
+                                      sendCanControllers,
+                                      sendEthControllers,
+                                      sendLinControllers,
+                                      sendFrControllers));
 
     // Assert
     AssertFrame(FrameKind::ConnectOk);
@@ -331,15 +334,15 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     std::vector<FrControllerContainer> receiveFrControllers;
     AssertOk(_protocol->ReadConnectOkVersion(_receiverChannel->GetReader(), receiveProtocolVersion));
     AssertOk(_protocol->ReadConnectOk(_receiverChannel->GetReader(),
-                                       receiveMode,
-                                       receiveStepSize,
-                                       receiveSimulationState,
-                                       receiveIncomingSignals,
-                                       receiveOutgoingSignals,
-                                       receiveCanControllers,
-                                       receiveEthControllers,
-                                       receiveLinControllers,
-                                       receiveFrControllers));
+                                      receiveMode,
+                                      receiveStepSize,
+                                      receiveSimulationState,
+                                      receiveIncomingSignals,
+                                      receiveOutgoingSignals,
+                                      receiveCanControllers,
+                                      receiveEthControllers,
+                                      receiveLinControllers,
+                                      receiveFrControllers));
     ASSERT_EQ(sendProtocolVersion, receiveProtocolVersion);
     ASSERT_EQ(sendMode, receiveMode);
     ASSERT_EQ(sendStepSize, receiveStepSize);

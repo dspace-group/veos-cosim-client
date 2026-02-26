@@ -10,12 +10,14 @@
 #include <string>
 #include <utility>
 
-#include "Error.hpp"
+#include <fmt/format.h>
+
+#include "Logger.hpp"
+#include "Result.hpp"
 
 #ifdef _WIN32
 
 #include <filesystem>
-#include <optional>
 
 #include <WS2tcpip.h>
 #include <afunix.h>
@@ -53,14 +55,12 @@ namespace {
 using SocketLength = int32_t;
 constexpr int32_t ErrorCodeInterrupted = WSAEINTR;
 constexpr int32_t ErrorCodeWouldBlock = WSAEWOULDBLOCK;
-constexpr int32_t ErrorCodeConnectionAborted = WSAECONNABORTED;
-constexpr int32_t ErrorCodeConnectionReset = WSAECONNRESET;
 
-inline int DoPoll(pollfd* fds, unsigned long nfds, int timeout) {
+inline int32_t DoPoll(pollfd* fds, uint32_t nfds, int32_t timeout) {
     return WSAPoll(fds, nfds, timeout);
 }
 
-inline int DoUnlink(const char* path) {
+inline int32_t DoUnlink(const char* path) {
     return _unlink(path);
 }
 
@@ -69,15 +69,12 @@ inline int DoUnlink(const char* path) {
 using SocketLength = socklen_t;
 constexpr int32_t ErrorCodeInterrupted = EINTR;
 constexpr int32_t ErrorCodeInProgress = EINPROGRESS;
-constexpr int32_t ErrorCodeBrokenPipe = EPIPE;
-constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
-constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
-inline int DoPoll(pollfd* fds, nfds_t nfds, int timeout) {
+inline int32_t DoPoll(pollfd* fds, nfds_t nfds, int32_t timeout) {
     return poll(fds, nfds, timeout);
 }
 
-inline int DoUnlink(const char* path) {
+inline int32_t DoUnlink(const char* path) {
     return unlink(path);
 }
 
@@ -92,7 +89,7 @@ struct AddressInfoDeleter {
 using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
 [[nodiscard]] std::string GetLocalPath(const std::string& name) {
-    std::string fileName = "dSPACE.VEOS.CoSim." + name;
+    std::string fileName = fmt::format("dSPACE.VEOS.CoSim.{}", name);
 #ifdef _WIN32
     std::filesystem::path fileDir = std::filesystem::temp_directory_path() / fileName;
     return fileDir.string();
@@ -122,7 +119,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     addrinfo* rawAddressInfo = nullptr;
     int32_t errorCode = getaddrinfo(ipAddress.c_str(), portString, &hints, &rawAddressInfo);
     if (errorCode != 0) {
-        return CreateError("Could not get address information.", errorCode);
+        LogError(errorCode, "Could not get address information.");
+        return CreateError();
     }
 
     addressInfo = UniqueAddressInfo(rawAddressInfo);
@@ -135,10 +133,11 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     std::array<char, INET_ADDRSTRLEN> ipAddress{};
     const char* ipAddressString = inet_ntop(AF_INET, &ipv4Address.sin_addr, ipAddress.data(), INET_ADDRSTRLEN);
     if (!ipAddressString) {
-        return CreateError("Could not get address information.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get address information.");
+        return CreateError();
     }
 
-    socketAddress = std::string(ipAddressString) + ':' + std::to_string(port);
+    socketAddress = fmt::format("{}:{}", ipAddressString, port);
     return CreateOk();
 }
 
@@ -148,10 +147,11 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     std::array<char, INET6_ADDRSTRLEN> ipAddress{};
     const char* ipAddressString = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
     if (!ipAddressString) {
-        return CreateError("Could not get address information.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get address information.");
+        return CreateError();
     }
 
-    socketAddress = std::string(ipAddressString) + ':' + std::to_string(port);
+    socketAddress = fmt::format("{}:{}", ipAddressString, port);
     return CreateOk();
 }
 
@@ -160,17 +160,20 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     u_long mode = 1;
     int32_t result = ioctlsocket(socketHandle.Get(), FIONBIO, &mode);
     if (result != 0) {
-        return CreateError("Could not switch to non-blocking mode.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not switch to non-blocking mode.");
+        return CreateError();
     }
 #else
     int32_t flags = fcntl(socketHandle.Get(), F_GETFL, 0);
     if (flags < 0) {
-        return CreateError("Could not get socket flags.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get socket flags.");
+        return CreateError();
     }
 
     int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags | O_NONBLOCK);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (result < 0) {
-        return CreateError("Could not switch to non-blocking mode.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not switch to non-blocking mode.");
+        return CreateError();
     }
 #endif
 
@@ -182,17 +185,20 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     u_long mode = 0;
     int32_t result = ioctlsocket(socketHandle.Get(), FIONBIO, &mode);
     if (result != 0) {
-        return CreateError("Could not switch to blocking mode.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not switch to blocking mode.");
+        return CreateError();
     }
 #else
     int32_t flags = fcntl(socketHandle.Get(), F_GETFL, 0);
     if (flags < 0) {
-        return CreateError("Could not get socket flags.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get socket flags.");
+        return CreateError();
     }
 
     int32_t result = fcntl(socketHandle.Get(), F_SETFL, flags & ~O_NONBLOCK);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (result < 0) {
-        return CreateError("Could not switch to blocking mode.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not switch to blocking mode.");
+        return CreateError();
     }
 #endif
 
@@ -209,11 +215,13 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
             return CreateNotConnected();
         }
 
-        return CreateError("Could not get socket option SO_ERROR.", errorCode);
+        LogError(errorCode, "Could not get socket option SO_ERROR.");
+        return CreateError();
     }
 
     if (error != 0) {
-        return CreateError("Socket error after connect.", error);
+        LogError(error, "Socket error after connect.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -237,7 +245,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     constexpr int32_t allowedErrorCode = ErrorCodeInProgress;
 #endif
     if (errorCode != allowedErrorCode) {
-        return CreateError("Could not connect to socket.", errorCode);
+        LogError(errorCode, "Could not connect to socket.");
+        return CreateError();
     }
 
     pollfd pfd{};
@@ -254,7 +263,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     }
 
     if (pollResult < 0) {
-        return CreateError("Select failed.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Select failed.");
+        return CreateError();
     }
 
     CheckResult(SwitchToBlockingMode(socketHandle));
@@ -274,7 +284,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
             return CreateOk();
     }
 
-    return CreateError("Invalid address family.");
+    LogError("Invalid address family.");
+    return CreateError();
 }
 
 [[nodiscard]] Result ConvertAddressFamily(int32_t addressFamily, AddressFamily& convertedAddressFamily) {
@@ -290,7 +301,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
             return CreateOk();
     }
 
-    return CreateError("Invalid address family.");
+    LogError("Invalid address family.");
+    return CreateError();
 }
 
 [[nodiscard]] Result EnableIpv6Only([[maybe_unused]] const SocketHandle& socketHandle) {
@@ -299,7 +311,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     int32_t flags = 1;
     int32_t result = setsockopt(socketHandle.Get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        return CreateError("Could not enable IPv6 only.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not enable IPv6 only.");
+        return CreateError();
     }
 #endif
 
@@ -310,7 +323,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     int32_t flags = 1;
     int32_t result = setsockopt(socketHandle.Get(), SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        return CreateError("Could not enable socket option reuse address.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not enable socket option reuse address.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -320,11 +334,17 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
-    address.sin_addr.s_addr = enableRemoteAccess ? INADDR_ANY : htonl(INADDR_LOOPBACK);
+
+    if (enableRemoteAccess) {
+        address.sin_addr.s_addr = INADDR_ANY;
+    } else {
+        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    }
 
     int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
     if (result != 0) {
-        return CreateError("Could not bind socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not bind socket.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -339,9 +359,17 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     // symbol
     address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;
 
+    if (enableRemoteAccess) {
+        // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same symbol
+        address.sin6_addr = in6_addr{};
+    } else {
+        address.sin6_addr = in6addr_loopback;
+    }
+
     int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
     if (result != 0) {
-        return CreateError("Could not bind socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not bind socket.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -367,7 +395,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), sizeof address);
     if (result != 0) {
-        return CreateError("Could not bind socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not bind socket.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -376,7 +405,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 [[nodiscard]] Result Listen(const SocketHandle& socketHandle) {
     int32_t result = listen(socketHandle.Get(), SOMAXCONN);
     if (result != 0) {
-        return CreateError("Could not listen on socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not listen on socket.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -389,7 +419,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t result = getsockname(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        return CreateError("Could not get local socket address.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get local socket address.");
+        return CreateError();
     }
 
     localPort = ntohs(address.sin_port);
@@ -403,7 +434,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t result = getsockname(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        return CreateError("Could not get local socket address.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get local socket address.");
+        return CreateError();
     }
 
     localPort = ntohs(address.sin6_port);
@@ -417,7 +449,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t result = getpeername(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        return CreateError("Could not get remote socket address.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get remote socket address.");
+        return CreateError();
     }
 
     return ConvertFromInternetAddress(address, remoteAddress);
@@ -430,7 +463,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t result = getpeername(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), &addressLength);
     if (result != 0) {
-        return CreateError("Could not get remote socket address.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not get remote socket address.");
+        return CreateError();
     }
 
     return ConvertFromInternetAddress(address, remoteAddress);
@@ -440,7 +474,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     int32_t flags = 1;
     int32_t result = setsockopt(socketHandle.Get(), IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
-        return CreateError("Could not enable TCP option no delay.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not enable TCP option no delay.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -453,7 +488,8 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
     int32_t pollResult = DoPoll(&fdArray, 1, 0);
     if (pollResult < 0) {
-        return CreateError("Could not poll on socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not poll on socket.");
+        return CreateError();
     }
 
     if (pollResult == 0) {
@@ -497,20 +533,21 @@ void Shutdown(const SocketHandle& socketHandle) {
 [[nodiscard]] Result StartupNetwork() {
 #ifdef _WIN32
     static std::once_flag initFlag;
-    static std::optional<Result> initError;
+    static bool isInitialized = false;
 
-    // call_once guarantees that initError is written once even in multi-threaded environments
     std::call_once(initFlag, []() {
         WSADATA wsaData;
 
         int32_t errorCode = WSAStartup(MAKEWORD(2, 2), &wsaData);
         if (errorCode != 0) {
-            initError = CreateError("Could not initialize Windows sockets.", errorCode);
+            LogError(errorCode, "Could not initialize Windows sockets.");
+        } else {
+            isInitialized = true;
         }
     });
 
-    if (initError) {
-        return *initError;
+    if (!isInitialized) {
+        return CreateError();
     }
 #endif
 
@@ -592,7 +629,13 @@ SocketClient::~SocketClient() noexcept {
                                               uint32_t timeoutInMilliseconds,
                                               SocketClient& client) {
     if (remotePort == 0) {
-        return CreateError("Remote port 0 is not valid.");
+        LogError("Remote port 0 is not valid.");
+        return CreateError();
+    }
+
+    if (client._isConnected || client._socketHandle.IsValid()) {
+        LogError("Client is already in use.");
+        return CreateError();
     }
 
     UniqueAddressInfo addressInfo{};
@@ -612,7 +655,10 @@ SocketClient::~SocketClient() noexcept {
         AddressFamily convertedAddressFamily{};
         CheckResult(ConvertAddressFamily(currentAddressInfo->ai_family, convertedAddressFamily));
 
-        client = SocketClient(std::move(socketHandle), convertedAddressFamily, "");
+        client._addressFamily = convertedAddressFamily;
+        client._socketHandle = std::move(socketHandle);
+        client._path = "";
+        client._isConnected = true;
         return CreateOk();
     }
 
@@ -621,12 +667,19 @@ SocketClient::~SocketClient() noexcept {
 
 [[nodiscard]] Result SocketClient::TryConnect(const std::string& name, SocketClient& client) {
     if (name.empty()) {
-        return CreateError("Empty name is not valid.");
+        LogError("Empty name is not valid.");
+        return CreateError();
+    }
+
+    if (client._isConnected || client._socketHandle.IsValid()) {
+        LogError("Client is already in use.");
+        return CreateError();
     }
 
     SocketHandle socketHandle(socket(AF_UNIX, SOCK_STREAM, 0));
     if (!socketHandle.IsValid()) {
-        return CreateError("Could not create socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not create socket.");
+        return CreateError();
     }
 
     std::string path = GetLocalPath(name);
@@ -638,16 +691,24 @@ SocketClient::~SocketClient() noexcept {
         return CreateNotConnected();
     }
 
-    client = SocketClient(std::move(socketHandle), AddressFamily::Local, std::move(path));
+    client._addressFamily = AddressFamily::Local;
+    client._socketHandle = std::move(socketHandle);
+    client._path = path;
+    client._isConnected = true;
     return CreateOk();
 }
 
 void SocketClient::Disconnect() {
-    if (_socketHandle.IsValid()) {
-        Shutdown(_socketHandle);
+    if (!_isConnected) {
+        return;
     }
 
     _isConnected = false;
+
+    if (_socketHandle.IsValid()) {
+        Shutdown(_socketHandle);
+        _socketHandle.Reset();
+    }
 }
 
 [[nodiscard]] Result SocketClient::GetRemoteAddress(std::string& remoteAddress) const {
@@ -691,20 +752,17 @@ void SocketClient::Disconnect() {
     }
 
     if (receivedSizeTmp == 0) {
+        LogTrace("Remote endpoint disconnected.");
         return CreateNotConnected();
     }
 
-    int32_t errorCode = GetLastNetworkError();
-
-    if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
-#ifndef _WIN32
-        || (errorCode == ErrorCodeBrokenPipe)
-#endif
-    ) {
+    if (!_isConnected) {
+        LogTrace("Local endpoint disconnected.");
         return CreateNotConnected();
     }
 
-    return CreateError("Could not receive from remote endpoint.", errorCode);
+    LogError(GetLastNetworkError(), "Could not receive from remote endpoint.");
+    return CreateError();
 }
 
 [[nodiscard]] Result SocketClient::Send(const void* source, size_t size) const {
@@ -733,20 +791,17 @@ void SocketClient::Disconnect() {
         }
 
         if (sentSize == 0) {
+            LogTrace("Remote endpoint disconnected.");
             return CreateNotConnected();
         }
 
-        int32_t errorCode = GetLastNetworkError();
-
-        if ((errorCode == ErrorCodeConnectionAborted) || (errorCode == ErrorCodeConnectionReset)
-#ifndef _WIN32
-            || (errorCode == ErrorCodeBrokenPipe)
-#endif
-        ) {
+        if (!_isConnected) {
+            LogTrace("Local endpoint disconnected.");
             return CreateNotConnected();
         }
 
-        return CreateError("Could not send to remote endpoint.", errorCode);
+        LogError(GetLastNetworkError(), "Could not send to remote endpoint.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -766,7 +821,8 @@ SocketListener::~SocketListener() noexcept {
 
 [[nodiscard]] Result SocketListener::Create(AddressFamily addressFamily, uint16_t port, bool enableRemoteAccess, SocketListener& listener) {
     if (addressFamily == AddressFamily::Local) {
-        return CreateError("Not supported for local sockets.");
+        LogError("Not supported for local sockets.");
+        return CreateError();
     }
 
     int32_t convertedAddressFamily{};
@@ -774,7 +830,8 @@ SocketListener::~SocketListener() noexcept {
 
     SocketHandle socketHandle(socket(convertedAddressFamily, SOCK_STREAM, IPPROTO_TCP));
     if (!socketHandle.IsValid()) {
-        return CreateError("Could not create TCP socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not create TCP socket.");
+        return CreateError();
     }
 
     if (addressFamily == AddressFamily::Ipv6) {
@@ -797,12 +854,14 @@ SocketListener::~SocketListener() noexcept {
 
 [[nodiscard]] Result SocketListener::Create(const std::string& name, SocketListener& listener) {
     if (name.empty()) {
-        return CreateError("Empty name is not valid.");
+        LogError("Empty name is not valid.");
+        return CreateError();
     }
 
     SocketHandle socketHandle(socket(AF_UNIX, SOCK_STREAM, 0));
     if (!socketHandle.IsValid()) {
-        return CreateError("Could not create local socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not create local socket.");
+        return CreateError();
     }
 
     std::string path = GetLocalPath(name);
@@ -837,14 +896,16 @@ void SocketListener::Stop() {
 
 [[nodiscard]] Result SocketListener::TryAccept(SocketClient& client) const {
     if (!IsRunning()) {
-        return CreateError("Server is not running.");
+        LogError("Server is not running.");
+        return CreateError();
     }
 
     CheckResult(PollInternal(_socketHandle));
 
     SocketHandle acceptedSocketHandle(accept(_socketHandle.Get(), nullptr, nullptr));
     if (!acceptedSocketHandle.IsValid()) {
-        return CreateError("Could not accept socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not accept socket.");
+        return CreateError();
     }
 
     if (_addressFamily != AddressFamily::Local) {
@@ -857,7 +918,8 @@ void SocketListener::Stop() {
 
 [[nodiscard]] Result SocketListener::GetLocalPort(uint16_t& localPort) const {
     if (!IsRunning()) {
-        return CreateError("Server is not running.");
+        LogError("Server is not running.");
+        return CreateError();
     }
 
     if (_addressFamily == AddressFamily::Ipv4) {

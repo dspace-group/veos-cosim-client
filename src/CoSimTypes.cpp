@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "Format.hpp"
+#include <fmt/format.h>
 
 namespace DsVeosCoSim {
 
@@ -40,37 +40,37 @@ template <typename T, size_t TSize>
 void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value) {
     switch (dataType) {
         case DataType::Bool:
-            string.append(format_as(static_cast<const uint8_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
             return;
         case DataType::Int8:
-            string.append(format_as(static_cast<const int8_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const int8_t*>(value)[index]));
             return;
         case DataType::Int16:
-            string.append(format_as(static_cast<const int16_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const int16_t*>(value)[index]));
             return;
         case DataType::Int32:
-            string.append(format_as(static_cast<const int32_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const int32_t*>(value)[index]));
             return;
         case DataType::Int64:
-            string.append(format_as(static_cast<const int64_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const int64_t*>(value)[index]));
             return;
         case DataType::UInt8:
-            string.append(format_as(static_cast<const uint8_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
             return;
         case DataType::UInt16:
-            string.append(format_as(static_cast<const uint16_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const uint16_t*>(value)[index]));
             return;
         case DataType::UInt32:
-            string.append(format_as(static_cast<const uint32_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const uint32_t*>(value)[index]));
             return;
         case DataType::UInt64:
-            string.append(format_as(static_cast<const uint64_t*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const uint64_t*>(value)[index]));
             return;
         case DataType::Float32:
-            string.append(format_as(static_cast<const float*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const float*>(value)[index]));
             return;
         case DataType::Float64:
-            string.append(format_as(static_cast<const double*>(value)[index]));
+            string.append(fmt::to_string(static_cast<const double*>(value)[index]));
             return;
     }
 
@@ -78,7 +78,7 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
 }
 
 [[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, const std::string& name) {
-    return Format(R"(IO Signal { Id: {}, Length: {}, DataType: {}, SizeKind: {}, Name: "{}" })", signalId, length, dataType, sizeKind, name);
+    return fmt::format(R"(IO Signal {{ Id: {}, Length: {}, DataType: {}, SizeKind: {}, Name: "{}" }})", signalId, length, dataType, sizeKind, name);
 }
 
 [[nodiscard]] std::string CanControllerToString(BusControllerId controllerId,
@@ -88,8 +88,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    return Format(
-        R"(CAN Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, FlexibleDataRateBitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
+    return fmt::format(
+        R"(CAN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, FlexibleDataRateBitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
         controllerId,
         queueSize,
         bitsPerSecond,
@@ -105,13 +105,13 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              uint32_t length,
                                              const uint8_t* data,
                                              CanMessageFlags flags) {
-    return Format(R"(CAN Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} })",
-                  timestamp,
-                  controllerId,
-                  messageId,
-                  length,
-                  DataToString(data, length, '-'),
-                  flags);
+    return fmt::format(R"(CAN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }})",
+                       timestamp,
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] std::string EthControllerToString(BusControllerId controllerId,
@@ -121,14 +121,14 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    return Format(R"(ETH Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, MacAddress: [{}], Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
-                  controllerId,
-                  queueSize,
-                  bitsPerSecond,
-                  DataToString(macAddress.data(), sizeof(macAddress), ':'),
-                  name,
-                  channelName,
-                  clusterName);
+    return fmt::format(R"(ETH Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, MacAddress: [{}], Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+                       controllerId,
+                       queueSize,
+                       bitsPerSecond,
+                       DataToString(macAddress.data(), sizeof(macAddress), ':'),
+                       name,
+                       channelName,
+                       clusterName);
 }
 
 [[nodiscard]] std::string EthMessageToString(SimulationTime timestamp,
@@ -136,12 +136,12 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              uint32_t length,
                                              const uint8_t* data,
                                              EthMessageFlags flags) {
-    return Format("ETH Message { Timestamp: {}, ControllerId: {}, Length: {}, Data: {}, Flags: {} }",
-                  format_as(timestamp),
-                  controllerId,
-                  length,
-                  DataToString(data, length, '-'),
-                  flags);
+    return fmt::format("ETH Message {{ Timestamp: {}, ControllerId: {}, Length: {}, Data: {}, Flags: {} }}",
+                       timestamp,
+                       controllerId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] std::string LinControllerToString(BusControllerId controllerId,
@@ -151,14 +151,14 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    return Format(R"(LIN Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, Type: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
-                  controllerId,
-                  queueSize,
-                  bitsPerSecond,
-                  type,
-                  name,
-                  channelName,
-                  clusterName);
+    return fmt::format(R"(LIN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Type: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+                       controllerId,
+                       queueSize,
+                       bitsPerSecond,
+                       type,
+                       name,
+                       channelName,
+                       clusterName);
 }
 
 [[nodiscard]] std::string LinMessageToString(SimulationTime timestamp,
@@ -167,13 +167,13 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              uint32_t length,
                                              const uint8_t* data,
                                              LinMessageFlags flags) {
-    return Format("LIN Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }",
-                  format_as(timestamp),
-                  controllerId,
-                  messageId,
-                  length,
-                  DataToString(data, length, '-'),
-                  flags);
+    return fmt::format("LIN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
+                       timestamp,
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] std::string FrControllerToString(BusControllerId controllerId,
@@ -182,13 +182,13 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                const std::string& name,
                                                const std::string& channelName,
                                                const std::string& clusterName) {
-    return Format(R"(FLEXRAY Controller { Id: {}, QueueSize: {}, BitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" })",
-                  controllerId,
-                  queueSize,
-                  bitsPerSecond,
-                  name,
-                  channelName,
-                  clusterName);
+    return fmt::format(R"(FlexRay Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+                       controllerId,
+                       queueSize,
+                       bitsPerSecond,
+                       name,
+                       channelName,
+                       clusterName);
 }
 
 [[nodiscard]] std::string FrMessageToString(SimulationTime timestamp,
@@ -197,13 +197,13 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                             uint32_t length,
                                             const uint8_t* data,
                                             FrMessageFlags flags) {
-    return Format("FLEXRAY Message { Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }",
-                  format_as(timestamp),
-                  controllerId,
-                  messageId,
-                  length,
-                  DataToString(data, length, '-'),
-                  flags);
+    return fmt::format("FlexRay Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
+                       timestamp,
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 }  // namespace
@@ -1543,7 +1543,7 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 }
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
-    return Format("IO Data { Id: {}, Length: {}, Data: {} }", ioSignal.id, length, ValueToString(ioSignal.dataType, length, value));
+    return fmt::format("IO Data {{ Id: {}, Length: {}, Data: {} }}", ioSignal.id, length, ValueToString(ioSignal.dataType, length, value));
 }
 
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator) {

@@ -1,9 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <string>
+
+#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "Helper.hpp"

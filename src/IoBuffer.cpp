@@ -12,16 +12,21 @@
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
-#include "Format.hpp"
+#include "Logger.hpp"
 #include "Protocol.hpp"
 #include "ProtocolLogger.hpp"
+#include "Result.hpp"
 #include "RingBuffer.hpp"
 
 #ifdef _WIN32
+
 #include "OsUtilities.hpp"
+
 #endif
 
 namespace DsVeosCoSim {
@@ -52,17 +57,20 @@ public:
         size_t nextSignalIndex = 0;
         for (const auto& ioSignal : ioSignals) {
             if (ioSignal.length == 0) {
-                return CreateError(Format("Invalid length 0 for IO signal '{}'.", ioSignal.name));
+                LogError("Invalid length 0 for IO signal '{}'.", ioSignal.name);
+                return CreateError();
             }
 
             size_t dataTypeSize = GetDataTypeSize(ioSignal.dataType);
             if (dataTypeSize == 0) {
-                return CreateError(Format("Invalid data type for IO signal '{}'.", ioSignal.name));
+                LogError("Invalid data type for IO signal '{}'.", ioSignal.name);
+                return CreateError();
             }
 
             auto search = _metaDataLookup.find(ioSignal.id);
             if (search != _metaDataLookup.end()) {
-                return CreateError(Format("Duplicated IO signal id {}.", ioSignal.id));
+                LogError("Duplicated IO signal id {}.", ioSignal.id);
+                return CreateError();
             }
 
             size_t totalDataSize = dataTypeSize * ioSignal.length;
@@ -86,7 +94,8 @@ public:
             return CreateOk();
         }
 
-        return CreateError(Format("IO signal id {} is unknown.", signalId));
+        LogError("IO signal id {} is unknown.", signalId);
+        return CreateError();
     }
 
     [[nodiscard]] std::unordered_map<IoSignalId, IoMetaData>& GetMetaDataLookup() {
@@ -226,14 +235,16 @@ public:
 
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
+                LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
+                return CreateError();
             }
 
             if (currentLength != length) {
                 if (!isChanged) {
                     isChanged = true;
                     if (!_changedSignalsQueue.TryPushBack(metaData)) {
-                        return CreateError("Changed signals queue is full.");
+                        LogError("Changed signals queue is full.");
+                        return CreateError();
                     }
                 }
             }
@@ -241,7 +252,8 @@ public:
             currentLength = length;
         } else {
             if (length != metaData->info.length) {
-                return CreateError(Format("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length));
+                LogError("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length);
+                return CreateError();
             }
         }
 
@@ -257,7 +269,8 @@ public:
         if (!isChanged) {
             isChanged = true;
             if (!_changedSignalsQueue.TryPushBack(metaData)) {
-                return CreateError("Changed signals queue is full.");
+                LogError("Changed signals queue is full.");
+                return CreateError();
             }
         }
 
@@ -326,7 +339,8 @@ public:
                 uint32_t length = 0;
                 CheckResultWithMessage(_protocol.ReadLength(reader, length), "Could not read signal length.");
                 if (length > metaData->info.length) {
-                    return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
+                    LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
+                    return CreateError();
                 }
 
                 data.currentLength = length;
@@ -451,13 +465,15 @@ public:
         bool currentLengthChanged{};
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                return CreateError(Format("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name));
+                LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
+                return CreateError();
             }
 
             currentLengthChanged = dataBuffer->currentLength != length;
         } else {
             if (length != metaData->info.length) {
-                return CreateError(Format("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length));
+                LogError("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length);
+                return CreateError();
             }
         }
 
@@ -472,7 +488,8 @@ public:
         if (!data.isChanged) {
             data.isChanged = true;
             if (!_changedSignalsQueue.TryPushBack(metaData)) {
-                return CreateError("Changed signals queue is full.");
+                LogError("Changed signals queue is full.");
+                return CreateError();
             }
 
             FlipBuffers(data);
@@ -606,8 +623,8 @@ public:
 
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
-            std::string outgoingName = name + ".Outgoing";
-            std::string incomingName = name + ".Incoming";
+            std::string outgoingName = fmt::format("{}.Outgoing", name);
+            std::string incomingName = fmt::format("{}.Incoming", name);
             if (coSimType == CoSimType::Server) {
                 std::swap(incomingName, outgoingName);
             }

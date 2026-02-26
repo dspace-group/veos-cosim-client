@@ -1,12 +1,12 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <fmt/format.h>
-
-#include <gtest/gtest.h>
-
 #include <deque>
 #include <memory>
 #include <string>
+
+#include <fmt/format.h>
+
+#include <gtest/gtest.h>
 
 #include "BusBuffer.hpp"
 #include "CoSimTypes.hpp"
@@ -60,10 +60,6 @@ protected:
         _remoteReceiverChannel.reset();
         _localSenderChannel.reset();
         _localReceiverChannel.reset();
-    }
-
-    void SetUp() override {
-        ClearLastMessage();
     }
 
     void Transfer(ConnectionKind connectionKind, const BusBuffer& senderBusBuffer, const BusBuffer& receiverBusBuffer) {
@@ -238,7 +234,7 @@ struct Param {
     }
 };
 
-//#define SINGLE_TEST
+// #define SINGLE_TEST
 
 #ifdef SINGLE_TEST
 using Parameters = Types<Param<LinControllerContainer, LinController, LinMessageContainer, LinMessage, CoSimType::Server, ConnectionKind::Remote>>;

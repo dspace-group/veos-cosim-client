@@ -1,10 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <benchmark/benchmark.h>
-
-#include <chrono>  // IWYU pragma: keep
 #include <string>
 #include <thread>
+
+#include <benchmark/benchmark.h>
 
 #include "BusBuffer.hpp"
 #include "Channel.hpp"

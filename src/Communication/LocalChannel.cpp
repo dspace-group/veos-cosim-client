@@ -11,6 +11,7 @@
 
 #include "Channel.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

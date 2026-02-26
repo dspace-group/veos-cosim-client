@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#include <fmt/format.h>
+
 #ifndef _WIN32
 
 #include <system_error>
@@ -40,49 +42,51 @@ public:
         _logCallback = std::move(logCallback);
     }
 
-    void LogError(std::string_view message) {
+    void Log(Severity severity, std::string_view message) {
         if (auto logCallback = _logCallback; logCallback) {
-            logCallback(Severity::Error, message);
-        }
-    }
-
-    void LogWarning(std::string_view message) {
-        if (auto logCallback = _logCallback; logCallback) {
-            logCallback(Severity::Warning, message);
-        }
-    }
-
-    void LogInfo(std::string_view message) {
-        if (auto logCallback = _logCallback; logCallback) {
-            logCallback(Severity::Info, message);
-        }
-    }
-
-    void LogTrace(std::string_view message) {
-        if (auto logCallback = _logCallback; logCallback) {
-            logCallback(Severity::Trace, message);
-        }
-    }
-
-    void LogError(std::string_view message, int32_t errorCode) {
-        if (auto logCallback = _logCallback; logCallback) {
-            std::string fullMessage(message);
-            fullMessage.append(" Error code: ").append(std::to_string(errorCode)).append(". ");
-
-#ifdef _WIN32
-            fullMessage.append(GetEnglishErrorMessage(errorCode));
-#else
-            fullMessage.append(std::system_category().message(errorCode));
-#endif
-
-            logCallback(Severity::Error, fullMessage);
+            logCallback(severity, message);
         }
     }
 
 private:
-    [[nodiscard]] static std::string GetEnglishErrorMessage(int32_t errorCode);
-
     LogCallback _logCallback;
 };
+
+#ifdef _WIN32
+
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode);
+
+#endif
+
+void LogError(int32_t errorCode, std::string_view message);
+void LogError(std::string_view message);
+void LogWarning(std::string_view message);
+void LogInfo(std::string_view message);
+void LogTrace(std::string_view message);
+
+template <typename... T>
+void LogError(int32_t errorCode, fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+    LogError(errorCode, fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogError(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+    LogError(fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogWarning(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+    LogWarning(fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogInfo(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+    LogInfo(fmt::vformat(format, fmt::make_format_args(args...)));
+}
+
+template <typename... T>
+void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
+    LogTrace(fmt::vformat(format, fmt::make_format_args(args...)));
+}
 
 }  // namespace DsVeosCoSim

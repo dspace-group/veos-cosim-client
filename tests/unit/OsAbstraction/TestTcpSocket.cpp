@@ -1,16 +1,17 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <fmt/format.h>
+#include <chrono>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <gtest/gtest.h>
-
-#include <string>
-#include <vector>
 
 #include "Helper.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
 
+using namespace std::chrono_literals;
 using namespace DsVeosCoSim;
 
 namespace {
@@ -180,6 +181,102 @@ TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
 
     // Assert
     AssertOk(result);
+}
+
+TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    acceptClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    connectClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    connectClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
+    // Arrange
+    Param param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    acceptClient.Disconnect();
+
+    // Cleanup
+    t.join();
 }
 
 TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid) {

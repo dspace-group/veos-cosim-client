@@ -1,10 +1,10 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <benchmark/benchmark.h>
-
 #include <memory>
 #include <string>
 #include <thread>
+
+#include <benchmark/benchmark.h>
 
 #include "Event.hpp"
 #include "Helper.hpp"

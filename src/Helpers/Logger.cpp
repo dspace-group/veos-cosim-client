@@ -28,7 +28,7 @@ namespace DsVeosCoSim {
 
 #ifdef _WIN32
 
-[[nodiscard]] std::string Logger::GetEnglishErrorMessage(int32_t errorCode) {
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     char* buffer = nullptr;
@@ -50,5 +50,34 @@ namespace DsVeosCoSim {
 }
 
 #endif
+
+void LogError(std::string_view message) {
+    Logger::Instance().Log(Severity::Error, message);
+}
+
+void LogWarning(std::string_view message) {
+    Logger::Instance().Log(Severity::Warning, message);
+}
+
+void LogInfo(std::string_view message) {
+    Logger::Instance().Log(Severity::Info, message);
+}
+
+void LogTrace(std::string_view message) {
+    Logger::Instance().Log(Severity::Trace, message);
+}
+
+void LogError(int32_t errorCode, std::string_view message) {
+    std::string fullMessage(message);
+    fullMessage.append(" Error code: ").append(std::to_string(errorCode)).append(". ");
+
+#ifdef _WIN32
+    fullMessage.append(GetEnglishErrorMessage(errorCode));
+#else
+    fullMessage.append(std::system_category().message(errorCode));
+#endif
+
+    LogError(fullMessage);
+}
 
 }  // namespace DsVeosCoSim

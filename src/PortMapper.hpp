@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include "Error.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

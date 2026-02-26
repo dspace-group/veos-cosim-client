@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <string>
 
-#include "Error.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32

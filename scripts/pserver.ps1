@@ -24,5 +24,9 @@ if (-not (Test-Path $filePath)) {
 }
 
 & "$filePath"
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "Running performance test server for $config failed."
+  exit 1
+}
 
 Write-Host "Running performance test server for $config finished successfully." -ForegroundColor Blue

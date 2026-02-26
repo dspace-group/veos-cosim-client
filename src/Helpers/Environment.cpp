@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "Format.hpp"
+#include <fmt/format.h>
 
 namespace DsVeosCoSim {
 
@@ -101,7 +101,7 @@ namespace {
 [[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
-    if (TryGetHexValue(Format("{}_{}", environmentVariableName, name), mask)) {
+    if (TryGetHexValue(fmt::format("{}_{}", environmentVariableName, name), mask)) {
         return true;
     }
 

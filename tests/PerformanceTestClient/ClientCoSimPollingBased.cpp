@@ -1,13 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.hpp"
-
 #include <string>
 
 #include "CoSimClient.hpp"
 #include "CoSimTypes.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
+#include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -46,7 +46,8 @@ namespace {
             case Command::Continue:
                 break;
             default:
-                return CreateError("Invalid command.");
+                LogError("Invalid command.");
+                return CreateError();
         }
 
         CheckResult(coSimClient->FinishCommand());

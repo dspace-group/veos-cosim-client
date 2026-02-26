@@ -2,14 +2,16 @@
 
 #ifdef _WIN32
 
-#include <gtest/gtest.h>
-
+#include <chrono>
 #include <string>
+
+#include <gtest/gtest.h>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
 #include "TestHelper.hpp"
 
+using namespace std::chrono_literals;
 using namespace DsVeosCoSim;
 
 namespace {
@@ -129,6 +131,102 @@ TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
 
     // Assert
     AssertOk(result);
+}
+
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+    // Arrange
+    std::string name = GenerateName();
+
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    acceptClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+    // Arrange
+    std::string name = GenerateName();
+
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    connectClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
+    // Arrange
+    std::string name = GenerateName();
+
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    connectClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient) {
+    // Arrange
+    std::string name = GenerateName();
+
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    std::this_thread::sleep_for(100ms);
+
+    // Act and assert
+    acceptClient.Disconnect();
+
+    // Cleanup
+    t.join();
 }
 
 TEST_F(TestShmPipe, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {

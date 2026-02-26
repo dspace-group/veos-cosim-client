@@ -12,15 +12,18 @@ int main() {
         return 1;
     }
 
-    StartEventsServer();
     StartLocalSocketServer();
     StartPipeServer();
-    StartShmPipeServer();
     StartTcpSocketServer();
     StartUdpSocketServer();
     StartLocalCommunicationServer();
     StartRemoteCommunicationServer();
     StartCoSimServer();
+
+#ifdef _WIN32
+    StartEventsServer();
+    StartShmPipeServer();
+#endif
 
     std::promise<void>().get_future().wait();
 

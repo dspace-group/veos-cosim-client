@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
-
 #include <string>
+
+#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"

@@ -1,14 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.hpp"
-
 #include <array>
 #include <string>
 
-#include "Error.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsAbstractionTestHelper.hpp"
+#include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

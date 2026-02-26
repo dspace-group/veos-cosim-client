@@ -17,11 +17,16 @@ void RunTcpSocketTest(const std::string& host);
 void RunUdpSocketTest(const std::string& host);
 void RunLocalSocketTest();
 void RunPipeTest();
-void RunShmPipeTest();
-void RunEventsTest();
 void RunRemoteCommunicationTest(const std::string& host);
 void RunLocalCommunicationTest();
 void RunCoSimCallbackTest(const std::string& host);
 void RunCoSimPollingTest(const std::string& host);
+
+#ifdef _WIN32
+
+void RunEventsTest();
+void RunShmPipeTest();
+
+#endif
 
 }  // namespace DsVeosCoSim

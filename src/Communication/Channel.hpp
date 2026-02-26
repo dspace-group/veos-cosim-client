@@ -10,7 +10,8 @@
 #include <string>
 #include <type_traits>
 
-#include "Error.hpp"
+#include "Logger.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -119,7 +120,8 @@ public:
             CheckResult(EndWrite());
 
             if (BufferSize - _writeIndex < sizeToReserve) {
-                return CreateError("No more space available.");
+                LogError("No more space available.");
+                return CreateError();
             }
         }
 
@@ -135,7 +137,8 @@ public:
             CheckResult(EndWrite());
 
             if (BufferSize - _writeIndex < size) {
-                return CreateError("No more space available.");
+                LogError("No more space available.");
+                return CreateError();
             }
         }
 
@@ -151,7 +154,8 @@ public:
             CheckResult(EndWrite());
 
             if (BufferSize - _writeIndex < size) {
-                return CreateError("No more space available.");
+                LogError("No more space available.");
+                return CreateError();
             }
         }
 
@@ -167,7 +171,8 @@ public:
             CheckResult(EndWrite());
 
             if (BufferSize - _writeIndex < size) {
-                return CreateError("No more space available.");
+                LogError("No more space available.");
+                return CreateError();
             }
         }
 
@@ -452,7 +457,8 @@ private:
                 _endFrameIndex = *reinterpret_cast<int32_t*>(buffer);
 
                 if (_endFrameIndex > BufferSize) {
-                    return CreateError("Protocol error. The buffer size is too small.");
+                    LogError("Protocol error. The buffer size is too small.");
+                    return CreateError();
                 }
 
                 if (_writeIndex >= _endFrameIndex) {

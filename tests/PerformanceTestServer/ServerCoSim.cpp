@@ -4,9 +4,10 @@
 #include <thread>
 
 #include "CoSimServer.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "PerformanceTestHelper.hpp"
 #include "PerformanceTestServer.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

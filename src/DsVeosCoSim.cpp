@@ -9,17 +9,18 @@
 
 #include "CoSimClient.hpp"
 #include "CoSimTypes.hpp"
+#include "Logger.hpp"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-#define CheckNotNull(arg)                                                       \
-    do {                                                                        \
-        if (!(arg)) {                                                           \
-            Logger::Instance().LogError("Argument " #arg " must not be null."); \
-            return DsVeosCoSim_Result_InvalidArgument;                          \
-        }                                                                       \
+#define CheckNotNull(arg)                                    \
+    do {                                                     \
+        if (!(arg)) {                                        \
+            LogError("Argument " #arg " must not be null."); \
+            return DsVeosCoSim_Result_InvalidArgument;       \
+        }                                                    \
     } while (0)
 
 void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& callbacks) {

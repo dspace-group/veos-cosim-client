@@ -12,11 +12,15 @@
 #include <cstdint>
 #include <utility>
 
+#include <fmt/format.h>
+
 #include <Windows.h>
 #undef min
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
-#include "Error.hpp"
+
+#include "Logger.hpp"
+#include "Result.hpp"
 
 #else
 
@@ -49,28 +53,30 @@ constexpr size_t ServerSharedMemorySize = 4;
 
     int32_t sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), nullptr, 0);
     if (sizeNeeded <= 0) {
-        return CreateError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not convert UTF-8 string to wide string.");
+        return CreateError();
     }
 
     utf16String.resize(static_cast<size_t>(sizeNeeded));
     sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int32_t>(utf8String.size()), utf16String.data(), sizeNeeded);
     if (sizeNeeded <= 0) {
-        return CreateError("Could not convert UTF-8 string to wide string.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not convert UTF-8 string to wide string.");
+        return CreateError();
     }
 
     return CreateOk();
 }
 
 [[nodiscard]] Result GetFullNamedEventName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.Event." + name, fullName);
+    return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim2.Event.{}", name), fullName);
 }
 
 [[nodiscard]] Result GetFullTestNamedLockName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.Mutex." + name, fullName);
+    return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim2.Mutex.{}", name), fullName);
 }
 
 [[nodiscard]] Result GetFullSharedMemoryName(const std::string& name, std::wstring& fullName) {
-    return Utf8ToWide("Local\\dSPACE.VEOS.CoSim2.SharedMemory." + name, fullName);
+    return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim2.SharedMemory.{}", name), fullName);
 }
 
 // Spin wait with exponential backoff
@@ -133,7 +139,8 @@ void Handle::Reset(void* newHandle) {
 
 [[nodiscard]] Result Handle::Wait(uint32_t milliseconds) const {
     if (!IsValid()) {
-        return CreateError("Handle is not initialized.");
+        LogError("Handle is not initialized.");
+        return CreateError();
     }
 
     switch (DWORD result = WaitForSingleObject(_handle, milliseconds); result) {
@@ -142,12 +149,12 @@ void Handle::Reset(void* newHandle) {
         case WAIT_TIMEOUT:
             return CreateTimeout();
         case WAIT_ABANDONED:
-        case WAIT_FAILED: {
-            return CreateError("Could not wait for handle.", GetLastWindowsError());
-        }
-        default: {
-            return CreateError("Could not wait for handle. Invalid result.", GetLastWindowsError());
-        }
+        case WAIT_FAILED:
+            LogError(GetLastWindowsError(), "Could not wait for handle.");
+            return CreateError();
+        default:
+            LogError(GetLastWindowsError(), "Could not wait for handle. Invalid result.");
+            return CreateError();
     }
 }
 
@@ -160,7 +167,8 @@ NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
 
     Handle handle(CreateEventW(nullptr, FALSE, FALSE, fullName.c_str()));
     if (!handle.IsValid()) {
-        return CreateError("Could not create or open event.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not create or open event.");
+        return CreateError();
     }
 
     namedEvent = NamedEvent(std::move(handle));
@@ -173,12 +181,14 @@ void NamedEvent::Close() {
 
 [[nodiscard]] Result NamedEvent::Set() const {
     if (!IsValid()) {
-        return CreateError("Not initialized.");
+        LogError("Not initialized.");
+        return CreateError();
     }
 
     BOOL result = SetEvent(_handle.Get());
     if (result == FALSE) {
-        return CreateError("Could not set event.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not set event.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -211,7 +221,8 @@ NamedLock::~NamedLock() noexcept {
 
     Handle handle(CreateMutexW(nullptr, FALSE, fullName.c_str()));
     if (!handle.IsValid()) {
-        return CreateError("Could not create or open mutex.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not create or open mutex.");
+        return CreateError();
     }
 
     CheckResult(handle.Wait());
@@ -253,12 +264,14 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     auto sizeLow = static_cast<DWORD>(size);
     Handle handle(CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, sizeHigh, sizeLow, fullName.c_str()));
     if (!handle.IsValid()) {
-        return CreateError("Could not create or open shared memory.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not create or open shared memory.");
+        return CreateError();
     }
 
     void* data = MapViewOfFile(handle.Get(), FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        return CreateError("Could not map view of shared memory.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not map view of shared memory.");
+        return CreateError();
     }
 
     sharedMemory = SharedMemory(std::move(handle), size, data);
@@ -276,7 +289,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
 
     void* data = MapViewOfFile(handle.Get(), FILE_MAP_ALL_ACCESS, 0, 0, size);
     if (!data) {
-        return CreateError("Could not map view of shared memory.", GetLastWindowsError());
+        LogError(GetLastWindowsError(), "Could not map view of shared memory.");
+        return CreateError();
     }
 
     sharedMemory = SharedMemory(std::move(handle), size, data);
@@ -318,9 +332,9 @@ ShmPipePart::~ShmPipePart() noexcept {
     NamedLock mutex;
     CheckResult(NamedLock::Create(name, mutex));
 
-    std::string dataName = name + ".Data";
-    std::string newDataName = name + ".NewData";
-    std::string newSpaceName = name + ".NewSpace";
+    std::string dataName = fmt::format("{}.Data", name);
+    std::string newDataName = fmt::format("{}.NewData", name);
+    std::string newSpaceName = fmt::format("{}.NewSpace", name);
 
     constexpr size_t totalSize = static_cast<size_t>(PipeBufferSize) + sizeof(Header);
 
@@ -368,7 +382,8 @@ void ShmPipePart::Disconnect() {
 
 [[nodiscard]] Result ShmPipePart::Read(void* destination, size_t size, size_t& receivedSize) {
     if (_isWriter) {
-        return CreateError("Pipe is writer.");
+        LogError("Pipe is writer.");
+        return CreateError();
     }
 
     CheckResult(EnsureConnected());
@@ -411,7 +426,8 @@ void ShmPipePart::Disconnect() {
 
 [[nodiscard]] Result ShmPipePart::Write(const void* source, size_t size) {
     if (!_isWriter) {
-        return CreateError("Pipe is reader.");
+        LogError("Pipe is reader.");
+        return CreateError();
     }
 
     CheckResult(EnsureConnected());
@@ -577,7 +593,8 @@ void ShmPipePart::Disconnect() {
             // Not connected yet. Give it up to 5 seconds ...
             _detectionCounter++;
             if (_detectionCounter == ConnectionTimeoutInMilliseconds) {
-                return CreateError("Counterpart still not connected after 5 seconds.");
+                LogError("Counterpart still not connected after 5 seconds.");
+                return CreateError();
             }
 
             return CreateOk();
@@ -595,7 +612,8 @@ void ShmPipePart::Disconnect() {
         return CreateOk();
     }
 
-    return CreateError("Counterpart process is not running anymore.");
+    LogError("Counterpart process is not running anymore.");
+    return CreateError();
 }
 
 void ShmPipePart::SetOwnPid(uint32_t pid) {
@@ -625,11 +643,11 @@ ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader) : _writer(s
     auto& counter = *sharedMemory.As<std::atomic<uint32_t>>();
     uint32_t currentCounter = counter.fetch_add(1);
 
-    std::string writerName = name + '.' + std::to_string(currentCounter) + '.' + ClientToServerPostFix;
+    std::string writerName = fmt::format("{}.{}.{}", name, currentCounter, ClientToServerPostFix);
     ShmPipePart writer;
     CheckResult(ShmPipePart::Create(writerName, true, writer));
 
-    std::string readerName = name + '.' + std::to_string(currentCounter) + '.' + ServerToClientPostFix;
+    std::string readerName = fmt::format("{}.{}.{}", name, currentCounter, ServerToClientPostFix);
     ShmPipePart reader;
     CheckResult(ShmPipePart::Create(readerName, false, reader));
 
@@ -676,7 +694,8 @@ void ShmPipeListener::Stop() {
 
 [[nodiscard]] Result ShmPipeListener::TryAccept(ShmPipeClient& client) {
     if (!IsRunning()) {
-        return CreateError("Server is not running.");
+        LogError("Server is not running.");
+        return CreateError();
     }
 
     auto& counter = *_sharedMemory.As<std::atomic<uint32_t>>();
@@ -688,11 +707,11 @@ void ShmPipeListener::Stop() {
     uint32_t counterToUse = _lastCounter;
     _lastCounter++;
 
-    std::string writerName = _name + '.' + std::to_string(counterToUse) + '.' + ShmPipeClient::ServerToClientPostFix;
+    std::string writerName = fmt::format("{}.{}.{}", _name, counterToUse, ShmPipeClient::ServerToClientPostFix);
     ShmPipePart writer;
     CheckResult(ShmPipePart::Create(writerName, true, writer));
 
-    std::string readerName = _name + '.' + std::to_string(counterToUse) + '.' + ShmPipeClient::ClientToServerPostFix;
+    std::string readerName = fmt::format("{}.{}.{}", _name, counterToUse, ShmPipeClient::ClientToServerPostFix);
     ShmPipePart reader;
     CheckResult(ShmPipePart::Create(readerName, false, reader));
 

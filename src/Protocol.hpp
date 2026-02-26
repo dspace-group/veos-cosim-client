@@ -7,7 +7,7 @@
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "Error.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

@@ -9,7 +9,7 @@
 
 #include <atomic>
 
-#include "Error.hpp"
+#include "Result.hpp"
 
 #endif
 

@@ -7,7 +7,7 @@
 #include <string>
 #include <utility>
 
-#include "Error.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

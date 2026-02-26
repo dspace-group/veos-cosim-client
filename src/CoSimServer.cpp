@@ -12,11 +12,12 @@
 #include "BusBuffer.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "Format.hpp"
 #include "IoBuffer.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 
 using namespace std::chrono;
 
@@ -93,7 +94,7 @@ public:
                 return CreateOk();
             }
 
-            Logger::Instance().LogInfo(Format("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '{}' ...", _serverName));
+            LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '{}' ...", _serverName);
 
             while (!IsOk(AcceptChannel())) {
                 std::this_thread::sleep_for(milliseconds(100));
@@ -334,7 +335,7 @@ private:
     }
 
     [[nodiscard]] Result CloseConnection() {
-        Logger::Instance().LogWarning("dSPACE VEOS CoSim client disconnected.");
+        LogWarning("dSPACE VEOS CoSim client disconnected.");
 
         _channel.reset();
 
@@ -368,13 +369,13 @@ private:
         if (port != 0) {
             if (_registerAtPortMapper) {
                 if (!IsOk(PortMapperSetPort(_serverName, port))) {
-                    Logger::Instance().LogTrace("Could not set port in port mapper.");
+                    LogTrace("Could not set port in port mapper.");
                 }
             }
 
             const char* address = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
 
-            Logger::Instance().LogInfo(Format("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, address, port));
+            LogInfo("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, address, port);
         }
 
         return CreateOk();
@@ -419,7 +420,8 @@ private:
             return CreateOk();
         }
 
-        return CreateError("No server found.");
+        LogError("No server found.");
+        return CreateError();
     }
 
     [[nodiscard]] Result OnHandleConnect() {
@@ -475,15 +477,15 @@ private:
             std::string remoteAddress;
             CheckResult(_channel->GetRemoteAddress(remoteAddress));
             if (clientName.empty()) {
-                Logger::Instance().LogInfo(Format("dSPACE VEOS CoSim client at {} connected.", remoteAddress));
+                LogInfo("dSPACE VEOS CoSim client at {} connected.", remoteAddress);
             } else {
-                Logger::Instance().LogInfo(Format("dSPACE VEOS CoSim client '{}' at {} connected.", clientName, remoteAddress));
+                LogInfo("dSPACE VEOS CoSim client '{}' at {} connected.", clientName, remoteAddress);
             }
         } else {
             if (clientName.empty()) {
-                Logger::Instance().LogInfo("Local dSPACE VEOS CoSim client connected.");
+                LogInfo("Local dSPACE VEOS CoSim client connected.");
             } else {
-                Logger::Instance().LogInfo(Format("Local dSPACE VEOS CoSim client '{}' connected.", clientName));
+                LogInfo("Local dSPACE VEOS CoSim client '{}' connected.", clientName);
             }
         }
 
@@ -558,7 +560,8 @@ private:
     [[nodiscard]] Result OnError() const {
         std::string errorMessage;
         CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorMessage), "Could not read error frame.");
-        return CreateError(errorMessage);
+        LogError(errorMessage);
+        return CreateError();
     }
 
     void HandlePendingCommand(Command command) const {
@@ -589,7 +592,8 @@ private:
     }
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
-        return CreateError(Format("Received unexpected frame '{}'.", frameKind));
+        LogError("Received unexpected frame '{}'.", frameKind);
+        return CreateError();
     }
 
     std::unique_ptr<Channel> _channel;

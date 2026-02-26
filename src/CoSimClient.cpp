@@ -8,11 +8,13 @@
 #include <string>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "BusBuffer.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "Format.hpp"
 #include "IoBuffer.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
 #include "Protocol.hpp"
@@ -42,7 +44,8 @@ public:
 
     [[nodiscard]] Result Connect(const ConnectConfig& connectConfig) override {
         if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
-            return CreateInvalidArgument("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
+            LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
+            return CreateInvalidArgument();
         }
 
         if (_isConnected) {
@@ -143,7 +146,8 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand != Command::None) {
-            return CreateError("Call to FinishCommand() for last command is missing.");
+            LogError("Call to FinishCommand() for last command is missing.");
+            return CreateError();
         }
 
         if (!IsOk(PollCommandInternal(simulationTime, command))) {
@@ -159,7 +163,8 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand == Command::None) {
-            return CreateError("Call to PollCommand(...) is missing.");
+            LogError("Call to PollCommand(...) is missing.");
+            return CreateError();
         }
 
         if (!IsOk(FinishCommandInternal())) {
@@ -210,7 +215,8 @@ public:
                 return CreateOk();
         }
 
-        return CreateError(Format("Unknown terminate reason '{}'.", terminateReason));
+        LogError("Unknown terminate reason '{}'.", terminateReason);
+        return CreateError();
     }
 
     [[nodiscard]] Result Pause() override {
@@ -462,7 +468,7 @@ private:
 
     [[nodiscard]] Result LocalConnect() {
         CheckResultWithMessage(TryConnectToLocalChannel(_serverName, _channel),
-                               Format("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName));
+                               fmt::format("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName));
 
         _connectionKind = ConnectionKind::Local;
         return CreateOk();
@@ -470,14 +476,14 @@ private:
 
     [[nodiscard]] Result RemoteConnect() {
         if (_remotePort == 0) {
-            Logger::Instance().LogInfo(Format("Obtaining TCP port of dSPACE VEOS CoSim server '{}' at {} ...", _serverName, _remoteIpAddress));
+            LogInfo("Obtaining TCP port of dSPACE VEOS CoSim server '{}' at {} ...", _serverName, _remoteIpAddress);
             CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort), "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
-            Logger::Instance().LogInfo(Format("Connecting to dSPACE VEOS CoSim server at {}:{} ...", _remoteIpAddress, _remotePort));
+            LogInfo("Connecting to dSPACE VEOS CoSim server at {}:{} ...", _remoteIpAddress, _remotePort);
         } else {
-            Logger::Instance().LogInfo(Format("Connecting to dSPACE VEOS CoSim server '{}' at {}:{} ...", _serverName, _remoteIpAddress, _remotePort));
+            LogInfo("Connecting to dSPACE VEOS CoSim server '{}' at {}:{} ...", _serverName, _remoteIpAddress, _remotePort);
         }
 
         CheckResultWithMessage(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel),
@@ -523,12 +529,12 @@ private:
         _frControllersExtern = Convert(_frControllers);
 
         if (_connectionKind == ConnectionKind::Local) {
-            Logger::Instance().LogInfo(Format("Connected to local dSPACE VEOS CoSim server '{}'.", _serverName));
+            LogInfo("Connected to local dSPACE VEOS CoSim server '{}'.", _serverName);
         } else {
             if (_serverName.empty()) {
-                Logger::Instance().LogInfo(Format("Connected to dSPACE VEOS CoSim server at {}:{}.", _remoteIpAddress, _remotePort));
+                LogInfo("Connected to dSPACE VEOS CoSim server at {}:{}.", _remoteIpAddress, _remotePort);
             } else {
-                Logger::Instance().LogInfo(Format("Connected to dSPACE VEOS CoSim server '{}' at {}:{}.", _serverName, _remoteIpAddress, _remotePort));
+                LogInfo("Connected to dSPACE VEOS CoSim server '{}' at {}:{}.", _serverName, _remoteIpAddress, _remotePort);
             }
         }
 
@@ -551,7 +557,8 @@ private:
     [[nodiscard]] Result OnConnectError() const {
         std::string errorString;
         CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorString), "Could not read error frame.");
-        return CreateError(errorString);
+        LogError(errorString);
+        return CreateError();
     }
 
     [[nodiscard]] Result ReceiveConnectResponse() {
@@ -800,7 +807,8 @@ private:
 
     [[nodiscard]] Result EnsureIsConnected() const {
         if (!_isConnected) {
-            return CreateError("Not connected.");
+            LogError("Not connected.");
+            return CreateError();
         }
 
         return CreateOk();
@@ -815,10 +823,12 @@ private:
                 _responderMode = ResponderMode::Blocking;
                 return CreateOk();
             case ResponderMode::NonBlocking:
-                return CreateError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
+                LogError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
+                return CreateError();
         }
 
-        return CreateError("Invalid responder mode.");
+        LogError("Invalid responder mode.");
+        return CreateError();
     }
 
     [[nodiscard]] Result EnsureIsInResponderModeNonBlocking() {
@@ -830,14 +840,16 @@ private:
                 _responderMode = ResponderMode::NonBlocking;
                 return CreateOk();
             case ResponderMode::Blocking:
-                return CreateError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
+                LogError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
+                return CreateError();
         }
 
-        return CreateError("Invalid responder mode.");
+        LogError("Invalid responder mode.");
+        return CreateError();
     }
 
     void CloseConnection() {
-        Logger::Instance().LogWarning("dSPACE VEOS CoSim server disconnected.");
+        LogWarning("dSPACE VEOS CoSim server disconnected.");
 
         _isConnected = false;
 
@@ -847,21 +859,25 @@ private:
     }
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
-        return CreateError(Format("Received unexpected frame '{}'.", frameKind));
+        LogError("Received unexpected frame '{}'.", frameKind);
+        return CreateError();
     }
 
     [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
         if (length > CanMessageMaxLength) {
-            return CreateInvalidArgument("CAN message data exceeds maximum length.");
+            LogError("CAN message data exceeds maximum length.");
+            return CreateInvalidArgument();
         }
 
         if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
             if (length > 8) {
-                return CreateInvalidArgument("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
+                LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
+                return CreateInvalidArgument();
             }
 
             if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-                return CreateInvalidArgument("CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
+                LogError("CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
+                return CreateInvalidArgument();
             }
         }
 

@@ -1,15 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.hpp"
-
 #ifdef _WIN32
 
 #include <array>
 #include <thread>
 
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

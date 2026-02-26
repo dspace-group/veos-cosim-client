@@ -2,14 +2,14 @@
 
 #include "TestHelper.hpp"
 
+#include <memory>
+#include <string>
+#include <thread>
+
 #include <fmt/format.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <memory>
-#include <string>
-#include <thread>
 
 #include "Helper.hpp"
 

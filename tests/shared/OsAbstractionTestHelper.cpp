@@ -3,10 +3,12 @@
 #include "OsAbstractionTestHelper.hpp"
 
 #include <string>
-#include "Error.hpp"
-#include "Socket.hpp"
 
 #include <fmt/format.h>
+
+#include "Logger.hpp"
+#include "Result.hpp"
+#include "Socket.hpp"
 
 #ifdef _WIN32
 
@@ -60,7 +62,8 @@ namespace {
     in_addr ipAddressInt{};
     int32_t result = inet_pton(AF_INET, ipAddress.c_str(), &ipAddressInt);
     if (result <= 0) {
-        return CreateError("Could not convert IP address string to integer.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not convert IP address string to integer.");
+        return CreateError();
     }
 
     address.sin_family = AF_INET;
@@ -84,7 +87,8 @@ void Shutdown(const SocketHandle& socketHandle) {
 
     pipe = open(name.data(), O_RDWR | O_CLOEXEC);  // NOLINT(cppcoreguidelines-pro-type-vararg)
     if (pipe < 0) {
-        return CreateError("Could not open pipe.");
+        LogError("Could not open pipe.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -130,7 +134,8 @@ UdpSocket::~UdpSocket() noexcept {
 [[nodiscard]] Result UdpSocket::CreateClient(UdpSocket& udpSocket) {
     SocketHandle socketHandle(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
     if (!socketHandle.IsValid()) {
-        return CreateError("Could not create UDP socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not create UDP socket.");
+        return CreateError();
     }
 
     udpSocket = UdpSocket(std::move(socketHandle));
@@ -140,7 +145,8 @@ UdpSocket::~UdpSocket() noexcept {
 [[nodiscard]] Result UdpSocket::CreateServer(const std::string& ipAddress, uint16_t port, UdpSocket& udpSocket) {
     SocketHandle socketHandle(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
     if (!socketHandle.IsValid()) {
-        return CreateError("Could not create UDP socket.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not create UDP socket.");
+        return CreateError();
     }
 
     sockaddr_in socketAddress{};
@@ -148,7 +154,8 @@ UdpSocket::~UdpSocket() noexcept {
 
     int32_t result = bind(socketHandle.Get(), reinterpret_cast<const sockaddr*>(&socketAddress), static_cast<SocketLength>(sizeof socketAddress));
     if (result < 0) {
-        return CreateError("Could not bind.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not bind.");
+        return CreateError();
     }
 
     udpSocket = UdpSocket(std::move(socketHandle));
@@ -160,7 +167,8 @@ UdpSocket::~UdpSocket() noexcept {
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
     auto length = CAST(sendto(_socketHandle.Get(), sourcePointer, static_cast<int32_t>(size), 0, reinterpret_cast<const sockaddr*>(&address), addressLength));
     if (length != static_cast<int32_t>(size)) {
-        return CreateError("Could not send.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not send.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -171,7 +179,8 @@ UdpSocket::~UdpSocket() noexcept {
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
     auto length = CAST(recvfrom(_socketHandle.Get(), destinationPointer, static_cast<int32_t>(size), 0, reinterpret_cast<sockaddr*>(&address), &addressLength));
     if (length != static_cast<int32_t>(size)) {
-        return CreateError("Could not receive.", GetLastNetworkError());
+        LogError(GetLastNetworkError(), "Could not receive.");
+        return CreateError();
     }
 
     return CreateOk();
@@ -203,19 +212,22 @@ PipeClient::~PipeClient() noexcept {
 
         DWORD lastError = GetLastError();
         if (lastError != ERROR_PIPE_BUSY) {
-            return CreateError("Could not create pipe.");
+            LogError("Could not create pipe.");
+            return CreateError();
         }
 
         BOOL result = WaitNamedPipeA(fullName.c_str(), 10);
         if (result == 0) {
-            return CreateError("Could not create pipe.");
+            LogError("Could not create pipe.");
+            return CreateError();
         }
     }
 
     DWORD dwMode = PIPE_READMODE_MESSAGE;
     BOOL success = SetNamedPipeHandleState(pipe.Get(), &dwMode, nullptr, nullptr);
     if (success == 0) {
-        return CreateError("Could not set pipe to message mode.");
+        LogError("Could not set pipe to message mode.");
+        return CreateError();
     }
 
     client = PipeClient();
@@ -248,12 +260,14 @@ PipeClient::~PipeClient() noexcept {
                                  0,
                                  nullptr));
     if (!pipe.IsValid()) {
-        return CreateError("Could not create pipe.");
+        LogError("Could not create pipe.");
+        return CreateError();
     }
 
     bool connected = ConnectNamedPipe(pipe.Get(), nullptr) != 0 ? true : GetLastError() == ERROR_PIPE_CONNECTED;
     if (!connected) {
-        return CreateError("Could not connect.");
+        LogError("Could not connect.");
+        return CreateError();
     }
 
     client = PipeClient();

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "CoSimTypes.hpp"
-#include "Error.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 

@@ -8,8 +8,8 @@
 
 #include <fmt/color.h>
 
-#include "Error.hpp"
 #include "Logger.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32
@@ -32,8 +32,6 @@ namespace DsVeosCoSim {
 
 namespace {
 
-std::string LastMessage;
-
 [[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
     SocketListener listener;
     CheckResult(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
@@ -54,22 +52,6 @@ std::string LastMessage;
 }
 
 }  // namespace
-
-void LogError(const std::string& message) {
-    print(fg(fmt::color::red), "{}\n", message);
-}
-
-void LogWarning(const std::string& message) {
-    print(fg(fmt::color::yellow), "{}\n", message);
-}
-
-void LogInfo(const std::string& message) {
-    print(fg(fmt::color::white), "{}\n", message);
-}
-
-void LogTrace(const std::string& message) {
-    print(fg(fmt::color::light_gray), "{}\n", message);
-}
 
 void InitializeOutput() {
 #ifdef _WIN32
@@ -95,30 +77,47 @@ void MustBeOk(const Result& result) {
     }
 }
 
+void MustBeNotConnected(const Result& result) {
+    if (!IsNotConnected(result)) {
+        exit(1);
+    }
+}
+
 void OnLogCallback(Severity severity, std::string_view message) {
-    LastMessage = message;
     switch (severity) {
         case Severity::Error:
-            LogError(message);
+            print(fg(fmt::color::red), "{}\n", message);
             break;
         case Severity::Warning:
-            LogWarning(message);
+            print(fg(fmt::color::yellow), "{}\n", message);
             break;
         case Severity::Info:
-            LogInfo(message);
+            print(fg(fmt::color::white), "{}\n", message);
             break;
         case Severity::Trace:
-            LogTrace(message);
+            print(fg(fmt::color::light_gray), "{}\n", message);
             break;
     }
 }
 
-void ClearLastMessage() {
-    LastMessage.clear();
+void LogIoData(std::string_view ioDataStr) {
+    print(fg(fmt::color::fuchsia), "{}\n", ioDataStr);
 }
 
-[[nodiscard]] std::string GetLastMessage() {
-    return LastMessage;
+void LogCanMessage(std::string_view canMessageStr) {
+    print(fg(fmt::color::dodger_blue), "{}\n", canMessageStr);
+}
+
+void LogEthMessage(std::string_view ethMessageStr) {
+    print(fg(fmt::color::cyan), "{}\n", ethMessageStr);
+}
+
+void LogLinMessage(std::string_view linMessageStr) {
+    print(fg(fmt::color::lime), "{}\n", linMessageStr);
+}
+
+void LogFrMessage(std::string_view linMessageStr) {
+    print(fg(fmt::color::blue_violet), "{}\n", linMessageStr);
 }
 
 [[nodiscard]] int32_t GetChar() {

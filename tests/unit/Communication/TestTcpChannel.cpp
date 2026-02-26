@@ -1,11 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <gtest/gtest.h>
-
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <fmt/format.h>
+
+#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "Helper.hpp"

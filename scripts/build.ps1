@@ -4,8 +4,6 @@ param(
   [string]$config = "Debug"
 )
 
-$ErrorActionPreference = "Stop"
-
 switch ($config.ToLower()) {
   'debug' { $config = "Debug" }
   'release' { $config = "Release" }
@@ -32,14 +30,16 @@ if (-not (Test-Path $buildDir)) {
   New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 }
 
-Push-Location $buildDir
-
-try {
-  & cmake ../.. -GNinja -DCMAKE_BUILD_TYPE="$config" -DDSVEOSCOSIM_BUILD_TESTS=ON
-  & cmake --build . --config $config
-
-  Write-Host "Building for $config finished successfully." -ForegroundColor Blue
+& cmake . -B "$buildDir" -GNinja -DCMAKE_BUILD_TYPE="$config" -DDSVEOSCOSIM_BUILD_TESTS=ON
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "Building for $config failed."
+  exit 1
 }
-finally {
-  Pop-Location
+
+& cmake --build "$buildDir" --config $config
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "Building for $config failed."
+  exit 1
 }
+
+Write-Host "Building for $config finished successfully." -ForegroundColor Blue

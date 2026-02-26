@@ -10,8 +10,9 @@
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
-#include "Error.hpp"
+#include "Logger.hpp"
 #include "ProtocolLogger.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -42,7 +43,8 @@ public:
 
     [[nodiscard]] Result WriteSize(ChannelWriter& writer, size_t size) override {
         if (size > UINT32_MAX) {
-            return CreateError("Size exceeds maximum supported value.");
+            LogError("Size exceeds maximum supported value.");
+            return CreateError();
         }
 
         auto intSize = static_cast<uint32_t>(size);
@@ -92,7 +94,8 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > CanMessageMaxLength) {
-            return CreateError("CAN message data exceeds maximum length.");
+            LogError("CAN message data exceeds maximum length.");
+            return CreateError();
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
@@ -124,7 +127,8 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > EthMessageMaxLength) {
-            return CreateError("Ethernet message data exceeds maximum length.");
+            LogError("Ethernet message data exceeds maximum length.");
+            return CreateError();
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
@@ -156,7 +160,8 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > LinMessageMaxLength) {
-            return CreateError("LIN message data exceeds maximum length.");
+            LogError("LIN message data exceeds maximum length.");
+            return CreateError();
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
@@ -937,7 +942,8 @@ protected:
         CheckResultWithMessage(ReadSize(reader, size), "Could not read string size.");
 
         if (size > MaxStringSize) {
-            return CreateError("String size exceeds maximum allowed size.");
+            LogError("String size exceeds maximum allowed size.");
+            return CreateError();
         }
 
         string.resize(size);
@@ -948,7 +954,8 @@ protected:
 
     [[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
         if (string.size() > MaxStringSize) {
-            return CreateError("String size exceeds maximum allowed size.");
+            LogError("String size exceeds maximum allowed size.");
+            return CreateError();
         }
 
         CheckResultWithMessage(WriteSize(writer, string.size()), "Could not write string size.");
@@ -1383,7 +1390,8 @@ public:
         blockReader.EndRead();
 
         if (messageContainer.length > FrMessageMaxLength) {
-            return CreateError("FLEXRAY message data exceeds maximum length.");
+            LogError("FlexRay message data exceeds maximum length.");
+            return CreateError();
         }
 
         CheckResultWithMessage(reader.Read(messageContainer.data.data(), messageContainer.length), "Could not read data.");
@@ -1416,7 +1424,8 @@ public:
         return CreateOk();
     }
 
-    return CreateError("Unsupported protocol version.");
+    LogError("Unsupported protocol version.");
+    return CreateError();
 }
 
 }  // namespace DsVeosCoSim

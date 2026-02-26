@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "CoSimTypes.hpp"
-#include "Helper.hpp"
+#include "Result.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -15,12 +15,7 @@ using namespace testing;
 
 namespace {
 
-class TestTypes : public testing::Test {
-protected:
-    void SetUp() override {
-        ClearLastMessage();
-    }
-};
+class TestTypes : public testing::Test {};
 
 TEST_F(TestTypes, DataToString) {
     // Arrange

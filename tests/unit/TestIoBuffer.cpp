@@ -1,11 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <deque>
 #include <memory>
 #include <string>
+
+#include <fmt/format.h>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -61,8 +63,6 @@ protected:
     std::unique_ptr<IProtocol> _protocol;
 
     void SetUp() override {
-        ClearLastMessage();
-
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 };
@@ -113,8 +113,6 @@ protected:
     }
 
     void SetUp() override {
-        ClearLastMessage();
-
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 

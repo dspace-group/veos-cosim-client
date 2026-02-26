@@ -1,17 +1,16 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.hpp"
-
 #ifdef _WIN32
 
 #include <array>
 #include <cstdint>
 #include <string>
 
-#include "Error.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
+#include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -58,15 +57,6 @@ void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
     RunPerformanceTest(EventsTest, "");
     LogTrace("");
-}
-
-}  // namespace DsVeosCoSim
-
-#else
-
-namespace DsVeosCoSim {
-
-void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
 }
 
 }  // namespace DsVeosCoSim

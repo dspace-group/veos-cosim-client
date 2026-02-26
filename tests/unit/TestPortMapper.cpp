@@ -1,11 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <fmt/format.h>
-
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <string>
+
+#include <gtest/gtest.h>
 
 #include "Helper.hpp"
 #include "PortMapper.hpp"
@@ -16,12 +14,7 @@ using namespace testing;
 
 namespace {
 
-class TestPortMapper : public Test {
-protected:
-    void SetUp() override {
-        ClearLastMessage();
-    }
-};
+class TestPortMapper : public Test {};
 
 TEST_F(TestPortMapper, StartOfServer) {
     // Arrange

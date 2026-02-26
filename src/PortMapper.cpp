@@ -9,13 +9,15 @@
 #include <unordered_map>
 #include <utility>
 
+#include <fmt/format.h>
+
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
-#include "Error.hpp"
 #include "Event.hpp"
-#include "Format.hpp"
+#include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -60,7 +62,7 @@ private:
     [[nodiscard]] Result CheckForClient() {
         std::unique_ptr<Channel> channel;
         CheckResult(_server->TryAccept(channel));
-        CheckResultWithMessage(HandleClient(*channel), Format("Port mapper client disconnected unexpectedly."));
+        CheckResultWithMessage(HandleClient(*channel), "Port mapper client disconnected unexpectedly.");
         return CreateOk();
     }
 
@@ -79,7 +81,8 @@ private:
                 CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
                 return CreateOk();
             default:
-                return CreateError(Format("Received unexpected frame '{}'.", frameKind));
+                LogError("Received unexpected frame '{}'.", frameKind);
+                return CreateError();
         }
     }
 
@@ -88,12 +91,12 @@ private:
         CheckResultWithMessage(_protocol->ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            Logger::Instance().LogTrace(Format("Get '{}'", name));
+            LogTrace("Get '{}'", name);
         }
 
         auto search = _ports.find(name);
         if (search == _ports.end()) {
-            std::string message = Format("Could not find port for dSPACE VEOS CoSim server '{}'.", name);
+            std::string message = fmt::format("Could not find port for dSPACE VEOS CoSim server '{}'.", name);
             CheckResultWithMessage(_protocol->SendError(channel.GetWriter(), message), "Could not send error frame.");
             return CreateOk();
         }
@@ -108,7 +111,7 @@ private:
         CheckResultWithMessage(_protocol->ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            Logger::Instance().LogTrace(Format("Set '{}': {}", name, port));
+            LogTrace("Set '{}': {}", name, port);
         }
 
         _ports[name] = port;
@@ -126,7 +129,7 @@ private:
         CheckResultWithMessage(_protocol->ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
         if (IsPortMapperServerVerbose()) {
-            Logger::Instance().LogTrace(Format("Unset '{}'", name));
+            LogTrace("Unset '{}'", name);
         }
 
         _ports.erase(name);
@@ -141,12 +144,12 @@ private:
 
     void DumpEntries() {
         if (_ports.empty()) {
-            Logger::Instance().LogTrace("No PortMapper Ports.");
+            LogTrace("No PortMapper Ports.");
         } else {
-            Logger::Instance().LogTrace("PortMapper Ports:");
+            LogTrace("PortMapper Ports:");
 
             for (auto& [name, port] : _ports) {
-                Logger::Instance().LogTrace(Format("  '{}': {}", name, port));
+                LogTrace("  '{}': {}", name, port);
             }
         }
     }
@@ -173,7 +176,7 @@ private:
 
 [[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
-        Logger::Instance().LogTrace(Format("PortMapperGetPort(ipAddress: '{}', serverName: '{}')", ipAddress, serverName));
+        LogTrace("PortMapperGetPort(ipAddress: '{}', serverName: '{}')", ipAddress, serverName);
     }
 
     std::unique_ptr<Channel> channel;
@@ -196,10 +199,12 @@ private:
         case FrameKind::Error: {
             std::string errorMessage;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage), "Could not read error frame.");
-            return CreateError(errorMessage);
+            LogError(errorMessage);
+            return CreateError();
         }
         default:
-            return CreateError(Format("PortMapperGetPort: Received unexpected frame '{}'.", frameKind));
+            LogError("PortMapperGetPort: Received unexpected frame '{}'.", frameKind);
+            return CreateError();
     }
 }
 
@@ -223,10 +228,12 @@ private:
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
-            return CreateError(errorString);
+            LogError(errorString);
+            return CreateError();
         }
         default:
-            return CreateError(Format("PortMapperSetPort: Received unexpected frame '{}'.", frameKind));
+            LogError("PortMapperSetPort: Received unexpected frame '{}'.", frameKind);
+            return CreateError();
     }
 }
 
@@ -250,10 +257,12 @@ private:
         case FrameKind::Error: {
             std::string errorString;
             CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorString), "Could not read error frame.");
-            return CreateError(errorString);
+            LogError(errorString);
+            return CreateError();
         }
         default:
-            return CreateError(Format("PortMapperUnsetPort: Received unexpected frame '{}'.", frameKind));
+            LogError("PortMapperUnsetPort: Received unexpected frame '{}'.", frameKind);
+            return CreateError();
     }
 }
 

@@ -4,15 +4,14 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "BusBuffer.hpp"
 #include "CoSimTypes.hpp"
-#include "Error.hpp"  // IWYU pragma: keep
 #include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"  // IWYU pragma: keep
 #include "Socket.hpp"
 
 #ifdef _WIN32
@@ -36,39 +35,18 @@ namespace DsVeosCoSim {
 #define CTRL(c) ((c) & 037)
 #endif
 
-void LogError(const std::string& message);
-void LogWarning(const std::string& message);
-void LogInfo(const std::string& message);
-void LogTrace(const std::string& message);
-
-template <typename... T>
-void LogError(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    LogError(fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogWarning(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    LogWarning(fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogInfo(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    LogInfo(fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    LogTrace(fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
 void InitializeOutput();
 
 void MustBeOk(const Result& result);
+void MustBeNotConnected(const Result& result);
 
 void OnLogCallback(Severity severity, std::string_view message);
 
-void ClearLastMessage();
-[[nodiscard]] std::string GetLastMessage();
+void LogIoData(std::string_view ioDataStr);
+void LogCanMessage(std::string_view canMessageStr);
+void LogEthMessage(std::string_view ethMessageStr);
+void LogLinMessage(std::string_view linMessageStr);
+void LogFrMessage(std::string_view linMessageStr);
 
 [[nodiscard]] int32_t GetChar();
 

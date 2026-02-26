@@ -21,9 +21,12 @@ int main(int argc, char* argv[]) {
         RunTcpSocketTest("127.0.0.1");
         RunUdpSocketTest("127.0.0.1");
         RunLocalSocketTest();
-        RunEventsTest();
         RunPipeTest();
+
+#ifdef _WIN32
+        RunEventsTest();
         RunShmPipeTest();
+#endif
 
         RunRemoteCommunicationTest("127.0.0.1");
         RunLocalCommunicationTest();
