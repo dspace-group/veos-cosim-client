@@ -51,6 +51,37 @@ namespace {
     return static_cast<BusMessageId>(GenerateU32());
 }
 
+Severity MinimalSeverity = Severity::Trace;
+
+void OnLogCallback(Severity severity, std::string_view message) {
+    switch (severity) {
+        case Severity::Error:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::red), "{}\n", message);
+            }
+
+            break;
+        case Severity::Warning:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::yellow), "{}\n", message);
+            }
+
+            break;
+        case Severity::Info:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::white), "{}\n", message);
+            }
+
+            break;
+        case Severity::Trace:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::light_gray), "{}\n", message);
+            }
+
+            break;
+    }
+}
+
 }  // namespace
 
 void InitializeOutput() {
@@ -71,6 +102,10 @@ void InitializeOutput() {
     Logger::Instance().SetLogCallback(OnLogCallback);
 }
 
+void SetMinimalSeverity(Severity severity) {
+    MinimalSeverity = severity;
+}
+
 void MustBeOk(const Result& result) {
     if (!IsOk(result)) {
         exit(1);
@@ -80,23 +115,6 @@ void MustBeOk(const Result& result) {
 void MustBeNotConnected(const Result& result) {
     if (!IsNotConnected(result)) {
         exit(1);
-    }
-}
-
-void OnLogCallback(Severity severity, std::string_view message) {
-    switch (severity) {
-        case Severity::Error:
-            print(fg(fmt::color::red), "{}\n", message);
-            break;
-        case Severity::Warning:
-            print(fg(fmt::color::yellow), "{}\n", message);
-            break;
-        case Severity::Info:
-            print(fg(fmt::color::white), "{}\n", message);
-            break;
-        case Severity::Trace:
-            print(fg(fmt::color::light_gray), "{}\n", message);
-            break;
     }
 }
 

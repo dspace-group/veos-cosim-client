@@ -185,14 +185,15 @@ private:
     [[nodiscard]] Result WaitForData();
     [[nodiscard]] Result CheckIfConnectionIsAlive();
     void SetOwnPid(uint32_t pid);
-    [[nodiscard]] uint32_t GetCounterPartPid();
+    [[nodiscard]] uint32_t GetOwnPid() const;
+    [[nodiscard]] uint32_t GetCounterPartPid() const;
 
     NamedEvent _newDataEvent;
     NamedEvent _newSpaceEvent;
     SharedMemory _sharedMemory;
-    bool _isWriter{};
-    uint32_t _detectionCounter{};
     Handle _counterPartProcess{};
+    uint32_t _detectionCounter{};
+    bool _isWriter{};
 };
 
 class ShmPipeListener;

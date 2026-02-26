@@ -83,5 +83,5 @@ void Local(benchmark::State& state) {
 
 }  // namespace
 
-//BENCHMARK(Remote);
+BENCHMARK(Remote);
 BENCHMARK(Local);

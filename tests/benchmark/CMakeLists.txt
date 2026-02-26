@@ -7,13 +7,13 @@ add_executable(
 target_sources(
   DsVeosCoSimBenchmark
   PRIVATE
-  #Communication/BenchmarkChannel.cpp
-  #OsAbstraction/BenchmarkNamedEvent.cpp
-  #OsAbstraction/BenchmarkShmPipe.cpp
-  #OsAbstraction/BenchmarkSocket.cpp
-  #BenchmarkBusBuffer.cpp
+  Communication/BenchmarkChannel.cpp
+  OsAbstraction/BenchmarkNamedEvent.cpp
+  OsAbstraction/BenchmarkShmPipe.cpp
+  OsAbstraction/BenchmarkSocket.cpp
+  BenchmarkBusBuffer.cpp
   BenchmarkCoSim.cpp
-  #BenchmarkIoBuffer.cpp
+  BenchmarkIoBuffer.cpp
   Program.cpp
 )
 

@@ -36,11 +36,10 @@ namespace DsVeosCoSim {
 #endif
 
 void InitializeOutput();
+void SetMinimalSeverity(Severity severity);
 
 void MustBeOk(const Result& result);
 void MustBeNotConnected(const Result& result);
-
-void OnLogCallback(Severity severity, std::string_view message);
 
 void LogIoData(std::string_view ioDataStr);
 void LogCanMessage(std::string_view canMessageStr);

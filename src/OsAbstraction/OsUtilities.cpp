@@ -320,7 +320,10 @@ void SharedMemory::Close() {
 }
 
 ShmPipePart::ShmPipePart(NamedEvent newDataEvent, NamedEvent newSpaceEvent, SharedMemory sharedMemory, bool isWriter)
-    : _newDataEvent(std::move(newDataEvent)), _newSpaceEvent(std::move(newSpaceEvent)), _sharedMemory(std::move(sharedMemory)), _isWriter(isWriter) {
+    : _newDataEvent(std::move(newDataEvent)),
+      _newSpaceEvent(std::move(newSpaceEvent)),
+      _sharedMemory(std::move(sharedMemory)),
+      _isWriter(isWriter) {
     SetOwnPid(GetCurrentProcessId());
 }
 
@@ -375,9 +378,6 @@ void ShmPipePart::Disconnect() {
     }
 
     SetOwnPid(0);
-    _sharedMemory.Close();
-    _newDataEvent.Close();
-    _newSpaceEvent.Close();
 }
 
 [[nodiscard]] Result ShmPipePart::Read(void* destination, size_t size, size_t& receivedSize) {
@@ -468,7 +468,7 @@ void ShmPipePart::Disconnect() {
 }
 
 [[nodiscard]] bool ShmPipePart::IsConnected() const {
-    return _sharedMemory.IsValid();
+    return _sharedMemory.IsValid() && (GetOwnPid() != 0);
 }
 
 [[nodiscard]] uint32_t ShmPipePart::MaskIndex(uint32_t index) {
@@ -487,6 +487,11 @@ void ShmPipePart::Disconnect() {
 
 [[nodiscard]] Result ShmPipePart::EnsureConnected() {
     if (!_sharedMemory.IsValid()) {
+        return CreateNotConnected();
+    }
+
+    uint32_t ownPid = GetOwnPid();
+    if (ownPid == 0) {
         return CreateNotConnected();
     }
 
@@ -587,6 +592,11 @@ void ShmPipePart::Disconnect() {
 [[nodiscard]] Result ShmPipePart::CheckIfConnectionIsAlive() {
     static constexpr uint32_t ConnectionTimeoutInMilliseconds = 5000U;
 
+    uint32_t ownPid = GetOwnPid();
+    if (ownPid == 0) {
+        return CreateNotConnected();
+    }
+
     uint32_t counterPartPid = GetCounterPartPid();
     if (counterPartPid == 0) {
         if (!_counterPartProcess.IsValid()) {
@@ -625,7 +635,12 @@ void ShmPipePart::SetOwnPid(uint32_t pid) {
     }
 }
 
-[[nodiscard]] uint32_t ShmPipePart::GetCounterPartPid() {
+[[nodiscard]] uint32_t ShmPipePart::GetOwnPid() const {
+    auto& header = *_sharedMemory.As<Header>();
+    return _isWriter ? header.writerPid.load(std::memory_order_acquire) : header.readerPid.load(std::memory_order_acquire);
+}
+
+[[nodiscard]] uint32_t ShmPipePart::GetCounterPartPid() const {
     auto& header = *_sharedMemory.As<Header>();
     return _isWriter ? header.readerPid.load(std::memory_order_acquire) : header.writerPid.load(std::memory_order_acquire);
 }
