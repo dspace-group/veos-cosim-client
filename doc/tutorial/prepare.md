@@ -157,7 +157,7 @@ int main() {
 
 ### 5.4 Create compile_flags.txt
 
-In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt`file with the following content:
+In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt` file with the following content:
 
 ```
 -xc++
@@ -165,7 +165,7 @@ In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt`file with the 
 -Iveos-cosim-client/include
 ```
 
-### 5.4 Build the Client
+### 5.5 Build the Client
 
 In the `DsVeosCoSimDemo` directory, run the following commands to create a `build` directory, configure the build project, and compile the test executable:
 
@@ -179,7 +179,7 @@ cmake --build ./build
 >
 > If you use Visual Studio on Windows, make sure to run these commands in the Visual Studio Developer Command Prompt.
 
-### 5.5 Run Client
+### 5.6 Run Client
 
 Run the executable by running the following command in the directory `DsVeosCoSimDemo`:
 

@@ -152,7 +152,7 @@ int main() {
                 canMessage.data = data;
                 DsVeosCoSim_Result result = DsVeosCoSim_TransmitCanMessage(handle, &canMessage);
                 if (result == DsVeosCoSim_Result_Full) {
-                    // No more place in the internal buffer
+                    // No more space in the internal buffer
                 } else if (result != DsVeosCoSim_Result_Ok) {
                     DsVeosCoSim_Disconnect(handle);
                     DsVeosCoSim_Destroy(handle);
