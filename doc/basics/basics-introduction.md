@@ -8,6 +8,7 @@
     - [CoSim server](#cosim-server)
     - [CoSim client](#cosim-client)
   - [Compatibility and licensing](#compatibility-and-licensing)
+  - [Compatibility Overview](#compatibility-overview)
   - [Limitation](#limitation)
 
 ## Introduction
@@ -75,6 +76,17 @@ The VEOS co-simulation interface is compatible with VEOS 2023-B and later.
 It requires the license for the VEOS - AAP (AUTOSAR Adaptive Platform) module.
 
 The VEOS co-simulation client interface is licensed as Open Source under the permissive Apache 2.0 license.
+
+## Compatibility Overview
+
+| Topic | Requirement |
+| --- | --- |
+| VEOS version | VEOS 2023-B or later |
+| License | VEOS - AAP (AUTOSAR Adaptive Platform) module |
+| Supported tutorial platforms | Windows 10 or later, Ubuntu 20.04 LTS or later |
+| Supported tutorial compilers | GCC 7 or later, MSVC 2022 or later, Clang 10 or later |
+| Build system in tutorial | CMake 3.15 or later |
+| Client license | Apache 2.0 |
 
 ## Limitation
 

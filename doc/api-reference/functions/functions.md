@@ -8,7 +8,7 @@
 
 ## Descriptions
 
-Describes all available functions and function pointers.
+Describes all available functions.
 
 ## List of Functions
 
@@ -78,7 +78,7 @@ Receives a CAN message from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveCanMessageContainer](DsVeosCoSim_ReceiveCanMessageContainer.md)
 
-Receives a CAN message from the VEOS CoSim server.
+Receives a CAN message container from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveEthMessage](DsVeosCoSim_ReceiveEthMessage.md)
 
@@ -86,15 +86,15 @@ Receives an Ethernet message from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveEthMessageContainer](DsVeosCoSim_ReceiveEthMessageContainer.md)
 
-Receives an Ethernet message from the VEOS CoSim server.
+Receives an Ethernet message container from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveFrMessage](DsVeosCoSim_ReceiveFrMessage.md)
 
-Receives an FlexRay message from the VEOS CoSim server.
+Receives a FlexRay message from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveFrMessageContainer](DsVeosCoSim_ReceiveFrMessageContainer.md)
 
-Receives an FlexRay message from the VEOS CoSim server.
+Receives a FlexRay message container from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveLinMessage](DsVeosCoSim_ReceiveLinMessage.md)
 
@@ -102,7 +102,7 @@ Receives a LIN message from the VEOS CoSim server.
 
 > [DsVeosCoSim_ReceiveLinMessageContainer](DsVeosCoSim_ReceiveLinMessageContainer.md)
 
-Receives a LIN message from the VEOS CoSim server.
+Receives a LIN message container from the VEOS CoSim server.
 
 > [DsVeosCoSim_RunCallbackBasedCoSimulation](DsVeosCoSim_RunCallbackBasedCoSimulation.md)
 
@@ -118,7 +118,7 @@ Sets the next simulation time for the given client handle.
 
 > [DsVeosCoSim_StartPollingBasedCoSimulation](DsVeosCoSim_StartPollingBasedCoSimulation.md)
 
-Starts a co-simulation in non-blocking mode.
+Starts a polling-based co-simulation in non-blocking mode.
 
 > [DsVeosCoSim_TransmitCanMessage](DsVeosCoSim_TransmitCanMessage.md)
 
@@ -126,7 +126,7 @@ Transmits a CAN message to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitCanMessageContainer](DsVeosCoSim_TransmitCanMessageContainer.md)
 
-Transmits a CAN message to the VEOS CoSim server.
+Transmits a CAN message container to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitEthMessage](DsVeosCoSim_TransmitEthMessage.md)
 
@@ -134,15 +134,15 @@ Transmits an Ethernet message to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitEthMessageContainer](DsVeosCoSim_TransmitEthMessageContainer.md)
 
-Transmits an Ethernet message to the VEOS CoSim server.
+Transmits an Ethernet message container to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitFrMessage](DsVeosCoSim_TransmitFrMessage.md)
 
-Transmits an FlexRay message to the VEOS CoSim server.
+Transmits a FlexRay message to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitFrMessageContainer](DsVeosCoSim_TransmitFrMessageContainer.md)
 
-Transmits an FlexRay message to the VEOS CoSim server.
+Transmits a FlexRay message container to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitLinMessage](DsVeosCoSim_TransmitLinMessage.md)
 
@@ -150,7 +150,7 @@ Transmits a LIN message to the VEOS CoSim server.
 
 > [DsVeosCoSim_TransmitLinMessageContainer](DsVeosCoSim_TransmitLinMessageContainer.md)
 
-Transmits a LIN message to the VEOS CoSim server.
+Transmits a LIN message container to the VEOS CoSim server.
 
 > [DsVeosCoSim_WriteOutgoingSignal](DsVeosCoSim_WriteOutgoingSignal.md)
 
