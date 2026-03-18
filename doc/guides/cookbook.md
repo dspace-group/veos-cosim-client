@@ -30,12 +30,14 @@ DsVeosCoSim_Result result = DsVeosCoSim_Connect(handle, connectConfig);
 
 If the server uses a static TCP port, set `remotePort` explicitly.
 
+If both `serverName` and `remotePort` are set, the static port is used for the connection.
+
 ## Use Callback-Based Execution
 
 ```cpp
 DsVeosCoSim_Callbacks callbacks{};
 callbacks.simulationEndStepCallback = OnEndStep;
-callbacks.userData = &handle;
+callbacks.userData = handle;
 
 DsVeosCoSim_Result result = DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks);
 ```
@@ -100,3 +102,5 @@ if (result == DsVeosCoSim_Result_Ok) {
 }
 
 ```
+
+If you register a CAN receive callback for the same connection, do not use this pull-based receive pattern for CAN data on that connection.

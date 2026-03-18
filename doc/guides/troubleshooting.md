@@ -18,7 +18,7 @@ Check:
 - `serverName` is set when using the port mapper.
 - `remotePort` is set when connecting to a static port.
 - `remoteIpAddress` is set when the server is not local.
-- the VEOS simulator has loaded the OSA and the CoSim server is available.
+- The VEOS simulator has loaded the OSA and the CoSim server is available.
 
 Problem: The wrong server is reached or the connection goes to the wrong endpoint.
 
@@ -63,6 +63,7 @@ Check:
 
 - A callback for the same bus type is not already registered.
 - You are not mixing message and message-container processing styles unintentionally.
+- The connection is still active.
 
 Problem: Signal access fails.
 
@@ -70,6 +71,7 @@ Check:
 
 - The signal ID was obtained from the currently connected handle.
 - The provided buffer length matches the signal data you expect to read or write.
+- The signal direction matches the API: incoming signals for read operations, outgoing signals for write operations.
 
 Problem: Transmit calls return a full-buffer result.
 

@@ -44,11 +44,11 @@ void OnLog(DsVeosCoSim_Severity severity, const char* message) {
 }
 
 void OnEndStep(DsVeosCoSim_SimulationTime simulationTime, void* userData) {
-    auto* handle = static_cast<DsVeosCoSim_Handle*>(userData);
+    DsVeosCoSim_Handle handle = userData;
     std::cout << "Step at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s\n";
 
     if (simulationTime >= DSVEOSCOSIM_SECONDS_TO_SIMULATION_TIME(1.0)) {
-        DsVeosCoSim_Disconnect(*handle);
+        DsVeosCoSim_Disconnect(handle);
     }
 }
 
@@ -70,7 +70,7 @@ int main() {
 
     DsVeosCoSim_Callbacks callbacks{};
     callbacks.simulationEndStepCallback = OnEndStep;
-    callbacks.userData = &handle;
+    callbacks.userData = handle;
 
     DsVeosCoSim_Result result = DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks);
     DsVeosCoSim_Destroy(handle);
@@ -83,7 +83,7 @@ int main() {
 
 - The log callback receives diagnostic messages from the client library.
 - The end-step callback runs once per completed step.
-- The client disconnects itself after one simulated second.
+- The callback disconnects the client after one simulated second.
 - [DsVeosCoSim_RunCallbackBasedCoSimulation](../api-reference/functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md) normally returns [DsVeosCoSim_Result_Disconnected](../api-reference/enumerations/DsVeosCoSim_Result.md) when the co-simulation stops cleanly.
 
 ## Next Steps

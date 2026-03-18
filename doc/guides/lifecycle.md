@@ -67,3 +67,4 @@ If you call `PollCommand` twice in a row without `FinishCommand`, the client rep
 - Disconnect before destroying the handle if a co-simulation is currently active.
 - After a disconnect, reacquire dynamic data such as signal lists or controller lists when you connect again.
 - Use [DsVeosCoSim_SetNextSimulationTime](../api-reference/functions/DsVeosCoSim_SetNextSimulationTime.md) only to influence step scheduling during an active co-simulation.
+- If you want to change execution mode, disconnect first and then reconnect before starting the new mode.

@@ -30,6 +30,7 @@ Usage rules:
 
 - Do not modify these arrays.
 - Do not free these arrays.
+- Treat these pointers as valid only while the same handle remains connected.
 - Reacquire them after connecting again with the same handle.
 - Do not rely on previously returned pointers after reconnecting or destroying the handle.
 
@@ -46,13 +47,15 @@ This applies to pointers such as:
 - message pointers
 - message-container pointers
 
-If you need the data after the callback returns, copy it during the callback.
+If you need any of this data after the callback returns, copy it during the callback.
 
 ## Message and Signal Buffers
 
 - Receive functions fill caller-provided output structures.
 - Signal read and write functions operate on caller-provided buffers.
 - For [DsVeosCoSim_WriteOutgoingSignal](../api-reference/functions/DsVeosCoSim_WriteOutgoingSignal.md), the caller retains ownership of the provided value buffer.
+
+When in doubt, prefer copying data into application-owned storage instead of caching library-owned pointers.
 
 ## Practical Recommendations
 
