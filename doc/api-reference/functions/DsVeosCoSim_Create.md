@@ -15,7 +15,7 @@ Creates a new VEOS CoSim client.
 ## Syntax
 
 ```c
-DSVEOSCOSIM_DECL DsVeosCoSim_Handle DsVeosCoSim_Connect(void);
+DSVEOSCOSIM_DECL DsVeosCoSim_Handle DsVeosCoSim_Create(void);
 ```
 
 ## Parameters

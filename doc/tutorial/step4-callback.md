@@ -255,10 +255,10 @@ veos-sim start
 The following listing shows the output produced by the client:
 
 ```console
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.002 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.022 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.042 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.062 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.002 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.022 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.042 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.062 s.
 ```
 
 ## 7 Cleanup

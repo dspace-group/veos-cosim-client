@@ -19,7 +19,7 @@ typedef enum DsVeosCoSim_Result {
     DsVeosCoSim_Result_Ok,
     DsVeosCoSim_Result_Error,
     DsVeosCoSim_Result_Empty,
-    DsVeosCoSim_Result_Full
+    DsVeosCoSim_Result_Full,
     DsVeosCoSim_Result_InvalidArgument,
     DsVeosCoSim_Result_Disconnected
 } DsVeosCoSim_Result;

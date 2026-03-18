@@ -270,7 +270,7 @@ int main() {
     callbacks.incomingSignalChangedCallback = OnSignal;
     callbacks.simulationEndStepCallback = OnEndStep;
     callbacks.userData = handle;  // Pass the handle to every callback
-    if (DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks) != DsVeosCoSim_Result_Ok) {
+    if (DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks) != DsVeosCoSim_Result_Disconnected) {
         DsVeosCoSim_Disconnect(handle);
         DsVeosCoSim_Destroy(handle);
         return 1;
@@ -366,7 +366,7 @@ the current simulation time in seconds.
 The second client performs a callback-based simulation in which the `OnSignal` function is called when the input signal changes.
 It then prints the new value and the corresponding simulation time.
 
-The `OnEndStep` function is called at the end of each simulation step. It reads the first incoming signal in the list
+The `OnEndStep` function is called at the end of each simulation step. It reads the first incoming signal in the list (`ioSignals[0]`)
 and prints its value and the corresponding simulation time.
 
 ## 5 Running the Co-Simulation

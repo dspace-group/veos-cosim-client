@@ -264,4 +264,4 @@ veos-sim unload
 
 ## 8 Next Step
 
-Refer to [Step 7: Running a Polling-Based Simulation](step7-poll.md).
+Refer to [Step 8: Handling I/O Signals](step8-io-signals.md).
