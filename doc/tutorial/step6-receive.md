@@ -82,7 +82,8 @@ void OnEndStep(DsVeosCoSim_SimulationTime simulationTime, void* userData) {
         DsVeosCoSim_CanMessage message{};
         DsVeosCoSim_Result result = DsVeosCoSim_ReceiveCanMessage(handle, &message);
         if (result == DsVeosCoSim_Result_Ok) {
-            std::cout << "Received CAN message with ID " << message.id << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+            std::cout << "Received CAN message with ID " << message.id << " at "
+                      << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
         } else if (result == DsVeosCoSim_Result_Empty) {
             // No more messages
             break;
@@ -133,7 +134,8 @@ void OnCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                   const DsVeosCoSim_CanController* canController,
                   const DsVeosCoSim_CanMessage* message,
                   void* userData) {
-    std::cout << "Received CAN message with ID " << message->id << " with data " << DataToString(message->data, message->length, '-') << " from CAN controller "
+    std::cout << "Received CAN message with ID " << message->id << " with data "
+              << DataToString(message->data, message->length, '-') << " from CAN controller "
               << canController->name << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 

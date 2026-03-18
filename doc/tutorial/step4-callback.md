@@ -116,7 +116,8 @@ void OnCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                   const DsVeosCoSim_CanController* canController,
                   const DsVeosCoSim_CanMessage* message,
                   void* userData) {
-    std::cout << "Received CAN message with ID " << message->id << " with data " << DataToString(message->data, message->length, '-') << " from CAN controller "
+    std::cout << "Received CAN message with ID " << message->id << " with data "
+              << DataToString(message->data, message->length, '-') << " from CAN controller "
               << canController->name << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 // END ADDITION

@@ -53,7 +53,7 @@ A pointer to the received LIN message container.
 
 > void* userData
 
-The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Lin be `NULL`.
+The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
 
 ## Return values
 

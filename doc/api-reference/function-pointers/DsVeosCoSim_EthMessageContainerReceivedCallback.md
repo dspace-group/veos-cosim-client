@@ -53,7 +53,7 @@ A pointer to the received Ethernet message container.
 
 > void* userData
 
-The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Eth be `NULL`.
+The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
 
 ## Return values
 

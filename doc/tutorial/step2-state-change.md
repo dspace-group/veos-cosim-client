@@ -119,7 +119,7 @@ int main() {
     }
 
     DsVeosCoSim_Destroy(handle);
-    return 0; 
+    return 0;
 }
 ```
 
