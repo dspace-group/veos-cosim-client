@@ -30,7 +30,7 @@ The handle of the VEOS CoSim client.
 
 > uint32_t* incomingSignalsCount
 
-A pointer to the counter of incoming signals.
+A pointer to the number of incoming signals.
 
 > const [DsVeosCoSim_IoSignal](../structures/DsVeosCoSim_IoSignal.md)** incomingSignals
 

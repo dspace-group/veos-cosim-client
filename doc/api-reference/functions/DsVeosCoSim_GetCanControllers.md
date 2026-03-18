@@ -30,7 +30,7 @@ The handle of the VEOS CoSim client.
 
 > uint32_t* canControllersCount
 
-A pointer to the counter of CAN controllers.
+A pointer to the number of CAN controllers.
 
 > const [DsVeosCoSim_CanController](../structures/DsVeosCoSim_CanController.md)** canControllers
 

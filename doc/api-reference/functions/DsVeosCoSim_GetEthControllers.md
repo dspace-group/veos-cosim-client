@@ -30,7 +30,7 @@ The handle of the VEOS CoSim client.
 
 > uint32_t* ethControllersCount
 
-A pointer to the counter of Ethernet controllers.
+A pointer to the number of Ethernet controllers.
 
 > const [DsVeosCoSim_EthController](../structures/DsVeosCoSim_EthController.md)** ethControllers
 

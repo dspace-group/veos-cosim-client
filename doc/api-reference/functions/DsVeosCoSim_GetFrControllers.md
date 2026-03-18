@@ -30,7 +30,7 @@ The handle of the VEOS CoSim client.
 
 > uint32_t* frControllersCount
 
-A pointer to the counter of FlexRay controllers.
+A pointer to the number of FlexRay controllers.
 
 > const [DsVeosCoSim_FrController](../structures/DsVeosCoSim_FrController.md)** frControllers
 
