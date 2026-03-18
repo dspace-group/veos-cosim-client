@@ -30,7 +30,7 @@ typedef enum DsVeosCoSim_Command {
 
 > DsVeosCoSim_Command_None
 
-No simulation command
+No simulation command.
 
 > DsVeosCoSim_Command_Step
 

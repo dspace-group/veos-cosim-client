@@ -8,7 +8,7 @@
 
 ## Description
 
-Describes all available macros and contstants.
+Describes all available macros and constants.
 
 ## List of Macros and Constants
 
@@ -36,6 +36,6 @@ Defines the maximum length of a LIN message payload.
 
 Defines the conversion factor between DsVeosCoSim_SimulationTime and seconds in data type double.
 
-[DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS](DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS.md)
+> [DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS](DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS.md)
 
 Converts the given simulation time to a double in seconds.
