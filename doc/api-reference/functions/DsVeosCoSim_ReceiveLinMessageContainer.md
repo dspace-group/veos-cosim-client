@@ -10,12 +10,12 @@
 
 ## Description
 
-Receives a LIN message from the VEOS CoSim server.
+Receives a LIN message container from the VEOS CoSim server.
 
 > [!NOTE]
 > If the [DsVeosCoSim_LinMessageReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageReceivedCallback.md) callback
 > or the [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback is registered,
-> LIN messages cannot be collected using the `DsVeosCoSim_ReceiveLinMessageContainer` function.
+> LIN message containers cannot be collected using the `DsVeosCoSim_ReceiveLinMessageContainer` function.
 
 ## Syntax
 

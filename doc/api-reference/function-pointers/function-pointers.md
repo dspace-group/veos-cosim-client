@@ -14,7 +14,7 @@ Describes all available function pointers.
 
 > [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md)
 
-Called when a new CAN message is received from the VEOS CoSim server.
+Called when a new CAN message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_CanMessageReceivedCallback](DsVeosCoSim_CanMessageReceivedCallback.md)
 
@@ -22,7 +22,7 @@ Called when a new CAN message is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md)
 
-Called when a new Ethernet message is received from the VEOS CoSim server.
+Called when a new Ethernet message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_EthMessageReceivedCallback](DsVeosCoSim_EthMessageReceivedCallback.md)
 
@@ -30,7 +30,7 @@ Called when a new Ethernet message is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md)
 
-Called when a new FlexRay message is received from the VEOS CoSim server.
+Called when a new FlexRay message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_FrMessageReceivedCallback](DsVeosCoSim_FrMessageReceivedCallback.md)
 
@@ -42,7 +42,7 @@ Called when the value of an incoming I/O signal has changed.
 
 > [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md)
 
-Called when a new LIN message is received from the VEOS CoSim server.
+Called when a new LIN message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_LinMessageReceivedCallback](DsVeosCoSim_LinMessageReceivedCallback.md)
 

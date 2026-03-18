@@ -21,7 +21,7 @@ The `DsVeosCoSim_LinMessageReceivedCallback` callback can be registered with the
 > [DsVeosCoSim_ReceiveLinMessageContainer](../functions/DsVeosCoSim_ReceiveLinMessageContainer.md).
 
 > [!NOTE]
-> If both, the [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback as well as the `DsVeosCoSim_LinMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md) will be called.
+> If both the [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback and the `DsVeosCoSim_LinMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.

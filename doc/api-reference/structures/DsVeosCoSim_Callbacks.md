@@ -90,13 +90,13 @@ Arbitrary user data to be passed to every callback.
 
 Called when a CAN message container is received from VEOS.
 
-> [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md) linMessageContainerReceivedCallback
-
-Called when a LIN message container is received from VEOS.
-
 > [DsVeosCoSim_EthMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageContainerReceivedCallback.md) ethMessageContainerReceivedCallback
 
 Called when an Ethernet message container is received from VEOS.
+
+> [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md) linMessageContainerReceivedCallback
+
+Called when a LIN message container is received from VEOS.
 
 > [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md) frMessageContainerReceivedCallback
 

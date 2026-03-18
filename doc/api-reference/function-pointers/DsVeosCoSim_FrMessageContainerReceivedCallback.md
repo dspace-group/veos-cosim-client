@@ -11,7 +11,7 @@
 
 ## Description
 
-Called when a new FlexRay message is received from the VEOS CoSim server.
+Called when a new FlexRay message container is received from the VEOS CoSim server.
 
 The `DsVeosCoSim_FrMessageContainerReceivedCallback` callback can be registered with the [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md) function or the [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md) function.
 
@@ -21,7 +21,7 @@ The `DsVeosCoSim_FrMessageContainerReceivedCallback` callback can be registered 
 > [DsVeosCoSim_ReceiveFrMessageContainer](../functions/DsVeosCoSim_ReceiveFrMessageContainer.md).
 
 > [!NOTE]
-> If both, the `DsVeosCoSim_FrMessageContainerReceivedCallback` callback as well as the [DsVeosCoSim_FrMessageReceivedCallback](DsVeosCoSim_FrMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_FrMessageContainerReceivedCallback` will be called.
+> If both the `DsVeosCoSim_FrMessageContainerReceivedCallback` callback and the [DsVeosCoSim_FrMessageReceivedCallback](DsVeosCoSim_FrMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_FrMessageContainerReceivedCallback` callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.

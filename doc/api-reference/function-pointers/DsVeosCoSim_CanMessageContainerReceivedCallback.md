@@ -11,7 +11,7 @@
 
 ## Description
 
-Called when a new CAN message is received from the VEOS CoSim server.
+Called when a new CAN message container is received from the VEOS CoSim server.
 
 The `DsVeosCoSim_CanMessageContainerReceivedCallback` callback can be registered with the [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md) function or the [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md) function.
 
@@ -21,7 +21,7 @@ The `DsVeosCoSim_CanMessageContainerReceivedCallback` callback can be registered
 > [DsVeosCoSim_ReceiveCanMessageContainer](../functions/DsVeosCoSim_ReceiveCanMessageContainer.md).
 
 > [!NOTE]
-> If both, the `DsVeosCoSim_CanMessageContainerReceivedCallback` callback as well as the [DsVeosCoSim_CanMessageReceivedCallback](DsVeosCoSim_CanMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_CanMessageContainerReceivedCallback` will be called.
+> If both the `DsVeosCoSim_CanMessageContainerReceivedCallback` callback and the [DsVeosCoSim_CanMessageReceivedCallback](DsVeosCoSim_CanMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_CanMessageContainerReceivedCallback` callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.
