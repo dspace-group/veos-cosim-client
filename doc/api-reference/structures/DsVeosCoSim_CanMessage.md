@@ -53,6 +53,6 @@ The CAN message payload.
 
 ## See Also
 
-- [DsVeosCoSim_CanMessageReceivedCallback](../functions/DsVeosCoSim_CanMessageReceivedCallback.md)
+- [DsVeosCoSim_CanMessageReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageReceivedCallback.md)
 - [DsVeosCoSim_ReceiveCanMessage](../functions/DsVeosCoSim_ReceiveCanMessage.md)
 - [DsVeosCoSim_TransmitCanMessage](../functions/DsVeosCoSim_TransmitCanMessage.md)

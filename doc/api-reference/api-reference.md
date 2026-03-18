@@ -15,7 +15,7 @@ Describes the DsVeosCoSim Client API.
 > [Enumerations](enumerations/enumerations.md)<br>
 > Describes all available Enumerations.
 
-> [Function Pointers](functions/function-pointers.md)<br>
+> [Function Pointers](function-pointers/function-pointers.md)<br>
 > Describes all available Function Pointers.
 
 > [Functions](functions/functions.md)<br>

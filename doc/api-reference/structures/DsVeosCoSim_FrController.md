@@ -53,6 +53,6 @@ The name of the FlexRay cluster.
 
 ## See Also
 
-- [DsVeosCoSim_FrMessageReceivedCallback](../functions/DsVeosCoSim_FrMessageReceivedCallback.md)
-- [DsVeosCoSim_FrMessageContainerReceivedCallback](../functions/DsVeosCoSim_FrMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_FrMessageReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageReceivedCallback.md)
+- [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_GetFrControllers](../functions/DsVeosCoSim_GetFrControllers.md)

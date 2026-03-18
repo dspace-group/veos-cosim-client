@@ -36,7 +36,7 @@ The second client reads the signal from the first one and reports on each signal
 
 ## 2 Preconditions
 
-You must have run [Step 7: Running a Polling-Based Simulation](step7-signals.md).
+You must have run [Step 7: Running a Polling-Based Simulation](step7-poll.md).
 
 ## 3 How to modify the polling-based client
 

@@ -58,6 +58,6 @@ The name of the Ethernet cluster.
 
 ## See Also
 
-- [DsVeosCoSim_EthMessageReceivedCallback](../functions/DsVeosCoSim_EthMessageReceivedCallback.md)
-- [DsVeosCoSim_EthMessageContainerReceivedCallback](../functions/DsVeosCoSim_EthMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_EthMessageReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageReceivedCallback.md)
+- [DsVeosCoSim_EthMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_GetEthControllers](../functions/DsVeosCoSim_GetEthControllers.md)

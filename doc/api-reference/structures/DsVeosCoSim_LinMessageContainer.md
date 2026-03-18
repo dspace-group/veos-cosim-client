@@ -58,6 +58,6 @@ The LIN message payload.
 
 ## See Also
 
-- [DsVeosCoSim_LinMessageContainerReceivedCallback](../functions/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_ReceiveLinMessageContainer](../functions/DsVeosCoSim_ReceiveLinMessageContainer.md)
 - [DsVeosCoSim_TransmitLinMessageContainer](../functions/DsVeosCoSim_TransmitLinMessageContainer.md)

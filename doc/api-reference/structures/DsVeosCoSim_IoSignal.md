@@ -48,6 +48,6 @@ The name of the I/O signal.
 
 ## See Also
 
-- [DsVeosCoSim_IncomingSignalChangedCallback](../functions/DsVeosCoSim_IncomingSignalChangedCallback.md)
+- [DsVeosCoSim_IncomingSignalChangedCallback](../function-pointers/DsVeosCoSim_IncomingSignalChangedCallback.md)
 - [DsVeosCoSim_GetIncomingSignals](../functions/DsVeosCoSim_GetIncomingSignals.md)
 - [DsVeosCoSim_GetOutgoingSignals](../functions/DsVeosCoSim_GetOutgoingSignals.md)

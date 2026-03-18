@@ -13,8 +13,8 @@
 Receives an Ethernet message from the VEOS CoSim server.
 
 > [!NOTE]
-> If the [DsVeosCoSim_EthMessageReceivedCallback](DsVeosCoSim_EthMessageReceivedCallback.md) callback
-> or the [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md) callback is registered,
+> If the [DsVeosCoSim_EthMessageReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageReceivedCallback.md) callback
+> or the [DsVeosCoSim_EthMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageContainerReceivedCallback.md) callback is registered,
 > Ethernet messages cannot be collected using the `DsVeosCoSim_ReceiveEthMessage` function.
 
 ## Syntax

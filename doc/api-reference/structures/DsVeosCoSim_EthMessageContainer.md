@@ -53,6 +53,6 @@ The Ethernet message payload.
 
 ## See Also
 
-- [DsVeosCoSim_EthMessageContainerReceivedCallback](../functions/DsVeosCoSim_EthMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_EthMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_ReceiveEthMessageContainer](../functions/DsVeosCoSim_ReceiveEthMessageContainer.md)
 - [DsVeosCoSim_TransmitEthMessageContainer](../functions/DsVeosCoSim_TransmitEthMessageContainer.md)
