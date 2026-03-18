@@ -155,7 +155,7 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
     std::ostringstream oss;
-    oss << "ETH Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", MacAddress: ["
+    oss << "Ethernet Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", MacAddress: ["
         << DataToString(macAddress.data(), sizeof(macAddress), ':') << "], Name: \"" << name << "\", ChannelName: \"" << channelName << "\", ClusterName: \""
         << clusterName << "\" }";
     return oss.str();
@@ -167,7 +167,7 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              const uint8_t* data,
                                              EthMessageFlags flags) {
     std::ostringstream oss;
-    oss << "ETH Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Length: " << length
+    oss << "Ethernet Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Length: " << length
         << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
     return oss.str();
 }
@@ -222,7 +222,7 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                const std::string& channelName,
                                                const std::string& clusterName) {
     std::ostringstream oss;
-    oss << "FLEXRAY Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Name: \"" << name
+    oss << "FlexRay Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Name: \"" << name
         << "\", ChannelName: \"" << channelName << "\", ClusterName: \"" << clusterName << "\" }";
     return oss.str();
 }
@@ -234,14 +234,14 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                             const uint8_t* data,
                                             FrMessageFlags flags) {
     std::ostringstream oss;
-    oss << "FLEXRAY Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
+    oss << "FlexRay Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
         << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
     return oss.str();
 }
 
 [[nodiscard]] Result FrMessageCheck(uint32_t length) {
     if (length > FrMessageMaxLength) {
-        Logger::Instance().LogError("FLEXRAY message data exceeds maximum length.");
+        Logger::Instance().LogError("FlexRay message data exceeds maximum length.");
         return Result::InvalidArgument;
     }
 

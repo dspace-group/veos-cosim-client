@@ -194,7 +194,7 @@ void SwitchSendingCanMessages() {
 
 void SwitchSendingEthMessages() {
     SendEthMessages = !SendEthMessages;
-    PrintStatus(SendEthMessages, "ETH messages");
+    PrintStatus(SendEthMessages, "Ethernet messages");
 }
 
 void SwitchSendingLinMessages() {
@@ -204,7 +204,7 @@ void SwitchSendingLinMessages() {
 
 void SwitchSendingFrMessages() {
     SendFrMessages = !SendFrMessages;
-    PrintStatus(SendFrMessages, "FR messages");
+    PrintStatus(SendFrMessages, "FlexRay messages");
 }
 
 [[nodiscard]] Result WriteOutGoingSignal(const IoSignalContainer& ioSignal) {

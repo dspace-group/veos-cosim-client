@@ -819,10 +819,10 @@ public:
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) const override {
         CheckResultWithMessage(_canTransmitBuffer->Serialize(writer), "Could not transmit CAN messages.");
-        CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit ETH messages.");
+        CheckResultWithMessage(_ethTransmitBuffer->Serialize(writer), "Could not transmit Ethernet messages.");
         CheckResultWithMessage(_linTransmitBuffer->Serialize(writer), "Could not transmit LIN messages.");
         if (_doFlexrayOperations) {
-            CheckResultWithMessage(_frTransmitBuffer->Serialize(writer), "Could not transmit FLEXRAY messages.");
+            CheckResultWithMessage(_frTransmitBuffer->Serialize(writer), "Could not transmit FlexRay messages.");
         }
         return Result::Ok;
     }
@@ -833,14 +833,14 @@ public:
             "Could not receive CAN messages.");
         CheckResultWithMessage(
             _ethReceiveBuffer->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback, callbacks.ethMessageContainerReceivedCallback),
-            "Could not receive ETH messages.");
+            "Could not receive Ethernet messages.");
         CheckResultWithMessage(
             _linReceiveBuffer->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback, callbacks.linMessageContainerReceivedCallback),
             "Could not receive LIN messages.");
         if (_doFlexrayOperations) {
             CheckResultWithMessage(
                 _frReceiveBuffer->Deserialize(reader, simulationTime, callbacks.frMessageReceivedCallback, callbacks.frMessageContainerReceivedCallback),
-                "Could not receive FLEXRAY messages.");
+                "Could not receive FlexRay messages.");
         }
         return Result::Ok;
     }

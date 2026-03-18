@@ -65,7 +65,7 @@ void SwitchSendingCanMessages() {
 
 void SwitchSendingEthMessages() {
     SendEthMessages = !SendEthMessages;
-    PrintStatus(SendEthMessages, "ETH messages");
+    PrintStatus(SendEthMessages, "Ethernet messages");
 }
 
 void SwitchSendingLinMessages() {
@@ -75,7 +75,7 @@ void SwitchSendingLinMessages() {
 
 void SwitchSendingFrMessages() {
     SendFrMessages = !SendFrMessages;
-    PrintStatus(SendFrMessages, "FR messages");
+    PrintStatus(SendFrMessages, "FlexRay messages");
 }
 
 [[nodiscard]] DsVeosCoSim_Result WriteOutGoingSignal(const DsVeosCoSim_IoSignal& ioSignal) {
@@ -305,7 +305,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     CheckDsVeosCoSimResult(DsVeosCoSim_GetEthControllers(Client, &tmpEthControllersCount, &tmpEthControllers));
     if (tmpEthControllersCount > 0) {
         EthControllers = std::vector<DsVeosCoSim_EthController>(tmpEthControllers, tmpEthControllers + tmpEthControllersCount);
-        LogTrace("Found the following ETH controllers:");
+        LogTrace("Found the following Ethernet controllers:");
         for (const DsVeosCoSim_EthController& controller : EthControllers) {
             LogTrace("  {}", DsVeosCoSim_EthControllerToString(&controller));
         }
@@ -331,7 +331,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     CheckDsVeosCoSimResult(DsVeosCoSim_GetFrControllers(Client, &tmpFrControllersCount, &tmpFrControllers));
     if (tmpFrControllersCount > 0) {
         FrControllers = std::vector<DsVeosCoSim_FrController>(tmpFrControllers, tmpFrControllers + tmpFrControllersCount);
-        LogTrace("Found the following FR controllers:");
+        LogTrace("Found the following FlexRay controllers:");
         for (const DsVeosCoSim_FrController& controller : FrControllers) {
             LogTrace("  {}", DsVeosCoSim_FrControllerToString(&controller));
         }

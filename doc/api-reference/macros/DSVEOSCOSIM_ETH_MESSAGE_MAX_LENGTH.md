@@ -9,7 +9,7 @@
 
 ## Description
 
-Defines the maximum length of an ethernet message payload.
+Defines the maximum length of an Ethernet message payload.
 
 ## Syntax
 

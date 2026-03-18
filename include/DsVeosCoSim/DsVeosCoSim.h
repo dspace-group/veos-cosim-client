@@ -56,7 +56,7 @@ enum {
 };
 
 /**
- * \brief Defines the maximum length of an ethernet message payload.
+ * \brief Defines the maximum length of an Ethernet message payload.
  */
 enum {
     DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH = 9018
@@ -77,7 +77,7 @@ enum {
 };
 
 /**
- * \brief Defines the maximum length of an ethernet address (MAC address).
+ * \brief Defines the maximum length of an Ethernet address (MAC address).
  */
 enum {
     DSVEOSCOSIM_ETH_ADDRESS_LENGTH = 6
@@ -428,12 +428,12 @@ enum {
 };
 
 /**
- * \brief Underlying data type of the flags of an ethernet message.
+ * \brief Underlying data type of the flags of an Ethernet message.
  */
 typedef uint32_t DsVeosCoSim_EthMessageFlags;
 
 /**
- * \brief Represents the flags of an ethernet message.
+ * \brief Represents the flags of an Ethernet message.
  */
 enum {
     /**
@@ -538,70 +538,70 @@ enum {
 };
 
 /**
- * \brief Underlying data type of the flags of a FLEXRAY message.
+ * \brief Underlying data type of the flags of a FlexRay message.
  */
 typedef uint32_t DsVeosCoSim_FrMessageFlags;
 
 /**
- * \brief Represents the flags of a FLEXRAY message.
+ * \brief Represents the flags of a FlexRay message.
  */
 enum {
     /**
-     * \brief FLEXRAY message will be transmitted to sender as well.
+     * \brief FlexRay message will be transmitted to sender as well.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_Loopback = 1,
 
     /**
-     * \brief FLEXRAY message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
+     * \brief FlexRay message could not be transmitted due to an error at the dSPACE VEOS CoSim server.
      *        For received messages only.
      */
     DsVeosCoSim_FrMessageFlags_Error = 2,
 
     /**
-     * \brief FLEXRAY message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
+     * \brief FlexRay message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
      *        For received messages only.
      */
     DsVeosCoSim_FrMessageFlags_Drop = 4,
 
     /**
-     * \brief FLEXRAY message is a startup frame.
+     * \brief FlexRay message is a startup frame.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_Startup = 8,
 
     /**
-     * \brief FLEXRAY message is a sync frame.
+     * \brief FlexRay message is a sync frame.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_SyncFrame = 16,
 
     /**
-     * \brief FLEXRAY message is a null frame.
+     * \brief FlexRay message is a null frame.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_NullFrame = 32,
 
     /**
-     * \brief FLEXRAY message uses the payload preamble.
+     * \brief FlexRay message uses the payload preamble.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_PayloadPreamble = 64,
 
     /**
-     * \brief FLEXRAY message will only be transmitted in one cycle, otherwise message will be retransmitted in every
-     * upcoming cycle. For transmitted messages only.
+     * \brief FlexRay message will only be transmitted in one cycle, otherwise message will be retransmitted in every
+     *        upcoming cycle. For transmitted messages only.
      */
     DsVeosCoSim_FrMessageFlags_TransferOnce = 128,
 
     /**
-     * \brief FLEXRAY message is transmitted on Channel A.
+     * \brief FlexRay message is transmitted on Channel A.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_ChannelA = 256,
 
     /**
-     * \brief FLEXRAY message is transmitted on Channel B.
+     * \brief FlexRay message is transmitted on Channel B.
      *        For received and transmitted messages.
      */
     DsVeosCoSim_FrMessageFlags_ChannelB = 512,
@@ -717,7 +717,8 @@ typedef struct DsVeosCoSim_CanMessage {
  */
 typedef struct DsVeosCoSim_CanMessageContainer {
     /**
-     * \brief Contains the virtual simulation time at which the CAN message was received. Only for received messages.
+     * \brief Contains the virtual simulation time at which the CAN message container was received. Only for
+     *        received message containers.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
@@ -832,7 +833,8 @@ typedef struct DsVeosCoSim_EthMessage {
  */
 typedef struct DsVeosCoSim_EthMessageContainer {
     /**
-     * \brief Contains the virtual simulation time at which the Ethernet message was received. Only for received messages.
+     * \brief Contains the virtual simulation time at which the Ethernet message container was received. Only for
+     *        received message containers.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
@@ -942,7 +944,8 @@ typedef struct DsVeosCoSim_LinMessage {
  */
 typedef struct DsVeosCoSim_LinMessageContainer {
     /**
-     * \brief Contains the virtual simulation time at which the LIN message was received. Only for received messages.
+     * \brief Contains the virtual simulation time at which the LIN message container was received. Only for
+     *        received message containers.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
@@ -1052,7 +1055,8 @@ typedef struct DsVeosCoSim_FrMessage {
  */
 typedef struct DsVeosCoSim_FrMessageContainer {
     /**
-     * \brief Contains the virtual simulation time at which the FlexRay message was received. Only for received messages.
+     * \brief Contains the virtual simulation time at which the FlexRay message container was received. Only for
+     *        received message containers.
      */
     DsVeosCoSim_SimulationTime timestamp;
 
@@ -1139,7 +1143,7 @@ typedef void (*DsVeosCoSim_CanMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \brief Represents a CAN message container received callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param canController     The CAN controller transmitting the message.
- * \param message           The received message.
+ * \param messageContainer  The received message container.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_CanMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
@@ -1148,9 +1152,9 @@ typedef void (*DsVeosCoSim_CanMessageContainerReceivedCallback)(DsVeosCoSim_Simu
                                                                 void* userData);
 
 /**
- * \brief Represents an ethernet message received callback function pointer.
+ * \brief Represents an Ethernet message received callback function pointer.
  * \param simulationTime    The current simulation time.
- * \param ethController     The ethernet controller transmitting the message.
+ * \param ethController     The Ethernet controller transmitting the message.
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
@@ -1160,10 +1164,10 @@ typedef void (*DsVeosCoSim_EthMessageReceivedCallback)(DsVeosCoSim_SimulationTim
                                                        void* userData);
 
 /**
- * \brief Represents an ethernet message container received callback function pointer.
+ * \brief Represents an Ethernet message container received callback function pointer.
  * \param simulationTime    The current simulation time.
- * \param ethController     The ethernet controller transmitting the message.
- * \param message           The received message.
+ * \param ethController     The Ethernet controller transmitting the message.
+ * \param messageContainer  The received message container.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_EthMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
@@ -1187,7 +1191,7 @@ typedef void (*DsVeosCoSim_LinMessageReceivedCallback)(DsVeosCoSim_SimulationTim
  * \brief Represents a LIN message container received callback function pointer.
  * \param simulationTime    The current simulation time.
  * \param linController     The LIN controller transmitting the message.
- * \param message           The received message.
+ * \param messageContainer  The received message container.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
@@ -1196,9 +1200,9 @@ typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(DsVeosCoSim_Simu
                                                                 void* userData);
 
 /**
- * \brief Represents a FLEXRAY message received callback function pointer.
+ * \brief Represents a FlexRay message received callback function pointer.
  * \param simulationTime    The current simulation time.
- * \param frController      The FLEXRAY controller transmitting the message.
+ * \param frController      The FlexRay controller transmitting the message.
  * \param message           The received message.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
@@ -1208,10 +1212,10 @@ typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(DsVeosCoSim_SimulationTime
                                                       void* userData);
 
 /**
- * \brief Represents a Fr message container received callback function pointer.
+ * \brief Represents a FlexRay message container received callback function pointer.
  * \param simulationTime    The current simulation time.
- * \param frController      The FLEXRAY controller transmitting the message.
- * \param message           The received message.
+ * \param frController      The FlexRay controller transmitting the message.
+ * \param messageContainer  The received message container.
  * \param userData          The user data passed via DsVeosCoSim_Callbacks.
  */
 typedef void (*DsVeosCoSim_FrMessageContainerReceivedCallback)(DsVeosCoSim_SimulationTime simulationTime,
@@ -1284,29 +1288,27 @@ typedef struct DsVeosCoSim_Callbacks {
     void* userData;
 
     /**
-     * \brief Called when a CAN message is received from VEOS.
+     * \brief Called when a CAN message container is received from VEOS.
      */
     DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback;
 
     /**
-     * \brief Called when a LIN message is received from VEOS.
+     * \brief Called when an Ethernet message container is received from VEOS.
      */
     DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback;
 
     /**
-     * \brief Called when an Ethernet message is received from VEOS.
+     * \brief Called when a LIN message container is received from VEOS.
      */
     DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback;
 
     /**
-     * \brief Called when a FlexRay message is received from VEOS.
+     * \brief Called when a FlexRay message container is received from VEOS.
      */
     DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback;
 
     /**
-     * \brief Will be called when a FLEXRAY message was received from dSPACE VEOS.
-     *        If this callback is registered, then DsVeosCoSim_ReceiveFrMessage will always return
-     *        DsVeosCoSim_Result_Empty.
+     * \brief Called when a FlexRay message is received from VEOS.
      */
     DsVeosCoSim_FrMessageReceivedCallback frMessageReceivedCallback;
 } DsVeosCoSim_Callbacks;
@@ -1316,7 +1318,7 @@ typedef struct DsVeosCoSim_Callbacks {
  */
 typedef struct DsVeosCoSim_ConnectConfig {
     /**
-     * \brief The IP address of the VEOS CoSim server. Using local communication if not specified.
+     * \brief The IP address or host name of the VEOS CoSim server.
      */
     const char* remoteIpAddress;
 
@@ -1383,14 +1385,14 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_H
  *        This function will only return if DsVeosCoSim_Disconnect is called in one of the callbacks
  *        or the dSPACE VEOS CoSim server is unloaded.
  * \param handle    The handle.
- * \param callbacks The callbacks.
+ * \param callbacks The callbacks to register.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks);
 
 /**
  * \brief Starts a polling based co-simulation for the given handle.
  * \param handle    The handle.
- * \param callbacks The callbacks.
+ * \param callbacks The callbacks to register.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks);
 
@@ -1459,7 +1461,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_H
 /**
  * \brief Writes the given value to the outgoing signal of the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
- * \param outgoingSignalId  The IO signal id.
+ * \param outgoingSignalId  The ID of the outgoing signal.
  * \param length            The length of the value to write.
  * \param value             The value to write.
  */
@@ -1507,38 +1509,38 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_H
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_CanMessageContainer* messageContainer);
 
 /**
- * \brief Gets all available ethernet controllers.
+ * \brief Gets all available Ethernet controllers.
  * \param handle                The handle.
- * \param ethControllersCount   The ethernet controllers count.
- * \param ethControllers        The ethernet controllers.
+ * \param ethControllersCount   The Ethernet controllers count.
+ * \param ethControllers        The Ethernet controllers.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle handle,
                                                                   uint32_t* ethControllersCount,
                                                                   const DsVeosCoSim_EthController** ethControllers);
 
 /**
- * \brief Receives an ethernet message from the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Receives an Ethernet message from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
- * \param message   The received ethernet message.
+ * \param message   The received Ethernet message.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessage* message);
 
 /**
- * \brief Receives an ethernet message container from the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Receives an Ethernet message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
- * \param messageContainer  The received ethernet message container.
+ * \param messageContainer  The received Ethernet message container.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_EthMessageContainer* messageContainer);
 
 /**
- * \brief Transmits the given ethernet message to the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Transmits the given Ethernet message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_EthMessage* message);
 
 /**
- * \brief Transmits the given ethernet message container to the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Transmits the given Ethernet message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */
@@ -1564,7 +1566,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Ha
 /**
  * \brief Receives a LIN message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
- * \param messageContainer  The received LIN message.
+ * \param messageContainer  The received LIN message container.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_LinMessageContainer* messageContainer);
 
@@ -1583,38 +1585,38 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_H
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle handle, const DsVeosCoSim_LinMessageContainer* messageContainer);
 
 /**
- * \brief Gets all available FLEXRAY controllers.
+ * \brief Gets all available FlexRay controllers.
  * \param handle                The handle.
- * \param frControllersCount    The FLEXRAY controllers count.
- * \param frControllers         The FLEXRAY controllers.
+ * \param frControllersCount    The FlexRay controllers count.
+ * \param frControllers         The FlexRay controllers.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetFrControllers(DsVeosCoSim_Handle handle,
                                                                  uint32_t* frControllersCount,
                                                                  const DsVeosCoSim_FrController** frControllers);
 
 /**
- * \brief Receives a FLEXRAY message from the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Receives a FlexRay message from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
- * \param message   The received FLEXRAY message.
+ * \param message   The received FlexRay message.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessage* message);
 
 /**
- * \brief Receives a FLEXRAY message container from the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Receives a FlexRay message container from the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
- * \param messageContainer  The received FLEXRAY message.
+ * \param messageContainer  The received FlexRay message container.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle handle, DsVeosCoSim_FrMessageContainer* messageContainer);
 
 /**
- * \brief Transmits the given FLEXRAY message to the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Transmits the given FlexRay message to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle    The handle.
  * \param message   The message to transmit.
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle handle, const DsVeosCoSim_FrMessage* message);
 
 /**
- * \brief Transmits the given FLEXRAY message container to the dSPACE VEOS CoSim server identified by the given handle.
+ * \brief Transmits the given FlexRay message container to the dSPACE VEOS CoSim server identified by the given handle.
  * \param handle            The handle.
  * \param messageContainer  The message container to transmit.
  */

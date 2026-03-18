@@ -394,7 +394,7 @@ public:
         CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
         CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
         CheckResultWithMessage(ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
-        CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
+        CheckResultWithMessage(ReadControllerInfos(reader, ethControllers), "Could not read Ethernet controllers.");
         CheckResultWithMessage(ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
         reader.EndRead();
 
@@ -451,7 +451,7 @@ public:
         CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
         CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
         CheckResultWithMessage(WriteControllerInfos(writer, canControllers), "Could not write CAN controllers.");
-        CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
+        CheckResultWithMessage(WriteControllerInfos(writer, ethControllers), "Could not write Ethernet controllers.");
         CheckResultWithMessage(WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
@@ -1183,9 +1183,9 @@ public:
         CheckResultWithMessage(ReadIoSignalInfos(reader, incomingSignals), "Could not read incoming signals.");
         CheckResultWithMessage(ReadIoSignalInfos(reader, outgoingSignals), "Could not read outgoing signals.");
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, canControllers), "Could not read CAN controllers.");
-        CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, ethControllers), "Could not read ETH controllers.");
+        CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, ethControllers), "Could not read Ethernet controllers.");
         CheckResultWithMessage(ProtocolV1::ReadControllerInfos(reader, linControllers), "Could not read LIN controllers.");
-        CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FLEXRAY controllers.");
+        CheckResultWithMessage(ReadControllerInfos(reader, frControllers), "Could not read FlexRay controllers.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
@@ -1242,9 +1242,9 @@ public:
         CheckResultWithMessage(WriteIoSignalInfos(writer, incomingSignals), "Could not write incoming signals.");
         CheckResultWithMessage(WriteIoSignalInfos(writer, outgoingSignals), "Could not write outgoing signals.");
         CheckResultWithMessage(ProtocolV1::WriteControllerInfos(writer, canControllers), "Could not write CAN controllers.");
-        CheckResultWithMessage(ProtocolV1::WriteControllerInfos(writer, ethControllers), "Could not write ETH controllers.");
+        CheckResultWithMessage(ProtocolV1::WriteControllerInfos(writer, ethControllers), "Could not write Ethernet controllers.");
         CheckResultWithMessage(ProtocolV1::WriteControllerInfos(writer, linControllers), "Could not write LIN controllers.");
-        CheckResultWithMessage(WriteControllerInfos(writer, frControllers), "Could not write FLEXRAY controllers.");
+        CheckResultWithMessage(WriteControllerInfos(writer, frControllers), "Could not write FlexRay controllers.");
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
