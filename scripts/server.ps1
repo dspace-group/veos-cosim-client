@@ -4,8 +4,6 @@ param(
   [string]$config = "Debug"
 )
 
-$ErrorActionPreference = "Stop"
-
 switch ($config.ToLower()) {
   'debug' { $config = "Debug" }
   'release' { $config = "Release" }
@@ -24,5 +22,9 @@ if (-not (Test-Path $filePath)) {
 }
 
 & "$filePath"
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "Running test server for $config failed."
+  exit 1
+}
 
 Write-Host "Running test server for $config finished successfully." -ForegroundColor Blue
