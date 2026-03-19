@@ -8,11 +8,11 @@
 #include <string>
 #include <thread>
 
-#include "BusBuffer.h"
-#include "Channel.h"
-#include "Event.h"
-#include "Helper.h"
-#include "OsUtilities.h"
+#include "BusBuffer.hpp"
+#include "Channel.hpp"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;

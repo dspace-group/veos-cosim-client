@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Protocol.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Protocol.hpp"
 
 #define AssertEq(expected, actual) ASSERT_EQ(expected, actual)
 #define AssertNotEq(expected, actual) ASSERT_NE(expected, actual)

@@ -3,10 +3,10 @@
 #include <memory>
 #include <thread>
 
-#include "CoSimServer.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
-#include "PerformanceTestServer.h"
+#include "CoSimServer.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
 
 using namespace DsVeosCoSim;
 

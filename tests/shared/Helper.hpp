@@ -8,9 +8,9 @@
 
 #include <fmt/format.h>
 
-#include "BusBuffer.h"  // IWYU pragma: keep
-#include "CoSimTypes.h"
-#include "Socket.h"
+#include "BusBuffer.hpp"  // IWYU pragma: keep
+#include "CoSimTypes.hpp"
+#include "Socket.hpp"
 
 namespace DsVeosCoSim {
 

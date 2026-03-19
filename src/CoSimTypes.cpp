@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "CoSimTypes.h"
+#include "CoSimTypes.hpp"
 
 #include <array>
 #include <cstdint>

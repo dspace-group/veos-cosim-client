@@ -4,11 +4,11 @@
 #include <chrono>
 #include <thread>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestHelper.h"
-#include "PerformanceTestServer.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
 
 using namespace DsVeosCoSim;
 

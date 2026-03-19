@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Socket.h"
+#include "Socket.hpp"
 
 #include <array>
 #include <cstdint>
@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "CoSimTypes.h"
+#include "CoSimTypes.hpp"
 
 #ifdef _WIN32
 #include <WS2tcpip.h>

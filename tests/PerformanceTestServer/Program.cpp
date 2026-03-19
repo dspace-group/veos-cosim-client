@@ -2,9 +2,9 @@
 
 #include <future>
 
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestServer.h"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestServer.hpp"
 
 using namespace DsVeosCoSim;
 

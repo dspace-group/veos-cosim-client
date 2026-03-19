@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "Socket.h"
-#include "TestHelper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "Socket.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

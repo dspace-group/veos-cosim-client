@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <string>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 
 namespace DsVeosCoSim {
 

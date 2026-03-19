@@ -8,11 +8,11 @@
 #include <string>
 #include <thread>
 
-#include "Event.h"
-#include "Helper.h"
-#include "IoBuffer.h"
-#include "OsUtilities.h"
-#include "Protocol.h"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "IoBuffer.hpp"
+#include "OsUtilities.hpp"
+#include "Protocol.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;

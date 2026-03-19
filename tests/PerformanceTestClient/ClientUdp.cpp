@@ -1,15 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <array>
 #include <string>
 
-#include "Helper.h"
-#include "OsAbstractionTestHelper.h"
-#include "PerformanceTestHelper.h"
+#include "Helper.hpp"
+#include "OsAbstractionTestHelper.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -52,10 +50,3 @@ void RunUdpTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     RunPerformanceTest(UdpClientRun, host);
     LogTrace("");
 }
-
-#else
-
-void RunUdpTest([[maybe_unused]] const std::string& host) {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif  // ALL_COMMUNICATION_TESTS

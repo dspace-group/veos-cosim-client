@@ -11,7 +11,7 @@
 #include <fmt/color.h>
 
 #include "DsVeosCoSim/DsVeosCoSim.h"
-#include "Helper.h"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;

@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 #include <string>
 #include <utility>
@@ -11,8 +11,8 @@
 
 #include <fmt/format.h>
 
-#include "CoSimTypes.h"
-#include "OsUtilities.h"
+#include "CoSimTypes.hpp"
+#include "OsUtilities.hpp"
 
 namespace DsVeosCoSim {
 

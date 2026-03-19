@@ -1,15 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Helper.h"
+#include "Helper.hpp"
 
 #include <memory>
 #include <string>
 
 #include <fmt/color.h>
 
-#include "CoSimTypes.h"
-#include "Protocol.h"
-#include "Socket.h"
+#include "CoSimTypes.hpp"
+#include "Protocol.hpp"
+#include "Socket.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>

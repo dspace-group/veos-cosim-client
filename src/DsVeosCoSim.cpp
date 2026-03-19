@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include "CoSimClient.h"
-#include "CoSimTypes.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
 
 using namespace DsVeosCoSim;
 

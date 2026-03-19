@@ -8,7 +8,7 @@
 #include <ostream>
 #include <string>
 
-#include "Helpers/Logger.h"
+#include "Logger.hpp"
 
 namespace DsVeosCoSim {
 

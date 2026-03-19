@@ -10,9 +10,9 @@
 
 #include <fmt/color.h>
 
-#include "CoSimServer.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
+#include "CoSimServer.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace std::chrono;

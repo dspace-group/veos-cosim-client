@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "TestHelper.h"
+#include "TestHelper.hpp"
 
 #include <fmt/format.h>
 
@@ -10,7 +10,7 @@
 #include <string>
 #include <thread>
 
-#include "Helper.h"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 

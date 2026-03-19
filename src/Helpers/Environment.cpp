@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Environment.h"
+#include "Environment.hpp"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <cstdint>

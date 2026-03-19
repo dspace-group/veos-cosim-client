@@ -8,8 +8,8 @@
 #include <thread>
 #include <vector>
 
-#include "Helper.h"
-#include "Socket.h"
+#include "Helper.hpp"
+#include "Socket.hpp"
 
 using namespace DsVeosCoSim;
 

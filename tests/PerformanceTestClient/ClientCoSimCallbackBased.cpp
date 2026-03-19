@@ -2,11 +2,11 @@
 
 #include <string>
 
-#include "CoSimClient.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestClient.h"
-#include "PerformanceTestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestClient.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

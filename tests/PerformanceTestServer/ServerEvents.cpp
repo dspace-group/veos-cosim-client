@@ -1,15 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.h"
+#include "PerformanceTestServer.hpp"
 
-#if defined(ALL_COMMUNICATION_TESTS) && defined(_WIN32)
+#ifdef _WIN32
 
 #include <array>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestHelper.h"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

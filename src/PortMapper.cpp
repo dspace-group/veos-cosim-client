@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PortMapper.h"
+#include "PortMapper.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -11,11 +11,11 @@
 
 #include <fmt/format.h>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Environment.h"
-#include "Event.h"
-#include "Protocol.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "Event.hpp"
+#include "Protocol.hpp"
 
 namespace DsVeosCoSim {
 

@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "CoSimClient.h"
+#include "CoSimClient.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -11,13 +11,13 @@
 
 #include <fmt/format.h>
 
-#include "BusBuffer.h"
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "IoBuffer.h"
-#include "OsUtilities.h"
-#include "PortMapper.h"
-#include "Protocol.h"
+#include "BusBuffer.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "IoBuffer.hpp"
+#include "OsUtilities.hpp"
+#include "PortMapper.hpp"
+#include "Protocol.hpp"
 
 namespace DsVeosCoSim {
 

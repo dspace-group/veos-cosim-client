@@ -7,9 +7,9 @@
 #include <memory>
 #include <string>
 
-#include "Helper.h"
-#include "PortMapper.h"
-#include "TestHelper.h"
+#include "Helper.hpp"
+#include "PortMapper.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace testing;

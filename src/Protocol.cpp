@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Protocol.h"
+#include "Protocol.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -9,9 +9,9 @@
 
 #include <fmt/format.h>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Environment.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
 
 namespace DsVeosCoSim {
 

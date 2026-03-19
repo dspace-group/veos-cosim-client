@@ -1,15 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestServer.hpp"
 
 #include <array>
 #include <thread>
 
-#include "Helper.h"
-#include "OsAbstractionTestHelper.h"
-#include "PerformanceTestHelper.h"
+#include "Helper.hpp"
+#include "OsAbstractionTestHelper.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -50,10 +48,3 @@ void PipeServerRun() {
 void StartPipeServer() {
     std::thread(PipeServerRun).detach();
 }
-
-#else
-
-void StartPipeServer() {
-}
-
-#endif  // ALL_COMMUNICATION_TESTS

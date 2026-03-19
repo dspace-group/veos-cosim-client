@@ -8,7 +8,7 @@
 #include <string>
 #include <type_traits>
 
-#include "CoSimTypes.h"
+#include "CoSimTypes.hpp"
 
 namespace DsVeosCoSim {
 

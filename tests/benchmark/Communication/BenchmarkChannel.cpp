@@ -6,8 +6,8 @@
 #include <thread>
 #include <vector>
 
-#include "Channel.h"
-#include "Helper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 

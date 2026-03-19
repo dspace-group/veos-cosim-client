@@ -1,16 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <array>
 #include <optional>
 #include <string>
 
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
-#include "Socket.h"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "Socket.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -48,10 +46,3 @@ void RunLocalTest() {  // NOLINT(misc-use-internal-linkage)
     RunPerformanceTest(LocalClientRun, "");
     LogTrace("");
 }
-
-#else
-
-void RunLocalTest() {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif

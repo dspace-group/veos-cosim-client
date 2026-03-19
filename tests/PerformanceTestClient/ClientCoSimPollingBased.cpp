@@ -1,15 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <string>
 
-#include "CoSimClient.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -77,10 +75,3 @@ void RunCoSimPollingTest(const std::string& host) {  // NOLINT(misc-use-internal
     RunPerformanceTest(CoSimClientRun, host);
     LogTrace("");
 }
-
-#else
-
-void RunCoSimPollingTest([[maybe_unused]] const std::string& host) {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif  // ALL_COMMUNICATION_TESTS

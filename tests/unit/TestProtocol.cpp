@@ -4,11 +4,11 @@
 #include <optional>
 #include <string>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "Protocol.h"
-#include "TestHelper.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "Protocol.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

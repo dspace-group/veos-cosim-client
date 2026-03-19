@@ -13,9 +13,9 @@
 
 #include <fmt/format.h>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Socket.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Socket.hpp"
 
 namespace DsVeosCoSim {
 

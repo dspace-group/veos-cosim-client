@@ -1,16 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <array>
 #include <cstdint>
 #include <string>
 
-#include "Helper.h"
-#include "OsAbstractionTestHelper.h"
-#include "PerformanceTestHelper.h"
+#include "Helper.hpp"
+#include "OsAbstractionTestHelper.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -49,10 +47,3 @@ void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
     RunPerformanceTest(PipeClientRun, "");
     LogTrace("");
 }
-
-#else
-
-void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif  // ALL_COMMUNICATION_TESTS

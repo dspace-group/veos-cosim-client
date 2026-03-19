@@ -1,15 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestServer.hpp"
 
 #include <array>
 #include <thread>
 
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
-#include "Socket.h"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "Socket.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -63,10 +61,3 @@ void LocalServerRun() {
 void StartLocalServer() {
     std::thread(LocalServerRun).detach();
 }
-
-#else
-
-void StartLocalServer() {
-}
-
-#endif

@@ -1,7 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Helper.h"
-#include "PerformanceTestClient.h"
+#include "Helper.hpp"
+#include "PerformanceTestClient.hpp"
 
 using namespace DsVeosCoSim;
 

@@ -3,11 +3,11 @@
 #include <array>
 #include <string>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "PerformanceTestClient.h"
-#include "PerformanceTestHelper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "PerformanceTestClient.hpp"
+#include "PerformanceTestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

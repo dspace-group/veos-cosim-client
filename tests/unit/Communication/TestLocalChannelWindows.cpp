@@ -7,9 +7,9 @@
 #include <memory>
 #include <string>
 
-#include "Channel.h"
-#include "Helper.h"
-#include "TestHelper.h"
+#include "Channel.hpp"
+#include "Helper.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

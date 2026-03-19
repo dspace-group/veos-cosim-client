@@ -1,14 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
+#include "PerformanceTestClient.hpp"
 
 #include <chrono>
 #include <cstdint>
 #include <string>
 #include <thread>
 
-#include "Event.h"
-#include "Helper.h"
+#include "Event.hpp"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 

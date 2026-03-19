@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "OsAbstractionTestHelper.h"
+#include "OsAbstractionTestHelper.hpp"
 
 #include <string>
 
@@ -25,8 +25,8 @@
 #include <unistd.h>
 #endif
 
-#include "CoSimTypes.h"
-#include "Helper.h"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
 
 #ifdef _WIN32
 using socklen_t = int32_t;

@@ -6,9 +6,9 @@
 #include <chrono>
 #include <string>
 
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "TestHelper.h"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "TestHelper.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;

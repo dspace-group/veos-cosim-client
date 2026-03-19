@@ -1,17 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.h"
-
-#ifdef ALL_COMMUNICATION_TESTS
+#include "PerformanceTestClient.hpp"
 
 #include <array>
 #include <optional>
 #include <string>
 
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "PerformanceTestHelper.h"
-#include "Socket.h"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "PerformanceTestHelper.hpp"
+#include "Socket.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -51,10 +49,3 @@ void RunTcpTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     RunPerformanceTest(TcpClientRun, host);
     LogTrace("");
 }
-
-#else
-
-void RunTcpTest([[maybe_unused]] const std::string& host) {  // NOLINT(misc-use-internal-linkage)
-}
-
-#endif  // ALL_COMMUNICATION_TESTS

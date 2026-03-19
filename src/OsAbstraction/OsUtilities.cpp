@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 
-#include "OsUtilities.h"
+#include "OsUtilities.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -13,8 +13,8 @@
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
 
-#include "CoSimTypes.h"
-#include "Environment.h"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
 
 namespace DsVeosCoSim {
 
@@ -308,7 +308,7 @@ void SetThreadAffinity(const std::string& name) {
 #include <pthread.h>
 #include <sched.h>
 
-#include "Environment.h"
+#include "Environment.hpp"
 
 namespace DsVeosCoSim {
 

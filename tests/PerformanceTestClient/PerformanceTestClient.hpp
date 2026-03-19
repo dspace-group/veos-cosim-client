@@ -5,7 +5,7 @@
 #include <functional>
 #include <string>
 
-#include "Event.h"
+#include "Event.hpp"
 
 using PerformanceTestFunc = std::function<void(const std::string& host, DsVeosCoSim::Event& connectedEvent, uint64_t& counter, const bool& isStopped)>;
 

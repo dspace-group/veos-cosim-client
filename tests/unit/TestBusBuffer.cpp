@@ -10,10 +10,10 @@
 #include <string>
 #include <thread>
 
-#include "BusBuffer.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "TestHelper.h"
+#include "BusBuffer.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "TestHelper.hpp"
 
 using testing::Types;
 

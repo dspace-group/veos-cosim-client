@@ -18,10 +18,10 @@
 #include <emmintrin.h>  // IWYU pragma: keep
 #include <fmt/format.h>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Environment.h"
-#include "OsUtilities.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "OsUtilities.hpp"
 
 namespace DsVeosCoSim {
 

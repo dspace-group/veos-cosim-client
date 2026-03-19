@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "CoSimTypes.h"
+#include "CoSimTypes.hpp"
 
 namespace DsVeosCoSim {
 

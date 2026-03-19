@@ -7,9 +7,9 @@
 #include <string>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
-#include "TestHelper.h"
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

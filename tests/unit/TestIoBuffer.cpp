@@ -8,12 +8,12 @@
 #include <string>
 #include <thread>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Helper.h"
-#include "IoBuffer.h"
-#include "Protocol.h"
-#include "TestHelper.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Helper.hpp"
+#include "IoBuffer.hpp"
+#include "Protocol.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 using namespace testing;

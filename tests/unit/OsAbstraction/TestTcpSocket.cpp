@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "Helper.h"
-#include "Socket.h"
-#include "TestHelper.h"
+#include "Helper.hpp"
+#include "Socket.hpp"
+#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 

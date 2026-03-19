@@ -1,6 +1,6 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "IoBuffer.h"
+#include "IoBuffer.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -14,14 +14,14 @@
 
 #include <fmt/format.h>
 
-#include "Channel.h"
-#include "CoSimTypes.h"
-#include "Environment.h"
-#include "Protocol.h"
-#include "RingBuffer.h"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Environment.hpp"
+#include "Protocol.hpp"
+#include "RingBuffer.hpp"
 
 #ifdef _WIN32
-#include "OsUtilities.h"
+#include "OsUtilities.hpp"
 #endif
 
 namespace DsVeosCoSim {

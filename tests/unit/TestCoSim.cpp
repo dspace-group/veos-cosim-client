@@ -5,12 +5,12 @@
 #include <string>
 #include <thread>
 
-#include "CoSimClient.h"
-#include "CoSimServer.h"
-#include "CoSimTypes.h"
-#include "Event.h"
-#include "Helper.h"
-#include "TestHelper.h"
+#include "CoSimClient.hpp"
+#include "CoSimServer.hpp"
+#include "CoSimTypes.hpp"
+#include "Event.hpp"
+#include "Helper.hpp"
+#include "TestHelper.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
