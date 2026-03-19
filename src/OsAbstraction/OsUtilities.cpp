@@ -13,7 +13,7 @@
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
 
 namespace DsVeosCoSim {

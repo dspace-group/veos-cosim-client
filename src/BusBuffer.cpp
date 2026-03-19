@@ -7,17 +7,17 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
 #include "Protocol.h"
-#include "ProtocolLogger.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -64,9 +64,7 @@ public:
         for (const auto& controller : controllers) {
             auto search = _controllers.find(controller.id);
             if (search != _controllers.end()) {
-                std::ostringstream oss;
-                oss << "Duplicated controller id " << controller.id << '.';
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Duplicated controller id {}.", controller.id);
                 return Result::Error;
             }
 
@@ -171,9 +169,7 @@ protected:
             return Result::Ok;
         }
 
-        std::ostringstream oss;
-        oss << "Controller id " << controllerId << " is unknown.";
-        Logger::Instance().LogError(oss.str());
+        Logger::Instance().LogError("Controller id {} is unknown.", controllerId);
         return Result::Error;
     }
 
@@ -225,9 +221,7 @@ protected:
     [[nodiscard]] Result CheckForSpace(ExtensionPtr extension) {
         if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::ostringstream oss;
-                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
-                Logger::Instance().LogWarning(oss.str());
+                Logger::Instance().LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", extension->info.name);
                 extension->warningSent = true;
             }
 
@@ -298,7 +292,7 @@ protected:
             TMessageContainer& messageContainer = _messageBuffer.PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(format_as(messageContainer));
+                Logger::Instance().LogProtData(format_as(messageContainer));
             }
 
             CheckResultWithMessage(_protocol.WriteMessage(writer, messageContainer), "Could not serialize message.");
@@ -323,7 +317,7 @@ protected:
             CheckResultWithMessage(_protocol.ReadMessage(reader, messageContainer), "Could not deserialize message.");
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(format_as(messageContainer));
+                Logger::Instance().LogProtData(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};
@@ -343,9 +337,7 @@ protected:
 
             if (_messageCountPerController[extension->controllerIndex] == extension->info.queueSize) {
                 if (!extension->warningSent) {
-                    std::ostringstream oss;
-                    oss << "Receive buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
-                    Logger::Instance().LogWarning(oss.str());
+                    Logger::Instance().LogWarning("Receive buffer for controller '{}' is full. Messages are dropped.", extension->info.name);
                     extension->warningSent = true;
                 }
 
@@ -524,9 +516,7 @@ protected:
     [[nodiscard]] static Result CheckForSpace(const std::atomic<uint32_t>& messageCount, ExtensionPtr extension) {
         if (messageCount.load(std::memory_order_acquire) == extension->info.queueSize) {
             if (!extension->warningSent) {
-                std::ostringstream oss;
-                oss << "Transmit buffer for controller '" << extension->info.name << "' is full. Messages are dropped.";
-                Logger::Instance().LogWarning(oss.str());
+                Logger::Instance().LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", extension->info.name);
                 extension->warningSent = true;
             }
 
@@ -616,7 +606,7 @@ protected:
             TMessageContainer& messageContainer = _messageBuffer->PopFront();
 
             if (IsProtocolTracingEnabled()) {
-                LogProtocolDataTrace(format_as(messageContainer));
+                Logger::Instance().LogProtData(format_as(messageContainer));
             }
 
             ExtensionPtr extension{};

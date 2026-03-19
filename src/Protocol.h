@@ -6,7 +6,7 @@
 #include <string>
 
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 
 namespace DsVeosCoSim {
 

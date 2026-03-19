@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Protocol.h"
 
 namespace DsVeosCoSim {

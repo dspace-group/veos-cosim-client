@@ -10,16 +10,16 @@
 #include <cstring>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 
 #include <emmintrin.h>  // IWYU pragma: keep
+#include <fmt/format.h>
 
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
 #include "OsUtilities.h"
 
@@ -169,9 +169,7 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ServerToClientPostFix : ClientToServerPostFix;
-        std::ostringstream oss;
-        oss << name << '.' << counter << '.' << postFix;
-        CheckResult(InitializeBase(oss.str(), isServer));
+        CheckResult(InitializeBase(fmt::format("{}.{}.{}", name, counter, postFix), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Write");
         return Result::Ok;
@@ -347,9 +345,7 @@ public:
 
     [[nodiscard]] Result Initialize(const std::string& name, uint32_t counter, bool isServer) {
         const auto* postFix = isServer ? ClientToServerPostFix : ServerToClientPostFix;
-        std::ostringstream oss;
-        oss << name << '.' << counter << '.' << postFix;
-        CheckResult(InitializeBase(oss.str(), isServer));
+        CheckResult(InitializeBase(fmt::format("{}.{}.{}", name, counter, postFix), isServer));
 
         _spinCount = GetSpinCount(name, postFix, "Read");
         return Result::Ok;

@@ -5,7 +5,7 @@
 #include <string>
 
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 #include "Protocol.h"
 #include "TestHelper.h"

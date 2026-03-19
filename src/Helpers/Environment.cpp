@@ -5,8 +5,9 @@
 #include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <cstdlib>
-#include <sstream>
 #include <string>
+
+#include <fmt/format.h>
 
 namespace DsVeosCoSim {
 
@@ -113,21 +114,18 @@ namespace {
 
     uint32_t spinCount{};
 
-    std::ostringstream directionFullName;
-    directionFullName << environmentVariableName << '_' << name << '.' << part << '.' << direction;
-    if (TryGetSpinCount(directionFullName.str(), spinCount)) {
+    const std::string directionFullName = fmt::format("{}_{}.{}.{}", environmentVariableName, name, part, direction);
+    if (TryGetSpinCount(directionFullName, spinCount)) {
         return spinCount;
     }
 
-    std::ostringstream partFullName;
-    partFullName << environmentVariableName << '_' << name << '.' << part;
-    if (TryGetSpinCount(partFullName.str(), spinCount)) {
+    const std::string partFullName = fmt::format("{}_{}.{}", environmentVariableName, name, part);
+    if (TryGetSpinCount(partFullName, spinCount)) {
         return spinCount;
     }
 
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetSpinCount(fullName.str(), spinCount)) {
+    const std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
+    if (TryGetSpinCount(fullName, spinCount)) {
         return spinCount;
     }
 
@@ -141,9 +139,8 @@ namespace {
 [[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetHexValue(fullName.str(), mask)) {
+    const std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
+    if (TryGetHexValue(fullName, mask)) {
         return true;
     }
 

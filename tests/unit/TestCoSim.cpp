@@ -5,9 +5,9 @@
 #include <string>
 #include <thread>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimServer.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimClient.h"
+#include "CoSimServer.h"
+#include "CoSimTypes.h"
 #include "Event.h"
 #include "Helper.h"
 #include "TestHelper.h"

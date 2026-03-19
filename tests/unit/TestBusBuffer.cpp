@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "BusBuffer.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 #include "TestHelper.h"
 

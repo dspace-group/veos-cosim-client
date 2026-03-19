@@ -18,7 +18,7 @@ target_sources(
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
   Helpers/Environment.cpp
-  Helpers/ProtocolLogger.cpp
+  Helpers/Logger.cpp
   OsAbstraction/OsUtilities.cpp
   OsAbstraction/Socket.cpp
   BusBuffer.cpp
@@ -50,6 +50,12 @@ target_compile_definitions(
   DsVeosCoSim
   PRIVATE
   DSVEOSCOSIM_EXPORT
+)
+
+target_link_libraries(
+  DsVeosCoSim
+  PRIVATE
+  ${DSVEOSCOSIM_FMT_TARGET}
 )
 
 if(WIN32)

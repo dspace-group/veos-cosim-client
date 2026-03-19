@@ -19,6 +19,7 @@ This guide shows the shortest practical path for creating a DsVeosCoSim client, 
 - A VEOS CoSim server is already configured and loaded.
 - You know either the server name or the static TCP port of the server.
 - Your build links against the `DsVeosCoSim` target.
+- Your build either keeps the bundled `third_party/fmt` directory in the DsVeosCoSim source tree or provides `fmt::fmt` from the parent CMake project before adding DsVeosCoSim.
 
 For detailed setup instructions, refer to [How to Prepare the CoSim Demo](../tutorial/prepare.md).
 

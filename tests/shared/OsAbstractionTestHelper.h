@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <string>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 
 class InternetAddress final {
 public:

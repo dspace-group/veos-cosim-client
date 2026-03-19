@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 
 #ifdef _WIN32
 #include <WS2tcpip.h>

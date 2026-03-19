@@ -6,8 +6,8 @@
 
 #include <thread>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimServer.h"
+#include "CoSimClient.h"
+#include "CoSimServer.h"
 #include "Event.h"
 #include "Helper.h"
 #include "PerformanceTestHelper.h"

@@ -10,8 +10,8 @@
 
 #include <fmt/color.h>
 
-#include "DsVeosCoSim/CoSimServer.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimServer.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 
 using namespace DsVeosCoSim;

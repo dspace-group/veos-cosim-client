@@ -1,36 +1,18 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <iomanip>
-#include <ios>
-#include <sstream>
+#include <iterator>
 #include <string>
 #include <vector>
 
-#include "OsUtilities.h"
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace DsVeosCoSim {
-
-namespace {
-
-[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
-    std::ostringstream oss;
-    oss << "Error code: " << errorCode << ". ";
-
-#if _WIN32
-    oss << GetEnglishErrorMessage(errorCode);
-#else
-    oss << std::system_category().message(errorCode);
-#endif
-
-    return oss.str();
-}
-
-}  // namespace
 
 namespace {
 
@@ -65,51 +47,48 @@ template <typename T, size_t TSize>
     return true;
 }
 
-void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t index, const void* value) {
+void AppendDataTypeValue(fmt::memory_buffer& result, DataType dataType, uint32_t index, const void* value) {
     switch (dataType) {
         case DataType::Bool:
-            oss << static_cast<const uint8_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const uint8_t*>(value)[index]);
             return;
         case DataType::Int8:
-            oss << static_cast<const int8_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const int8_t*>(value)[index]);
             return;
         case DataType::Int16:
-            oss << static_cast<const int16_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const int16_t*>(value)[index]);
             return;
         case DataType::Int32:
-            oss << static_cast<const int32_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const int32_t*>(value)[index]);
             return;
         case DataType::Int64:
-            oss << static_cast<const int64_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const int64_t*>(value)[index]);
             return;
         case DataType::UInt8:
-            oss << static_cast<const uint8_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const uint8_t*>(value)[index]);
             return;
         case DataType::UInt16:
-            oss << static_cast<const uint16_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const uint16_t*>(value)[index]);
             return;
         case DataType::UInt32:
-            oss << static_cast<const uint32_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const uint32_t*>(value)[index]);
             return;
         case DataType::UInt64:
-            oss << static_cast<const uint64_t*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const uint64_t*>(value)[index]);
             return;
         case DataType::Float32:
-            oss << static_cast<const float*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const float*>(value)[index]);
             return;
         case DataType::Float64:
-            oss << static_cast<const double*>(value)[index];
+            fmt::format_to(std::back_inserter(result), "{}", static_cast<const double*>(value)[index]);
             return;
     }
 
-    oss << "<Invalid DataType>";
+    fmt::format_to(std::back_inserter(result), "<Invalid DataType>");
 }
 
 [[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, const std::string& name) {
-    std::ostringstream oss;
-    oss << "IO Signal { Id: " << signalId << ", Length: " << length << ", DataType: " << dataType << ", SizeKind: " << sizeKind << ", Name: \"" << name
-        << "\" }";
-    return oss.str();
+    return fmt::format(R"(IO Signal {{ Id: {}, Length: {}, DataType: {}, SizeKind: {}, Name: "{}" }})", signalId, length, dataType, sizeKind, name);
 }
 
 [[nodiscard]] std::string CanControllerToString(BusControllerId controllerId,
@@ -119,11 +98,15 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "CAN Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond
-        << ", FlexibleDataRateBitsPerSecond: " << flexibleDataRateBitsPerSecond << ", Name: \"" << name << "\", ChannelName: \"" << channelName
-        << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return fmt::format(
+        R"(CAN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, FlexibleDataRateBitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+        controllerId,
+        queueSize,
+        bitsPerSecond,
+        flexibleDataRateBitsPerSecond,
+        name,
+        channelName,
+        clusterName);
 }
 
 [[nodiscard]] std::string CanMessageToString(SimulationTime timestamp,
@@ -132,10 +115,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              CanMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "CAN Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return fmt::format("CAN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
+                       SimulationTimeToString(timestamp),
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] Result CheckCanMessage(uint32_t length) {
@@ -154,11 +140,15 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "Ethernet Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", MacAddress: ["
-        << DataToString(macAddress.data(), sizeof(macAddress), ':') << "], Name: \"" << name << "\", ChannelName: \"" << channelName << "\", ClusterName: \""
-        << clusterName << "\" }";
-    return oss.str();
+    return fmt::format(
+        R"(Ethernet Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, MacAddress: [{}], Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+        controllerId,
+        queueSize,
+        bitsPerSecond,
+        DataToString(macAddress.data(), sizeof(macAddress), ':'),
+        name,
+        channelName,
+        clusterName);
 }
 
 [[nodiscard]] std::string EthMessageToString(SimulationTime timestamp,
@@ -166,10 +156,12 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              EthMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "Ethernet Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return fmt::format("Ethernet Message {{ Timestamp: {}, ControllerId: {}, Length: {}, Data: {}, Flags: {} }}",
+                       SimulationTimeToString(timestamp),
+                       controllerId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] Result EthMessageCheck(uint32_t length) {
@@ -188,10 +180,14 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                 const std::string& name,
                                                 const std::string& channelName,
                                                 const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "LIN Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Type: " << type << ", Name: \""
-        << name << "\", ChannelName: \"" << channelName << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return fmt::format(R"(LIN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Type: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+                       controllerId,
+                       queueSize,
+                       bitsPerSecond,
+                       type,
+                       name,
+                       channelName,
+                       clusterName);
 }
 
 [[nodiscard]] std::string LinMessageToString(SimulationTime timestamp,
@@ -200,10 +196,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                              uint32_t length,
                                              const uint8_t* data,
                                              LinMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "LIN Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return fmt::format("LIN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
+                       SimulationTimeToString(timestamp),
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] Result LinMessageCheck(uint32_t length) {
@@ -221,10 +220,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                                const std::string& name,
                                                const std::string& channelName,
                                                const std::string& clusterName) {
-    std::ostringstream oss;
-    oss << "FlexRay Controller { Id: " << controllerId << ", QueueSize: " << queueSize << ", BitsPerSecond: " << bitsPerSecond << ", Name: \"" << name
-        << "\", ChannelName: \"" << channelName << "\", ClusterName: \"" << clusterName << "\" }";
-    return oss.str();
+    return fmt::format(R"(FlexRay Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
+                       controllerId,
+                       queueSize,
+                       bitsPerSecond,
+                       name,
+                       channelName,
+                       clusterName);
 }
 
 [[nodiscard]] std::string FrMessageToString(SimulationTime timestamp,
@@ -233,10 +235,13 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
                                             uint32_t length,
                                             const uint8_t* data,
                                             FrMessageFlags flags) {
-    std::ostringstream oss;
-    oss << "FlexRay Message { Timestamp: " << timestamp << ", ControllerId: " << controllerId << ", Id: " << messageId << ", Length: " << length
-        << ", Data: " << DataToString(data, length, '-') << ", Flags: " << flags << " }";
-    return oss.str();
+    return fmt::format("FlexRay Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
+                       SimulationTimeToString(timestamp),
+                       controllerId,
+                       messageId,
+                       length,
+                       DataToString(data, length, '-'),
+                       flags);
 }
 
 [[nodiscard]] Result FrMessageCheck(uint32_t length) {
@@ -250,43 +255,7 @@ void DataTypeValueToString(std::ostringstream& oss, DataType dataType, uint32_t 
 
 }  // namespace
 
-void Logger::SetLogCallback(LogCallback logCallback) {
-    _logCallback = std::move(logCallback);
-}
-
-void Logger::LogError(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Error, message);
-    }
-}
-
-void Logger::LogWarning(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Warning, message);
-    }
-}
-
-void Logger::LogInfo(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Info, message);
-    }
-}
-
-void Logger::LogTrace(const std::string& message) {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(Severity::Trace, message);
-    }
-}
-
-void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
-    if (auto logCallback = _logCallback; logCallback) {
-        std::ostringstream oss;
-        oss << message << " " << GetSystemErrorMessage(errorCode);
-        logCallback(Severity::Error, oss.str());
-    }
-}
-
-[[nodiscard]] std::string format_as(SimulationTime simulationTime) {
+[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime) {
     int64_t nanoseconds = simulationTime.count();
     std::string str = std::to_string(nanoseconds);
 
@@ -496,33 +465,32 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str += ",Loopback";
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Error)) {
-        oss << ",Error";
+        str += ",Error";
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Drop)) {
-        oss << ",Drop";
+        str += ",Drop";
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::ExtendedId)) {
-        oss << ",ExtendedId";
+        str += ",ExtendedId";
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::BitRateSwitch)) {
-        oss << ",BitRateSwitch";
+        str += ",BitRateSwitch";
     }
 
     if (HasFlag(canMessageFlags, CanMessageFlags::FlexibleDataRateFormat)) {
-        oss << ",FlexibleDataRateFormat";
+        str += ",FlexibleDataRateFormat";
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -531,21 +499,20 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str += ",Loopback";
     }
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Error)) {
-        oss << ",Error";
+        str += ",Error";
     }
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Drop)) {
-        oss << ",Drop";
+        str += ",Drop";
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -554,57 +521,56 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str += ",Loopback";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Error)) {
-        oss << ",Error";
+        str += ",Error";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Drop)) {
-        oss << ",Drop";
+        str += ",Drop";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Header)) {
-        oss << ",Header";
+        str += ",Header";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Response)) {
-        oss << ",Response";
+        str += ",Response";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::WakeEvent)) {
-        oss << ",WakeEvent";
+        str += ",WakeEvent";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::SleepEvent)) {
-        oss << ",SleepEvent";
+        str += ",SleepEvent";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::EnhancedChecksum)) {
-        oss << ",EnhancedChecksum";
+        str += ",EnhancedChecksum";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::TransferOnce)) {
-        oss << ",TransferOnce";
+        str += ",TransferOnce";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::ParityFailure)) {
-        oss << ",ParityFailure";
+        str += ",ParityFailure";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Collision)) {
-        oss << ",Collision";
+        str += ",Collision";
     }
 
     if (HasFlag(linMessageFlags, LinMessageFlags::NoResponse)) {
-        oss << ",NoResponse";
+        str += ",NoResponse";
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -613,49 +579,48 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags) {
-    std::ostringstream oss;
+    std::string str;
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Loopback)) {
-        oss << ",Loopback";
+        str += ",Loopback";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Error)) {
-        oss << ",Error";
+        str += ",Error";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Drop)) {
-        oss << ",Drop";
+        str += ",Drop";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Startup)) {
-        oss << ",Startup";
+        str += ",Startup";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::SyncFrame)) {
-        oss << ",SyncFrame";
+        str += ",SyncFrame";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::NullFrame)) {
-        oss << ",NullFrame";
+        str += ",NullFrame";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::PayloadPreamble)) {
-        oss << ",PayloadPreamble";
+        str += ",PayloadPreamble";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::TransferOnce)) {
-        oss << ",TransferOnce";
+        str += ",TransferOnce";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::ChannelA)) {
-        oss << ",ChannelA";
+        str += ",ChannelA";
     }
 
     if (HasFlag(frMessageFlags, FrMessageFlags::ChannelB)) {
-        oss << ",ChannelB";
+        str += ",ChannelB";
     }
 
-    std::string str = oss.str();
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -823,107 +788,27 @@ void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
 }
 
 [[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
-    std::ostringstream oss;
-    oss << '[';
-
-    bool first = true;
-    for (const IoSignalContainer& signalContainer : ioSignalContainers) {
-        if (first) {
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << signalContainer;
-    }
-
-    oss << ']';
-
-    return oss.str();
+    return fmt::format("[{}]", fmt::join(ioSignalContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
-
-    bool first = true;
-    for (const CanControllerContainer& canControllerContainer : canControllerContainers) {
-        if (first) {
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << canControllerContainer;
-    }
-
-    oss << ']';
-
-    return oss.str();
+    return fmt::format("[{}]", fmt::join(canControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
-
-    bool first = true;
-    for (const EthControllerContainer& ethControllerContainer : ethControllerContainers) {
-        if (first) {
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << ethControllerContainer;
-    }
-
-    oss << ']';
-
-    return oss.str();
+    return fmt::format("[{}]", fmt::join(ethControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
-
-    bool first = true;
-    for (const LinControllerContainer& linControllerContainer : linControllerContainers) {
-        if (first) {
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << linControllerContainer;
-    }
-
-    oss << ']';
-
-    return oss.str();
+    return fmt::format("[{}]", fmt::join(linControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers) {
-    std::ostringstream oss;
-    oss << '[';
-
-    bool first = true;
-    for (const FrControllerContainer& frControllerContainer : frControllerContainers) {
-        if (first) {
-            first = false;
-        } else {
-            oss << ", ";
-        }
-
-        oss << frControllerContainer;
-    }
-
-    oss << ']';
-
-    return oss.str();
+    return fmt::format("[{}]", fmt::join(frControllerContainers, ", "));
 }
 
 std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
-    return stream << format_as(simulationTime);
+    return stream << SimulationTimeToString(simulationTime);
 }
 
 std::ostream& operator<<(std::ostream& stream, Result result) {
@@ -1847,35 +1732,32 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 }
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value) {
-    std::ostringstream oss;
+    fmt::memory_buffer result;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {
-            oss << " ";
+            fmt::format_to(std::back_inserter(result), " ");
         }
 
-        DataTypeValueToString(oss, dataType, i, value);
+        AppendDataTypeValue(result, dataType, i, value);
     }
 
-    return oss.str();
+    return fmt::to_string(result);
 }
 
 [[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
-    std::ostringstream oss;
-    oss << "IO Data { Id: " << ioSignal.id << ", Length: " << length << ", Data: " << ValueToString(ioSignal.dataType, length, value) << " }";
-    return oss.str();
+    return fmt::format("IO Data {{ Id: {}, Length: {}, Data: {} }}", ioSignal.id, length, ValueToString(ioSignal.dataType, length, value));
 }
 
 [[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator) {
-    std::ostringstream oss;
-    oss << std::hex << std::setfill('0');
+    fmt::memory_buffer result;
     for (uint32_t i = 0; i < dataLength; i++) {
-        oss << std::setw(2) << static_cast<int32_t>(data[i]);
+        fmt::format_to(std::back_inserter(result), "{:02x}", data[i]);
         if ((i < (dataLength - 1)) && (separator != 0)) {
-            oss << separator;
+            fmt::format_to(std::back_inserter(result), "{}", separator);
         }
     }
 
-    return oss.str();
+    return fmt::to_string(result);
 }
 
 }  // namespace DsVeosCoSim

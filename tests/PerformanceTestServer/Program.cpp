@@ -2,7 +2,7 @@
 
 #include <future>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 #include "PerformanceTestServer.h"
 

@@ -13,6 +13,8 @@ Implementation of a shared library used to create co-simulation clients for dSPA
 
 ### As a standalone project
 
+DsVeosCoSim requires `fmt` for internal string formatting. A standalone build picks up the bundled copy from `third_party/fmt` automatically, so no extra CMake arguments are required as long as that directory is present.
+
 ```console
 cmake -S . -B build
 cmake --build build
@@ -20,12 +22,17 @@ cmake --build build
 
 ### As a subdirectory in another CMake project
 
+When you embed DsVeosCoSim into a parent project, CMake uses an existing `fmt::fmt` or `fmt::fmt-header-only` target if your project already defines one. Otherwise it falls back to the bundled copy in `third_party/fmt`.
+
 ```cmake
+find_package(fmt CONFIG REQUIRED) # Optional if you want to use your own fmt package.
 add_subdirectory(veos-cosim-client)
 target_link_libraries(your_target PRIVATE DsVeosCoSim)
 ```
 
-The public headers are located in `include/DsVeosCoSim`.
+If you do not provide `fmt` from the parent project, keep `third_party/fmt` in the `veos-cosim-client` source tree so `add_subdirectory(veos-cosim-client)` can add the bundled copy.
+
+The public header is `include/DsVeosCoSim/DsVeosCoSim.h`.
 
 ## Integration Choices
 

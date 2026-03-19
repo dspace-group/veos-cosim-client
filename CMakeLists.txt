@@ -31,6 +31,7 @@ if(MSVC)
     /wd4711
     /wd4820
     /wd4865
+    /wd4868
     /wd5026
     /wd5027
     /wd5039
@@ -49,6 +50,24 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   set(DSVEOSCOSIM_TYPE SHARED)
+endif()
+
+if(TARGET fmt::fmt)
+  set(DSVEOSCOSIM_FMT_TARGET fmt::fmt)
+elseif(TARGET fmt::fmt-header-only)
+  set(DSVEOSCOSIM_FMT_TARGET fmt::fmt-header-only)
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/CMakeLists.txt")
+  add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
+
+  if(TARGET fmt::fmt)
+    set(DSVEOSCOSIM_FMT_TARGET fmt::fmt)
+  elseif(TARGET fmt::fmt-header-only)
+    set(DSVEOSCOSIM_FMT_TARGET fmt::fmt-header-only)
+  endif()
+endif()
+
+if(NOT DEFINED DSVEOSCOSIM_FMT_TARGET)
+  message(FATAL_ERROR "DsVeosCoSim requires fmt. Provide fmt::fmt from the parent project or include third_party/fmt.")
 endif()
 
 add_subdirectory(src)

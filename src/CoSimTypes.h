@@ -8,6 +8,8 @@
 #include <ostream>
 #include <string>
 
+#include "Helpers/Logger.h"
+
 namespace DsVeosCoSim {
 
 // NOLINTBEGIN
@@ -101,7 +103,6 @@ struct FrMessage;
 struct FrMessageContainer;
 
 using SimulationTime = std::chrono::nanoseconds;
-using LogCallback = std::function<void(Severity, const std::string&)>;
 
 using SimulationCallback = std::function<void(SimulationTime simulationTime)>;
 using SimulationTerminatedCallback = std::function<void(SimulationTime simulationTime, TerminateReason terminateReason)>;
@@ -118,30 +119,6 @@ using LinMessageContainerReceivedCallback =
     std::function<void(SimulationTime simulationTime, const LinController& linController, const LinMessageContainer& linMessageContainer)>;
 using FrMessageContainerReceivedCallback =
     std::function<void(SimulationTime simulationTime, const FrController& frController, const FrMessageContainer& frMessageContainer)>;
-
-class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
-private:
-    Logger() {
-    }
-
-    ~Logger() = default;
-
-public:
-    static Logger& Instance() {
-        static Logger instance;
-        return instance;
-    }
-
-    void SetLogCallback(LogCallback logCallback);
-    void LogError(const std::string& message);
-    void LogWarning(const std::string& message);
-    void LogInfo(const std::string& message);
-    void LogTrace(const std::string& message);
-    void LogSystemError(const std::string& message, int32_t errorCode);
-
-private:
-    LogCallback _logCallback;
-};
 
 enum class Result : uint32_t {
     Ok,
@@ -541,6 +518,8 @@ struct FrMessageContainer {
     void WriteTo(FrMessage& frMessage) const;
 };
 
+[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime);
+
 [[nodiscard]] std::string format_as(const IoSignal& ioSignal);
 [[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal);
 [[nodiscard]] std::string format_as(const CanController& canController);
@@ -559,7 +538,6 @@ struct FrMessageContainer {
 [[nodiscard]] std::string format_as(const FrControllerContainer& frController);
 [[nodiscard]] std::string format_as(const FrMessage& frMessage);
 [[nodiscard]] std::string format_as(const FrMessageContainer& frMessage);
-[[nodiscard]] std::string format_as(SimulationTime simulationTime);
 [[nodiscard]] const char* format_as(Result result);
 [[nodiscard]] const char* format_as(CoSimType coSimType);
 [[nodiscard]] const char* format_as(ConnectionKind connectionKind);

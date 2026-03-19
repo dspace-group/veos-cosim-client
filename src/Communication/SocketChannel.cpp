@@ -7,13 +7,14 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
-#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include <fmt/format.h>
+
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Socket.h"
 
 namespace DsVeosCoSim {
@@ -303,9 +304,7 @@ public:
     [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override {
         SocketAddress socketAddress{};
         CheckResult(_socket.GetRemoteAddress(socketAddress));
-        std::ostringstream oss;
-        oss << socketAddress.ipAddress << ':' << socketAddress.port;
-        remoteAddress = oss.str();
+        remoteAddress = fmt::format("{}:{}", socketAddress.ipAddress, socketAddress.port);
         return Result::Ok;
     }
 

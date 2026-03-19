@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 #include "IoBuffer.h"
 #include "Protocol.h"

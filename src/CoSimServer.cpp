@@ -1,18 +1,19 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "DsVeosCoSim/CoSimServer.h"
+#include "CoSimServer.h"
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "BusBuffer.h"
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "IoBuffer.h"
 #include "OsUtilities.h"
 #include "PortMapper.h"
@@ -93,9 +94,7 @@ public:
                 return Result::Ok;
             }
 
-            std::ostringstream oss;
-            oss << "Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '" << _serverName << "' ...";
-            Logger::Instance().LogInfo(oss.str());
+            Logger::Instance().LogInfo("Waiting for dSPACE VEOS CoSim client to connect to dSPACE VEOS CoSim server '{}' ...", _serverName);
 
             while (!IsOk(AcceptChannel())) {
                 std::this_thread::sleep_for(milliseconds(100));
@@ -376,9 +375,7 @@ private:
 
             const char* address = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
 
-            std::ostringstream oss;
-            oss << "dSPACE VEOS CoSim server '" << _serverName << "' is listening on " << address << ':' << port << '.';
-            Logger::Instance().LogInfo(oss.str());
+            Logger::Instance().LogInfo("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, address, port);
         }
 
         return Result::Ok;
@@ -477,21 +474,15 @@ private:
             std::string remoteAddress;
             CheckResult(_channel->GetRemoteAddress(remoteAddress));
             if (clientName.empty()) {
-                std::ostringstream oss;
-                oss << "dSPACE VEOS CoSim client at " << remoteAddress << " connected.";
-                Logger::Instance().LogInfo(oss.str());
+                Logger::Instance().LogInfo("dSPACE VEOS CoSim client at {} connected.", remoteAddress);
             } else {
-                std::ostringstream oss;
-                oss << "dSPACE VEOS CoSim client '" << clientName << "' at " << remoteAddress << " connected.";
-                Logger::Instance().LogInfo(oss.str());
+                Logger::Instance().LogInfo("dSPACE VEOS CoSim client '{}' at {} connected.", clientName, remoteAddress);
             }
         } else {
             if (clientName.empty()) {
                 Logger::Instance().LogInfo("Local dSPACE VEOS CoSim client connected.");
             } else {
-                std::ostringstream oss;
-                oss << "Local dSPACE VEOS CoSim client '" << clientName << "' connected.";
-                Logger::Instance().LogInfo(oss.str());
+                Logger::Instance().LogInfo("Local dSPACE VEOS CoSim client '{}' connected.", clientName);
             }
         }
 
@@ -598,9 +589,7 @@ private:
     }
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
-        std::ostringstream oss;
-        oss << "Received unexpected frame '" << frameKind << "'.";
-        Logger::Instance().LogError(oss.str());
+        Logger::Instance().LogError("Received unexpected frame '{}'.", frameKind);
         return Result::Error;
     }
 

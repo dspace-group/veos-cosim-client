@@ -9,7 +9,7 @@
 #include <fmt/format.h>
 
 #include "BusBuffer.h"  // IWYU pragma: keep
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Socket.h"
 
 namespace DsVeosCoSim {

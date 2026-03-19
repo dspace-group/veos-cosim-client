@@ -7,17 +7,17 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
 #include "Protocol.h"
-#include "ProtocolLogger.h"
 #include "RingBuffer.h"
 
 #ifdef _WIN32
@@ -27,6 +27,10 @@
 namespace DsVeosCoSim {
 
 namespace {
+
+void LogProtocolDataTraceSignal(IoSignalId signalId, uint32_t length, DataType dataType, const void* data) {
+    Logger::Instance().LogProtData("Signal {{ Id: {}, Length: {}, Data: {} }}", signalId, length, ValueToString(dataType, length, data));
+}
 
 class IoPartBufferBase {
 protected:
@@ -53,25 +57,19 @@ public:
         size_t nextSignalIndex = 0;
         for (const auto& signal : signals) {
             if (signal.length == 0) {
-                std::ostringstream oss;
-                oss << "Invalid length 0 for IO signal '" << signal.name << "'.";
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Invalid length 0 for IO signal '{}'.", signal.name);
                 return Result::Error;
             }
 
             size_t dataTypeSize = GetDataTypeSize(signal.dataType);
             if (dataTypeSize == 0) {
-                std::ostringstream oss;
-                oss << "Invalid data type for IO signal '" << signal.name << "'.";
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Invalid data type for IO signal '{}'.", signal.name);
                 return Result::Error;
             }
 
             auto search = _metaDataLookup.find(signal.id);
             if (search != _metaDataLookup.end()) {
-                std::ostringstream oss;
-                oss << "Duplicated IO signal id " << signal.id << '.';
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Duplicated IO signal id {}.", signal.id);
                 return Result::Error;
             }
 
@@ -161,9 +159,7 @@ protected:
             return Result::Ok;
         }
 
-        std::ostringstream oss;
-        oss << "IO signal id " << signalId << " is unknown.";
-        Logger::Instance().LogError(oss.str());
+        Logger::Instance().LogError("IO signal id {} is unknown.", signalId);
         return Result::Error;
     }
 
@@ -232,9 +228,7 @@ protected:
 
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
                 return Result::Error;
             }
 
@@ -248,9 +242,7 @@ protected:
             currentLength = length;
         } else {
             if (length != metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of fixed sized IO signal '" << metaData->info.name << "' must be " << metaData->info.length << " but was " << length << '.';
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length);
                 return Result::Error;
             }
         }
@@ -337,9 +329,7 @@ protected:
                 uint32_t length = 0;
                 CheckResultWithMessage(_protocol.ReadLength(reader, length), "Could not read signal length.");
                 if (length > metaData->info.length) {
-                    std::ostringstream oss;
-                    oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                    Logger::Instance().LogError(oss.str());
+                    Logger::Instance().LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
                     return Result::Error;
                 }
 
@@ -459,18 +449,14 @@ protected:
         bool currentLengthChanged{};
         if (metaData->info.sizeKind == SizeKind::Variable) {
             if (length > metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of variable sized IO signal '" << metaData->info.name << "' exceeds max size.";
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Length of variable sized IO signal '{}' exceeds max size.", metaData->info.name);
                 return Result::Error;
             }
 
             currentLengthChanged = dataBuffer->currentLength != length;
         } else {
             if (length != metaData->info.length) {
-                std::ostringstream oss;
-                oss << "Length of fixed sized IO signal '" << metaData->info.name << "' must be " << metaData->info.length << " but was " << length << '.';
-                Logger::Instance().LogError(oss.str());
+                Logger::Instance().LogError("Length of fixed sized IO signal '{}' must be {} but was {}.", metaData->info.name, metaData->info.length, length);
                 return Result::Error;
             }
         }

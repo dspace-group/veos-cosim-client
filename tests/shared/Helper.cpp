@@ -7,7 +7,7 @@
 
 #include <fmt/color.h>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Protocol.h"
 #include "Socket.h"
 

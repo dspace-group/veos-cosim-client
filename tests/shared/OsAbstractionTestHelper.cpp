@@ -25,7 +25,7 @@
 #include <unistd.h>
 #endif
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 
 #ifdef _WIN32

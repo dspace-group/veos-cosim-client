@@ -6,7 +6,7 @@
 #include <chrono>
 #include <string>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Helper.h"
 #include "TestHelper.h"
 
@@ -39,7 +39,7 @@ TEST_F(TestTypes, SimulationTimeToString) {
     SimulationTime simulationTime = 42ns;
 
     // Act
-    std::string string = format_as(simulationTime);
+    std::string string = SimulationTimeToString(simulationTime);
 
     // Assert
     AssertEqHelper("0.000000042", string);
@@ -216,7 +216,7 @@ TEST_F(TestTypes, IoSignalToString) {
     std::string string = format_as(signal);
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
+    AssertEqHelper(R"(IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: "MySignal" })", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerToString) {
@@ -232,7 +232,7 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     std::string string = format_as(signalContainer);
 
     // Assert
-    AssertEqHelper("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
+    AssertEqHelper(R"(IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: "MySignal" })", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerConvert) {
@@ -302,8 +302,7 @@ TEST_F(TestTypes, SignalContainersToString) {
 
     // Assert
     AssertEq(
-        "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: "
-        "44, Length: 45, DataType: Bool, SizeKind: Fixed, Name: \"MySignal2\" }]",
+        R"([IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: "MySignal1" }, IO Signal { Id: 44, Length: 45, DataType: Bool, SizeKind: Fixed, Name: "MySignal2" }])",
         string);
 }
 
@@ -401,8 +400,7 @@ TEST_F(TestTypes, CanControllerToString) {
 
     // Assert
     AssertEqHelper(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", "
-        "ChannelName: \"channelName\", ClusterName: \"clusterName\" }",
+        R"(CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: "name", ChannelName: "channelName", ClusterName: "clusterName" })",
         string);
 }
 
@@ -422,8 +420,7 @@ TEST_F(TestTypes, CanControllerContainerToString) {
 
     // Assert
     AssertEqHelper(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", "
-        "ChannelName: \"channelName\", ClusterName: \"clusterName\" }",
+        R"(CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: "name", ChannelName: "channelName", ClusterName: "clusterName" })",
         string);
 }
 

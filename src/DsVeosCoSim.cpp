@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include "DsVeosCoSim/CoSimClient.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimClient.h"
+#include "CoSimTypes.h"
 
 using namespace DsVeosCoSim;
 
@@ -700,7 +700,7 @@ DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSi
 }
 
 std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return format_as(SimulationTime(simulationTime));
+    return SimulationTimeToString(SimulationTime(simulationTime));
 }
 
 std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal) {

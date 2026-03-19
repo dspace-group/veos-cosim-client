@@ -4,14 +4,14 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <sstream>
 #include <string>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 #include "Environment.h"
-#include "ProtocolLogger.h"
 
 namespace DsVeosCoSim {
 
@@ -177,13 +177,13 @@ public:
 
     [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) override {
         if (IsProtocolHeaderTracingEnabled()) {
-            LogProtocolBeginTraceReceiveHeader();
+            Logger::Instance().LogProtBegin("ReceiveHeader()");
         }
 
         CheckResultWithMessage(reader.Read(frameKind), "Could not receive frame kind.");
 
         if (IsProtocolHeaderTracingEnabled()) {
-            LogProtocolEndTraceReceiveHeader(frameKind);
+            Logger::Instance().LogProtEnd("ReceiveHeader(FrameKind: {})", frameKind);
         }
 
         return Result::Ok;
@@ -197,14 +197,14 @@ public:
 
     [[nodiscard]] Result SendOk(ChannelWriter& writer) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendOk();
+            Logger::Instance().LogProtBegin("SendOk()");
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::Ok), "Could not write frame kind.");
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendOk();
+            Logger::Instance().LogProtEnd("SendOk()");
         }
 
         return Result::Ok;
@@ -212,14 +212,14 @@ public:
 
     [[nodiscard]] Result ReadError(ChannelReader& reader, std::string& errorMessage) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadError();
+            Logger::Instance().LogProtBegin("ReadError()");
         }
 
         CheckResultWithMessage(ReadString(reader, errorMessage), "Could not read error message.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadError(errorMessage);
+            Logger::Instance().LogProtEnd(R"(ReadError(ErrorMessage: "{}"))", errorMessage);
         }
 
         return Result::Ok;
@@ -227,7 +227,7 @@ public:
 
     [[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendError(errorMessage);
+            Logger::Instance().LogProtBegin(R"(SendError(ErrorMessage: "{}"))", errorMessage);
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::Error), "Could not write frame kind.");
@@ -235,7 +235,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendError();
+            Logger::Instance().LogProtEnd("SendError()");
         }
 
         return Result::Ok;
@@ -247,14 +247,14 @@ public:
 
     [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceSendPing(roundTripTime);
+            Logger::Instance().LogProtBegin("SendPing(RoundTripTime: {} s)", SimulationTimeToString(roundTripTime));
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::Ping), "Could not write frame kind.");
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolEndTraceSendPing();
+            Logger::Instance().LogProtEnd("SendPing()");
         }
 
         return Result::Ok;
@@ -262,14 +262,14 @@ public:
 
     [[nodiscard]] Result ReadPingOk(ChannelReader& reader, Command& command) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceReadPingOk();
+            Logger::Instance().LogProtBegin("ReadPingOk()");
         }
 
         CheckResultWithMessage(reader.Read(command), "Could not read command.");
         reader.EndRead();
 
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolEndTraceReadPingOk(command);
+            Logger::Instance().LogProtEnd("ReadPingOk(Command: {})", command);
         }
 
         return Result::Ok;
@@ -277,7 +277,7 @@ public:
 
     [[nodiscard]] Result SendPingOk(ChannelWriter& writer, Command command) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceSendPingOk(command);
+            Logger::Instance().LogProtBegin("SendPingOk(Command: {})", command);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(command);
@@ -292,7 +292,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolEndTraceSendPingOk();
+            Logger::Instance().LogProtEnd("SendPingOk()");
         }
 
         return Result::Ok;
@@ -304,7 +304,7 @@ public:
                                      std::string& serverName,
                                      std::string& clientName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadConnect();
+            Logger::Instance().LogProtBegin("ReadConnect()");
         }
 
         constexpr size_t size = sizeof(protocolVersion) + sizeof(clientMode);
@@ -321,7 +321,11 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadConnect(protocolVersion, clientMode, serverName, clientName);
+            Logger::Instance().LogProtEnd(R"(ReadConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
+                                          protocolVersion,
+                                          clientMode,
+                                          serverName,
+                                          clientName);
         }
 
         return Result::Ok;
@@ -333,7 +337,11 @@ public:
                                      const std::string& serverName,
                                      const std::string& clientName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendConnect(protocolVersion, clientMode, serverName, clientName);
+            Logger::Instance().LogProtBegin(R"(SendConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
+                                            protocolVersion,
+                                            clientMode,
+                                            serverName,
+                                            clientName);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(protocolVersion) + sizeof(clientMode);
@@ -351,7 +359,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendConnect();
+            Logger::Instance().LogProtEnd("SendConnect()");
         }
 
         return Result::Ok;
@@ -361,7 +369,7 @@ public:
         CheckResultWithMessage(reader.Read(protocolVersion), "Could not read protocolVersion block for ConnectOkVersion frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadConnectOkVersion(protocolVersion);
+            Logger::Instance().LogProtEnd("ReadConnectOk(ProtocolVersion: {})", protocolVersion);
         }
 
         return Result::Ok;
@@ -376,9 +384,9 @@ public:
                                        std::vector<CanControllerContainer>& canControllers,
                                        std::vector<EthControllerContainer>& ethControllers,
                                        std::vector<LinControllerContainer>& linControllers,
-                                       std::vector<FrControllerContainer>& frControllers) override {
+                                       [[maybe_unused]] std::vector<FrControllerContainer>& frControllers) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadConnectOk();
+            Logger::Instance().LogProtBegin("ReadConnectOk()");
         }
 
         constexpr size_t size = sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
@@ -399,15 +407,17 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadConnectOk(clientMode,
-                                             stepSize,
-                                             simulationState,
-                                             incomingSignals,
-                                             outgoingSignals,
-                                             canControllers,
-                                             ethControllers,
-                                             linControllers,
-                                             frControllers);
+            Logger::Instance().LogProtEnd(
+                "ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: {}, EthControllers: {}, "
+                "LinControllers: {})",
+                clientMode,
+                SimulationTimeToString(stepSize),
+                simulationState,
+                incomingSignals,
+                outgoingSignals,
+                canControllers,
+                ethControllers,
+                linControllers);
         }
 
         return Result::Ok;
@@ -423,18 +433,20 @@ public:
                                        const std::vector<CanControllerContainer>& canControllers,
                                        const std::vector<EthControllerContainer>& ethControllers,
                                        const std::vector<LinControllerContainer>& linControllers,
-                                       const std::vector<FrControllerContainer>& frControllers) override {
+                                       [[maybe_unused]] const std::vector<FrControllerContainer>& frControllers) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendConnectOk(protocolVersion,
-                                               clientMode,
-                                               stepSize,
-                                               simulationState,
-                                               incomingSignals,
-                                               outgoingSignals,
-                                               canControllers,
-                                               ethControllers,
-                                               linControllers,
-                                               frControllers);
+            Logger::Instance().LogProtBegin(
+                "SendConnectOk(ProtocolVersion: {}, ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, "
+                "CanControllers: {}, EthControllers: {}, LinControllers: {})",
+                protocolVersion,
+                clientMode,
+                SimulationTimeToString(stepSize),
+                simulationState,
+                incomingSignals,
+                outgoingSignals,
+                canControllers,
+                ethControllers,
+                linControllers);
         }
         constexpr size_t size = sizeof(FrameKind) + sizeof(protocolVersion) + sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
 
@@ -456,7 +468,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendConnectOk();
+            Logger::Instance().LogProtEnd("SendConnectOk()");
         }
 
         return Result::Ok;
@@ -464,14 +476,14 @@ public:
 
     [[nodiscard]] Result ReadStart(ChannelReader& reader, SimulationTime& simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadStart();
+            Logger::Instance().LogProtBegin("ReadStart()");
         }
 
         CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadStart(simulationTime);
+            Logger::Instance().LogProtEnd("ReadStart(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         return Result::Ok;
@@ -479,7 +491,7 @@ public:
 
     [[nodiscard]] Result SendStart(ChannelWriter& writer, SimulationTime simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendStart(simulationTime);
+            Logger::Instance().LogProtBegin("SendStart(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime);
@@ -494,7 +506,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendStart();
+            Logger::Instance().LogProtEnd("SendStart()");
         }
 
         return Result::Ok;
@@ -502,14 +514,14 @@ public:
 
     [[nodiscard]] Result ReadStop(ChannelReader& reader, SimulationTime& simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadStop();
+            Logger::Instance().LogProtBegin("ReadStop()");
         }
 
         CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadStop(simulationTime);
+            Logger::Instance().LogProtEnd("ReadStop(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         return Result::Ok;
@@ -517,7 +529,7 @@ public:
 
     [[nodiscard]] Result SendStop(ChannelWriter& writer, SimulationTime simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendStop(simulationTime);
+            Logger::Instance().LogProtBegin("SendStop(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime);
@@ -532,7 +544,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendStop();
+            Logger::Instance().LogProtEnd("SendStop()");
         }
 
         return Result::Ok;
@@ -540,7 +552,7 @@ public:
 
     [[nodiscard]] Result ReadTerminate(ChannelReader& reader, SimulationTime& simulationTime, TerminateReason& reason) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadTerminate();
+            Logger::Instance().LogProtBegin("ReadTerminate()");
         }
 
         constexpr size_t size = sizeof(simulationTime) + sizeof(reason);
@@ -555,7 +567,7 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadTerminate(simulationTime, reason);
+            Logger::Instance().LogProtEnd("ReadTerminate(SimulationTime: {} s, Reason: {})", SimulationTimeToString(simulationTime), reason);
         }
 
         return Result::Ok;
@@ -563,7 +575,7 @@ public:
 
     [[nodiscard]] Result SendTerminate(ChannelWriter& writer, SimulationTime simulationTime, TerminateReason reason) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendTerminate(simulationTime, reason);
+            Logger::Instance().LogProtBegin("SendTerminate(SimulationTime: {} s, Reason: {})", SimulationTimeToString(simulationTime), reason);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime) + sizeof(reason);
@@ -579,7 +591,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendTerminate();
+            Logger::Instance().LogProtEnd("SendTerminate()");
         }
 
         return Result::Ok;
@@ -587,14 +599,14 @@ public:
 
     [[nodiscard]] Result ReadPause(ChannelReader& reader, SimulationTime& simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadPause();
+            Logger::Instance().LogProtBegin("ReadPause()");
         }
 
         CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadPause(simulationTime);
+            Logger::Instance().LogProtEnd("ReadPause(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         return Result::Ok;
@@ -602,7 +614,7 @@ public:
 
     [[nodiscard]] Result SendPause(ChannelWriter& writer, SimulationTime simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendPause(simulationTime);
+            Logger::Instance().LogProtBegin("SendPause(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime);
@@ -617,7 +629,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendPause();
+            Logger::Instance().LogProtEnd("SendPause()");
         }
 
         return Result::Ok;
@@ -625,14 +637,14 @@ public:
 
     [[nodiscard]] Result ReadContinue(ChannelReader& reader, SimulationTime& simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadContinue();
+            Logger::Instance().LogProtBegin("ReadContinue()");
         }
 
         CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadContinue(simulationTime);
+            Logger::Instance().LogProtEnd("ReadContinue(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         return Result::Ok;
@@ -640,7 +652,7 @@ public:
 
     [[nodiscard]] Result SendContinue(ChannelWriter& writer, SimulationTime simulationTime) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendContinue(simulationTime);
+            Logger::Instance().LogProtBegin("SendContinue(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime);
@@ -655,7 +667,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendContinue();
+            Logger::Instance().LogProtEnd("SendContinue()");
         }
 
         return Result::Ok;
@@ -667,7 +679,7 @@ public:
                                   const DeserializeFunction& deserializeBusMessages,
                                   const Callbacks& callbacks) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadStep();
+            Logger::Instance().LogProtBegin("ReadStep()");
         }
 
         CheckResultWithMessage(reader.Read(simulationTime), "Could not read simulation time.");
@@ -681,7 +693,7 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadStep(simulationTime);
+            Logger::Instance().LogProtEnd("ReadStep(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         return Result::Ok;
@@ -692,7 +704,7 @@ public:
                                   const SerializeFunction& serializeIoData,
                                   const SerializeFunction& serializeBusMessages) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendStep(simulationTime);
+            Logger::Instance().LogProtBegin("SendStep(SimulationTime: {} s)", SimulationTimeToString(simulationTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(simulationTime);
@@ -709,7 +721,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendStep();
+            Logger::Instance().LogProtEnd("SendStep()");
         }
 
         return Result::Ok;
@@ -722,7 +734,7 @@ public:
                                     const DeserializeFunction& deserializeBusMessages,
                                     const Callbacks& callbacks) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadStepOk();
+            Logger::Instance().LogProtBegin("ReadStepOk()");
         }
 
         constexpr size_t size = sizeof(nextSimulationTime) + sizeof(command);
@@ -743,7 +755,7 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadStepOk(nextSimulationTime, command);
+            Logger::Instance().LogProtEnd("ReadStepOk(NextSimulationTime: {} s, Command: {})", SimulationTimeToString(nextSimulationTime), command);
         }
 
         return Result::Ok;
@@ -755,7 +767,7 @@ public:
                                     const SerializeFunction& serializeIoData,
                                     const SerializeFunction& serializeBusMessages) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendStepOk(nextSimulationTime, command);
+            Logger::Instance().LogProtBegin("SendStepOk(NextSimulationTime: {} s, Command: {})", SimulationTimeToString(nextSimulationTime), command);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(nextSimulationTime) + sizeof(command);
@@ -773,7 +785,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendStepOk();
+            Logger::Instance().LogProtEnd("SendStepOk()");
         }
 
         return Result::Ok;
@@ -781,7 +793,7 @@ public:
 
     [[nodiscard]] Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadSetPort();
+            Logger::Instance().LogProtBegin("ReadSetPort()");
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
@@ -789,7 +801,7 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadSetPort(serverName, port);
+            Logger::Instance().LogProtEnd(R"(ReadSetPort(ServerName: "{}", Port: {}))", serverName, port);
         }
 
         return Result::Ok;
@@ -797,7 +809,7 @@ public:
 
     [[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendSetPort(serverName, port);
+            Logger::Instance().LogProtBegin(R"(SendSetPort(ServerName: "{}", Port: {}))", serverName, port);
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::SetPort), "Could not write frame kind.");
@@ -806,7 +818,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendSetPort();
+            Logger::Instance().LogProtEnd("SendSetPort()");
         }
 
         return Result::Ok;
@@ -814,14 +826,14 @@ public:
 
     [[nodiscard]] Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadUnsetPort();
+            Logger::Instance().LogProtBegin("ReadUnsetPort()");
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadUnsetPort(serverName);
+            Logger::Instance().LogProtEnd(R"(ReadUnsetPort(ServerName: "{}"))", serverName);
         }
 
         return Result::Ok;
@@ -829,7 +841,7 @@ public:
 
     [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendUnsetPort(serverName);
+            Logger::Instance().LogProtBegin(R"(SendUnsetPort(ServerName: "{}"))", serverName);
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::UnsetPort), "Could not write frame kind.");
@@ -837,7 +849,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendUnsetPort();
+            Logger::Instance().LogProtEnd("SendUnsetPort()");
         }
 
         return Result::Ok;
@@ -845,14 +857,14 @@ public:
 
     [[nodiscard]] Result ReadGetPort(ChannelReader& reader, std::string& serverName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadGetPort();
+            Logger::Instance().LogProtBegin("ReadGetPort()");
         }
 
         CheckResultWithMessage(ReadString(reader, serverName), "Could not read server name.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadGetPort(serverName);
+            Logger::Instance().LogProtEnd(R"(ReadGetPort(ServerName: "{}"))", serverName);
         }
 
         return Result::Ok;
@@ -860,7 +872,7 @@ public:
 
     [[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendGetPort(serverName);
+            Logger::Instance().LogProtBegin(R"(SendGetPort(ServerName: "{}"))", serverName);
         }
 
         CheckResultWithMessage(writer.Write(FrameKind::GetPort), "Could not write frame kind.");
@@ -868,7 +880,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendGetPort();
+            Logger::Instance().LogProtEnd("SendGetPort()");
         }
 
         return Result::Ok;
@@ -876,14 +888,14 @@ public:
 
     [[nodiscard]] Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadGetPortOk();
+            Logger::Instance().LogProtBegin("ReadGetPortOk()");
         }
 
         CheckResultWithMessage(reader.Read(port), "Could not read port.");
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadGetPortOk(port);
+            Logger::Instance().LogProtEnd("ReadGetPortOk(Port: {})", port);
         }
 
         return Result::Ok;
@@ -891,7 +903,7 @@ public:
 
     [[nodiscard]] Result SendGetPortOk(ChannelWriter& writer, uint16_t port) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendGetPortOk(port);
+            Logger::Instance().LogProtBegin("SendGetPortOk(Port: {})", port);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(port);
@@ -906,7 +918,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendGetPortOk();
+            Logger::Instance().LogProtEnd("SendGetPortOk()");
         }
 
         return Result::Ok;
@@ -1167,7 +1179,7 @@ public:
                                        std::vector<LinControllerContainer>& linControllers,
                                        std::vector<FrControllerContainer>& frControllers) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceReadConnectOk();
+            Logger::Instance().LogProtBegin("ReadConnectOk()");
         }
 
         constexpr size_t size = sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
@@ -1189,15 +1201,18 @@ public:
         reader.EndRead();
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceReadConnectOk(clientMode,
-                                             stepSize,
-                                             simulationState,
-                                             incomingSignals,
-                                             outgoingSignals,
-                                             canControllers,
-                                             ethControllers,
-                                             linControllers,
-                                             frControllers);
+            Logger::Instance().LogProtEnd(
+                "ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, CanControllers: {}, EthControllers: {}, "
+                "LinControllers: {}, FrControllers: {})",
+                clientMode,
+                SimulationTimeToString(stepSize),
+                simulationState,
+                incomingSignals,
+                outgoingSignals,
+                canControllers,
+                ethControllers,
+                linControllers,
+                frControllers);
         }
 
         return Result::Ok;
@@ -1215,16 +1230,19 @@ public:
                                        const std::vector<LinControllerContainer>& linControllers,
                                        const std::vector<FrControllerContainer>& frControllers) override {
         if (IsProtocolTracingEnabled()) {
-            LogProtocolBeginTraceSendConnectOk(protocolVersion,
-                                               clientMode,
-                                               stepSize,
-                                               simulationState,
-                                               incomingSignals,
-                                               outgoingSignals,
-                                               canControllers,
-                                               ethControllers,
-                                               linControllers,
-                                               frControllers);
+            Logger::Instance().LogProtBegin(
+                "SendConnectOk(ProtocolVersion: {}, ClientMode: {}, StepSize: {} s, SimulationState: {}, IncomingSignals: {}, OutgoingSignals: {}, "
+                "CanControllers: {}, EthControllers: {}, LinControllers: {}, FrControllers: {})",
+                protocolVersion,
+                clientMode,
+                SimulationTimeToString(stepSize),
+                simulationState,
+                incomingSignals,
+                outgoingSignals,
+                canControllers,
+                ethControllers,
+                linControllers,
+                frControllers);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(protocolVersion) + sizeof(clientMode) + sizeof(stepSize) + sizeof(simulationState);
@@ -1248,7 +1266,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolTracingEnabled()) {
-            LogProtocolEndTraceSendConnectOk();
+            Logger::Instance().LogProtEnd("SendConnectOk()");
         }
 
         return Result::Ok;
@@ -1256,14 +1274,14 @@ public:
 
     [[nodiscard]] Result ReadPing(ChannelReader& reader, std::chrono::nanoseconds& roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceReadPing();
+            Logger::Instance().LogProtBegin("ReadPing()");
         }
 
         CheckResultWithMessage(reader.Read(roundTripTime), "Could not read round trip time.");
         reader.EndRead();
 
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolEndTraceReadPing(roundTripTime);
+            Logger::Instance().LogProtEnd("ReadPing(RoundTripTime: {} s)", SimulationTimeToString(roundTripTime));
         }
 
         return Result::Ok;
@@ -1271,7 +1289,7 @@ public:
 
     [[nodiscard]] Result SendPing(ChannelWriter& writer, std::chrono::nanoseconds roundTripTime) override {
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolBeginTraceSendPing(roundTripTime);
+            Logger::Instance().LogProtBegin("SendPing(RoundTripTime: {} s)", SimulationTimeToString(roundTripTime));
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(roundTripTime);
@@ -1285,7 +1303,7 @@ public:
         CheckResultWithMessage(writer.EndWrite(), "Could not finish frame.");
 
         if (IsProtocolPingTracingEnabled()) {
-            LogProtocolEndTraceSendPing();
+            Logger::Instance().LogProtEnd("SendPing()");
         }
 
         return Result::Ok;
@@ -1395,9 +1413,7 @@ public:
         return Result::Ok;
     }
 
-    std::ostringstream oss;
-    oss << "Unsupported protocol version: " << negotiatedVersion << '.';
-    Logger::Instance().LogError(oss.str());
+    Logger::Instance().LogError("Unsupported protocol version: {}.", negotiatedVersion);
     return Result::Error;
 }
 

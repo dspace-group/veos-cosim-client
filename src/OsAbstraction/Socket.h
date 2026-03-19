@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 
-#include "DsVeosCoSim/CoSimTypes.h"
+#include "CoSimTypes.h"
 
 namespace DsVeosCoSim {
 

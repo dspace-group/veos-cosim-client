@@ -133,11 +133,17 @@ project(DsVeosCoSimDemo VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+# Optional: if your project already provides fmt, keep this enabled.
+# Otherwise veos-cosim-client uses its bundled copy from third_party/fmt.
+# find_package(fmt CONFIG REQUIRED)
+
 add_subdirectory(veos-cosim-client)
 
 add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE DsVeosCoSim)
 ```
+
+The `veos-cosim-client` directory must include `third_party/fmt` unless your top-level CMake project provides a `fmt::fmt` or `fmt::fmt-header-only` target before `add_subdirectory(veos-cosim-client)`.
 
 ### 5.3 Create Source Code
 
