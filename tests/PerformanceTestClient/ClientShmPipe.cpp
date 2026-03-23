@@ -1,11 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#ifdef _WIN32
+
 #include <array>
 #include <cstdint>
 #include <string>
 
+#include "Helper.hpp"
 #include "Logger.hpp"
-#include "OsAbstractionTestHelper.hpp"
+#include "OsUtilities.hpp"
 #include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
@@ -15,16 +18,16 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    PipeClient client;
-    CheckResult(PipeClient::Connect(PipeName, client));
+    ShmPipeClient client;
+    CheckResult(ShmPipeClient::TryConnect(ShmPipeName, client));
 
     std::array<char, FrameSize> buffer{};
 
     connectedEvent.Set();
 
     while (!isStopped) {
-        CheckResult(client.Write(buffer.data(), FrameSize));
-        CheckResult(client.Read(buffer.data(), FrameSize));
+        CheckResult(client.Send(buffer.data(), FrameSize));
+        CheckResult(ReceiveComplete(client, buffer.data(), FrameSize));
 
         counter++;
     }
@@ -32,18 +35,20 @@ namespace {
     return CreateOk();
 }
 
-void PipeTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void ShmPipeTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
-        LogError("Could not run Pipe Client.");
+        LogError("Could not run SHM Pipe Client.");
     }
 }
 
 }  // namespace
 
-void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
-    LogTrace("Pipe:");
-    RunPerformanceTest(PipeTest, "");
+void RunShmPipeTest() {  // NOLINT(misc-use-internal-linkage)
+    LogTrace("SHM Pipe:");
+    RunPerformanceTest(ShmPipeTest, "");
     LogTrace("");
 }
 
 }  // namespace DsVeosCoSim
+
+#endif

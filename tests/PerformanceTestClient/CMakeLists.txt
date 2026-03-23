@@ -9,16 +9,24 @@ target_sources(
   PRIVATE
   ClientCoSimCallbackBased.cpp
   ClientCoSimPollingBased.cpp
-  ClientEvents.cpp
   ClientLocalCommunication.cpp
+  ClientLocalSocket.cpp
   ClientPipe.cpp
   ClientRemoteCommunication.cpp
-  ClientTcp.cpp
-  ClientUdp.cpp
-  ClientLocal.cpp
+  ClientTcpSocket.cpp
+  ClientUdpSocket.cpp
   PerformanceTestClient.cpp
   Program.cpp
 )
+
+if(WIN32)
+  target_sources(
+    PerformanceTestClient
+    PRIVATE
+    ClientEvents.cpp
+    ClientShmPipe.cpp
+  )
+endif()
 
 target_include_directories(
   PerformanceTestClient

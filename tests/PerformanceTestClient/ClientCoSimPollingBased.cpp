@@ -1,15 +1,15 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.hpp"
-
 #include <string>
 
 #include "CoSimClient.hpp"
 #include "CoSimTypes.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
+#include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
@@ -47,14 +47,14 @@ namespace {
                 break;
             default:
                 LogError("Invalid command.");
-                return Result::Error;
+                return CreateError();
         }
 
         CheckResult(coSimClient->FinishCommand());
     }
 
     coSimClient->Disconnect();
-    return Result::Ok;
+    return CreateOk();
 }
 
 void CoSimClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
@@ -75,3 +75,5 @@ void RunCoSimPollingTest(const std::string& host) {  // NOLINT(misc-use-internal
     RunPerformanceTest(CoSimClientRun, host);
     LogTrace("");
 }
+
+}  // namespace DsVeosCoSim

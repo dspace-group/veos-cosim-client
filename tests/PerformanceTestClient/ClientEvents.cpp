@@ -1,49 +1,53 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestClient.hpp"
-
 #ifdef _WIN32
 
 #include <array>
 #include <cstdint>
 #include <string>
 
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "OsUtilities.hpp"
+#include "PerformanceTestClient.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "Result.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
 [[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     NamedEvent beginEvent;
     CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
+
     NamedEvent endEvent;
     CheckResult(NamedEvent::CreateOrOpen(EndEventName, endEvent));
-    SharedMemory sharedMemory;
-    CheckResult(SharedMemory::CreateOrOpen(ShmName, BufferSize, sharedMemory));
 
-    std::array<char, BufferSize> buffer{};
+    SharedMemory sharedMemory;
+    CheckResult(SharedMemory::TryOpenExisting(ShmName, FrameSize, sharedMemory));
+
+    std::array<char, FrameSize> buffer{};
 
     connectedEvent.Set();
 
     while (!isStopped) {
-        (void)memcpy(sharedMemory.GetData(), buffer.data(), BufferSize);
+        memcpy(sharedMemory.GetData(), buffer.data(), FrameSize);
+
         CheckResult(beginEvent.Set());
         CheckResult(endEvent.Wait());
-        (void)memcpy(buffer.data(), sharedMemory.GetData(), BufferSize);
+
+        memcpy(buffer.data(), sharedMemory.GetData(), FrameSize);
         buffer[0]++;
 
         counter++;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
-void EventsClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+void EventsTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
-        LogError("Could not run events client.");
+        LogError("Could not run Events Client.");
     }
 }
 
@@ -51,13 +55,10 @@ void EventsClientRun(const std::string& host, Event& connectedEvent, uint64_t& c
 
 void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
-    RunPerformanceTest(EventsClientRun, "");
+    RunPerformanceTest(EventsTest, "");
     LogTrace("");
 }
 
-#else
-
-void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
-}
+}  // namespace DsVeosCoSim
 
 #endif
