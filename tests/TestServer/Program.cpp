@@ -1,6 +1,5 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <chrono>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -8,11 +7,17 @@
 #include <thread>
 #include <vector>
 
-#include <fmt/color.h>
-
 #include "CoSimServer.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
+#include "Result.hpp"
+
+#ifdef _WIN32
+
+#include <chrono>
+
+#endif
 
 using namespace DsVeosCoSim;
 using namespace std::chrono;
@@ -37,62 +42,62 @@ public:
     [[nodiscard]] Result Load(const CoSimServerConfig& config) {
         CheckResult(CreateServer(_server));
         _config = config;
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Load(config);
     }
 
     [[nodiscard]] Result Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Step(simulationTime, nextSimulationTime);
     }
 
     [[nodiscard]] Result Start(SimulationTime simulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Start(simulationTime);
     }
 
     [[nodiscard]] Result Stop(SimulationTime simulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Stop(simulationTime);
     }
 
     [[nodiscard]] Result Pause(SimulationTime simulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Pause(simulationTime);
     }
 
     [[nodiscard]] Result Continue(SimulationTime simulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Continue(simulationTime);
     }
 
     [[nodiscard]] Result Terminate(SimulationTime simulationTime) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Terminate(simulationTime, TerminateReason::Error);
     }
 
     [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const std::vector<uint8_t>& value) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Write(signalId, length, value.data());
     }
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         return _server->Transmit(messageContainer);
     }
 
@@ -101,15 +106,11 @@ public:
         _backgroundThread = std::thread([&] {
             while (!_stopBackgroundThreadFlag) {
                 std::this_thread::sleep_for(1s);
-                std::lock_guard lock(_mutex);
-                std::chrono::nanoseconds roundTripTime{};
+                std::scoped_lock lock(_mutex);
+                SimulationTime roundTripTime{};
                 if (!IsOk(_server->BackgroundService(roundTripTime))) {
                     LogError("Error in background task.");
                     return;
-                }
-
-                if (roundTripTime.count() > 0) {
-                    LogTrace("Round trip time: {} ns.", roundTripTime.count());
                 }
             }
         });
@@ -247,7 +248,7 @@ void SwitchSendingFrMessages() {
     static int64_t counter = 0;
     SimulationTime currentHalfSecond = simulationTime / 500000000;
     if (currentHalfSecond == lastHalfSecond) {
-        return Result::Ok;
+        return CreateOk();
     }
 
     lastHalfSecond = currentHalfSecond;
@@ -283,7 +284,7 @@ void SwitchSendingFrMessages() {
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 [[nodiscard]] Result DoSimulation() {
@@ -305,7 +306,7 @@ void SwitchSendingFrMessages() {
 
     Server->StartBackgroundThread();
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void StopSimulationThread() {
@@ -332,17 +333,24 @@ void StartSimulationThread() {
     SimulationThread = std::thread(DoSimulation);
 }
 
-[[nodiscard]] Result StartSimulation() {
-    std::lock_guard lock(LockState);
+[[nodiscard]] Result StartOrPauseSimulation() {
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
         case SimulationState::Running:
+            LogInfo("Pausing ...");
+
+            StopSimulationThread();
+            CheckResult(Server->Pause(CurrentTime));
+            State = SimulationState::Paused;
+
+            LogInfo("Paused.");
             break;
         case SimulationState::Stopped:
             LogInfo("Starting ...");
 
-            CurrentTime = 0ns;
+            CurrentTime = 0s;
             CheckResult(Server->Start(CurrentTime));
             State = SimulationState::Running;
             StartSimulationThread();
@@ -359,20 +367,20 @@ void StartSimulationThread() {
             LogInfo("Continued.");
             break;
         default:
-            LogError("Could not start in state {}.", state);
+            LogError("Could not start or pause in state {}.", state);
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationStarted() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
         case SimulationState::Stopped:
-            CurrentTime = 0ns;
+            CurrentTime = 0s;
             if (!IsOk(Server->Start(CurrentTime))) {
                 LogError("Could not start.");
                 return;
@@ -397,7 +405,7 @@ void OnSimulationStarted() {
 }
 
 [[nodiscard]] Result StopSimulation() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
@@ -425,11 +433,11 @@ void OnSimulationStarted() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationStopped() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
@@ -454,32 +462,8 @@ void OnSimulationStopped() {
     }
 }
 
-[[nodiscard]] Result PauseSimulation() {
-    std::lock_guard lock(LockState);
-
-    SimulationState state = State;
-    switch (state) {
-        case SimulationState::Paused:
-            break;
-        case SimulationState::Running:
-            LogInfo("Pausing ...");
-
-            StopSimulationThread();
-            CheckResult(Server->Pause(CurrentTime));
-            State = SimulationState::Paused;
-
-            LogInfo("Paused.");
-            break;
-        default:
-            LogError("Could not pause in state {}.", state);
-            break;
-    }
-
-    return Result::Ok;
-}
-
 void OnSimulationPaused() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
@@ -498,7 +482,7 @@ void OnSimulationPaused() {
 }
 
 [[nodiscard]] Result TerminateSimulation() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
@@ -520,11 +504,11 @@ void OnSimulationPaused() {
             break;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void OnSimulationTerminated() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     SimulationState state = State;
     switch (state) {
@@ -572,25 +556,25 @@ void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTi
 void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const CanController& controller,
                                    const CanMessageContainer& messageContainer) {
-    print(fg(fmt::color::dodger_blue), "{}\n", messageContainer);
+    LogCanMessage(format_as(messageContainer));
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const EthController& controller,
                                    const EthMessageContainer& messageContainer) {
-    print(fg(fmt::color::cyan), "{}\n", messageContainer);
+    LogEthMessage(format_as(messageContainer));
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                    [[maybe_unused]] const LinController& controller,
                                    const LinMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer);
+    LogLinMessage(format_as(messageContainer));
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
                                   [[maybe_unused]] const FrController& controller,
                                   const FrMessageContainer& messageContainer) {
-    print(fg(fmt::color::lime), "{}\n", messageContainer);
+    LogFrMessage(format_as(messageContainer));
 }
 
 [[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
@@ -598,7 +582,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
 
     if (State != SimulationState::Unloaded) {
         LogError("Could not load in state {}.", State);
-        return Result::Ok;
+        return CreateOk();
     }
 
     CoSimServerConfig config{};
@@ -630,7 +614,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     Server->StartBackgroundThread();
 
     LogInfo("Loaded.");
-    return Result::Ok;
+    return CreateOk();
 }
 
 void UnloadSimulation() {
@@ -650,7 +634,7 @@ void UnloadSimulation() {
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
-                return Result::Ok;
+                return CreateOk();
             case 'l':
                 CheckResult(LoadSimulation(isClientOptional, name));
                 break;
@@ -658,10 +642,10 @@ void UnloadSimulation() {
                 UnloadSimulation();
                 break;
             case 's':
-                CheckResult(StartSimulation());
-                break;
             case 'p':
-                CheckResult(PauseSimulation());
+            case 'k':
+            case ' ':
+                CheckResult(StartOrPauseSimulation());
                 break;
             case 't':
                 CheckResult(StopSimulation());
@@ -690,7 +674,7 @@ void UnloadSimulation() {
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 }  // namespace
