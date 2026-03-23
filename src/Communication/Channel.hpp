@@ -402,7 +402,7 @@ protected:
         // Did we read more than one frame the last time?
         if (_writeIndex > _endFrameIndex) {
             int32_t bytesToMove = _writeIndex - _endFrameIndex;
-            memcpy(buffer, &buffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
+            memmove(buffer, &buffer[static_cast<size_t>(_endFrameIndex)], static_cast<size_t>(bytesToMove));
 
             _writeIndex = bytesToMove;
 
