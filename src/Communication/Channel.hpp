@@ -18,6 +18,18 @@ namespace DsVeosCoSim {
 constexpr int32_t HeaderSize = 4;
 constexpr int32_t BufferSize = 65536;
 
+template <typename TValue>
+void WriteScalarToBuffer(uint8_t* destination, TValue value) {
+    static_assert(std::is_trivially_copyable_v<TValue>, "TValue must be trivially copyable.");
+    memcpy(destination, &value, sizeof(value));
+}
+
+template <typename TValue>
+void ReadScalarFromBuffer(const uint8_t* source, TValue& value) {
+    static_assert(std::is_trivially_copyable_v<TValue>, "TValue must be trivially copyable.");
+    memcpy(&value, source, sizeof(value));
+}
+
 class BlockWriter final {
 public:
     BlockWriter() = default;
@@ -39,7 +51,7 @@ public:
             throw std::runtime_error("No more space available.");
         }
 
-        *reinterpret_cast<decltype(value)*>(_data) = value;
+        WriteScalarToBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -51,7 +63,7 @@ public:
             throw std::runtime_error("No more space available.");
         }
 
-        *reinterpret_cast<decltype(value)*>(_data) = value;
+        WriteScalarToBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -63,7 +75,7 @@ public:
             throw std::runtime_error("No more space available.");
         }
 
-        *reinterpret_cast<decltype(value)*>(_data) = value;
+        WriteScalarToBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -138,7 +150,7 @@ public:
             }
         }
 
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
 
         return CreateOk();
@@ -155,7 +167,7 @@ public:
             }
         }
 
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
 
         return CreateOk();
@@ -172,7 +184,7 @@ public:
             }
         }
 
-        *(reinterpret_cast<decltype(value)*>(&_writeBuffer[static_cast<size_t>(_writeIndex)])) = value;
+        WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
 
         return CreateOk();
@@ -234,7 +246,7 @@ public:
             throw std::runtime_error("No more data available.");
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(_data);
+        ReadScalarFromBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -246,7 +258,7 @@ public:
             throw std::runtime_error("No more data available.");
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(_data);
+        ReadScalarFromBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -258,7 +270,7 @@ public:
             throw std::runtime_error("No more data available.");
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(_data);
+        ReadScalarFromBuffer(_data, value);
         _data += size;
         _size -= size;
     }
@@ -322,7 +334,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        ReadScalarFromBuffer(&_readBuffer[static_cast<size_t>(_readIndex)], value);
         _readIndex += size;
         return CreateOk();
     }
@@ -333,7 +345,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        ReadScalarFromBuffer(&_readBuffer[static_cast<size_t>(_readIndex)], value);
         _readIndex += size;
         return CreateOk();
     }
@@ -344,7 +356,7 @@ public:
             CheckResult(BeginRead());
         }
 
-        value = *reinterpret_cast<std::remove_reference_t<decltype(value)>*>(&_readBuffer[static_cast<size_t>(_readIndex)]);
+        ReadScalarFromBuffer(&_readBuffer[static_cast<size_t>(_readIndex)], value);
         _readIndex += size;
         return CreateOk();
     }
@@ -397,7 +409,7 @@ protected:
             // Did we read at least HeaderSize bytes more?
             if (bytesToMove >= HeaderSize) {
                 readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(buffer);
+                ReadScalarFromBuffer(buffer, _endFrameIndex);
 
                 // Did we read at least an entire second frame?
                 if (_writeIndex >= _endFrameIndex) {
@@ -419,7 +431,7 @@ protected:
 
             if (readHeader && (_writeIndex >= HeaderSize)) {
                 readHeader = false;
-                _endFrameIndex = *reinterpret_cast<int32_t*>(buffer);
+                ReadScalarFromBuffer(buffer, _endFrameIndex);
 
                 if (_endFrameIndex > BufferSize) {
                     LogError("Protocol error. The buffer size is too small.");

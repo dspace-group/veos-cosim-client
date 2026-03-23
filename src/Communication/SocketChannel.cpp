@@ -33,7 +33,7 @@ public:
         uint8_t* buffer = _writeBuffer.data();
 
         // Write header
-        *reinterpret_cast<int32_t*>(buffer) = _writeIndex;
+        WriteScalarToBuffer(buffer, _writeIndex);
 
         CheckResult(Send(buffer, static_cast<size_t>(_writeIndex)));
 
