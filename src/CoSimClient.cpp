@@ -10,10 +10,10 @@
 
 #include <fmt/format.h>
 
-#include "BusBuffer.hpp"
+#include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "IoBuffer.hpp"
+#include "SignalExchange.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
@@ -260,19 +260,19 @@ public:
     [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Write(outgoingSignalId, length, value);
+        return _signalExchange->Write(outgoingSignalId, length, value);
     }
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Read(incomingSignalId, length, value);
+        return _signalExchange->Read(incomingSignalId, length, value);
     }
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Read(incomingSignalId, length, value);
+        return _signalExchange->Read(incomingSignalId, length, value);
     }
 
     [[nodiscard]] Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const override {
@@ -339,98 +339,98 @@ public:
         CheckResult(EnsureIsConnected());
         CheckResult(CheckCanMessage(message.flags, message.length));
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const EthMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const LinMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const FrMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
         CheckResult(CheckCanMessage(messageContainer.flags, messageContainer.length));
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Receive(CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(EthMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(LinMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(FrMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
 private:
@@ -544,9 +544,9 @@ private:
             }
         }
 
-        CheckResult(CreateIoBuffer(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _ioBuffer));
+        CheckResult(CreateSignalExchange(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _signalExchange));
 
-        CheckResult(CreateBusBuffer(CoSimType::Client,
+        CheckResult(CreateBusExchange(CoSimType::Client,
                                     _connectionKind,
                                     _serverName,
                                     _canControllersExtern,
@@ -554,7 +554,7 @@ private:
                                     _linControllersExtern,
                                     _frControllersExtern,
                                     *_protocol,
-                                    _busBuffer));
+                                    _busExchange));
 
         _isConnected = true;
         return CreateOk();
@@ -734,8 +734,8 @@ private:
     [[nodiscard]] Result OnStart() {
         CheckResultWithMessage(_protocol->ReadStart(_channel->GetReader(), _currentSimulationTime), "Could not read start frame.");
 
-        _ioBuffer->ClearData();
-        _busBuffer->ClearData();
+        _signalExchange->ClearData();
+        _busExchange->ClearData();
 
         if (_callbacks.simulationStartedCallback) {
             _callbacks.simulationStartedCallback(_currentSimulationTime);
@@ -926,23 +926,23 @@ private:
     std::vector<LinController> _linControllersExtern;
     std::vector<FrController> _frControllersExtern;
 
-    std::unique_ptr<IoBuffer> _ioBuffer;
-    std::unique_ptr<BusBuffer> _busBuffer;
+    std::unique_ptr<SignalExchange> _signalExchange;
+    std::unique_ptr<BusExchange> _busExchange;
 
     SerializeFunction _serializeIoData = [&](ChannelWriter& writer) {
-        return _ioBuffer->Serialize(writer);
+        return _signalExchange->Serialize(writer);
     };
 
     SerializeFunction _serializeBusMessages = [&](ChannelWriter& writer) {
-        return _busBuffer->Serialize(writer);
+        return _busExchange->Serialize(writer);
     };
 
     DeserializeFunction _deserializeIoData = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _signalExchange->Deserialize(reader, simulationTime, callbacks);
     };
 
     DeserializeFunction _deserializeBusMessages = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _busExchange->Deserialize(reader, simulationTime, callbacks);
     };
 };
 

@@ -12,7 +12,7 @@
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
-#include "IoBuffer.hpp"
+#include "SignalExchange.hpp"
 #include "Protocol.hpp"
 #include "TestHelper.hpp"
 
@@ -26,13 +26,13 @@ namespace {
 #ifdef SINGLE_TEST
 auto CoSimTypes = Values(CoSimType::Client);
 
-auto IoBufferConnectionKinds = Values(ConnectionKind::Remote);
+auto SignalExchangeConnectionKinds = Values(ConnectionKind::Remote);
 
 auto DataTypes = Values(DataType::Float64);
 #else
 auto CoSimTypes = Values(CoSimType::Client, CoSimType::Server);
 
-auto IoBufferConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
+auto SignalExchangeConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
 
 auto DataTypes = Values(DataType::Bool,
                         DataType::Int8,
@@ -58,7 +58,7 @@ void SwitchSignals(std::vector<IoSignal>& incomingSignals, std::vector<IoSignal>
     }
 }
 
-class TestIoBufferWithCoSimType : public TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
+class TestSignalExchangeWithCoSimType : public TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
 protected:
     std::unique_ptr<IProtocol> _protocol;
 
@@ -68,28 +68,28 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(Test,
-                         TestIoBufferWithCoSimType,
-                         testing::Combine(CoSimTypes, IoBufferConnectionKinds),
+                         TestSignalExchangeWithCoSimType,
+                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
                              return fmt::format("{}_{}", std::get<0>(info.param), std::get<1>(info.param));
                          });
 
-TEST_P(TestIoBufferWithCoSimType, CreateWithZeroIoSignalInfos) {
+TEST_P(TestSignalExchangeWithCoSimType, CreateWithZeroIoSignalInfos) {
     // Arrange
     auto [coSimType, connectionKind] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
-    std::unique_ptr<IoBuffer> ioBuffer;
+    std::unique_ptr<SignalExchange> signalExchange;
 
     // Act
-    Result result = CreateIoBuffer(coSimType, connectionKind, name, {}, {}, *_protocol, ioBuffer);
+    Result result = CreateSignalExchange(coSimType, connectionKind, name, {}, {}, *_protocol, signalExchange);
 
     // Assert
     AssertOk(result);
 }
 
-class TestIoBuffer : public TestWithParam<std::tuple<CoSimType, ConnectionKind, DataType>> {
+class TestSignalExchange : public TestWithParam<std::tuple<CoSimType, ConnectionKind, DataType>> {
 protected:
     static std::unique_ptr<Channel> _senderChannel;
     static std::unique_ptr<Channel> _receiverChannel;
@@ -116,17 +116,17 @@ protected:
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
-    static void Transfer(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer) {
+    static void Transfer(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange) {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
-        AssertOk(writerIoBuffer.Serialize(writer));
+        AssertOk(writerSignalExchange.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        AssertOk(readerIoBuffer.Deserialize(reader, GenerateSimulationTime(), {}));
+        AssertOk(readerSignalExchange.Deserialize(reader, GenerateSimulationTime(), {}));
     }
 
-    static void TransferWithEvents(IoBuffer& writerIoBuffer, IoBuffer& readerIoBuffer, std::deque<EventData> expectedCallbacks) {
+    static void TransferWithEvents(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange, std::deque<EventData> expectedCallbacks) {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
@@ -146,74 +146,74 @@ protected:
             expectedCallbacks.pop_front();
         };
 
-        AssertOk(writerIoBuffer.Serialize(writer));
+        AssertOk(writerSignalExchange.Serialize(writer));
         AssertOk(writer.EndWrite());
 
-        AssertOk(readerIoBuffer.Deserialize(reader, simulationTime, callbacks));
+        AssertOk(readerSignalExchange.Deserialize(reader, simulationTime, callbacks));
 
         ASSERT_TRUE(expectedCallbacks.empty()) << "Not all expected callbacks were called.";
     }
 };
 
-std::unique_ptr<Channel> TestIoBuffer::_senderChannel;
-std::unique_ptr<Channel> TestIoBuffer::_receiverChannel;
+std::unique_ptr<Channel> TestSignalExchange::_senderChannel;
+std::unique_ptr<Channel> TestSignalExchange::_receiverChannel;
 
 INSTANTIATE_TEST_SUITE_P(,
-                         TestIoBuffer,
-                         testing::Combine(CoSimTypes, IoBufferConnectionKinds, DataTypes),
+                         TestSignalExchange,
+                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds, DataTypes),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DataType>>& info) {
                              return fmt::format("{}_{}_{}", std::get<0>(info.param), std::get<1>(info.param), std::get<2>(info.param));
                          });
 
-TEST_P(TestIoBuffer, CreateWithSingleIoSignalInfo) {
+TEST_P(TestSignalExchange, CreateWithSingleIoSignalInfo) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer incomingSignal = CreateSignal(dataType);
     IoSignalContainer outgoingSignal = CreateSignal(dataType);
 
-    std::unique_ptr<IoBuffer> ioBuffer;
+    std::unique_ptr<SignalExchange> signalExchange;
 
     // Act
-    Result result = CreateIoBuffer(coSimType, connectionKind, name, {incomingSignal.Convert()}, {outgoingSignal.Convert()}, *_protocol, ioBuffer);
+    Result result = CreateSignalExchange(coSimType, connectionKind, name, {incomingSignal.Convert()}, {outgoingSignal.Convert()}, *_protocol, signalExchange);
 
     // Assert
     AssertOk(result);
 }
 
-TEST_P(TestIoBuffer, CreateWithMultipleIoSignalInfos) {
+TEST_P(TestSignalExchange, CreateWithMultipleIoSignalInfos) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer incomingSignal1 = CreateSignal(dataType);
     IoSignalContainer incomingSignal2 = CreateSignal(dataType);
     IoSignalContainer outgoingSignal1 = CreateSignal(dataType);
     IoSignalContainer outgoingSignal2 = CreateSignal(dataType);
 
-    std::unique_ptr<IoBuffer> ioBuffer;
+    std::unique_ptr<SignalExchange> signalExchange;
 
     // Act
-    Result result = (CreateIoBuffer(coSimType,
+    Result result = (CreateSignalExchange(coSimType,
                                     connectionKind,
                                     name,
                                     {incomingSignal1.Convert(), incomingSignal2.Convert()},
                                     {outgoingSignal1.Convert(), outgoingSignal2.Convert()},
                                     *_protocol,
-                                    ioBuffer));
+                                    signalExchange));
 
     // Assert
     AssertOk(result);
 }
 
-TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
+TEST_P(TestSignalExchange, InitialDataOfFixedSizedSignal) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
@@ -221,8 +221,8 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> ioBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, ioBuffer));
+    std::unique_ptr<SignalExchange> signalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, signalExchange));
 
     std::vector<uint8_t> initialValue = CreateZeroedIoData(signal);
 
@@ -230,7 +230,7 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     // Act
-    Result result = ioBuffer->Read(signal.id, readLength, readValue.data());
+    Result result = signalExchange->Read(signal.id, readLength, readValue.data());
 
     // Assert
     AssertOk(result);
@@ -238,11 +238,11 @@ TEST_P(TestIoBuffer, InitialDataOfFixedSizedSignal) {
     ASSERT_THAT(readValue, ContainerEq(initialValue));
 }
 
-TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
+TEST_P(TestSignalExchange, InitialDataOfVariableSizedSignal) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
@@ -250,25 +250,25 @@ TEST_P(TestIoBuffer, InitialDataOfVariableSizedSignal) {
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> ioBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, ioBuffer));
+    std::unique_ptr<SignalExchange> signalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, signalExchange));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     // Act
-    Result result = ioBuffer->Read(signal.id, readLength, readValue.data());
+    Result result = signalExchange->Read(signal.id, readLength, readValue.data());
 
     // Assert
     AssertOk(result);
     ASSERT_EQ(0U, readLength);
 }
 
-TEST_P(TestIoBuffer, WriteFixedSizedData) {
+TEST_P(TestSignalExchange, WriteFixedSizedData) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
@@ -276,23 +276,23 @@ TEST_P(TestIoBuffer, WriteFixedSizedData) {
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> ioBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, ioBuffer));
+    std::unique_ptr<SignalExchange> signalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, signalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     // Act
-    Result result = ioBuffer->Write(signal.id, signal.length, writeValue.data());
+    Result result = signalExchange->Write(signal.id, signal.length, writeValue.data());
 
     // Assert
     AssertOk(result);
 }
 
-TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     IoSignalContainer signal1 = CreateSignal();
@@ -301,39 +301,39 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndRead) {
     std::vector outgoingSignals = {signal1.Convert(), signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
-    Transfer(*writerIoBuffer, *readerIoBuffer);
+    Transfer(*writerSignalExchange, *readerSignalExchange);
 
     // Act
-    AssertOk(readerIoBuffer->Read(signal.id, readLength, readValue.data()));
+    AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
     ASSERT_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     IoSignalContainer signal1 = CreateSignal();
@@ -342,43 +342,43 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReadLatestValue) {
     std::vector outgoingSignals = {signal.Convert(), signal1.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     // Second write with different data
     writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     uint32_t readLength{};
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
-    Transfer(*writerIoBuffer, *readerIoBuffer);
+    Transfer(*writerSignalExchange, *readerSignalExchange);
 
     // Act
-    AssertOk(readerIoBuffer->Read(signal.id, readLength, readValue.data()));
+    AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
     ASSERT_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     IoSignalContainer signal1 = CreateSignal();
@@ -388,30 +388,30 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataAndReceiveEvent) {
     std::vector outgoingSignals = {signal.Convert(), signal1.Convert(), signal2.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     // Act and assert
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     IoSignalContainer signal1 = CreateSignal();
@@ -421,36 +421,36 @@ TEST_P(TestIoBuffer, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     std::vector outgoingSignals = {signal1.Convert(), signal2.Convert(), signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     // Act and assert
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     // Second write with different data
     writeValue[0]++;
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     // Act and assert
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
+TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
     signal.length = GenerateRandom(2U, 10U);
@@ -459,35 +459,35 @@ TEST_P(TestIoBuffer, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 
     // Second write with same data
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     // Act and assert
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {});
 }
 
-TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataAndReceiveEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
 
@@ -495,31 +495,31 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataAndReceiveEvent) {
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     // Act and assert
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveEvent) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -528,36 +528,36 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveE
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 
     // Act and assert
 
     ++writeValue[0];  // Only change one byte, so that only element is changed
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventWithSharedMemory) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventWithSharedMemory) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -566,33 +566,33 @@ TEST_P(TestIoBuffer, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventW
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     IoSignalContainer signalCopy = signal;
     signalCopy.length--;
 
     std::vector<uint8_t> writeValue = GenerateIoData(signalCopy);
-    AssertOk(writerIoBuffer->Write(signal.id, signalCopy.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signalCopy.length, writeValue.data()));
 
     // Act and assert
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signalCopy, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signalCopy, writeValue}});
 }
 
-TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory) {
+TEST_P(TestSignalExchange, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory) {
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
-    std::string name = GenerateString("IoBuffer名前");
+    std::string name = GenerateString("SignalExchange名前");
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Variable);
     signal.length = GenerateRandom(2U, 10U);
@@ -601,28 +601,28 @@ TEST_P(TestIoBuffer, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
     std::vector outgoingSignals = {signal.Convert()};
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    AssertOk(CreateIoBuffer(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    AssertOk(CreateSignalExchange(coSimType, connectionKind, name, incomingSignals, outgoingSignals, *_protocol, writerSignalExchange));
 
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    AssertOk(CreateIoBuffer(GetCounterPart(coSimType),
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
                             connectionKind,
                             GetCounterPart(name, connectionKind),
                             incomingSignals,
                             outgoingSignals,
                             *_protocol,
-                            readerIoBuffer));
+                            readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {{signal, writeValue}});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 
     // Second write with same data
-    AssertOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+    AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     // Act and assert
-    TransferWithEvents(*writerIoBuffer, *readerIoBuffer, {});
+    TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {});
 }
 
 }  // namespace

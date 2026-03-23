@@ -210,40 +210,40 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 }
 #endif
 
-[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
-                                     ConnectionKind connectionKind,
-                                     const std::string& name,
-                                     const std::vector<CanController>& controllers,
-                                     IProtocol& protocol,
-                                     std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busBuffer);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       const std::string& name,
+                                       const std::vector<CanController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busExchange);
 }
 
-[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
-                                     ConnectionKind connectionKind,
-                                     const std::string& name,
-                                     const std::vector<EthController>& controllers,
-                                     IProtocol& protocol,
-                                     std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busBuffer);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       const std::string& name,
+                                       const std::vector<EthController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busExchange);
 }
 
-[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
-                                     ConnectionKind connectionKind,
-                                     const std::string& name,
-                                     const std::vector<LinController>& controllers,
-                                     IProtocol& protocol,
-                                     std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busBuffer);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       const std::string& name,
+                                       const std::vector<LinController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busExchange);
 }
 
-[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
-                                     ConnectionKind connectionKind,
-                                     const std::string& name,
-                                     const std::vector<FrController>& controllers,
-                                     IProtocol& protocol,
-                                     std::unique_ptr<BusBuffer>& busBuffer) {
-    return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       const std::string& name,
+                                       const std::vector<FrController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busExchange);
 }
 
 void FillWithRandomData(uint8_t* data, size_t length) {

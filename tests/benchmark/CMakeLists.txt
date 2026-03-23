@@ -11,9 +11,9 @@ target_sources(
   OsAbstraction/BenchmarkNamedEvent.cpp
   OsAbstraction/BenchmarkShmPipe.cpp
   OsAbstraction/BenchmarkSocket.cpp
-  BenchmarkBusBuffer.cpp
+  BenchmarkBusExchange.cpp
   BenchmarkCoSim.cpp
-  BenchmarkIoBuffer.cpp
+  BenchmarkSignalExchange.cpp
   Program.cpp
 )
 

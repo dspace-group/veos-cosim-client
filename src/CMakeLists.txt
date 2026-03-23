@@ -21,12 +21,12 @@ target_sources(
   Helpers/Logger.cpp
   OsAbstraction/OsUtilities.cpp
   OsAbstraction/Socket.cpp
-  BusBuffer.cpp
+  BusExchange.cpp
   CoSimClient.cpp
   CoSimServer.cpp
   CoSimTypes.cpp
   DsVeosCoSim.cpp
-  IoBuffer.cpp
+  SignalExchange.cpp
   PortMapper.cpp
   Protocol.cpp
 )

@@ -5,7 +5,7 @@
 
 #include <benchmark/benchmark.h>
 
-#include "BusBuffer.hpp"
+#include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "Event.hpp"
 #include "Helper.hpp"
@@ -45,15 +45,15 @@ struct FrBus {
 };
 
 template <typename TBus>
-void ReceiveMessages(size_t count, BusBuffer& receiverBusBuffer, Channel& channel, bool& stopThread, Event& endEvent) {
+void ReceiveMessages(size_t count, BusExchange& receiverBusExchange, Channel& channel, bool& stopThread, Event& endEvent) {
     using TMessage = typename TBus::Message;
 
     while (!stopThread) {
         TMessage receiveMessage{};
-        MustBeOk(receiverBusBuffer.Deserialize(channel.GetReader(), SimulationTime{}, {}));
+        MustBeOk(receiverBusExchange.Deserialize(channel.GetReader(), SimulationTime{}, {}));
 
         for (size_t i = 0; i < count; i++) {
-            MustBeOk(receiverBusBuffer.Receive(receiveMessage));
+            MustBeOk(receiverBusExchange.Receive(receiveMessage));
         }
 
         endEvent.Set();
@@ -76,17 +76,17 @@ void RunTest(benchmark::State& state,
     TControllerContainer controller{};
     FillWithRandom(controller);
 
-    std::unique_ptr<BusBuffer> transmitterBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Server, connectionKind, writerName, {controller.Convert()}, *protocol, transmitterBusBuffer));
-    std::unique_ptr<BusBuffer> receiverBusBuffer;
-    MustBeOk(CreateBusBuffer(CoSimType::Client, connectionKind, readerName, {controller.Convert()}, *protocol, receiverBusBuffer));
+    std::unique_ptr<BusExchange> transmitterBusExchange;
+    MustBeOk(CreateBusExchange(CoSimType::Server, connectionKind, writerName, {controller.Convert()}, *protocol, transmitterBusExchange));
+    std::unique_ptr<BusExchange> receiverBusExchange;
+    MustBeOk(CreateBusExchange(CoSimType::Client, connectionKind, readerName, {controller.Convert()}, *protocol, receiverBusExchange));
 
     auto count = static_cast<size_t>(state.range(0));
 
     bool stopThread{};
     Event endEvent;
 
-    std::thread thread(ReceiveMessages<TBus>, count, std::ref(*receiverBusBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
+    std::thread thread(ReceiveMessages<TBus>, count, std::ref(*receiverBusExchange), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
 
     TMessageContainer sendMessage{};
     FillWithRandom(sendMessage, controller.id);
@@ -94,10 +94,10 @@ void RunTest(benchmark::State& state,
 
     for (auto _ : state) {
         for (size_t i = 0; i < count; i++) {
-            MustBeOk(transmitterBusBuffer->Transmit(sendMessage));
+            MustBeOk(transmitterBusExchange->Transmit(sendMessage));
         }
 
-        MustBeOk(transmitterBusBuffer->Serialize(senderChannel.GetWriter()));
+        MustBeOk(transmitterBusExchange->Serialize(senderChannel.GetWriter()));
         MustBeOk(senderChannel.GetWriter().EndWrite());
 
         (void)endEvent.Wait(Infinite);
@@ -108,10 +108,10 @@ void RunTest(benchmark::State& state,
     // The receiver thread is probably in receive function which is blocking. So we wake it up by sending everything one
     // last time
     for (size_t i = 0; i < count; i++) {
-        MustBeOk(transmitterBusBuffer->Transmit(sendMessage));
+        MustBeOk(transmitterBusExchange->Transmit(sendMessage));
     }
 
-    MustBeOk(transmitterBusBuffer->Serialize(senderChannel.GetWriter()));
+    MustBeOk(transmitterBusExchange->Serialize(senderChannel.GetWriter()));
     MustBeOk(senderChannel.GetWriter().EndWrite());
 
     thread.join();

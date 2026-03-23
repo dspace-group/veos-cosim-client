@@ -8,7 +8,7 @@
 
 #include "Event.hpp"
 #include "Helper.hpp"
-#include "IoBuffer.hpp"
+#include "SignalExchange.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
 
@@ -17,14 +17,14 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-void Receive(const IoSignalContainer& signal, const IoBuffer& readerIoBuffer, Channel& channel, const bool& stopThread, Event& endEvent) {
+void Receive(const IoSignalContainer& signal, const SignalExchange& readerSignalExchange, Channel& channel, const bool& stopThread, Event& endEvent) {
     std::vector<uint8_t> readValue = CreateZeroedIoData(signal);
 
     uint32_t readLength{};
 
     while (!stopThread) {
-        MustBeOk(readerIoBuffer.Deserialize(channel.GetReader(), 0ns, {}));
-        MustBeOk(readerIoBuffer.Read(signal.id, readLength, readValue.data()));
+        MustBeOk(readerSignalExchange.Deserialize(channel.GetReader(), 0ns, {}));
+        MustBeOk(readerSignalExchange.Read(signal.id, readLength, readValue.data()));
         endEvent.Set();
     }
 }
@@ -41,23 +41,23 @@ void RunTest(benchmark::State& state,
     std::unique_ptr<IProtocol> protocol;
     MustBeOk(CreateProtocol(ProtocolVersionLatest, protocol));
 
-    std::unique_ptr<IoBuffer> writerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerIoBuffer));
-    std::unique_ptr<IoBuffer> readerIoBuffer;
-    MustBeOk(CreateIoBuffer(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, *protocol, readerIoBuffer));
+    std::unique_ptr<SignalExchange> writerSignalExchange;
+    MustBeOk(CreateSignalExchange(CoSimType::Server, connectionKind, writerName, {signal.Convert()}, {}, *protocol, writerSignalExchange));
+    std::unique_ptr<SignalExchange> readerSignalExchange;
+    MustBeOk(CreateSignalExchange(CoSimType::Client, connectionKind, readerName, {signal.Convert()}, {}, *protocol, readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
     bool stopThread{};
     Event endEvent;
 
-    std::thread thread(Receive, std::ref(signal), std::ref(*readerIoBuffer), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
+    std::thread thread(Receive, std::ref(signal), std::ref(*readerSignalExchange), std::ref(receiverChannel), std::ref(stopThread), std::ref(endEvent));
 
     for (auto _ : state) {
         writeValue[0]++;
-        MustBeOk(writerIoBuffer->Write(signal.id, signal.length, writeValue.data()));
+        MustBeOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
-        MustBeOk(writerIoBuffer->Serialize(senderChannel.GetWriter()));
+        MustBeOk(writerSignalExchange->Serialize(senderChannel.GetWriter()));
         MustBeOk(senderChannel.GetWriter().EndWrite());
 
         (void)endEvent.Wait(Infinite);
@@ -68,7 +68,7 @@ void RunTest(benchmark::State& state,
     // The receiver thread is probably in receive function which is blocking. So we wake it up by sending everything one
     // last time
 
-    MustBeOk(writerIoBuffer->Serialize(senderChannel.GetWriter()));
+    MustBeOk(writerSignalExchange->Serialize(senderChannel.GetWriter()));
     MustBeOk(senderChannel.GetWriter().EndWrite());
 
     thread.join();

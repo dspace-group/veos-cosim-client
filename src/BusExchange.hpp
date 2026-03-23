@@ -13,18 +13,18 @@
 
 namespace DsVeosCoSim {
 
-class BusBuffer {
+class BusExchange {
 protected:
-    BusBuffer() = default;
+    BusExchange() = default;
 
 public:
-    virtual ~BusBuffer() noexcept = default;
+    virtual ~BusExchange() noexcept = default;
 
-    BusBuffer(const BusBuffer&) = delete;
-    BusBuffer& operator=(const BusBuffer&) = delete;
+    BusExchange(const BusExchange&) = delete;
+    BusExchange& operator=(const BusExchange&) = delete;
 
-    BusBuffer(BusBuffer&&) = delete;
-    BusBuffer& operator=(BusBuffer&&) = delete;
+    BusExchange(BusExchange&&) = delete;
+    BusExchange& operator=(BusExchange&&) = delete;
 
     virtual void ClearData() const = 0;
 
@@ -52,14 +52,14 @@ public:
     [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const = 0;
 };
 
-[[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
-                                     ConnectionKind connectionKind,
-                                     const std::string& name,
-                                     const std::vector<CanController>& canControllers,
-                                     const std::vector<EthController>& ethControllers,
-                                     const std::vector<LinController>& linControllers,
-                                     const std::vector<FrController>& frControllers,
-                                     IProtocol& protocol,
-                                     std::unique_ptr<BusBuffer>& busBuffer);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       const std::string& name,
+                                       const std::vector<CanController>& canControllers,
+                                       const std::vector<EthController>& ethControllers,
+                                       const std::vector<LinController>& linControllers,
+                                       const std::vector<FrController>& frControllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange);
 
 }  // namespace DsVeosCoSim

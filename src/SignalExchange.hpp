@@ -14,18 +14,18 @@
 
 namespace DsVeosCoSim {
 
-class IoBuffer {
+class SignalExchange {
 protected:
-    IoBuffer() = default;
+    SignalExchange() = default;
 
 public:
-    virtual ~IoBuffer() noexcept = default;
+    virtual ~SignalExchange() noexcept = default;
 
-    IoBuffer(const IoBuffer&) = delete;
-    IoBuffer& operator=(const IoBuffer&) = delete;
+    SignalExchange(const SignalExchange&) = delete;
+    SignalExchange& operator=(const SignalExchange&) = delete;
 
-    IoBuffer(IoBuffer&&) = delete;
-    IoBuffer& operator=(IoBuffer&&) = delete;
+    SignalExchange(SignalExchange&&) = delete;
+    SignalExchange& operator=(SignalExchange&&) = delete;
 
     virtual void ClearData() const = 0;
 
@@ -37,12 +37,12 @@ public:
     [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const = 0;
 };
 
-[[nodiscard]] Result CreateIoBuffer(CoSimType coSimType,
-                                    ConnectionKind connectionKind,
-                                    const std::string& name,
-                                    const std::vector<IoSignal>& incomingSignals,
-                                    const std::vector<IoSignal>& outgoingSignals,
-                                    IProtocol& protocol,
-                                    std::unique_ptr<IoBuffer>& ioBuffer);
+[[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,
+                                          ConnectionKind connectionKind,
+                                          const std::string& name,
+                                          const std::vector<IoSignal>& incomingSignals,
+                                          const std::vector<IoSignal>& outgoingSignals,
+                                          IProtocol& protocol,
+                                          std::unique_ptr<SignalExchange>& signalExchange);
 
 }  // namespace DsVeosCoSim

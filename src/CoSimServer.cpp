@@ -9,10 +9,10 @@
 #include <thread>
 #include <vector>
 
-#include "BusBuffer.hpp"
+#include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "IoBuffer.hpp"
+#include "SignalExchange.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
@@ -179,7 +179,7 @@ public:
             return CreateOk();
         }
 
-        return _ioBuffer->Write(signalId, length, value);
+        return _signalExchange->Write(signalId, length, value);
     }
 
     [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value, bool& valueRead) const override {
@@ -189,7 +189,7 @@ public:
         }
 
         valueRead = true;
-        return _ioBuffer->Read(signalId, length, value);
+        return _signalExchange->Read(signalId, length, value);
     }
 
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
@@ -197,7 +197,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const EthMessage& message) const override {
@@ -205,7 +205,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const LinMessage& message) const override {
@@ -213,7 +213,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const FrMessage& message) const override {
@@ -221,7 +221,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
@@ -229,7 +229,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
@@ -237,7 +237,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
@@ -245,7 +245,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
@@ -253,7 +253,7 @@ public:
             return CreateOk();
         }
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result BackgroundService(SimulationTime& roundTripTime) override {
@@ -455,13 +455,13 @@ private:
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
         std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-        CheckResult(CreateIoBuffer(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, *_protocol, _ioBuffer));
+        CheckResult(CreateSignalExchange(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, *_protocol, _signalExchange));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
         std::vector<LinController> linControllersExtern = Convert(_linControllers);
         std::vector<FrController> frControllersExtern = Convert(_frControllers);
-        CheckResult(CreateBusBuffer(CoSimType::Server,
+        CheckResult(CreateBusExchange(CoSimType::Server,
                                     _connectionKind,
                                     _serverName,
                                     canControllersExtern,
@@ -469,7 +469,7 @@ private:
                                     linControllersExtern,
                                     frControllersExtern,
                                     *_protocol,
-                                    _busBuffer));
+                                    _busExchange));
 
         StopAccepting();
 
@@ -620,23 +620,23 @@ private:
     std::vector<EthControllerContainer> _ethControllers;
     std::vector<LinControllerContainer> _linControllers;
     std::vector<FrControllerContainer> _frControllers;
-    std::unique_ptr<IoBuffer> _ioBuffer;
-    std::unique_ptr<BusBuffer> _busBuffer;
+    std::unique_ptr<SignalExchange> _signalExchange;
+    std::unique_ptr<BusExchange> _busExchange;
 
     SerializeFunction _serializeIoData = [&](ChannelWriter& writer) {
-        return _ioBuffer->Serialize(writer);
+        return _signalExchange->Serialize(writer);
     };
 
     SerializeFunction _serializeBusMessages = [&](ChannelWriter& writer) {
-        return _busBuffer->Serialize(writer);
+        return _busExchange->Serialize(writer);
     };
 
     DeserializeFunction _deserializeIoData = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _signalExchange->Deserialize(reader, simulationTime, callbacks);
     };
 
     DeserializeFunction _deserializeBusMessages = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _busExchange->Deserialize(reader, simulationTime, callbacks);
     };
 };
 

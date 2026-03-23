@@ -17,9 +17,9 @@ target_sources(
   OsAbstraction/TestTcpSocket.cpp
   Helpers/TestHelper.cpp
   Program.cpp
-  TestBusBuffer.cpp
+  TestBusExchange.cpp
   TestCoSim.cpp
-  TestIoBuffer.cpp
+  TestSignalExchange.cpp
   TestPortMapper.cpp
   TestProtocol.cpp
   TestTypes.cpp
