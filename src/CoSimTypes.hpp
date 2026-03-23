@@ -4,11 +4,9 @@
 
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <functional>
-#include <ostream>
 #include <string>
-
-#include "Logger.hpp"
 
 namespace DsVeosCoSim {
 
@@ -44,48 +42,12 @@ namespace DsVeosCoSim {
     }
 // NOLINTEND
 
-#define IsOk(result) ((result) == Result::Ok)
-#define IsDisconnected(result) ((result) == Result::Disconnected)
-
-#define CheckResult(result)         \
-    do {                            \
-        Result _result_ = (result); \
-        if (!IsOk(_result_)) {      \
-            return _result_;        \
-        }                           \
-    } while (0)
-
-#define CheckBoolResult(result)   \
-    do {                          \
-        if (!(result)) {          \
-            return Result::Error; \
-        }                         \
-    } while (0)
-
-#define CheckResultWithMessage(result, message)   \
-    do {                                          \
-        Result _result_ = (result);               \
-        if (!IsOk(_result_)) {                    \
-            Logger::Instance().LogTrace(message); \
-            return _result_;                      \
-        }                                         \
-    } while (0)
-
-#define CheckBoolWithMessage(result, message)     \
-    do {                                          \
-        if (!(result)) {                          \
-            Logger::Instance().LogTrace(message); \
-            return Result::Error;                 \
-        }                                         \
-    } while (0)
-
 constexpr uint32_t CanMessageMaxLength = 64U;
 constexpr uint32_t EthMessageMaxLength = 9018U;
 constexpr uint32_t LinMessageMaxLength = 8U;
 constexpr uint32_t FrMessageMaxLength = 254U;
 constexpr uint32_t EthAddressLength = 6U;
 
-enum class Severity : uint32_t;
 enum class TerminateReason : uint32_t;
 
 struct IoSignal;
@@ -120,24 +82,37 @@ using LinMessageContainerReceivedCallback =
 using FrMessageContainerReceivedCallback =
     std::function<void(SimulationTime simulationTime, const FrController& frController, const FrMessageContainer& frMessageContainer)>;
 
-enum class Result : uint32_t {
-    Ok,
-    Error,
-    Empty,
-    Full,
-    InvalidArgument,
-    Disconnected
-};
-
 enum class CoSimType : uint32_t {
     Client,
     Server
 };
 
+[[nodiscard]] constexpr std::string_view format_as(CoSimType coSimType) noexcept {
+    switch (coSimType) {
+        case CoSimType::Client:
+            return "Client";
+        case CoSimType::Server:
+            return "Server";
+    }
+
+    return "<Invalid CoSimType>";
+}
+
 enum class ConnectionKind : uint32_t {
     Remote,
     Local
 };
+
+[[nodiscard]] constexpr std::string_view format_as(ConnectionKind connectionKind) noexcept {
+    switch (connectionKind) {
+        case ConnectionKind::Remote:
+            return "Remote";
+        case ConnectionKind::Local:
+            return "Local";
+    }
+
+    return "<Invalid ConnectionKind>";
+}
 
 enum class Command : uint32_t {
     None,
@@ -151,22 +126,62 @@ enum class Command : uint32_t {
     Ping
 };
 
-enum class Severity : uint32_t {
-    Error,
-    Warning,
-    Info,
-    Trace
-};
+[[nodiscard]] constexpr std::string_view format_as(Command command) noexcept {
+    switch (command) {
+        case Command::None:
+            return "None";
+        case Command::Step:
+            return "Step";
+        case Command::Start:
+            return "Start";
+        case Command::Stop:
+            return "Stop";
+        case Command::Terminate:
+            return "Terminate";
+        case Command::Pause:
+            return "Pause";
+        case Command::Continue:
+            return "Continue";
+        case Command::TerminateFinished:
+            return "TerminateFinished";
+        case Command::Ping:
+            return "Ping";
+    }
+
+    return "<Invalid Command>";
+}
 
 enum class TerminateReason : uint32_t {
     Finished,
     Error
 };
 
+[[nodiscard]] constexpr std::string_view format_as(TerminateReason terminateReason) noexcept {
+    switch (terminateReason) {
+        case TerminateReason::Finished:
+            return "Finished";
+        case TerminateReason::Error:
+            return "Error";
+    }
+
+    return "<Invalid TerminateReason>";
+}
+
 enum class ConnectionState : uint32_t {
     Disconnected,
     Connected
 };
+
+[[nodiscard]] constexpr std::string_view format_as(ConnectionState connectionState) noexcept {
+    switch (connectionState) {
+        case ConnectionState::Disconnected:
+            return "Disconnected";
+        case ConnectionState::Connected:
+            return "Connected";
+    }
+
+    return "<Invalid ConnectionState>";
+}
 
 enum class SimulationState : uint32_t {
     Unloaded,
@@ -176,8 +191,29 @@ enum class SimulationState : uint32_t {
     Terminated
 };
 
+[[nodiscard]] constexpr std::string_view format_as(SimulationState simulationState) noexcept {
+    switch (simulationState) {
+        case SimulationState::Unloaded:
+            return "Unloaded";
+        case SimulationState::Stopped:
+            return "Stopped";
+        case SimulationState::Running:
+            return "Running";
+        case SimulationState::Paused:
+            return "Paused";
+        case SimulationState::Terminated:
+            return "Terminated";
+    }
+
+    return "<Unknown SimulationState>";
+}
+
 enum class Mode : uint32_t {
 };
+
+[[nodiscard]] constexpr std::string_view format_as([[maybe_unused]] Mode mode) noexcept {
+    return "<Unused>";
+}
 
 enum class IoSignalId : uint32_t {
 };
@@ -196,10 +232,50 @@ enum class DataType : uint32_t {
     Float64
 };
 
+[[nodiscard]] constexpr std::string_view format_as(DataType dataType) noexcept {
+    switch (dataType) {
+        case DataType::Bool:
+            return "Bool";
+        case DataType::Int8:
+            return "Int8";
+        case DataType::Int16:
+            return "Int16";
+        case DataType::Int32:
+            return "Int32";
+        case DataType::Int64:
+            return "Int64";
+        case DataType::UInt8:
+            return "UInt8";
+        case DataType::UInt16:
+            return "UInt16";
+        case DataType::UInt32:
+            return "UInt32";
+        case DataType::UInt64:
+            return "UInt64";
+        case DataType::Float32:
+            return "Float32";
+        case DataType::Float64:
+            return "Float64";
+    }
+
+    return "<Invalid DataType>";
+}
+
 enum class SizeKind : uint32_t {
     Fixed = 1,
     Variable
 };
+
+[[nodiscard]] constexpr std::string_view format_as(SizeKind sizeKind) noexcept {
+    switch (sizeKind) {
+        case SizeKind::Fixed:
+            return "Fixed";
+        case SizeKind::Variable:
+            return "Variable";
+    }
+
+    return "<Invalid SizeKind>";
+}
 
 enum class BusControllerId : uint32_t {
 };
@@ -211,6 +287,17 @@ enum class LinControllerType : uint32_t {
     Responder = 1,
     Commander
 };
+
+[[nodiscard]] constexpr std::string_view format_as(LinControllerType linControllerType) noexcept {
+    switch (linControllerType) {
+        case LinControllerType::Responder:
+            return "Responder";
+        case LinControllerType::Commander:
+            return "Commander";
+    }
+
+    return "<Invalid LinControllerType>";
+}
 
 enum class CanMessageFlags : uint32_t {
     Loopback = 1,
@@ -288,6 +375,47 @@ enum class FrameKind : uint32_t {
     UnsetPort
 };
 
+[[nodiscard]] constexpr std::string_view format_as(FrameKind frameKind) noexcept {
+    switch (frameKind) {
+        case FrameKind::Ping:
+            return "Ping";
+        case FrameKind::PingOk:
+            return "PingOk";
+        case FrameKind::Ok:
+            return "Ok";
+        case FrameKind::Error:
+            return "Error";
+        case FrameKind::Start:
+            return "Start";
+        case FrameKind::Stop:
+            return "Stop";
+        case FrameKind::Terminate:
+            return "Terminate";
+        case FrameKind::Pause:
+            return "Pause";
+        case FrameKind::Continue:
+            return "Continue";
+        case FrameKind::Step:
+            return "Step";
+        case FrameKind::StepOk:
+            return "StepOk";
+        case FrameKind::Connect:
+            return "Connect";
+        case FrameKind::ConnectOk:
+            return "ConnectOk";
+        case FrameKind::GetPort:
+            return "GetPort";
+        case FrameKind::GetPortOk:
+            return "GetPortOk";
+        case FrameKind::SetPort:
+            return "SetPort";
+        case FrameKind::UnsetPort:
+            return "UnsetPort";
+    }
+
+    return "<Invalid FrameKind>";
+}
+
 struct Callbacks {
     SimulationCallback simulationStartedCallback;
     SimulationCallback simulationStoppedCallback;
@@ -363,7 +491,6 @@ struct CanMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(CanMessageContainer& canMessageContainer) const;
 };
 
@@ -376,7 +503,6 @@ struct CanMessageContainer {
     uint32_t length{};
     std::array<uint8_t, CanMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(CanMessage& canMessage) const;
 };
 
@@ -410,7 +536,6 @@ struct EthMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(EthMessageContainer& ethMessageContainer) const;
 };
 
@@ -422,7 +547,6 @@ struct EthMessageContainer {
     uint32_t length{};
     std::array<uint8_t, EthMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(EthMessage& ethMessage) const;
 };
 
@@ -456,7 +580,6 @@ struct LinMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(LinMessageContainer& linMessageContainer) const;
 };
 
@@ -469,7 +592,6 @@ struct LinMessageContainer {
     uint32_t length{};
     std::array<uint8_t, LinMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(LinMessage& linMessage) const;
 };
 
@@ -501,7 +623,6 @@ struct FrMessage {
     uint32_t length{};
     const uint8_t* data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(FrMessageContainer& frMessageContainer) const;
 };
 
@@ -514,7 +635,6 @@ struct FrMessageContainer {
     uint32_t length{};
     std::array<uint8_t, FrMessageMaxLength> data{};
 
-    [[nodiscard]] Result Check() const;
     void WriteTo(FrMessage& frMessage) const;
 };
 
@@ -538,26 +658,13 @@ struct FrMessageContainer {
 [[nodiscard]] std::string format_as(const FrControllerContainer& frController);
 [[nodiscard]] std::string format_as(const FrMessage& frMessage);
 [[nodiscard]] std::string format_as(const FrMessageContainer& frMessage);
-[[nodiscard]] const char* format_as(Result result);
-[[nodiscard]] const char* format_as(CoSimType coSimType);
-[[nodiscard]] const char* format_as(ConnectionKind connectionKind);
-[[nodiscard]] const char* format_as(Command command);
-[[nodiscard]] const char* format_as(Severity severity);
-[[nodiscard]] const char* format_as(TerminateReason terminateReason);
-[[nodiscard]] const char* format_as(ConnectionState connectionState);
-[[nodiscard]] const char* format_as(SimulationState simulationState);
-[[nodiscard]] const char* format_as(Mode mode);
 [[nodiscard]] std::string format_as(IoSignalId ioSignalId);
-[[nodiscard]] const char* format_as(DataType dataType);
-[[nodiscard]] const char* format_as(SizeKind sizeKind);
 [[nodiscard]] std::string format_as(BusControllerId busControllerId);
 [[nodiscard]] std::string format_as(BusMessageId busMessageId);
-[[nodiscard]] const char* format_as(LinControllerType linControllerType);
 [[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags);
 [[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags);
 [[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags);
 [[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags);
-[[nodiscard]] const char* format_as(FrameKind frameKind);
 
 [[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers);
 [[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers);
@@ -565,72 +672,24 @@ struct FrMessageContainer {
 [[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers);
 [[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers);
 
-std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
-std::ostream& operator<<(std::ostream& stream, Result result);
-std::ostream& operator<<(std::ostream& stream, CoSimType coSimType);
-std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind);
-std::ostream& operator<<(std::ostream& stream, Command command);
-std::ostream& operator<<(std::ostream& stream, Severity severity);
-std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason);
-std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState);
-std::ostream& operator<<(std::ostream& stream, SimulationState simulationState);
-std::ostream& operator<<(std::ostream& stream, Mode mode);
-std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId);
-std::ostream& operator<<(std::ostream& stream, DataType dataType);
-std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind);
-std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId);
-std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId);
-std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType);
-std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags);
-std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags);
-std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags);
-std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags);
-
-std::ostream& operator<<(std::ostream& stream, FrameKind frameKind);
-
-std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal);
-std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer);
-std::ostream& operator<<(std::ostream& stream, const CanController& canController);
-std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage);
-std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const EthController& ethController);
-std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage);
-std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const LinController& linController);
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
-std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const FrController& frController);
-std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage);
-std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer);
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers);
-
-[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second);
-[[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second);
-[[nodiscard]] bool operator==(const CanController& first, const CanController& second);
-[[nodiscard]] bool operator==(const CanControllerContainer& first, const CanControllerContainer& second);
-[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second);
-[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second);
-[[nodiscard]] bool operator==(const EthController& first, const EthController& second);
-[[nodiscard]] bool operator==(const EthControllerContainer& first, const EthControllerContainer& second);
-[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second);
-[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second);
-[[nodiscard]] bool operator==(const LinController& first, const LinController& second);
-[[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second);
-[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second);
-[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second);
-[[nodiscard]] bool operator==(const FrController& first, const FrController& second);
-[[nodiscard]] bool operator==(const FrControllerContainer& first, const FrControllerContainer& second);
-[[nodiscard]] bool operator==(const FrMessage& first, const FrMessage& second);
-[[nodiscard]] bool operator==(const FrMessageContainer& first, const FrMessageContainer& second);
+[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) noexcept;
+[[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second) noexcept;
+[[nodiscard]] bool operator==(const CanController& first, const CanController& second) noexcept;
+[[nodiscard]] bool operator==(const CanControllerContainer& first, const CanControllerContainer& second) noexcept;
+[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second) noexcept;
+[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second) noexcept;
+[[nodiscard]] bool operator==(const EthController& first, const EthController& second) noexcept;
+[[nodiscard]] bool operator==(const EthControllerContainer& first, const EthControllerContainer& second) noexcept;
+[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second) noexcept;
+[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second) noexcept;
+[[nodiscard]] bool operator==(const LinController& first, const LinController& second) noexcept;
+[[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second) noexcept;
+[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second) noexcept;
+[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second) noexcept;
+[[nodiscard]] bool operator==(const FrController& first, const FrController& second) noexcept;
+[[nodiscard]] bool operator==(const FrControllerContainer& first, const FrControllerContainer& second) noexcept;
+[[nodiscard]] bool operator==(const FrMessage& first, const FrMessage& second) noexcept;
+[[nodiscard]] bool operator==(const FrMessageContainer& first, const FrMessageContainer& second) noexcept;
 
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers);
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers);

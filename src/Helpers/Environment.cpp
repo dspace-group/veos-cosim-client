@@ -66,14 +66,15 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
+[[nodiscard]] uint32_t GetSpinCountInitial() {
+    constexpr uint32_t defaultSpinCount = 512;
+
     size_t intValue{};
-    if (TryGetDecimalValue(name, intValue)) {
-        spinCount = static_cast<uint32_t>(intValue);
-        return true;
+    if (TryGetDecimalValue("VEOS_COSIM_SPIN_COUNT", intValue)) {
+        return static_cast<uint32_t>(intValue);
     }
 
-    return false;
+    return defaultSpinCount;
 }
 
 }  // namespace
@@ -108,38 +109,15 @@ namespace {
     return port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction) {
-    constexpr uint32_t defaultSpinCount = 0;
-    constexpr char environmentVariableName[] = "VEOS_COSIM_SPIN_COUNT";
-
-    uint32_t spinCount{};
-
-    const std::string directionFullName = fmt::format("{}_{}.{}.{}", environmentVariableName, name, part, direction);
-    if (TryGetSpinCount(directionFullName, spinCount)) {
-        return spinCount;
-    }
-
-    const std::string partFullName = fmt::format("{}_{}.{}", environmentVariableName, name, part);
-    if (TryGetSpinCount(partFullName, spinCount)) {
-        return spinCount;
-    }
-
-    const std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
-    if (TryGetSpinCount(fullName, spinCount)) {
-        return spinCount;
-    }
-
-    if (TryGetSpinCount(environmentVariableName, spinCount)) {
-        return spinCount;
-    }
-
-    return defaultSpinCount;
+[[nodiscard]] uint32_t GetSpinCount() {
+    static uint32_t spinCount = GetSpinCountInitial();
+    return spinCount;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
-    const std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
+    std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
     if (TryGetHexValue(fullName, mask)) {
         return true;
     }

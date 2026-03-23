@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include "CoSimTypes.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -15,7 +15,7 @@ protected:
     PortMapperServer() = default;
 
 public:
-    virtual ~PortMapperServer() = default;
+    virtual ~PortMapperServer() noexcept = default;
 
     PortMapperServer(const PortMapperServer&) = delete;
     PortMapperServer& operator=(const PortMapperServer&) = delete;

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "CoSimTypes.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -41,7 +42,7 @@ protected:
     CoSimServer() = default;
 
 public:
-    virtual ~CoSimServer() = default;
+    virtual ~CoSimServer() noexcept = default;
 
     CoSimServer(const CoSimServer&) = delete;
     CoSimServer& operator=(const CoSimServer&) = delete;
@@ -73,7 +74,7 @@ public:
     [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
     [[nodiscard]] virtual Result Transmit(const FrMessageContainer& messageContainer) const = 0;
 
-    [[nodiscard]] virtual Result BackgroundService(std::chrono::nanoseconds& roundTripTime) = 0;
+    [[nodiscard]] virtual Result BackgroundService(SimulationTime& roundTripTime) = 0;
 
     [[nodiscard]] virtual Result GetLocalPort(uint16_t& port) const = 0;
 };

@@ -2,72 +2,57 @@
 
 #include "Logger.hpp"
 
+#ifdef _WIN32
+
+#include <cstdint>
 #include <string>
-#include <utility>
 
-#ifndef _WIN32
-#include <system_error>
+#include <Windows.h>
+#undef min
+
 #endif
-
-#include <fmt/format.h>
-
-#include "CoSimTypes.hpp"
-#include "OsUtilities.hpp"
 
 namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] std::string GetSystemErrorMessage(int32_t errorCode) {
-#if _WIN32
-    return fmt::format("Error code: {}. {}", errorCode, GetEnglishErrorMessage(errorCode));
-#else
-    return fmt::format("Error code: {}. {}", errorCode, std::system_category().message(errorCode));
-#endif
+#ifdef _WIN32
+
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
+    constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+    char* buffer = nullptr;
+    DWORD size = FormatMessageA(flags, nullptr, static_cast<DWORD>(errorCode), languageId, reinterpret_cast<char*>(&buffer), 0, nullptr);
+
+    std::string message;
+    if ((size > 0) && buffer) {
+        message.assign(buffer, size);
+        LocalFree(buffer);
+
+        while (!message.empty() && (std::isspace(message.back()) != 0)) {
+            message.pop_back();
+        }
+    } else {
+        message = "Unknown error.";
+    }
+
+    return message;
 }
+
+#endif
 
 }  // namespace
 
-void Logger::SetLogCallback(LogCallback logCallback) {
-    _logCallback = std::move(logCallback);
-}
+void LogError(int32_t errorCode, const std::string& message) {
+    std::string reason;
 
-void Logger::LogMessage(Severity severity, const std::string& message) const {
-    if (auto logCallback = _logCallback; logCallback) {
-        logCallback(severity, message);
-    }
-}
+#ifdef _WIN32
+    reason = GetEnglishErrorMessage(errorCode);
+#else
+    reason = std::system_category().message(errorCode);
+#endif
 
-void Logger::LogError(const std::string& message) {
-    LogMessage(Severity::Error, message);
-}
-
-void Logger::LogWarning(const std::string& message) {
-    LogMessage(Severity::Warning, message);
-}
-
-void Logger::LogInfo(const std::string& message) {
-    LogMessage(Severity::Info, message);
-}
-
-void Logger::LogTrace(const std::string& message) {
-    LogMessage(Severity::Trace, message);
-}
-
-void Logger::LogSystemError(const std::string& message, int32_t errorCode) {
-    LogMessage(Severity::Error, fmt::format("{} {}", message, GetSystemErrorMessage(errorCode)));
-}
-
-void Logger::LogProtBegin(const std::string& message) {
-    LogTrace("PROT BEGIN {}", message);
-}
-
-void Logger::LogProtEnd(const std::string& message) {
-    LogTrace("PROT END   {}", message);
-}
-
-void Logger::LogProtData(const std::string& message) {
-    LogTrace("PROT DATA  {}", message);
+    LogError("{} Error code: {}. {}", message, errorCode, reason);
 }
 
 }  // namespace DsVeosCoSim

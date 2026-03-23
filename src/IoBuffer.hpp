@@ -10,6 +10,7 @@
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -18,7 +19,7 @@ protected:
     IoBuffer() = default;
 
 public:
-    virtual ~IoBuffer() = default;
+    virtual ~IoBuffer() noexcept = default;
 
     IoBuffer(const IoBuffer&) = delete;
     IoBuffer& operator=(const IoBuffer&) = delete;

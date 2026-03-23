@@ -3,7 +3,7 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
+#include <string_view>
 
 namespace DsVeosCoSim {
 
@@ -16,8 +16,8 @@ namespace DsVeosCoSim {
 
 [[nodiscard]] uint16_t GetPortMapperPort();
 
-[[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction);
+[[nodiscard]] uint32_t GetSpinCount();
 
-[[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask);
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask);
 
 }  // namespace DsVeosCoSim

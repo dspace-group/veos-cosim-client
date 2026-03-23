@@ -2,26 +2,32 @@
 
 #pragma once
 
-#include <stdexcept>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace DsVeosCoSim {
 
+// Not thread safe
 template <typename T>
 class RingBuffer final {
 public:
+    static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable.");
+
     RingBuffer() = default;
-    explicit RingBuffer(size_t capacity) {
+
+    // No guard for zero capacity, but that's ok
+    explicit RingBuffer(size_t capacity) : _capacity(capacity) {
         _items.resize(capacity);
     }
 
-    ~RingBuffer() = default;
+    ~RingBuffer() noexcept = default;
 
     RingBuffer(const RingBuffer&) = delete;
     RingBuffer& operator=(const RingBuffer&) = delete;
 
-    RingBuffer(RingBuffer&& other) = default;
-    RingBuffer& operator=(RingBuffer&& other) = default;
+    RingBuffer(RingBuffer&& other) noexcept = default;
+    RingBuffer& operator=(RingBuffer&& other) noexcept = default;
 
     void Clear() {
         _readIndex = 0;
@@ -29,67 +35,92 @@ public:
         _size = 0;
     }
 
-    [[nodiscard]] size_t Size() const {
+    [[nodiscard]] size_t Size() const noexcept {
         return _size;
     }
 
-    [[nodiscard]] bool IsEmpty() const {
+    [[nodiscard]] bool IsEmpty() const noexcept {
         return _size == 0;
     }
 
-    [[nodiscard]] bool IsFull() const {
-        return _size == _items.size();
+    [[nodiscard]] bool IsFull() const noexcept {
+        return _size == _capacity;
     }
 
-    void PushBack(const T& item) {
+    [[nodiscard]] bool TryPushBack(const T& item) noexcept {
         if (IsFull()) {
-            throw std::runtime_error("Ring buffer is full.");
+            return false;
         }
 
-        size_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = item;
-        _writeIndex = (_writeIndex + 1) % _items.size();
+        _items[_writeIndex] = item;
+        AdvanceIndex(_writeIndex);
+
         ++_size;
+        return true;
     }
 
-    void PushBack(T&& item) {
+    [[nodiscard]] bool TryPushBack(T&& item) noexcept {
         if (IsFull()) {
-            throw std::runtime_error("Ring buffer is full.");
+            return false;
         }
 
-        size_t currentWriteIndex = _writeIndex;
-        _items[currentWriteIndex] = std::move(item);
-        _writeIndex = (_writeIndex + 1) % _items.size();
+        _items[_writeIndex] = std::move(item);
+        AdvanceIndex(_writeIndex);
+
         ++_size;
+        return true;
     }
 
-    [[nodiscard]] T& EmplaceBack() {
-        if (IsFull()) {
-            throw std::runtime_error("Ring buffer is full.");
-        }
-
-        size_t currentWriteIndex = _writeIndex;
-        T& item = _items[currentWriteIndex];
-        _writeIndex = (_writeIndex + 1) % _items.size();
-        ++_size;
-        return item;
-    }
-
-    [[nodiscard]] T& PopFront() {
+    [[nodiscard]] bool TryPopFront(T& item) noexcept {
         if (IsEmpty()) {
-            throw std::runtime_error("Ring buffer is empty.");
+            return false;
         }
+
+        item = std::move(_items[_readIndex]);
+        AdvanceIndex(_readIndex);
 
         --_size;
-        T& item = _items[_readIndex];
-        _readIndex = (_readIndex + 1) % _items.size();
-        return item;
+        return true;
+    }
+
+    [[nodiscard]] T* TryPeekFront() noexcept {
+        if (IsEmpty()) {
+            return nullptr;
+        }
+
+        return &_items[_readIndex];
+    }
+
+    [[nodiscard]] T* TryPeekFront() const noexcept {
+        if (IsEmpty()) {
+            return nullptr;
+        }
+
+        return &_items[_readIndex];
+    }
+
+    void RemoveFront() noexcept {
+        if (IsEmpty()) {
+            return;
+        }
+
+        AdvanceIndex(_readIndex);
+        --_size;
     }
 
 private:
+    void AdvanceIndex(size_t& index) const noexcept {
+        index++;
+        if (index == _capacity) {
+            index = 0;
+        }
+    }
+
+    size_t _capacity{};
+    size_t _size{};
     size_t _readIndex{};
     size_t _writeIndex{};
-    size_t _size{};
+
     std::vector<T> _items{};
 };
 

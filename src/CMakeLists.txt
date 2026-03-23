@@ -52,6 +52,12 @@ target_compile_definitions(
   DSVEOSCOSIM_EXPORT
 )
 
+target_compile_options(
+  DsVeosCoSim
+  PRIVATE
+  ${DSVEOSCOSIM_WARNINGS}
+)
+
 target_link_libraries(
   DsVeosCoSim
   PRIVATE
@@ -65,15 +71,7 @@ if(WIN32)
     _CRT_SECURE_NO_WARNINGS
     WIN32_LEAN_AND_MEAN
   )
-endif()
 
-target_compile_options(
-  DsVeosCoSim
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
-
-if(WIN32)
   target_link_libraries(
     DsVeosCoSim
     PRIVATE
