@@ -4,11 +4,12 @@
 #include <thread>
 
 #include "CoSimServer.hpp"
-#include "Helper.hpp"
+#include "Logger.hpp"
 #include "PerformanceTestHelper.hpp"
 #include "PerformanceTestServer.hpp"
+#include "Result.hpp"
 
-using namespace DsVeosCoSim;
+namespace DsVeosCoSim {
 
 namespace {
 
@@ -45,7 +46,7 @@ namespace {
         }
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
 void CoSimServerRun() {
@@ -59,3 +60,5 @@ void CoSimServerRun() {
 void StartCoSimServer() {
     std::thread(CoSimServerRun).detach();
 }
+
+}  // namespace DsVeosCoSim

@@ -2,7 +2,6 @@
 
 #include <future>
 
-#include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "PerformanceTestServer.hpp"
 
@@ -13,14 +12,18 @@ int main() {
         return 1;
     }
 
-    StartTcpServer();
-    StartUdpServer();
-    StartLocalServer();
+    StartLocalSocketServer();
     StartPipeServer();
-    StartEventsServer();
+    StartTcpSocketServer();
+    StartUdpSocketServer();
     StartLocalCommunicationServer();
     StartRemoteCommunicationServer();
     StartCoSimServer();
+
+#ifdef _WIN32
+    StartEventsServer();
+    StartShmPipeServer();
+#endif
 
     std::promise<void>().get_future().wait();
 

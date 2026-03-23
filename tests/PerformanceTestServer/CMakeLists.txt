@@ -11,11 +11,12 @@ target_sources(
   ServerCoSim.cpp
   ServerEvents.cpp
   ServerLocalCommunication.cpp
+  ServerLocalSocket.cpp
   ServerPipe.cpp
   ServerRemoteCommunication.cpp
-  ServerTcp.cpp
-  ServerUdp.cpp
-  ServerLocal.cpp
+  ServerShmPipe.cpp
+  ServerTcpSocket.cpp
+  ServerUdpSocket.cpp
 )
 
 target_compile_options(

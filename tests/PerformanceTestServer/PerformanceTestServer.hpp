@@ -2,11 +2,19 @@
 
 #pragma once
 
-void StartUdpServer();
-void StartTcpServer();
-void StartLocalServer();
+namespace DsVeosCoSim {
+
+void StartLocalSocketServer();
+void StartTcpSocketServer();
+void StartUdpSocketServer();
 void StartPipeServer();
-void StartEventsServer();
 void StartLocalCommunicationServer();
 void StartRemoteCommunicationServer();
 void StartCoSimServer();
+
+#ifdef _WIN32
+void StartEventsServer();
+void StartShmPipeServer();
+#endif
+
+}  // namespace DsVeosCoSim
