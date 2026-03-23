@@ -12,12 +12,12 @@
 #include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "SignalExchange.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
 #include "Protocol.hpp"
 #include "Result.hpp"
+#include "SignalExchange.hpp"
 
 using namespace std::chrono;
 
@@ -161,6 +161,8 @@ public:
     }
 
     [[nodiscard]] Result Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) override {
+        nextSimulationTime = {};
+
         if (!_channel) {
             return CreateOk();
         }
@@ -455,21 +457,22 @@ private:
 
         std::vector<IoSignal> incomingSignalsExtern = Convert(_incomingSignals);
         std::vector<IoSignal> outgoingSignalsExtern = Convert(_outgoingSignals);
-        CheckResult(CreateSignalExchange(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, *_protocol, _signalExchange));
+        CheckResult(
+            CreateSignalExchange(CoSimType::Server, _connectionKind, _serverName, incomingSignalsExtern, outgoingSignalsExtern, *_protocol, _signalExchange));
 
         std::vector<CanController> canControllersExtern = Convert(_canControllers);
         std::vector<EthController> ethControllersExtern = Convert(_ethControllers);
         std::vector<LinController> linControllersExtern = Convert(_linControllers);
         std::vector<FrController> frControllersExtern = Convert(_frControllers);
         CheckResult(CreateBusExchange(CoSimType::Server,
-                                    _connectionKind,
-                                    _serverName,
-                                    canControllersExtern,
-                                    ethControllersExtern,
-                                    linControllersExtern,
-                                    frControllersExtern,
-                                    *_protocol,
-                                    _busExchange));
+                                      _connectionKind,
+                                      _serverName,
+                                      canControllersExtern,
+                                      ethControllersExtern,
+                                      linControllersExtern,
+                                      frControllersExtern,
+                                      *_protocol,
+                                      _busExchange));
 
         StopAccepting();
 
@@ -563,22 +566,46 @@ private:
     void HandlePendingCommand(Command command) const {
         switch (command) {
             case Command::Start:
-                _callbacks.simulationStartedCallback({});
+                if (_callbacks.simulationStartedCallback) {
+                    _callbacks.simulationStartedCallback({});
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no started callback is registered.", command);
+                }
                 break;
             case Command::Stop:
-                _callbacks.simulationStoppedCallback({});
+                if (_callbacks.simulationStoppedCallback) {
+                    _callbacks.simulationStoppedCallback({});
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no stopped callback is registered.", command);
+                }
                 break;
             case Command::Terminate:
-                _callbacks.simulationTerminatedCallback({}, TerminateReason::Error);
+                if (_callbacks.simulationTerminatedCallback) {
+                    _callbacks.simulationTerminatedCallback({}, TerminateReason::Error);
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no terminated callback is registered.", command);
+                }
                 break;
             case Command::Pause:
-                _callbacks.simulationPausedCallback({});
+                if (_callbacks.simulationPausedCallback) {
+                    _callbacks.simulationPausedCallback({});
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no paused callback is registered.", command);
+                }
                 break;
             case Command::Continue:
-                _callbacks.simulationContinuedCallback({});
+                if (_callbacks.simulationContinuedCallback) {
+                    _callbacks.simulationContinuedCallback({});
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no continued callback is registered.", command);
+                }
                 break;
             case Command::TerminateFinished:
-                _callbacks.simulationTerminatedCallback({}, TerminateReason::Finished);
+                if (_callbacks.simulationTerminatedCallback) {
+                    _callbacks.simulationTerminatedCallback({}, TerminateReason::Finished);
+                } else {
+                    LogWarning("Ignoring pending '{}' command because no terminated callback is registered.", command);
+                }
                 break;
             case Command::None:
             case Command::Step:
