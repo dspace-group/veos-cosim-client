@@ -1,15 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#if 0
+#include <thread>
 
 #include <benchmark/benchmark.h>
-
-#include <thread>
 
 #include "CoSimClient.hpp"
 #include "CoSimServer.hpp"
 #include "Event.hpp"
 #include "Helper.hpp"
+#include "OsUtilities.hpp"
 #include "PerformanceTestHelper.hpp"
 
 using namespace std::chrono;
@@ -31,7 +30,7 @@ void HandleClient(CoSimClient& coSimClient, ConnectionKind connectionKind, Event
     connectedEvent.Set();
 
     Callbacks callbacks{};
-    MustBeDisconnected(coSimClient.RunCallbackBasedCoSimulation(callbacks));
+    MustBeNotConnected(coSimClient.RunCallbackBasedCoSimulation(callbacks));
 }
 
 void RunTest(benchmark::State& state, ConnectionKind connectionKind) {
@@ -56,19 +55,22 @@ void RunTest(benchmark::State& state, ConnectionKind connectionKind) {
     SimulationTime simulationTime{};
     MustBeOk(server->Start(simulationTime));
 
-    MustBeTrue(connectedEvent.Wait(100000000));
+    (void)connectedEvent.Wait(Infinite);
 
     for (auto _ : state) {
         SimulationTime nextSimulationTime{};
         MustBeOk(server->Step(simulationTime, nextSimulationTime));
 
-        ++simulationTime;
+        if (nextSimulationTime > simulationTime) {
+            simulationTime = nextSimulationTime;
+        } else {
+            simulationTime++;
+        }
     }
 
     client->Disconnect();
-    client.reset();
-
     thread.join();
+    client.reset();
 }
 
 void Remote(benchmark::State& state) {
@@ -83,5 +85,3 @@ void Local(benchmark::State& state) {
 
 BENCHMARK(Remote);
 BENCHMARK(Local);
-
-#endif
