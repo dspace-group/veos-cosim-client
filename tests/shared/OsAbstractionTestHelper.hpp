@@ -6,94 +6,93 @@
 #include <cstdint>
 #include <string>
 
-#include "CoSimTypes.hpp"
+#include "Result.hpp"
+#include "Socket.hpp"
+
+#ifdef _WIN32
+
+#include "OsUtilities.hpp"
+
+#endif
+
+// #include "CoSimTypes.hpp"
+
+namespace DsVeosCoSim {
 
 class InternetAddress final {
+    explicit InternetAddress(std::array<uint8_t, 16> address) : _address(address) {
+    }
+
 public:
     InternetAddress() = default;
-    ~InternetAddress() = default;
+    ~InternetAddress() noexcept = default;
 
     InternetAddress(const InternetAddress&) = delete;
     InternetAddress& operator=(InternetAddress const&) = delete;
 
-    InternetAddress(InternetAddress&&) = delete;
-    InternetAddress& operator=(InternetAddress&&) = delete;
+    InternetAddress(InternetAddress&&) noexcept = default;
+    InternetAddress& operator=(InternetAddress&&) noexcept = default;
 
-    [[nodiscard]] DsVeosCoSim::Result Initialize(const std::string& ipAddress, uint16_t port);
+    [[nodiscard]] static Result Create(const std::string& ipAddress, uint16_t port, InternetAddress& internetAddress);
 
 private:
     std::array<uint8_t, 16> _address{};
 };
 
 class UdpSocket final {
+    explicit UdpSocket(SocketHandle socketHandle) : _socketHandle(std::move(socketHandle)) {
+    }
+
 public:
     UdpSocket() = default;
-    ~UdpSocket();
+    ~UdpSocket() noexcept;
 
     UdpSocket(const UdpSocket&) = delete;
     UdpSocket& operator=(UdpSocket const&) = delete;
 
-    UdpSocket(UdpSocket&&) = delete;
-    UdpSocket& operator=(UdpSocket&&) = delete;
+    UdpSocket(UdpSocket&&) noexcept = default;
+    UdpSocket& operator=(UdpSocket&&) noexcept = default;
 
-    [[nodiscard]] DsVeosCoSim::Result Initialize();
+    [[nodiscard]] static Result CreateClient(UdpSocket& udpSocket);
+    [[nodiscard]] static Result CreateServer(const std::string& ipAddress, uint16_t port, UdpSocket& udpSocket);
 
-    [[nodiscard]] DsVeosCoSim::Result Bind(const std::string& ipAddress, uint16_t port) const;
-
-    [[nodiscard]] DsVeosCoSim::Result SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
-    [[nodiscard]] DsVeosCoSim::Result ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
+    [[nodiscard]] Result SendTo(const void* source, uint32_t size, const InternetAddress& address) const;
+    [[nodiscard]] Result ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const;
 
 private:
-#ifdef _WIN32
-    using socket_t = uintptr_t;
-    static constexpr socket_t InvalidSocket = UINTPTR_MAX;
-#else
-    using socket_t = int32_t;
-    static constexpr socket_t InvalidSocket = -1;
-#endif
-
-    socket_t _socket = InvalidSocket;
-    std::string _path;
+    SocketHandle _socketHandle;
 };
 
-class Pipe final {
+class PipeClient final {
 public:
-    Pipe() = default;
-    ~Pipe();
-
-    Pipe(const Pipe&) = delete;
-    Pipe& operator=(Pipe const&) = delete;
-
-    Pipe(Pipe&&) = delete;
-    Pipe& operator=(Pipe&&) = delete;
-
-    [[nodiscard]] DsVeosCoSim::Result Initialize(const std::string& name);
-
-    [[nodiscard]] DsVeosCoSim::Result Accept();
-    [[nodiscard]] DsVeosCoSim::Result Connect();
-
-    [[nodiscard]] DsVeosCoSim::Result Write(const void* source, uint32_t size) const;
-    [[nodiscard]] DsVeosCoSim::Result Read(void* destination, uint32_t size) const;
-
-private:
 #ifdef _WIN32
-    using pipe_t = void*;
+    using pipe_t = Handle;
 #else
     using pipe_t = int32_t;
 #endif
 
-#ifndef _WIN32
-    [[nodiscard]] DsVeosCoSim::Result CreatePipe(const std::string& name, pipe_t& pipe);
-#endif
+    PipeClient() = default;
+    ~PipeClient() noexcept;
 
+    PipeClient(const PipeClient&) = delete;
+    PipeClient& operator=(PipeClient const&) = delete;
+
+    PipeClient(PipeClient&&) noexcept = default;
+    PipeClient& operator=(PipeClient&&) noexcept = default;
+
+    [[nodiscard]] static Result Connect(const std::string& name, PipeClient& client);
+    [[nodiscard]] static Result Accept(const std::string& name, PipeClient& client);
+
+    [[nodiscard]] Result Write(const void* source, uint32_t size) const;
+    [[nodiscard]] Result Read(void* destination, uint32_t size) const;
+
+private:
 #ifdef _WIN32
-    std::string _name;
-    pipe_t _pipe = nullptr;
+    pipe_t _pipe;
 #else
-    pipe_t _pipe1 = 0;
-    pipe_t _pipe2 = 0;
-
-    pipe_t _writePipe = 0;
-    pipe_t _readPipe = 0;
+    pipe_t _writePipe{};
+    pipe_t _readPipe{};
 #endif
 };
+
+}  // namespace DsVeosCoSim

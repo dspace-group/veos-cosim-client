@@ -3,14 +3,23 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <string>
+#include <vector>
 
 #include <fmt/format.h>
 
-#include "BusBuffer.hpp"  // IWYU pragma: keep
+#include "BusBuffer.hpp"
 #include "CoSimTypes.hpp"
+#include "Logger.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"  // IWYU pragma: keep
 #include "Socket.hpp"
+
+#ifdef _WIN32
+
+#include "OsUtilities.hpp"
+
+#endif
 
 namespace DsVeosCoSim {
 
@@ -23,67 +32,21 @@ namespace DsVeosCoSim {
 
 [[maybe_unused]] constexpr uint32_t DefaultTimeout = 1000;
 
-#define MustBeOk(result)                                   \
-    do {                                                   \
-        Result _result_ = (result);                        \
-        if (!IsOk(_result_)) {                             \
-            LogError("Expected Ok but was {}.", _result_); \
-            exit(1);                                       \
-        }                                                  \
-    } while (0)
-
-#define MustBeDisconnected(result)                                   \
-    do {                                                             \
-        Result _result_ = (result);                                  \
-        if (_result_ != Result::Disconnected) {                      \
-            LogError("Expected Disconnected but was {}.", _result_); \
-            exit(1);                                                 \
-        }                                                            \
-    } while (0)
-
-#define MustBeTrue(result)                            \
-    do {                                              \
-        if (!(result)) {                              \
-            LogError("Expected true but was false."); \
-            exit(1);                                  \
-        }                                             \
-    } while (0)
-
 #ifndef CTRL
 #define CTRL(c) ((c) & 037)
 #endif
 
-template <typename... T>
-void LogError(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    OnLogCallback(DsVeosCoSim::Severity::Error, fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogWarning(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    OnLogCallback(DsVeosCoSim::Severity::Warning, fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogInfo(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    OnLogCallback(DsVeosCoSim::Severity::Info, fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-template <typename... T>
-void LogTrace(fmt::format_string<T...> format, T&&... args) {  // NOLINT(cppcoreguidelines-missing-std-forward)
-    OnLogCallback(DsVeosCoSim::Severity::Trace, fmt::vformat(format, fmt::make_format_args(args...)));
-}
-
-void LogError(const std::string& message);
-void LogWarning(const std::string& message);
-void LogInfo(const std::string& message);
-void LogTrace(const std::string& message);
-
 void InitializeOutput();
+void SetMinimalSeverity(Severity severity);
 
-void OnLogCallback(Severity severity, const std::string& message);
+void MustBeOk(const Result& result);
+void MustBeNotConnected(const Result& result);
 
-void ClearLastMessage();
-[[nodiscard]] std::string GetLastMessage();
+void LogIoData(std::string_view ioDataStr);
+void LogCanMessage(std::string_view canMessageStr);
+void LogEthMessage(std::string_view ethMessageStr);
+void LogLinMessage(std::string_view linMessageStr);
+void LogFrMessage(std::string_view linMessageStr);
 
 [[nodiscard]] int32_t GetChar();
 
@@ -91,9 +54,21 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 
 [[nodiscard]] Result StartUp();
 
-[[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily);
+[[nodiscard]] constexpr const char* GetLoopBackAddress(AddressFamily addressFamily) noexcept {
+    if (addressFamily == AddressFamily::Ipv4) {
+        return "127.0.0.1";
+    }
 
-[[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length);
+    return "::1";
+}
+
+[[nodiscard]] Result ReceiveComplete(const SocketClient& client, void* buffer, size_t length);
+
+#ifdef _WIN32
+
+[[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length);
+
+#endif
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
@@ -127,8 +102,8 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 [[nodiscard]] uint16_t GenerateU16();
 [[nodiscard]] uint32_t GenerateU32();
 [[nodiscard]] uint64_t GenerateU64();
-
 [[nodiscard]] int64_t GenerateI64();
+[[nodiscard]] size_t GenerateSizeT();
 
 void FillWithRandomData(uint8_t* data, size_t length);
 
@@ -163,10 +138,56 @@ void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId);
 void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId);
 
 [[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count);
-
 [[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(size_t count);
 [[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(size_t count);
 [[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(size_t count);
 [[nodiscard]] std::vector<FrControllerContainer> CreateFrControllers(size_t count);
+
+std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
+std::ostream& operator<<(std::ostream& stream, Result result);
+std::ostream& operator<<(std::ostream& stream, CoSimType coSimType);
+std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind);
+std::ostream& operator<<(std::ostream& stream, Command command);
+std::ostream& operator<<(std::ostream& stream, Severity severity);
+std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason);
+std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState);
+std::ostream& operator<<(std::ostream& stream, SimulationState simulationState);
+std::ostream& operator<<(std::ostream& stream, Mode mode);
+std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId);
+std::ostream& operator<<(std::ostream& stream, DataType dataType);
+std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind);
+std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId);
+std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId);
+std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType);
+std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags);
+std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags);
+std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags);
+std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags);
+std::ostream& operator<<(std::ostream& stream, FrameKind frameKind);
+
+std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal);
+std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer);
+std::ostream& operator<<(std::ostream& stream, const CanController& canController);
+std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage);
+std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const EthController& ethController);
+std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage);
+std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const LinController& linController);
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
+std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const FrController& frController);
+std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage);
+std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer);
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers);
 
 }  // namespace DsVeosCoSim

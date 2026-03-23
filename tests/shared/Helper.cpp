@@ -2,23 +2,30 @@
 
 #include "Helper.hpp"
 
-#include <memory>
+#include <cstdint>
+#include <ostream>
 #include <string>
 
 #include <fmt/color.h>
 
-#include "CoSimTypes.hpp"
-#include "Protocol.hpp"
+#include "Logger.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32
+
 #include <Windows.h>
 #include <conio.h>
+
+#include "OsUtilities.hpp"
+
 #else
+
 #include <termios.h>
 #include <unistd.h>
 
 #include <cstdlib>
+
 #endif
 
 namespace DsVeosCoSim {
@@ -27,11 +34,11 @@ namespace {
 
 std::string LastMessage;
 
-[[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& port) {
-    Socket socket;
-    CheckResult(Socket::Create(AddressFamily::Ipv4, socket));
-    CheckResult(socket.Bind(0, false));
-    return socket.GetLocalPort(port);
+[[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
+    SocketListener listener;
+    CheckResult(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
+
+    return listener.GetLocalPort(localPort);
 }
 
 [[nodiscard]] DataType GenerateDataType() {
@@ -46,28 +53,43 @@ std::string LastMessage;
     return static_cast<BusMessageId>(GenerateU32());
 }
 
+Severity MinimalSeverity = Severity::Trace;
+
+void OnLogCallback(Severity severity, const std::string& message) {
+    switch (severity) {
+        case Severity::Error:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::red), "{}\n", message);
+            }
+
+            break;
+        case Severity::Warning:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::yellow), "{}\n", message);
+            }
+
+            break;
+        case Severity::Info:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::white), "{}\n", message);
+            }
+
+            break;
+        case Severity::Trace:
+            if (MinimalSeverity >= severity) {
+                print(fg(fmt::color::light_gray), "{}\n", message);
+            }
+
+            break;
+    }
+}
+
 }  // namespace
 
-void LogError(const std::string& message) {
-    OnLogCallback(Severity::Error, message);
-}
-
-void LogWarning(const std::string& message) {
-    OnLogCallback(Severity::Warning, message);
-}
-
-void LogInfo(const std::string& message) {
-    OnLogCallback(Severity::Info, message);
-}
-
-void LogTrace(const std::string& message) {
-    OnLogCallback(Severity::Trace, message);
-}
-
 void InitializeOutput() {
-#if _WIN32
-    (void)SetConsoleOutputCP(CP_UTF8);
-    (void)setvbuf(stdout, nullptr, _IONBF, 0);
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    setvbuf(stdout, nullptr, _IONBF, 0);
 
     HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -75,37 +97,47 @@ void InitializeOutput() {
     BOOL result = GetConsoleMode(console, &dwMode);
     if (result != 0) {
         dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        (void)SetConsoleMode(console, dwMode);
+        SetConsoleMode(console, dwMode);
     }
 #endif
 
     Logger::Instance().SetLogCallback(OnLogCallback);
 }
 
-void OnLogCallback(Severity severity, const std::string& message) {
-    LastMessage = message;
-    switch (severity) {
-        case Severity::Error:
-            print(fg(fmt::color::red), "{}\n", message);
-            break;
-        case Severity::Warning:
-            print(fg(fmt::color::yellow), "{}\n", message);
-            break;
-        case Severity::Info:
-            print(fg(fmt::color::white), "{}\n", message);
-            break;
-        case Severity::Trace:
-            print(fg(fmt::color::light_gray), "{}\n", message);
-            break;
+void SetMinimalSeverity(Severity severity) {
+    MinimalSeverity = severity;
+}
+
+void MustBeOk(const Result& result) {
+    if (!IsOk(result)) {
+        exit(1);
     }
 }
 
-void ClearLastMessage() {
-    LastMessage = "";
+void MustBeNotConnected(const Result& result) {
+    if (!IsNotConnected(result)) {
+        exit(1);
+    }
 }
 
-[[nodiscard]] std::string GetLastMessage() {
-    return LastMessage;
+void LogIoData(std::string_view ioDataStr) {
+    print(fg(fmt::color::fuchsia), "{}\n", ioDataStr);
+}
+
+void LogCanMessage(std::string_view canMessageStr) {
+    print(fg(fmt::color::dodger_blue), "{}\n", canMessageStr);
+}
+
+void LogEthMessage(std::string_view ethMessageStr) {
+    print(fg(fmt::color::cyan), "{}\n", ethMessageStr);
+}
+
+void LogLinMessage(std::string_view linMessageStr) {
+    print(fg(fmt::color::lime), "{}\n", linMessageStr);
+}
+
+void LogFrMessage(std::string_view linMessageStr) {
+    print(fg(fmt::color::blue_violet), "{}\n", linMessageStr);
 }
 
 [[nodiscard]] int32_t GetChar() {
@@ -133,40 +165,50 @@ void ClearLastMessage() {
 
     uint16_t portMapperPort{};
     CheckResult(GetNextFreeDynamicPort(portMapperPort));
+
     std::string portMapperPortString = std::to_string(portMapperPort);
     SetEnvVariable("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString);
-    return Result::Ok;
+    return CreateOk();
 }
 
 void SetEnvVariable(const std::string& name, const std::string& value) {
 #ifdef _WIN32
     std::string environmentString = fmt::format("{}={}", name, value);
-    (void)_putenv(environmentString.c_str());
+    _putenv(environmentString.c_str());
 #else
-    (void)setenv(name.data(), value.data(), 1);
+    setenv(name.c_str(), value.c_str(), 1);
 #endif
 }
 
-[[nodiscard]] const char* GetLoopBackAddress(AddressFamily addressFamily) {
-    if (addressFamily == AddressFamily::Ipv4) {
-        return "127.0.0.1";
-    }
-
-    return "::1";
-}
-
-[[nodiscard]] Result ReceiveComplete(const Socket& socket, void* buffer, size_t length) {
+[[nodiscard]] Result ReceiveComplete(const SocketClient& client, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
+
     while (length > 0) {
         size_t receivedSize{};
-        CheckResult(socket.Receive(bufferPointer, length, receivedSize));
+        CheckResult(client.Receive(bufferPointer, length, receivedSize));
 
         length -= receivedSize;
         bufferPointer += receivedSize;
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
+
+#ifdef _WIN32
+[[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length) {
+    auto* bufferPointer = static_cast<uint8_t*>(buffer);
+
+    while (length > 0) {
+        size_t receivedSize{};
+        CheckResult(client.Receive(bufferPointer, length, receivedSize));
+
+        length -= receivedSize;
+        bufferPointer += receivedSize;
+    }
+
+    return CreateOk();
+}
+#endif
 
 [[nodiscard]] Result CreateBusBuffer(CoSimType coSimType,
                                      ConnectionKind connectionKind,
@@ -204,16 +246,6 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
     return CreateBusBuffer(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busBuffer);
 }
 
-[[nodiscard]] uint32_t GenerateU32() {
-    static bool first = true;
-    if (first) {
-        srand(static_cast<uint32_t>(std::time({})));  // NOLINT
-        first = false;
-    }
-
-    return static_cast<uint32_t>(rand());  // NOLINT
-}
-
 void FillWithRandomData(uint8_t* data, size_t length) {
     for (size_t i = 0; i < length; i++) {
         data[i] = GenerateU8();
@@ -228,6 +260,16 @@ void FillWithRandomData(uint8_t* data, size_t length) {
     return static_cast<uint16_t>(GenerateU32() % 65536);
 }
 
+[[nodiscard]] uint32_t GenerateU32() {
+    static bool first = true;
+    if (first) {
+        srand(42U);  // NOLINT
+        first = false;
+    }
+
+    return static_cast<uint32_t>(rand());  // NOLINT
+}
+
 [[nodiscard]] uint64_t GenerateU64() {
     return (static_cast<uint64_t>(GenerateU32()) << sizeof(uint32_t)) + static_cast<uint64_t>(GenerateU32());
 }
@@ -236,12 +278,20 @@ void FillWithRandomData(uint8_t* data, size_t length) {
     return (static_cast<int64_t>(GenerateU32()) << sizeof(int32_t)) + static_cast<int64_t>(GenerateU32());
 }
 
+[[nodiscard]] size_t GenerateSizeT() {
+    if constexpr (sizeof(size_t) == sizeof(uint32_t)) {
+        return GenerateU32();
+    }
+
+    return GenerateU64();
+}
+
 [[nodiscard]] std::string GenerateString(const std::string& prefix) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 
 [[nodiscard]] SimulationTime GenerateSimulationTime() {
-    return SimulationTime(GenerateU64());
+    return SimulationTime{GenerateI64()};
 }
 
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max) {
@@ -286,7 +336,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 
 [[nodiscard]] std::vector<uint8_t> GenerateIoData(const IoSignalContainer& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
-    FillWithRandomData(data.data(), data.size());
+    data[0]++;
     return data;
 }
 
@@ -298,7 +348,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 
 void FillWithRandom(CanControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.flexibleDataRateBitsPerSecond = GenerateU64();
     controller.name = GenerateString("CanController名前\xF0\x9F\x98\x80");
@@ -308,7 +358,7 @@ void FillWithRandom(CanControllerContainer& controller) {
 
 void FillWithRandom(EthControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     FillWithRandomData(controller.macAddress.data(), EthAddressLength);
     controller.name = GenerateString("EthController名前\xF0\x9F\x98\x80");
@@ -318,7 +368,7 @@ void FillWithRandom(EthControllerContainer& controller) {
 
 void FillWithRandom(LinControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
     controller.name = GenerateString("LinController名前\xF0\x9F\x98\x80");
@@ -328,7 +378,7 @@ void FillWithRandom(LinControllerContainer& controller) {
 
 void FillWithRandom(FrControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 100;
+    controller.queueSize = 1000;
     controller.bitsPerSecond = GenerateU64();
     controller.name = GenerateString("FrController名前\xF0\x9F\x98\x80");
     controller.channelName = GenerateString("FrChannel名前\xF0\x9F\x98\x80");
@@ -373,7 +423,6 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
 [[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count) {
     std::vector<IoSignalContainer> signals;
     signals.reserve(count);
-
     for (size_t i = 0; i < count; i++) {
         signals.push_back(CreateSignal());
     }
@@ -383,7 +432,6 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
 
 [[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(size_t count) {
     std::vector<CanControllerContainer> controllers;
-
     for (size_t i = 0; i < count; i++) {
         CanControllerContainer controller{};
         FillWithRandom(controller);
@@ -395,7 +443,6 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
 
 [[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(size_t count) {
     std::vector<EthControllerContainer> controllers;
-
     for (size_t i = 0; i < count; i++) {
         EthControllerContainer controller{};
         FillWithRandom(controller);
@@ -407,7 +454,6 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
 
 [[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(size_t count) {
     std::vector<LinControllerContainer> controllers;
-
     for (size_t i = 0; i < count; i++) {
         LinControllerContainer controller{};
         FillWithRandom(controller);
@@ -419,7 +465,6 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
 
 [[nodiscard]] std::vector<FrControllerContainer> CreateFrControllers(size_t count) {
     std::vector<FrControllerContainer> controllers;
-
     for (size_t i = 0; i < count; i++) {
         FrControllerContainer controller{};
         FillWithRandom(controller);
@@ -427,6 +472,182 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
     }
 
     return controllers;
+}
+
+std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
+    return stream << SimulationTimeToString(simulationTime);
+}
+
+std::ostream& operator<<(std::ostream& stream, Result result) {
+    return stream << format_as(result);
+}
+
+std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
+    return stream << format_as(coSimType);
+}
+
+std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
+    return stream << format_as(connectionKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, Command command) {
+    return stream << format_as(command);
+}
+
+std::ostream& operator<<(std::ostream& stream, Severity severity) {
+    return stream << format_as(severity);
+}
+
+std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
+    return stream << format_as(terminateReason);
+}
+
+std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
+    return stream << format_as(connectionState);
+}
+
+std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
+    return stream << format_as(simulationState);
+}
+
+std::ostream& operator<<(std::ostream& stream, Mode mode) {
+    return stream << format_as(mode);
+}
+
+std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
+    return stream << format_as(ioSignalId);
+}
+
+std::ostream& operator<<(std::ostream& stream, DataType dataType) {
+    return stream << format_as(dataType);
+}
+
+std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
+    return stream << format_as(sizeKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
+    return stream << format_as(busControllerId);
+}
+
+std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
+    return stream << format_as(busMessageId);
+}
+
+std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
+    return stream << format_as(linControllerType);
+}
+
+std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
+    return stream << format_as(canMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
+    return stream << format_as(ethMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
+    return stream << format_as(linMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
+    return stream << format_as(frMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
+    return stream << format_as(frameKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
+    return stream << format_as(ioSignal);
+}
+
+std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
+    return stream << format_as(ioSignalContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
+    return stream << format_as(canController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
+    return stream << format_as(canControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
+    return stream << format_as(canMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
+    return stream << format_as(canMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
+    return stream << format_as(ethController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
+    return stream << format_as(ethControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
+    return stream << format_as(ethMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
+    return stream << format_as(ethMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
+    return stream << format_as(linController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
+    return stream << format_as(frControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
+    return stream << format_as(linMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
+    return stream << format_as(linMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
+    return stream << format_as(frController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
+    return stream << format_as(frControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
+    return stream << format_as(frMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
+    return stream << format_as(frMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
+    return stream << format_as(ioSignalContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
+    return stream << format_as(canControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
+    return stream << format_as(ethControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
+    return stream << format_as(linControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
+    return stream << format_as(frControllerContainers);
 }
 
 }  // namespace DsVeosCoSim
