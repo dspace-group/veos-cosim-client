@@ -13,12 +13,12 @@
 #include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
-#include "SignalExchange.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "PortMapper.hpp"
 #include "Protocol.hpp"
 #include "Result.hpp"
+#include "SignalExchange.hpp"
 
 namespace DsVeosCoSim {
 
@@ -71,6 +71,7 @@ public:
     }
 
     void Disconnect() override {
+        LogInfo("Disconnecting from dSPACE VEOS CoSim server ...");
         _isConnected = false;
 
         if (_channel) {
@@ -544,17 +545,18 @@ private:
             }
         }
 
-        CheckResult(CreateSignalExchange(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _signalExchange));
+        CheckResult(
+            CreateSignalExchange(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _signalExchange));
 
         CheckResult(CreateBusExchange(CoSimType::Client,
-                                    _connectionKind,
-                                    _serverName,
-                                    _canControllersExtern,
-                                    _ethControllersExtern,
-                                    _linControllersExtern,
-                                    _frControllersExtern,
-                                    *_protocol,
-                                    _busExchange));
+                                      _connectionKind,
+                                      _serverName,
+                                      _canControllersExtern,
+                                      _ethControllersExtern,
+                                      _linControllersExtern,
+                                      _frControllersExtern,
+                                      *_protocol,
+                                      _busExchange));
 
         _isConnected = true;
         return CreateOk();
