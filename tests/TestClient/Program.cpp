@@ -2,16 +2,22 @@
 
 #include <cstdint>
 #include <cstring>
+#include <ctime>
 #include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include <fmt/color.h>
-
 #include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Helper.hpp"
+#include "Logger.hpp"
+
+#ifdef _WIN32
+
+#include <chrono>
+
+#endif
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;
@@ -44,8 +50,38 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 bool SendFrMessages;
+bool PrintTurnAroundTime;
 
-void PrintStatus(bool value, const std::string& what) {
+time_t lastTimeTurnaroundTimePrinted;
+
+[[nodiscard]] DsVeosCoSim_Result Disconnect();
+
+void PrintTurnaroundTime() {
+    time_t now{};
+    time(&now);
+
+    if (now <= lastTimeTurnaroundTimePrinted) {
+        return;
+    }
+
+    lastTimeTurnaroundTimePrinted = now;
+
+    if (!PrintTurnAroundTime) {
+        return;
+    }
+
+    int64_t roundTripTimeInNanoseconds{};
+    if (DsVeosCoSim_GetRoundTripTime(Client, &roundTripTimeInNanoseconds) != DsVeosCoSim_Result_Ok) {
+        LogError("Could not get round trip time.");
+        (void)Disconnect();
+    }
+
+    if (roundTripTimeInNanoseconds > 0) {
+        LogTrace("Round trip time: {} ns.", DsVeosCoSim_SimulationTimeToString(roundTripTimeInNanoseconds));
+    }
+}
+
+void PrintStatus(bool value, std::string_view what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {
@@ -76,6 +112,15 @@ void SwitchSendingLinMessages() {
 void SwitchSendingFrMessages() {
     SendFrMessages = !SendFrMessages;
     PrintStatus(SendFrMessages, "FlexRay messages");
+}
+
+void SwitchPrintingTurnAroundTime() {
+    PrintTurnAroundTime = !PrintTurnAroundTime;
+    if (PrintTurnAroundTime) {
+        LogInfo("Enabled Printing Turnaround Time.");
+    } else {
+        LogInfo("Disabled Printing Turnaround Time.");
+    }
 }
 
 [[nodiscard]] DsVeosCoSim_Result WriteOutGoingSignal(const DsVeosCoSim_IoSignal& ioSignal) {
@@ -187,35 +232,35 @@ void OnIncomingSignalChanged([[maybe_unused]] DsVeosCoSim_SimulationTime simulat
                              uint32_t length,
                              const void* value,
                              [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::fuchsia), "{}\n", DsVeosCoSim_IoDataToString(ioSignal, length, value));
+    LogIoData(DsVeosCoSim_IoDataToString(ioSignal, length, value));
 }
 
 void OnCanMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_CanController* controller,
                                    const DsVeosCoSim_CanMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::dodger_blue), "{}\n", DsVeosCoSim_CanMessageContainerToString(messageContainer));
+    LogCanMessage(DsVeosCoSim_CanMessageContainerToString(messageContainer));
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_EthController* controller,
                                    const DsVeosCoSim_EthMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::cyan), "{}\n", DsVeosCoSim_EthMessageContainerToString(messageContainer));
+    LogEthMessage(DsVeosCoSim_EthMessageContainerToString(messageContainer));
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_LinController* controller,
                                    const DsVeosCoSim_LinMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_LinMessageContainerToString(messageContainer));
+    LogLinMessage(DsVeosCoSim_LinMessageContainerToString(messageContainer));
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                   [[maybe_unused]] const DsVeosCoSim_FrController* controller,
                                   const DsVeosCoSim_FrMessageContainer* messageContainer,
                                   [[maybe_unused]] void* userData) {
-    print(fg(fmt::color::lime), "{}\n", DsVeosCoSim_FrMessageContainerToString(messageContainer));
+    LogFrMessage(DsVeosCoSim_FrMessageContainerToString(messageContainer));
 }
 
 void StartSimulationThread(const std::function<void()>& function) {
@@ -223,31 +268,31 @@ void StartSimulationThread(const std::function<void()>& function) {
 }
 
 void OnSimulationStartedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
     LogInfo("Simulation started at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Running;
 }
 
 void OnSimulationStoppedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
     LogInfo("Simulation stopped at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Stopped;
 }
 
 void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason, [[maybe_unused]] void* userData) {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
     LogInfo("Simulation terminated with reason {} at {} s.", DsVeosCoSim_TerminateReasonToString(reason), DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Terminated;
 }
 
 void OnSimulationPausedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
     LogInfo("Simulation paused at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Paused;
 }
 
 void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
     LogInfo("Simulation continued at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
     State = DsVeosCoSim_SimulationState_Running;
 }
@@ -405,11 +450,13 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
 }
 
 [[nodiscard]] DsVeosCoSim_Result Start() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     DsVeosCoSim_SimulationState state = State;
     switch (state) {
         case DsVeosCoSim_SimulationState_Running:
+            LogInfo("Pausing simulation ...");
+            CheckDsVeosCoSimResult(DsVeosCoSim_PauseSimulation(Client));
             break;
         case DsVeosCoSim_SimulationState_Stopped:
             LogInfo("Starting simulation ...");
@@ -420,26 +467,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
             CheckDsVeosCoSimResult(DsVeosCoSim_ContinueSimulation(Client));
             break;
         default:
-            LogError("Cannot start in state {}.", DsVeosCoSim_SimulationStateToString(State));
-            break;
-    }
-
-    return DsVeosCoSim_Result_Ok;
-}
-
-[[nodiscard]] DsVeosCoSim_Result Pause() {
-    std::lock_guard lock(LockState);
-
-    DsVeosCoSim_SimulationState state = State;
-    switch (state) {
-        case DsVeosCoSim_SimulationState_Paused:
-            break;
-        case DsVeosCoSim_SimulationState_Running:
-            LogInfo("Pausing simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_PauseSimulation(Client));
-            break;
-        default:
-            LogError("Cannot pause in state {}.", DsVeosCoSim_SimulationStateToString(State));
+            LogError("Cannot start or pause in state {}.", DsVeosCoSim_SimulationStateToString(State));
             break;
     }
 
@@ -447,7 +475,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
 }
 
 [[nodiscard]] DsVeosCoSim_Result Stop() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     DsVeosCoSim_SimulationState state = State;
     switch (state) {
@@ -467,7 +495,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
 }
 
 [[nodiscard]] DsVeosCoSim_Result Terminate() {
-    std::lock_guard lock(LockState);
+    std::scoped_lock lock(LockState);
 
     DsVeosCoSim_SimulationState state = State;
     switch (state) {
@@ -507,11 +535,14 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
             case '5':
                 SwitchSendingFrMessages();
                 break;
-            case 's':
-                CheckDsVeosCoSimResult(Start());
+            case '0':
+                SwitchPrintingTurnAroundTime();
                 break;
+            case 's':
             case 'p':
-                CheckDsVeosCoSimResult(Pause());
+            case 'k':
+            case ' ':
+                CheckDsVeosCoSimResult(Start());
                 break;
             case 't':
                 CheckDsVeosCoSimResult(Stop());
@@ -535,16 +566,16 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
 
     std::thread roundTripTimeThread([&] {
         while (connected) {
-            std::this_thread::sleep_for(1s);
-            int64_t roundTripTimeInNanoseconds{};
-            if (DsVeosCoSim_GetRoundTripTime(Client, &roundTripTimeInNanoseconds) != DsVeosCoSim_Result_Ok) {
-                LogError("Could not get round trip time.");
-                (void)Disconnect();
+            std::this_thread::sleep_for(100ms);
+
+            {
+                std::scoped_lock lock(LockState);
+                if (State == DsVeosCoSim_SimulationState_Running) {
+                    continue;
+                }
             }
 
-            if (roundTripTimeInNanoseconds > 0) {
-                LogTrace("Round trip time: {} ns.", roundTripTimeInNanoseconds);
-            }
+            PrintTurnaroundTime();
         }
     });
 
