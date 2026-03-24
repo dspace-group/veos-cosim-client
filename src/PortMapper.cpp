@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <unordered_map>
 #include <utility>
@@ -174,7 +175,7 @@ private:
     return CreateOk();
 }
 
-[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, const std::string& serverName, uint16_t& port) {
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, std::string_view serverName, uint16_t& port) {
     if (IsPortMapperClientVerbose()) {
         LogTrace("PortMapperGetPort(ipAddress: '{}', serverName: '{}')", ipAddress, serverName);
     }
@@ -206,7 +207,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(const std::string& name, uint16_t port) {
+[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
 
@@ -234,7 +235,7 @@ private:
     }
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(const std::string& name) {
+[[nodiscard]] Result PortMapperUnsetPort(std::string_view name) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToTcpChannel("127.0.0.1", GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
 

@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <string>
+#include <string_view>
 
 #include <gtest/gtest.h>
 
@@ -20,7 +21,7 @@ namespace {
 
 class TestNamedLock : public testing::Test {};
 
-void DifferentThread(const std::string& name, int32_t& counter) {
+void DifferentThread(std::string_view name, int32_t& counter) {
     for (int32_t i = 0; i < 10000; i++) {
         NamedLock mutex;
         AssertOk(NamedLock::Create(name, mutex));

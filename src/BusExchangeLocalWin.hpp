@@ -25,7 +25,18 @@ public:
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
 
-    LocalBusExchangePart(IProtocol& protocol, std::string name) : _protocol(protocol), _name(std::move(name)) {
+    LocalBusExchangePart(IProtocol& protocol,
+                         std::string name,
+                         ControllerRegistry<TBus> controllerRegistry,
+                         std::atomic<uint32_t>* sharedMessageCountByController,
+                         RingBufferView<TMessageContainer>* sharedMessageQueue,
+                         SharedMemory sharedMemory)
+        : _protocol(protocol),
+          _name(std::move(name)),
+          _controllerRegistry(std::move(controllerRegistry)),
+          _sharedMessageCountByController(sharedMessageCountByController),
+          _sharedMessageQueue(sharedMessageQueue),
+          _sharedMemory(std::move(sharedMemory)) {
     }
 
     ~LocalBusExchangePart() noexcept override = default;
@@ -36,31 +47,42 @@ public:
     LocalBusExchangePart(LocalBusExchangePart&&) = delete;
     LocalBusExchangePart& operator=(LocalBusExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize(const std::vector<TController>& controllers) override {
+    [[nodiscard]] static Result Create(IProtocol& protocol,
+                                       std::string name,
+                                       const std::vector<TController>& controllers,
+                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart) {
         // The shared memory region is split into per-controller counters followed
         // by one shared ring buffer containing the actual message payloads.
-        CheckResult(_controllerRegistry.Initialize(controllers));
+        ControllerRegistry<TBus> controllerRegistry;
+        CheckResult(ControllerRegistry<TBus>::Create(controllers, controllerRegistry));
 
-        size_t combinedQueueCapacity = _controllerRegistry.GetCombinedQueueCapacity();
-        size_t sizeOfMessageCountPerController =
-            _controllerRegistry.GetControllerStatesById().size() * sizeof(std::atomic<uint32_t>);
+        size_t combinedQueueCapacity = controllerRegistry.GetCombinedQueueCapacity();
+        size_t sizeOfMessageCountPerController = controllerRegistry.GetControllerStatesById().size() * sizeof(std::atomic<uint32_t>);
         size_t sizeOfMessageQueue = sizeof(RingBufferView<TMessageContainer>) + (combinedQueueCapacity * sizeof(TMessageContainer));
 
         size_t sizeOfSharedMemory = 0;
         sizeOfSharedMemory += sizeOfMessageCountPerController;
         sizeOfSharedMemory += sizeOfMessageQueue;
 
-        CheckResult(SharedMemory::CreateOrOpen(_name, sizeOfSharedMemory, _sharedMemory));
+        SharedMemory sharedMemory;
+        CheckResult(SharedMemory::CreateOrOpen(name, sizeOfSharedMemory, sharedMemory));
 
-        auto* pointerToMessageCountPerController = _sharedMemory.GetData();
+        auto* pointerToMessageCountPerController = sharedMemory.GetData();
         auto* pointerToMessageQueue = pointerToMessageCountPerController + sizeOfMessageCountPerController;
 
-        _sharedMessageCountByController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
-        _sharedMessageQueue = reinterpret_cast<RingBufferView<TMessageContainer>*>(pointerToMessageQueue);
+        auto* sharedMessageCountByController = reinterpret_cast<std::atomic<uint32_t>*>(pointerToMessageCountPerController);
+        auto* sharedMessageQueue = reinterpret_cast<RingBufferView<TMessageContainer>*>(pointerToMessageQueue);
 
-        _sharedMessageQueue->Initialize(static_cast<uint32_t>(combinedQueueCapacity));
+        sharedMessageQueue->Initialize(static_cast<uint32_t>(combinedQueueCapacity));
 
-        ClearData();
+        auto localBusExchangePart = std::make_unique<LocalBusExchangePart>(protocol,
+                                                                           std::move(name),
+                                                                           std::move(controllerRegistry),
+                                                                           sharedMessageCountByController,
+                                                                           sharedMessageQueue,
+                                                                           std::move(sharedMemory));
+        localBusExchangePart->ClearData();
+        busExchangePart = std::move(localBusExchangePart);
         return CreateOk();
     }
 
@@ -139,9 +161,7 @@ public:
     }
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
-        CheckResultWithMessage(
-            _protocol.WriteSize(writer, _pendingTransmitNotificationCount),
-            "Could not write transmit count.");
+        CheckResultWithMessage(_protocol.WriteSize(writer, _pendingTransmitNotificationCount), "Could not write transmit count.");
         _pendingTransmitNotificationCount = 0;
         return CreateOk();
     }
@@ -189,8 +209,7 @@ public:
     }
 
 private:
-    [[nodiscard]] static Result CheckControllerQueueCapacity(const std::atomic<uint32_t>& sharedQueuedMessageCount,
-                                                            ControllerState<TBus>& controllerState) {
+    [[nodiscard]] static Result CheckControllerQueueCapacity(const std::atomic<uint32_t>& sharedQueuedMessageCount, ControllerState<TBus>& controllerState) {
         if (sharedQueuedMessageCount.load(std::memory_order_acquire) == controllerState.controller.queueSize) {
             if (!controllerState.transmitWarningSent) {
                 LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", controllerState.controller.name);

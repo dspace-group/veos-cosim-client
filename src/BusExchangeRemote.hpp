@@ -21,7 +21,14 @@ public:
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
 
-    explicit RemoteBusExchangePart(IProtocol& protocol) : _protocol(protocol) {
+    RemoteBusExchangePart(IProtocol& protocol,
+                          ControllerRegistry<TBus> controllerRegistry,
+                          std::vector<uint32_t> queuedMessageCountByController,
+                          RingBuffer<TMessageContainer> queuedMessageContainers)
+        : _protocol(protocol),
+          _controllerRegistry(std::move(controllerRegistry)),
+          _queuedMessageCountByController(std::move(queuedMessageCountByController)),
+          _queuedMessageContainers(std::move(queuedMessageContainers)) {
     }
 
     ~RemoteBusExchangePart() noexcept override = default;
@@ -32,11 +39,20 @@ public:
     RemoteBusExchangePart(RemoteBusExchangePart&&) = delete;
     RemoteBusExchangePart& operator=(RemoteBusExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize(const std::vector<TController>& controllers) override {
-        CheckResult(_controllerRegistry.Initialize(controllers));
-        size_t combinedQueueCapacity = _controllerRegistry.GetCombinedQueueCapacity();
-        _queuedMessageCountByController.resize(_controllerRegistry.GetControllerStatesById().size());
-        _queuedMessageContainers = RingBuffer<TMessageContainer>(combinedQueueCapacity);
+    [[nodiscard]] static Result Create(IProtocol& protocol,
+                                       const std::vector<TController>& controllers,
+                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart) {
+        ControllerRegistry<TBus> controllerRegistry;
+        CheckResult(ControllerRegistry<TBus>::Create(controllers, controllerRegistry));
+
+        size_t combinedQueueCapacity = controllerRegistry.GetCombinedQueueCapacity();
+        std::vector<uint32_t> queuedMessageCountByController(controllerRegistry.GetControllerStatesById().size());
+        auto queuedMessageContainers = RingBuffer<TMessageContainer>(combinedQueueCapacity);
+
+        busExchangePart = std::make_unique<RemoteBusExchangePart>(protocol,
+                                                                  std::move(controllerRegistry),
+                                                                  std::move(queuedMessageCountByController),
+                                                                  std::move(queuedMessageContainers));
         return CreateOk();
     }
 

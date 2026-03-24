@@ -27,11 +27,6 @@ public:
     LockedBusExchangePart(LockedBusExchangePart&&) = delete;
     LockedBusExchangePart& operator=(LockedBusExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize(const std::vector<TController>& controllers) override {
-        std::scoped_lock lock(_mutex);
-        return _proxiedPart->Initialize(controllers);
-    }
-
     void ClearData() override {
         std::scoped_lock lock(_mutex);
         _proxiedPart->ClearData();

@@ -3,10 +3,10 @@
 #include "BusExchange.hpp"
 
 #include <memory>
-#include <string>
+#include <string_view>
 #include <vector>
 
-#include "BusExchangeFor.hpp"
+#include "BusExchangeSpecific.hpp"
 #include "Protocol.hpp"
 #include "Result.hpp"
 
@@ -14,36 +14,34 @@ namespace DsVeosCoSim {
 
 namespace {
 
-using CanPart = BusExchangeDetail::BusExchangeFor<BusExchangeDetail::CanBus>;
-using EthPart = BusExchangeDetail::BusExchangeFor<BusExchangeDetail::EthBus>;
-using LinPart = BusExchangeDetail::BusExchangeFor<BusExchangeDetail::LinBus>;
-using FrPart = BusExchangeDetail::BusExchangeFor<BusExchangeDetail::FrBus>;
+using CanBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::CanBus>;
+using EthBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::EthBus>;
+using LinBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::LinBus>;
+using FrBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::FrBus>;
+
+template <typename TBusExchange, typename TController>
+[[nodiscard]] Result CreateBusExchangeTransport(CoSimType coSimType,
+                                                ConnectionKind connectionKind,
+                                                std::string_view name,
+                                                const std::vector<TController>& controllers,
+                                                IProtocol& protocol,
+                                                std::unique_ptr<TBusExchange>& busExchangeTransport) {
+    CheckResult(TBusExchange::Create(coSimType, connectionKind, name, controllers, protocol, busExchangeTransport));
+    return CreateOk();
+}
 
 class BusExchangeImpl final : public BusExchange {
 public:
-    BusExchangeImpl() = default;
-
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    ConnectionKind connectionKind,
-                                    const std::string& name,
-                                    const std::vector<CanController>& canControllers,
-                                    const std::vector<EthController>& ethControllers,
-                                    const std::vector<LinController>& linControllers,
-                                    const std::vector<FrController>& frControllers,
-                                    IProtocol& protocol) {
-        _doFlexRayOperations = protocol.DoFlexRayOperations();
-
-        _canPart = std::make_unique<CanPart>();
-        _ethPart = std::make_unique<EthPart>();
-        _linPart = std::make_unique<LinPart>();
-        _frPart = std::make_unique<FrPart>();
-
-        CheckResult(_canPart->Initialize(coSimType, connectionKind, name, canControllers, protocol));
-        CheckResult(_ethPart->Initialize(coSimType, connectionKind, name, ethControllers, protocol));
-        CheckResult(_linPart->Initialize(coSimType, connectionKind, name, linControllers, protocol));
-        CheckResult(_frPart->Initialize(coSimType, connectionKind, name, frControllers, protocol));
-
-        return CreateOk();
+    BusExchangeImpl(std::unique_ptr<CanBusExchange> canBusExchange,
+                    std::unique_ptr<EthBusExchange> ethBusExchange,
+                    std::unique_ptr<LinBusExchange> linBusExchange,
+                    std::unique_ptr<FrBusExchange> frBusExchange,
+                    bool doFlexRayOperations)
+        : _canBusExchange(std::move(canBusExchange)),
+          _ethBusExchange(std::move(ethBusExchange)),
+          _linBusExchange(std::move(linBusExchange)),
+          _frBusExchange(std::move(frBusExchange)),
+          _doFlexRayOperations(doFlexRayOperations) {
     }
 
     ~BusExchangeImpl() override = default;
@@ -55,83 +53,83 @@ public:
     BusExchangeImpl& operator=(BusExchangeImpl&&) = delete;
 
     void ClearData() const override {
-        _canPart->ClearData();
-        _ethPart->ClearData();
-        _linPart->ClearData();
-        _frPart->ClearData();
+        _canBusExchange->ClearData();
+        _ethBusExchange->ClearData();
+        _linBusExchange->ClearData();
+        _frBusExchange->ClearData();
     }
 
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
-        return _canPart->Transmit(message);
+        return _canBusExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const EthMessage& message) const override {
-        return _ethPart->Transmit(message);
+        return _ethBusExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const LinMessage& message) const override {
-        return _linPart->Transmit(message);
+        return _linBusExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const FrMessage& message) const override {
-        return _frPart->Transmit(message);
+        return _frBusExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
-        return _canPart->Transmit(messageContainer);
+        return _canBusExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
-        return _ethPart->Transmit(messageContainer);
+        return _ethBusExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
-        return _linPart->Transmit(messageContainer);
+        return _linBusExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
-        return _frPart->Transmit(messageContainer);
+        return _frBusExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Receive(CanMessage& message) const override {
-        return _canPart->Receive(message);
+        return _canBusExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(EthMessage& message) const override {
-        return _ethPart->Receive(message);
+        return _ethBusExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(LinMessage& message) const override {
-        return _linPart->Receive(message);
+        return _linBusExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(FrMessage& message) const override {
-        return _frPart->Receive(message);
+        return _frBusExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const override {
-        return _canPart->Receive(messageContainer);
+        return _canBusExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const override {
-        return _ethPart->Receive(messageContainer);
+        return _ethBusExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const override {
-        return _linPart->Receive(messageContainer);
+        return _linBusExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const override {
-        return _frPart->Receive(messageContainer);
+        return _frBusExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Serialize(ChannelWriter& writer) const override {
-        CheckResultWithMessage(_canPart->Serialize(writer), "Could not transmit CAN messages.");
-        CheckResultWithMessage(_ethPart->Serialize(writer), "Could not transmit Ethernet messages.");
-        CheckResultWithMessage(_linPart->Serialize(writer), "Could not transmit LIN messages.");
+        CheckResultWithMessage(_canBusExchange->Serialize(writer), "Could not transmit CAN messages.");
+        CheckResultWithMessage(_ethBusExchange->Serialize(writer), "Could not transmit Ethernet messages.");
+        CheckResultWithMessage(_linBusExchange->Serialize(writer), "Could not transmit LIN messages.");
 
         if (_doFlexRayOperations) {
-            CheckResultWithMessage(_frPart->Serialize(writer), "Could not transmit FlexRay messages.");
+            CheckResultWithMessage(_frBusExchange->Serialize(writer), "Could not transmit FlexRay messages.");
         }
 
         return CreateOk();
@@ -139,18 +137,18 @@ public:
 
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const override {
         CheckResultWithMessage(
-            _canPart->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback, callbacks.canMessageContainerReceivedCallback),
+            _canBusExchange->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback, callbacks.canMessageContainerReceivedCallback),
             "Could not receive CAN messages.");
         CheckResultWithMessage(
-            _ethPart->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback, callbacks.ethMessageContainerReceivedCallback),
+            _ethBusExchange->Deserialize(reader, simulationTime, callbacks.ethMessageReceivedCallback, callbacks.ethMessageContainerReceivedCallback),
             "Could not receive Ethernet messages.");
         CheckResultWithMessage(
-            _linPart->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback, callbacks.linMessageContainerReceivedCallback),
+            _linBusExchange->Deserialize(reader, simulationTime, callbacks.linMessageReceivedCallback, callbacks.linMessageContainerReceivedCallback),
             "Could not receive LIN messages.");
 
         if (_doFlexRayOperations) {
             CheckResultWithMessage(
-                _frPart->Deserialize(reader, simulationTime, callbacks.frMessageReceivedCallback, callbacks.frMessageContainerReceivedCallback),
+                _frBusExchange->Deserialize(reader, simulationTime, callbacks.frMessageReceivedCallback, callbacks.frMessageContainerReceivedCallback),
                 "Could not receive FlexRay messages.");
         }
 
@@ -158,10 +156,10 @@ public:
     }
 
 private:
-    std::unique_ptr<CanPart> _canPart;
-    std::unique_ptr<EthPart> _ethPart;
-    std::unique_ptr<LinPart> _linPart;
-    std::unique_ptr<FrPart> _frPart;
+    std::unique_ptr<CanBusExchange> _canBusExchange;
+    std::unique_ptr<EthBusExchange> _ethBusExchange;
+    std::unique_ptr<LinBusExchange> _linBusExchange;
+    std::unique_ptr<FrBusExchange> _frBusExchange;
 
     bool _doFlexRayOperations{};
 };
@@ -170,16 +168,30 @@ private:
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<CanController>& canControllers,
                                        const std::vector<EthController>& ethControllers,
                                        const std::vector<LinController>& linControllers,
                                        const std::vector<FrController>& frControllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange) {
-    auto busExchangeTmp = std::make_unique<BusExchangeImpl>();
-    CheckResult(busExchangeTmp->Initialize(coSimType, connectionKind, name, canControllers, ethControllers, linControllers, frControllers, protocol));
-    busExchange = std::move(busExchangeTmp);
+    std::unique_ptr<CanBusExchange> canBusExchange;
+    CheckResult(CreateBusExchangeTransport(coSimType, connectionKind, name, canControllers, protocol, canBusExchange));
+
+    std::unique_ptr<EthBusExchange> ethBusExchange;
+    CheckResult(CreateBusExchangeTransport(coSimType, connectionKind, name, ethControllers, protocol, ethBusExchange));
+
+    std::unique_ptr<LinBusExchange> linBusExchange;
+    CheckResult(CreateBusExchangeTransport(coSimType, connectionKind, name, linControllers, protocol, linBusExchange));
+
+    std::unique_ptr<FrBusExchange> frBusExchange;
+    CheckResult(CreateBusExchangeTransport(coSimType, connectionKind, name, frControllers, protocol, frBusExchange));
+
+    busExchange = std::make_unique<BusExchangeImpl>(std::move(canBusExchange),
+                                                    std::move(ethBusExchange),
+                                                    std::move(linBusExchange),
+                                                    std::move(frBusExchange),
+                                                    protocol.DoFlexRayOperations());
     return CreateOk();
 }
 

@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "Result.hpp"
 #include "Socket.hpp"
@@ -14,8 +15,6 @@
 #include "OsUtilities.hpp"
 
 #endif
-
-// #include "CoSimTypes.hpp"
 
 namespace DsVeosCoSim {
 
@@ -36,7 +35,7 @@ public:
     [[nodiscard]] static Result Create(const std::string& ipAddress, uint16_t port, InternetAddress& internetAddress);
 
 private:
-    std::array<uint8_t, 16> _address{};
+    [[maybe_unused]] std::array<uint8_t, 16> _address{};
 };
 
 class UdpSocket final {
@@ -80,8 +79,8 @@ public:
     PipeClient(PipeClient&&) noexcept = default;
     PipeClient& operator=(PipeClient&&) noexcept = default;
 
-    [[nodiscard]] static Result Connect(const std::string& name, PipeClient& client);
-    [[nodiscard]] static Result Accept(const std::string& name, PipeClient& client);
+    [[nodiscard]] static Result Connect(std::string_view name, PipeClient& client);
+    [[nodiscard]] static Result Accept(std::string_view name, PipeClient& client);
 
     [[nodiscard]] Result Write(const void* source, uint32_t size) const;
     [[nodiscard]] Result Read(void* destination, uint32_t size) const;

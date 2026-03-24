@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -59,7 +60,7 @@ public:
     [[nodiscard]] virtual Result SendOk(ChannelWriter& writer) = 0;
 
     [[nodiscard]] virtual Result ReadError(ChannelReader& reader, std::string& errorMessage) = 0;
-    [[nodiscard]] virtual Result SendError(ChannelWriter& writer, const std::string& errorMessage) = 0;
+    [[nodiscard]] virtual Result SendError(ChannelWriter& writer, std::string_view errorMessage) = 0;
 
     [[nodiscard]] virtual Result ReadPing(ChannelReader& reader, SimulationTime& roundTripTime) = 0;
     [[nodiscard]] virtual Result SendPing(ChannelWriter& writer, SimulationTime roundTripTime) = 0;
@@ -75,8 +76,8 @@ public:
     [[nodiscard]] virtual Result SendConnect(ChannelWriter& writer,
                                              uint32_t protocolVersion,
                                              Mode clientMode,
-                                             const std::string& serverName,
-                                             const std::string& clientName) = 0;
+                                             std::string_view serverName,
+                                             std::string_view clientName) = 0;
 
     [[nodiscard]] virtual Result ReadConnectOkVersion(ChannelReader& reader, uint32_t& protocolVersion) = 0;
 
@@ -141,16 +142,16 @@ public:
                                             const SerializeFunction& serializeBusMessages) = 0;
 
     [[nodiscard]] virtual Result ReadGetPort(ChannelReader& reader, std::string& serverName) = 0;
-    [[nodiscard]] virtual Result SendGetPort(ChannelWriter& writer, const std::string& serverName) = 0;
+    [[nodiscard]] virtual Result SendGetPort(ChannelWriter& writer, std::string_view serverName) = 0;
 
     [[nodiscard]] virtual Result ReadGetPortOk(ChannelReader& reader, uint16_t& port) = 0;
     [[nodiscard]] virtual Result SendGetPortOk(ChannelWriter& writer, uint16_t port) = 0;
 
     [[nodiscard]] virtual Result ReadSetPort(ChannelReader& reader, std::string& serverName, uint16_t& port) = 0;
-    [[nodiscard]] virtual Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) = 0;
+    [[nodiscard]] virtual Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) = 0;
 
     [[nodiscard]] virtual Result ReadUnsetPort(ChannelReader& reader, std::string& serverName) = 0;
-    [[nodiscard]] virtual Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) = 0;
+    [[nodiscard]] virtual Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName) = 0;
 
     [[nodiscard]] virtual uint32_t GetVersion() = 0;
 

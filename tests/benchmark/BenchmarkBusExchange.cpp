@@ -1,6 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include <benchmark/benchmark.h>
@@ -63,8 +64,8 @@ void ReceiveMessages(size_t count, BusExchange& receiverBusExchange, Channel& ch
 template <typename TBus>
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             const std::string& writerName,
-             const std::string& readerName,
+             std::string_view writerName,
+             std::string_view readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     using TControllerContainer = typename TBus::ControllerContainer;

@@ -4,7 +4,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
+#include <string_view>
 #include <vector>
 
 #include "Channel.hpp"
@@ -39,7 +39,7 @@ public:
 
 [[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,
                                           ConnectionKind connectionKind,
-                                          const std::string& name,
+                                          std::string_view name,
                                           const std::vector<IoSignal>& incomingSignals,
                                           const std::vector<IoSignal>& outgoingSignals,
                                           IProtocol& protocol,

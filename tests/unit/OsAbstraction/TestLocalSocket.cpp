@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -19,7 +20,7 @@ namespace {
     return GenerateString("LocalPath");
 }
 
-void EstablishConnection(const std::string& name, SocketClient& connectClient, SocketClient& acceptClient) {
+void EstablishConnection(std::string_view name, SocketClient& connectClient, SocketClient& acceptClient) {
     SocketListener listener;
     AssertOk(SocketListener::Create(name, listener));
 

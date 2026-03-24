@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <fmt/format.h>
@@ -21,26 +22,33 @@ namespace DsVeosCoSim::BusExchangeDetail {
 // This layer selects the transport backend and keeps bus-specific length checks
 // independent from transport details.
 template <typename TBus>
-class BusExchangeFor final {
+class BusExchangeSpecific final {
 public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
 
-    BusExchangeFor() = default;
-    ~BusExchangeFor() noexcept = default;
+    BusExchangeSpecific(std::unique_ptr<IBusExchangePart<TBus>> outboundPart, std::unique_ptr<IBusExchangePart<TBus>> inboundPart)
+        : _outboundPart(std::move(outboundPart)), _inboundPart(std::move(inboundPart)) {
+    }
 
-    BusExchangeFor(const BusExchangeFor&) = delete;
-    BusExchangeFor& operator=(const BusExchangeFor&) = delete;
+    ~BusExchangeSpecific() noexcept = default;
 
-    BusExchangeFor(BusExchangeFor&&) = delete;
-    BusExchangeFor& operator=(BusExchangeFor&&) = delete;
+    BusExchangeSpecific(const BusExchangeSpecific&) = delete;
+    BusExchangeSpecific& operator=(const BusExchangeSpecific&) = delete;
 
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    [[maybe_unused]] ConnectionKind connectionKind,
-                                    [[maybe_unused]] const std::string& name,
-                                    const std::vector<TController>& controllers,
-                                    IProtocol& protocol) {
+    BusExchangeSpecific(BusExchangeSpecific&&) = delete;
+    BusExchangeSpecific& operator=(BusExchangeSpecific&&) = delete;
+
+    [[nodiscard]] static Result Create(CoSimType coSimType,
+                                       [[maybe_unused]] ConnectionKind connectionKind,
+                                       [[maybe_unused]] std::string_view name,
+                                       const std::vector<TController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchangeSpecific>& busExchangeFor) {
+        std::unique_ptr<IBusExchangePart<TBus>> outboundPart;
+        std::unique_ptr<IBusExchangePart<TBus>> inboundPart;
+
 #ifdef _WIN32
         if (connectionKind == ConnectionKind::Local) {
             std::string_view suffixForTransmit = coSimType == CoSimType::Client ? "Transmit" : "Receive";
@@ -51,23 +59,21 @@ public:
 
             // Local transport uses two shared-memory regions so each side can publish
             // and consume independently without swapping queue ownership.
-            _outboundPart = std::make_unique<LocalBusExchangePart<TBus>>(protocol, transmitPartName);
-            _inboundPart = std::make_unique<LocalBusExchangePart<TBus>>(protocol, receivePartName);
+            CheckResult(LocalBusExchangePart<TBus>::Create(protocol, std::move(transmitPartName), controllers, outboundPart));
+            CheckResult(LocalBusExchangePart<TBus>::Create(protocol, std::move(receivePartName), controllers, inboundPart));
         } else {
 #endif
-            _outboundPart = std::make_unique<RemoteBusExchangePart<TBus>>(protocol);
-            _inboundPart = std::make_unique<RemoteBusExchangePart<TBus>>(protocol);
+            CheckResult(RemoteBusExchangePart<TBus>::Create(protocol, controllers, outboundPart));
+            CheckResult(RemoteBusExchangePart<TBus>::Create(protocol, controllers, inboundPart));
 #ifdef _WIN32
         }
 #endif
         if (coSimType == CoSimType::Client) {
-            _outboundPart = std::make_unique<LockedBusExchangePart<TBus>>(std::move(_outboundPart));
-            _inboundPart = std::make_unique<LockedBusExchangePart<TBus>>(std::move(_inboundPart));
+            outboundPart = std::make_unique<LockedBusExchangePart<TBus>>(std::move(outboundPart));
+            inboundPart = std::make_unique<LockedBusExchangePart<TBus>>(std::move(inboundPart));
         }
 
-        CheckResult(_outboundPart->Initialize(controllers));
-        CheckResult(_inboundPart->Initialize(controllers));
-
+        busExchangeFor = std::make_unique<BusExchangeSpecific>(std::move(outboundPart), std::move(inboundPart));
         return CreateOk();
     }
 

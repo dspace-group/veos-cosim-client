@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -175,7 +176,7 @@ std::unique_ptr<ServerWrapper> Server;
 std::mutex LockState;
 SimulationState State;
 
-void PrintStatus(bool value, const std::string& what) {
+void PrintStatus(bool value, std::string_view what) {
     if (value) {
         LogInfo("Enabled sending {}.", what);
     } else {

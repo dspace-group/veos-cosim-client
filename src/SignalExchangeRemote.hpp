@@ -8,10 +8,10 @@
 #include <vector>
 
 #include "Environment.hpp"
-#include "SignalExchangeCommon.hpp"
 #include "Logger.hpp"
 #include "Protocol.hpp"
 #include "RingBuffer.hpp"
+#include "SignalExchangeCommon.hpp"
 
 namespace DsVeosCoSim::SignalExchangeDetail {
 
@@ -23,7 +23,14 @@ class RemoteSignalExchangePart final : public ISignalExchangePart {
     };
 
 public:
-    RemoteSignalExchangePart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals) : _protocol(protocol), _ioSignals(ioSignals) {
+    RemoteSignalExchangePart(IProtocol& protocol,
+                             SignalRegistry signalRegistry,
+                             std::vector<SignalValueState> signalStates,
+                             RingBuffer<SignalMetaDataPtr> changedSignalsQueue)
+        : _protocol(protocol),
+          _signalRegistry(std::move(signalRegistry)),
+          _signalStates(std::move(signalStates)),
+          _changedSignalsQueue(std::move(changedSignalsQueue)) {
     }
 
     ~RemoteSignalExchangePart() noexcept override = default;
@@ -34,11 +41,13 @@ public:
     RemoteSignalExchangePart(RemoteSignalExchangePart&&) = delete;
     RemoteSignalExchangePart& operator=(RemoteSignalExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize() override {
-        CheckResult(_signalRegistry.Initialize(_ioSignals));
-        std::unordered_map<IoSignalId, SignalMetaData>& metaDataLookup = _signalRegistry.GetMetaDataLookup();
-        _changedSignalsQueue = RingBuffer<SignalMetaDataPtr>(metaDataLookup.size());
-        _signalStates.resize(metaDataLookup.size());
+    [[nodiscard]] static Result Create(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+        SignalRegistry signalRegistry;
+        CheckResult(SignalRegistry::Create(ioSignals, signalRegistry));
+
+        std::unordered_map<IoSignalId, SignalMetaData>& metaDataLookup = signalRegistry.GetMetaDataLookup();
+        auto changedSignalsQueue = RingBuffer<SignalMetaDataPtr>(metaDataLookup.size());
+        std::vector<SignalValueState> signalStates(metaDataLookup.size());
         for (auto& [signalId, metaData] : metaDataLookup) {
             SignalValueState signalState{};
             signalState.buffer.resize(metaData.totalDataSize);
@@ -46,9 +55,11 @@ public:
                 signalState.currentLength = metaData.info.length;
             }
 
-            _signalStates[metaData.signalIndex] = signalState;
+            signalStates[metaData.signalIndex] = std::move(signalState);
         }
 
+        signalExchangePart =
+            std::make_unique<RemoteSignalExchangePart>(protocol, std::move(signalRegistry), std::move(signalStates), std::move(changedSignalsQueue));
         return CreateOk();
     }
 
@@ -203,7 +214,6 @@ public:
 
 private:
     IProtocol& _protocol;
-    const std::vector<IoSignal>& _ioSignals;
     SignalRegistry _signalRegistry;
     std::vector<SignalValueState> _signalStates;
     RingBuffer<SignalMetaDataPtr> _changedSignalsQueue;

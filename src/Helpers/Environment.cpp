@@ -14,7 +14,7 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
-    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
+    if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             intValue = std::strtoull(stringValue, &end, 10);
@@ -29,7 +29,7 @@ namespace {
 }
 
 [[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
-    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
+    if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             hexValue = std::strtoull(stringValue, &end, 16);

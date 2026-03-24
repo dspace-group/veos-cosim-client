@@ -3,6 +3,7 @@
 #include "OsAbstractionTestHelper.hpp"
 
 #include <string>
+#include <string_view>
 
 #include <fmt/format.h>
 
@@ -98,17 +99,17 @@ void Shutdown(const SocketHandle& socketHandle) {
 
 #ifdef _WIN32
 
-[[nodiscard]] std::string GetFullPipeName(const std::string& name) {
+[[nodiscard]] std::string GetFullPipeName(std::string_view name) {
     return fmt::format(R"(\\.\pipe\{})", name);
 }
 
 #else
 
-[[nodiscard]] std::string GetFirstPipePath(const std::string& name) {
+[[nodiscard]] std::string GetFirstPipePath(std::string_view name) {
     return fmt::format("/tmp/Pipe1{}", name);
 }
 
-[[nodiscard]] std::string GetSecondPipePath(const std::string& name) {
+[[nodiscard]] std::string GetSecondPipePath(std::string_view name) {
     return fmt::format("/tmp/Pipe2{}", name);
 }
 
@@ -199,7 +200,7 @@ PipeClient::~PipeClient() noexcept {
 #endif
 }
 
-[[nodiscard]] Result PipeClient::Connect(const std::string& name, PipeClient& client) {
+[[nodiscard]] Result PipeClient::Connect(std::string_view name, PipeClient& client) {
 #ifdef _WIN32
     std::string fullName = GetFullPipeName(name);
 
@@ -247,7 +248,7 @@ PipeClient::~PipeClient() noexcept {
 #endif
 }
 
-[[nodiscard]] Result PipeClient::Accept(const std::string& name, PipeClient& client) {
+[[nodiscard]] Result PipeClient::Accept(std::string_view name, PipeClient& client) {
 #ifdef _WIN32
     std::string fullName = GetFullPipeName(name);
 

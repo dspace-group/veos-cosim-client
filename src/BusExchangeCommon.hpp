@@ -63,8 +63,7 @@ template <typename TBus>
 using BusMessageCallback = std::function<void(SimulationTime, const typename TBus::Controller&, const typename TBus::Message&)>;
 
 template <typename TBus>
-using BusMessageContainerCallback =
-    std::function<void(SimulationTime, const typename TBus::Controller&, const typename TBus::MessageContainer&)>;
+using BusMessageContainerCallback = std::function<void(SimulationTime, const typename TBus::Controller&, const typename TBus::MessageContainer&)>;
 
 template <typename TBus>
 struct ControllerState {
@@ -95,14 +94,18 @@ public:
     ControllerRegistry(const ControllerRegistry&) = delete;
     ControllerRegistry& operator=(const ControllerRegistry&) = delete;
 
-    ControllerRegistry(ControllerRegistry&&) = delete;
-    ControllerRegistry& operator=(ControllerRegistry&&) = delete;
+    ControllerRegistry(ControllerRegistry&&) noexcept = default;
+    ControllerRegistry& operator=(ControllerRegistry&&) noexcept = default;
 
-    [[nodiscard]] Result Initialize(const std::vector<TController>& controllers) {
+    [[nodiscard]] static Result Create(const std::vector<TController>& controllers, ControllerRegistry& controllerRegistry) {
+        size_t combinedQueueCapacity = 0;
+        std::unordered_map<BusControllerId, ControllerState<TBus>> controllerStatesById;
+        controllerStatesById.reserve(controllers.size());
+
         size_t nextControllerSlot = 0;
         for (const auto& controller : controllers) {
-            auto search = _controllerStatesById.find(controller.id);
-            if (search != _controllerStatesById.end()) {
+            auto search = controllerStatesById.find(controller.id);
+            if (search != controllerStatesById.end()) {
                 LogError("Duplicated controller id {}.", controller.id);
                 return CreateError();
             }
@@ -110,10 +113,11 @@ public:
             ControllerState<TBus> controllerState{};
             controllerState.controller = controller;
             controllerState.controllerSlot = nextControllerSlot++;
-            _controllerStatesById[controller.id] = controllerState;
-            _combinedQueueCapacity += controller.queueSize;
+            controllerStatesById.emplace(controller.id, std::move(controllerState));
+            combinedQueueCapacity += controller.queueSize;
         }
 
+        controllerRegistry = ControllerRegistry(combinedQueueCapacity, std::move(controllerStatesById));
         return CreateOk();
     }
 
@@ -143,6 +147,10 @@ public:
     }
 
 private:
+    ControllerRegistry(size_t combinedQueueCapacity, std::unordered_map<BusControllerId, ControllerState<TBus>> controllerStatesById)
+        : _combinedQueueCapacity(combinedQueueCapacity), _controllerStatesById(std::move(controllerStatesById)) {
+    }
+
     size_t _combinedQueueCapacity{};
     std::unordered_map<BusControllerId, ControllerState<TBus>> _controllerStatesById;
 };
@@ -163,7 +171,6 @@ public:
     IBusExchangePart(IBusExchangePart&&) = delete;
     IBusExchangePart& operator=(IBusExchangePart&&) = delete;
 
-    [[nodiscard]] virtual Result Initialize(const std::vector<TController>& controllers) = 0;
     virtual void ClearData() = 0;
     [[nodiscard]] virtual Result Transmit(const TMessage& message) = 0;
     [[nodiscard]] virtual Result Transmit(const TMessageContainer& messageContainer) = 0;

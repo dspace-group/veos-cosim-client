@@ -26,6 +26,9 @@ using SignalMetaDataPtr = SignalMetaData*;
 // The registry keeps lookup-by-id while also assigning a dense signal index for
 // buffer-backed storage vectors.
 class SignalRegistry final {
+    explicit SignalRegistry(std::unordered_map<IoSignalId, SignalMetaData> metaDataLookup) : _metaDataLookup(std::move(metaDataLookup)) {
+    }
+
 public:
     SignalRegistry() = default;
     ~SignalRegistry() noexcept = default;
@@ -33,10 +36,13 @@ public:
     SignalRegistry(const SignalRegistry&) = delete;
     SignalRegistry& operator=(const SignalRegistry&) = delete;
 
-    SignalRegistry(SignalRegistry&&) = delete;
-    SignalRegistry& operator=(SignalRegistry&&) = delete;
+    SignalRegistry(SignalRegistry&&) noexcept = default;
+    SignalRegistry& operator=(SignalRegistry&&) noexcept = default;
 
-    [[nodiscard]] Result Initialize(const std::vector<IoSignal>& ioSignals) {
+    [[nodiscard]] static Result Create(const std::vector<IoSignal>& ioSignals, SignalRegistry& signalRegistry) {
+        std::unordered_map<IoSignalId, SignalMetaData> metaDataLookup;
+        metaDataLookup.reserve(ioSignals.size());
+
         size_t nextSignalIndex = 0;
         for (const auto& ioSignal : ioSignals) {
             if (ioSignal.length == 0) {
@@ -50,8 +56,8 @@ public:
                 return CreateError();
             }
 
-            auto search = _metaDataLookup.find(ioSignal.id);
-            if (search != _metaDataLookup.end()) {
+            auto search = metaDataLookup.find(ioSignal.id);
+            if (search != metaDataLookup.end()) {
                 LogError("Duplicated IO signal id {}.", ioSignal.id);
                 return CreateError();
             }
@@ -64,9 +70,10 @@ public:
             metaData.totalDataSize = totalDataSize;
             metaData.signalIndex = nextSignalIndex++;
 
-            _metaDataLookup[ioSignal.id] = metaData;
+            metaDataLookup.emplace(ioSignal.id, metaData);
         }
 
+        signalRegistry = SignalRegistry(std::move(metaDataLookup));
         return CreateOk();
     }
 
@@ -100,7 +107,6 @@ public:
     ISignalExchangePart(ISignalExchangePart&&) = delete;
     ISignalExchangePart& operator=(ISignalExchangePart&&) = delete;
 
-    [[nodiscard]] virtual Result Initialize() = 0;
     virtual void ClearData() = 0;
     [[nodiscard]] virtual Result Write(IoSignalId signalId, uint32_t length, const void* value) = 0;
     [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, void* value) = 0;

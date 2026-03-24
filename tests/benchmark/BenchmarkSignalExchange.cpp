@@ -2,15 +2,16 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include <benchmark/benchmark.h>
 
 #include "Event.hpp"
 #include "Helper.hpp"
-#include "SignalExchange.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
+#include "SignalExchange.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -31,8 +32,8 @@ void Receive(const IoSignalContainer& signal, const SignalExchange& readerSignal
 
 void RunTest(benchmark::State& state,
              ConnectionKind connectionKind,
-             const std::string& writerName,
-             const std::string& readerName,
+             std::string_view writerName,
+             std::string_view readerName,
              Channel& senderChannel,
              Channel& receiverChannel) {
     IoSignalContainer signal = CreateSignal(DataType::Int8, SizeKind::Fixed);

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <fmt/format.h>
@@ -72,28 +73,28 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<CanController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange);
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<EthController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange);
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<LinController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange);
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<FrController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange);
@@ -113,7 +114,7 @@ template <typename T>
     return static_cast<T>(static_cast<uint32_t>(min) + (GenerateU32() % diff));
 }
 
-[[nodiscard]] std::string GenerateString(const std::string& prefix);
+[[nodiscard]] std::string GenerateString(std::string_view prefix);
 [[nodiscard]] SimulationTime GenerateSimulationTime();
 [[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);
 [[nodiscard]] BusControllerId GenerateBusControllerId();

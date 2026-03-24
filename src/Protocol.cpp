@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <fmt/format.h>
@@ -243,7 +244,7 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result SendError(ChannelWriter& writer, const std::string& errorMessage) override {
+    [[nodiscard]] Result SendError(ChannelWriter& writer, std::string_view errorMessage) override {
         if (IsProtocolTracingEnabled()) {
             LogProtBegin(R"(SendError(ErrorMessage: "{}"))", errorMessage);
         }
@@ -340,10 +341,10 @@ public:
 
         if (IsProtocolTracingEnabled()) {
             LogProtEnd(R"(ReadConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
-                                          protocolVersion,
-                                          clientMode,
-                                          serverName,
-                                          clientName);
+                       protocolVersion,
+                       clientMode,
+                       serverName,
+                       clientName);
         }
 
         return CreateOk();
@@ -352,14 +353,14 @@ public:
     [[nodiscard]] Result SendConnect(ChannelWriter& writer,
                                      uint32_t protocolVersion,
                                      Mode clientMode,
-                                     const std::string& serverName,
-                                     const std::string& clientName) override {
+                                     std::string_view serverName,
+                                     std::string_view clientName) override {
         if (IsProtocolTracingEnabled()) {
             LogProtBegin(R"(SendConnect(ProtocolVersion: {}, ClientMode: {}, ServerName: "{}", ClientName: "{}"))",
-                                            protocolVersion,
-                                            clientMode,
-                                            serverName,
-                                            clientName);
+                         protocolVersion,
+                         clientMode,
+                         serverName,
+                         clientName);
         }
 
         constexpr size_t size = sizeof(FrameKind) + sizeof(protocolVersion) + sizeof(clientMode);
@@ -825,7 +826,7 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result SendSetPort(ChannelWriter& writer, const std::string& serverName, uint16_t port) override {
+    [[nodiscard]] Result SendSetPort(ChannelWriter& writer, std::string_view serverName, uint16_t port) override {
         if (IsProtocolTracingEnabled()) {
             LogProtBegin(R"(SendSetPort(ServerName: "{}", Port: {}))", serverName, port);
         }
@@ -857,7 +858,7 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, const std::string& serverName) override {
+    [[nodiscard]] Result SendUnsetPort(ChannelWriter& writer, std::string_view serverName) override {
         if (IsProtocolTracingEnabled()) {
             LogProtBegin(R"(SendUnsetPort(ServerName: "{}"))", serverName);
         }
@@ -888,7 +889,7 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result SendGetPort(ChannelWriter& writer, const std::string& serverName) override {
+    [[nodiscard]] Result SendGetPort(ChannelWriter& writer, std::string_view serverName) override {
         if (IsProtocolTracingEnabled()) {
             LogProtBegin(R"(SendGetPort(ServerName: "{}"))", serverName);
         }
@@ -987,7 +988,7 @@ protected:
         return CreateOk();
     }
 
-    [[nodiscard]] Result WriteString(ChannelWriter& writer, const std::string& string) {
+    [[nodiscard]] Result WriteString(ChannelWriter& writer, std::string_view string) {
         if (string.size() > MaxStringSize) {
             LogError("String size exceeds maximum allowed size.");
             return CreateError();

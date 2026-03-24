@@ -22,11 +22,6 @@ public:
     LockedSignalExchangePart(LockedSignalExchangePart&&) = delete;
     LockedSignalExchangePart& operator=(LockedSignalExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize() override {
-        std::scoped_lock lock(_mutex);
-        return _proxiedPart->Initialize();
-    }
-
     void ClearData() override {
         std::scoped_lock lock(_mutex);
         _proxiedPart->ClearData();

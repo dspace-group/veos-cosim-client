@@ -2,10 +2,10 @@
 
 #include "SignalExchange.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -13,12 +13,12 @@
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
 #include "SignalExchangeCommon.hpp"
 #include "SignalExchangeLocalWin.hpp"
 #include "SignalExchangeLocked.hpp"
 #include "SignalExchangeRemote.hpp"
-#include "Protocol.hpp"
-#include "Result.hpp"
 
 namespace DsVeosCoSim {
 
@@ -31,9 +31,40 @@ using SignalExchangeDetail::LocalSignalExchangePart;
 using SignalExchangeDetail::LockedSignalExchangePart;
 using SignalExchangeDetail::RemoteSignalExchangePart;
 
+[[nodiscard]] Result CreateSignalExchangePart(CoSimType coSimType,
+                                              [[maybe_unused]] ConnectionKind connectionKind,
+                                              [[maybe_unused]] std::string_view name,
+                                              const std::vector<IoSignal>& signals,
+                                              IProtocol& protocol,
+                                              [[maybe_unused]] bool isWritePart,
+                                              std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+#ifdef _WIN32
+    if (connectionKind == ConnectionKind::Local) {
+        std::string partName = fmt::format("{}.{}", name, isWritePart ? "Outgoing" : "Incoming");
+        if (coSimType == CoSimType::Server) {
+            partName = fmt::format("{}.{}", name, isWritePart ? "Incoming" : "Outgoing");
+        }
+
+        CheckResult(LocalSignalExchangePart::Create(protocol, signals, std::move(partName), signalExchangePart));
+    } else {
+#endif
+        CheckResult(RemoteSignalExchangePart::Create(protocol, signals, signalExchangePart));
+#ifdef _WIN32
+    }
+#endif
+
+    if (coSimType == CoSimType::Client) {
+        signalExchangePart = std::make_unique<LockedSignalExchangePart>(std::move(signalExchangePart));
+    }
+    return CreateOk();
+}
+
 class SignalExchangeImpl final : public SignalExchange {
 public:
-    SignalExchangeImpl() = default;
+    SignalExchangeImpl(std::unique_ptr<ISignalExchangePart> writePart, std::unique_ptr<ISignalExchangePart> readPart)
+        : _writePart(std::move(writePart)), _readPart(std::move(readPart)) {
+    }
+
     ~SignalExchangeImpl() noexcept override = default;
 
     SignalExchangeImpl(const SignalExchangeImpl&) = delete;
@@ -41,49 +72,6 @@ public:
 
     SignalExchangeImpl(SignalExchangeImpl&&) = delete;
     SignalExchangeImpl& operator=(SignalExchangeImpl&&) = delete;
-
-    [[nodiscard]] Result Initialize(CoSimType coSimType,
-                                    [[maybe_unused]] ConnectionKind connectionKind,
-                                    [[maybe_unused]] const std::string& name,
-                                    const std::vector<IoSignal>& incomingSignals,
-                                    const std::vector<IoSignal>& outgoingSignals,
-                                    IProtocol& protocol) {
-        const std::vector<IoSignal>* writeSignals = &outgoingSignals;
-        const std::vector<IoSignal>* readSignals = &incomingSignals;
-        if (coSimType == CoSimType::Server) {
-            writeSignals = &incomingSignals;
-            readSignals = &outgoingSignals;
-        }
-
-#ifdef _WIN32
-        if (connectionKind == ConnectionKind::Local) {
-            std::string outgoingName = fmt::format("{}.Outgoing", name);
-            std::string incomingName = fmt::format("{}.Incoming", name);
-            if (coSimType == CoSimType::Server) {
-                std::swap(incomingName, outgoingName);
-            }
-
-            _readPart = std::make_unique<LocalSignalExchangePart>(protocol, *readSignals, incomingName);
-            _writePart = std::make_unique<LocalSignalExchangePart>(protocol, *writeSignals, outgoingName);
-        } else {
-#endif
-            _readPart = std::make_unique<RemoteSignalExchangePart>(protocol, *readSignals);
-            _writePart = std::make_unique<RemoteSignalExchangePart>(protocol, *writeSignals);
-#ifdef _WIN32
-        }
-#endif
-
-        if (coSimType == CoSimType::Client) {
-            _readPart = std::make_unique<LockedSignalExchangePart>(std::move(_readPart));
-            _writePart = std::make_unique<LockedSignalExchangePart>(std::move(_writePart));
-        }
-
-        CheckResult(_readPart->Initialize());
-        CheckResult(_writePart->Initialize());
-
-        ClearData();
-        return CreateOk();
-    }
 
     void ClearData() const override {
         _readPart->ClearData();
@@ -119,14 +107,26 @@ private:
 
 [[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,
                                           ConnectionKind connectionKind,
-                                          const std::string& name,
+                                          std::string_view name,
                                           const std::vector<IoSignal>& incomingSignals,
                                           const std::vector<IoSignal>& outgoingSignals,
                                           IProtocol& protocol,
                                           std::unique_ptr<SignalExchange>& signalExchange) {
-    auto tmpSignalExchange = std::make_unique<SignalExchangeImpl>();
-    CheckResult(tmpSignalExchange->Initialize(coSimType, connectionKind, name, incomingSignals, outgoingSignals, protocol));
-    signalExchange = std::move(tmpSignalExchange);
+    const std::vector<IoSignal>* writeSignals = &outgoingSignals;
+    const std::vector<IoSignal>* readSignals = &incomingSignals;
+    if (coSimType == CoSimType::Server) {
+        writeSignals = &incomingSignals;
+        readSignals = &outgoingSignals;
+    }
+
+    std::unique_ptr<ISignalExchangePart> writePart;
+    CheckResult(CreateSignalExchangePart(coSimType, connectionKind, name, *writeSignals, protocol, true, writePart));
+
+    std::unique_ptr<ISignalExchangePart> readPart;
+    CheckResult(CreateSignalExchangePart(coSimType, connectionKind, name, *readSignals, protocol, false, readPart));
+
+    signalExchange = std::make_unique<SignalExchangeImpl>(std::move(writePart), std::move(readPart));
+    signalExchange->ClearData();
     return CreateOk();
 }
 

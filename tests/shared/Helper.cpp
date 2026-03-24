@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include <fmt/color.h>
 
@@ -212,7 +213,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<CanController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange) {
@@ -221,7 +222,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<EthController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange) {
@@ -230,7 +231,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<LinController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange) {
@@ -239,7 +240,7 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,
-                                       const std::string& name,
+                                       std::string_view name,
                                        const std::vector<FrController>& controllers,
                                        IProtocol& protocol,
                                        std::unique_ptr<BusExchange>& busExchange) {
@@ -286,7 +287,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
     return GenerateU64();
 }
 
-[[nodiscard]] std::string GenerateString(const std::string& prefix) {
+[[nodiscard]] std::string GenerateString(std::string_view prefix) {
     return fmt::format("{}{}", prefix, GenerateU32());
 }
 

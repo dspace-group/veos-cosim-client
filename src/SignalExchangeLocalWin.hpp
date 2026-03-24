@@ -12,11 +12,11 @@
 #include <vector>
 
 #include "Environment.hpp"
-#include "SignalExchangeCommon.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
 #include "RingBuffer.hpp"
+#include "SignalExchangeCommon.hpp"
 
 namespace DsVeosCoSim::SignalExchangeDetail {
 
@@ -35,8 +35,18 @@ class LocalSignalExchangePart final : public ISignalExchangePart {
     };
 
 public:
-    LocalSignalExchangePart(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::string name)
-        : _protocol(protocol), _ioSignals(ioSignals), _name(std::move(name)) {
+    LocalSignalExchangePart(IProtocol& protocol,
+                            std::string name,
+                            SignalRegistry signalRegistry,
+                            std::vector<SignalState> signalStates,
+                            SharedMemory sharedMemory,
+                            RingBuffer<SignalMetaDataPtr> changedSignalsQueue)
+        : _protocol(protocol),
+          _name(std::move(name)),
+          _signalRegistry(std::move(signalRegistry)),
+          _signalStates(std::move(signalStates)),
+          _sharedMemory(std::move(sharedMemory)),
+          _changedSignalsQueue(std::move(changedSignalsQueue)) {
     }
 
     ~LocalSignalExchangePart() noexcept override = default;
@@ -47,11 +57,16 @@ public:
     LocalSignalExchangePart(LocalSignalExchangePart&&) = delete;
     LocalSignalExchangePart& operator=(LocalSignalExchangePart&&) = delete;
 
-    [[nodiscard]] Result Initialize() override {
-        CheckResult(_signalRegistry.Initialize(_ioSignals));
-        std::unordered_map<IoSignalId, SignalMetaData>& metaDataLookup = _signalRegistry.GetMetaDataLookup();
-        _changedSignalsQueue = RingBuffer<SignalMetaDataPtr>(metaDataLookup.size());
-        _signalStates.resize(metaDataLookup.size());
+    [[nodiscard]] static Result Create(IProtocol& protocol,
+                                       const std::vector<IoSignal>& ioSignals,
+                                       std::string name,
+                                       std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+        SignalRegistry signalRegistry;
+        CheckResult(SignalRegistry::Create(ioSignals, signalRegistry));
+
+        std::unordered_map<IoSignalId, SignalMetaData>& metaDataLookup = signalRegistry.GetMetaDataLookup();
+        auto changedSignalsQueue = RingBuffer<SignalMetaDataPtr>(metaDataLookup.size());
+        std::vector<SignalState> signalStates(metaDataLookup.size());
 
         size_t totalSize{};
         for (auto& [signalId, metaData] : metaDataLookup) {
@@ -62,23 +77,32 @@ public:
             signalState.offsetOfStagingPartInShm = totalSize;
             totalSize += sizeof(uint32_t) + metaData.totalDataSize;
 
-            _signalStates[metaData.signalIndex] = signalState;
+            signalStates[metaData.signalIndex] = signalState;
         }
 
+        SharedMemory sharedMemory;
         if (totalSize > 0) {
-            CheckResult(SharedMemory::CreateOrOpen(_name, totalSize, _sharedMemory));
+            CheckResult(SharedMemory::CreateOrOpen(name, totalSize, sharedMemory));
         }
 
         for (auto& [signalId, metaData] : metaDataLookup) {
-            SignalState& signalState = _signalStates[metaData.signalIndex];
-            SharedDataPtr activePart = GetSharedData(signalState.offsetOfActivePartInShm);
-            SharedDataPtr stagingPart = GetSharedData(signalState.offsetOfStagingPartInShm);
+            SignalState& signalState = signalStates[metaData.signalIndex];
+            SharedDataPtr activePart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfActivePartInShm);
+            SharedDataPtr stagingPart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfStagingPartInShm);
             if (metaData.info.sizeKind == SizeKind::Fixed) {
                 activePart->currentLength = metaData.info.length;
                 stagingPart->currentLength = metaData.info.length;
             }
         }
 
+        auto localSignalExchangePart = std::make_unique<LocalSignalExchangePart>(protocol,
+                                                                                 std::move(name),
+                                                                                 std::move(signalRegistry),
+                                                                                 std::move(signalStates),
+                                                                                 std::move(sharedMemory),
+                                                                                 std::move(changedSignalsQueue));
+        localSignalExchangePart->ClearData();
+        signalExchangePart = std::move(localSignalExchangePart);
         return CreateOk();
     }
 
@@ -95,7 +119,7 @@ public:
             SharedDataPtr stagingPart = GetSharedData(signalState.offsetOfStagingPartInShm);
 
             if (signalState.offsetOfActivePartInShm > signalState.offsetOfStagingPartInShm) {
-                SwapActiveAndStagingPartss(signalState);
+                SwapActiveAndStagingParts(signalState);
             }
 
             if (metaData.info.sizeKind == SizeKind::Variable) {
@@ -145,7 +169,7 @@ public:
                 return CreateError();
             }
 
-            SwapActiveAndStagingPartss(signalState);
+            SwapActiveAndStagingParts(signalState);
             activePart = GetSharedData(signalState.offsetOfActivePartInShm);
         }
 
@@ -216,7 +240,7 @@ public:
             CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
             SignalState& signalState = _signalStates[metaData->signalIndex];
 
-            SwapActiveAndStagingPartss(signalState);
+            SwapActiveAndStagingParts(signalState);
 
             SharedDataPtr activePart = GetSharedData(signalState.offsetOfActivePartInShm);
 
@@ -237,12 +261,11 @@ private:
         return reinterpret_cast<SharedDataPtr>(_sharedMemory.GetData() + offset);
     }
 
-    static void SwapActiveAndStagingPartss(SignalState& signalState) {
+    static void SwapActiveAndStagingParts(SignalState& signalState) {
         std::swap(signalState.offsetOfActivePartInShm, signalState.offsetOfStagingPartInShm);
     }
 
     IProtocol& _protocol;
-    const std::vector<IoSignal>& _ioSignals;
     std::string _name;
     SignalRegistry _signalRegistry;
     std::vector<SignalState> _signalStates;

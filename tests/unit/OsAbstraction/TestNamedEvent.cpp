@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -137,7 +138,7 @@ TEST_F(TestNamedEvent, SetAndWaitOnDifferentNamedEvents) {
     AssertOk(waitResult);
 }
 
-void WaitAndSet(const std::string& name1, const std::string& name2) {
+void WaitAndSet(std::string_view name1, std::string_view name2) {
     NamedEvent event1;
     AssertOk(NamedEvent::CreateOrOpen(name1, event1));
 
