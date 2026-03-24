@@ -201,8 +201,8 @@ private:
 class ShmPipeListener;
 
 class ShmPipeClient final {
-    static constexpr char ServerToClientPostFix[] = "ServerToClient";
-    static constexpr char ClientToServerPostFix[] = "ClientToServer";
+    static constexpr std::string_view ServerToClientPostFix = "ServerToClient";
+    static constexpr std::string_view ClientToServerPostFix = "ClientToServer";
 
     friend class ShmPipeListener;
 

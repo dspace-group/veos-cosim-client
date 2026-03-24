@@ -139,13 +139,12 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     uint16_t port = ntohs(ipv4Address.sin_port);
 
     std::array<char, INET_ADDRSTRLEN> ipAddress{};
-    const char* ipAddressString = inet_ntop(AF_INET, &ipv4Address.sin_addr, ipAddress.data(), INET_ADDRSTRLEN);
-    if (!ipAddressString) {
+    if (inet_ntop(AF_INET, &ipv4Address.sin_addr, ipAddress.data(), INET_ADDRSTRLEN) == nullptr) {
         LogError(GetLastNetworkError(), "Could not get address information.");
         return CreateError();
     }
 
-    socketAddress = fmt::format("{}:{}", ipAddressString, port);
+    socketAddress = fmt::format("{}:{}", ipAddress.data(), port);
     return CreateOk();
 }
 
@@ -153,13 +152,12 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
     uint16_t port = ntohs(ipv6Address.sin6_port);
 
     std::array<char, INET6_ADDRSTRLEN> ipAddress{};
-    const char* ipAddressString = inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN);
-    if (!ipAddressString) {
+    if (inet_ntop(AF_INET6, &ipv6Address.sin6_addr, ipAddress.data(), INET6_ADDRSTRLEN) == nullptr) {
         LogError(GetLastNetworkError(), "Could not get address information.");
         return CreateError();
     }
 
-    socketAddress = fmt::format("{}:{}", ipAddressString, port);
+    socketAddress = fmt::format("{}:{}", ipAddress.data(), port);
     return CreateOk();
 }
 

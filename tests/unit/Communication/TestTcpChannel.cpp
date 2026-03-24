@@ -170,7 +170,7 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(acceptChannelRemoteAddress.c_str(), "");
+    ASSERT_NE(acceptChannelRemoteAddress, "");
 }
 
 TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses) {
@@ -188,7 +188,7 @@ TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses) {
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(connectChannelRemoteAddress.c_str(), "");
+    ASSERT_NE(connectChannelRemoteAddress, "");
 }
 
 TEST_F(TestTcpChannel, ConnectClientUsingHostName) {

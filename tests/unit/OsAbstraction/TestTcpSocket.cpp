@@ -294,7 +294,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(connectClientRemoteAddress.c_str(), "");
+    ASSERT_NE(connectClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) {
@@ -312,7 +312,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) 
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(acceptClientRemoteAddress.c_str(), "");
+    ASSERT_NE(acceptClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
