@@ -4,9 +4,13 @@
 
 #include <memory>
 #include <string_view>
+#include <utility>
 #include <vector>
 
+#include "BusExchangeCommon.hpp"
 #include "BusExchangeSpecific.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Protocol.hpp"
 #include "Result.hpp"
 

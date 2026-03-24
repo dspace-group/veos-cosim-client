@@ -4,10 +4,11 @@
 
 #ifdef _WIN32
 
+#include <cctype>  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
 
-#include <Windows.h>
+#include <Windows.h>  // IWYU pragma: keep
 #undef min
 
 #endif

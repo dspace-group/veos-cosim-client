@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstdio>
+#include <cstdio>   // IWYU pragma: keep
+#include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <mutex>
 #include <string>
@@ -60,11 +61,11 @@ constexpr int32_t ErrorCodeWouldBlock = WSAEWOULDBLOCK;
 constexpr int32_t ErrorCodeConnectionAborted = WSAECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = WSAECONNRESET;
 
-inline int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeout) {
+int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeout) {
     return WSAPoll(fds, countFds, timeout);
 }
 
-inline int32_t DoUnlink(const std::string& path) {
+int32_t DoUnlink(const std::string& path) {
     return _unlink(path.c_str());
 }
 
@@ -77,11 +78,11 @@ constexpr int32_t ErrorCodeBrokenPipe = EPIPE;
 constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
 
-inline int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeout) {
+int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeout) {
     return poll(fds, countFds, timeout);
 }
 
-inline int32_t DoUnlink(const std::string& path) {
+int32_t DoUnlink(const std::string& path) {
     return unlink(path.c_str());
 }
 

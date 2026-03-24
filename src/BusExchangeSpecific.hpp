@@ -20,7 +20,7 @@
 namespace DsVeosCoSim::BusExchangeDetail {
 
 // This layer selects the transport backend and keeps bus-specific length checks
-// independent from transport details.
+// independent of transport details.
 template <typename TBus>
 class BusExchangeSpecific final {
 public:

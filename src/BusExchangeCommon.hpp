@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
@@ -33,7 +33,7 @@ struct EthBus {
 #ifdef _WIN32
     static constexpr char ShmNamePart[] = ".Eth.";
 #endif
-    static constexpr char DisplayName[] = "ETH";
+    static constexpr char DisplayName[] = "Ethernet";
     static constexpr uint32_t MessageMaxLength = EthMessageMaxLength;
 };
 
@@ -53,7 +53,7 @@ struct FrBus {
     using MessageContainer = FrMessageContainer;
     using Controller = FrController;
 #ifdef _WIN32
-    static constexpr char ShmNamePart[] = ".Flexray.";
+    static constexpr char ShmNamePart[] = ".FlexRay.";
 #endif
     static constexpr char DisplayName[] = "FlexRay";
     static constexpr uint32_t MessageMaxLength = FrMessageMaxLength;

@@ -2,9 +2,9 @@
 
 #ifdef _WIN32
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
-#include <cstring>
+#include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <string>
 #include <utility>
@@ -90,7 +90,7 @@ protected:
         auto maxSizeToRead = static_cast<uint32_t>(BufferSize - unreadSize);
 
         size_t receivedSize{};
-        CheckResult(Receive(&_readBuffer[static_cast<size_t>(writeIndex)], static_cast<size_t>(maxSizeToRead), receivedSize));
+        CheckResult(Receive(&_readBuffer[static_cast<size_t>(writeIndex)], maxSizeToRead, receivedSize));
 
         writeIndex += static_cast<int32_t>(receivedSize);
         return CreateOk();

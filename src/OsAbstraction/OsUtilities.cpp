@@ -11,13 +11,13 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <cstring>
+#include <cstring>  // IWYU pragma: keep
 #include <string_view>
 #include <utility>
 
 #include <fmt/format.h>
 
-#include <Windows.h>
+#include <Windows.h>  // IWYU pragma: keep
 #undef min
 
 #include <sysinfoapi.h>  // IWYU pragma: keep
@@ -349,13 +349,13 @@ ShmPipePart::~ShmPipePart() noexcept {
     NamedEvent newSpaceEvent;
     CheckResult(NamedEvent::CreateOrOpen(newSpaceName, newSpaceEvent));
 
-    auto& header = *sharedMemory.As<Header>();
+    auto& [serverPid, clientPid, writeIndex, readIndex] = *sharedMemory.As<Header>();
 
     if (initShm) {
-        header.serverPid.store(0, std::memory_order_release);
-        header.clientPid.store(0, std::memory_order_release);
-        header.writeIndex.store(0, std::memory_order_release);
-        header.readIndex.store(0, std::memory_order_release);
+        serverPid.store(0, std::memory_order_release);
+        clientPid.store(0, std::memory_order_release);
+        writeIndex.store(0, std::memory_order_release);
+        readIndex.store(0, std::memory_order_release);
     }
 
     pipe = ShmPipePart(std::move(newDataEvent), std::move(newSpaceEvent), std::move(sharedMemory), isWriter, isServer);
@@ -520,7 +520,7 @@ void ShmPipePart::Disconnect() const {
 
     // Fast path
     if (SpinWait(
-            [&header]() {
+            [&header] {
                 return GetAvailableSpace(header) > 0;
             },
             _spinCount)) {
@@ -552,7 +552,7 @@ void ShmPipePart::Disconnect() const {
 
     // Fast path
     if (SpinWait(
-            [&header]() {
+            [&header] {
                 return GetAvailableData(header) > 0;
             },
             _spinCount)) {
@@ -660,7 +660,7 @@ ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader) : _writer(s
     return CreateOk();
 }
 
-void ShmPipeClient::Disconnect() {
+void ShmPipeClient::Disconnect() const {
     _writer.Disconnect();
     _reader.Disconnect();
 }
@@ -739,7 +739,7 @@ void ShmPipeListener::Stop() {
 }
 
 [[nodiscard]] uint32_t GetCurrentProcessIdCached() {
-    static const auto ProcessId = static_cast<uint32_t>(::GetCurrentProcessId());
+    static const auto ProcessId = static_cast<uint32_t>(GetCurrentProcessId());
     return ProcessId;
 }
 
