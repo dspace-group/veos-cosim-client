@@ -30,7 +30,7 @@ typedef struct DsVeosCoSim_LinMessageContainer {
 
 > [DsVeosCoSim_SimulationTime](../simple-types/DsVeosCoSim_SimulationTime.md) timestamp
 
-Contains the virtual simulation time at which the LIN message was received. Only for received messages.
+Contains the virtual simulation time at which the LIN message container was received. This member is only meaningful for received message containers.
 
 > [DsVeosCoSim_BusControllerId](../simple-types/DsVeosCoSim_BusControllerId.md) controllerId
 
@@ -58,6 +58,6 @@ The LIN message payload.
 
 ## See Also
 
-- [DsVeosCoSim_LinMessageContainerReceivedCallback](../functions/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_ReceiveLinMessageContainer](../functions/DsVeosCoSim_ReceiveLinMessageContainer.md)
 - [DsVeosCoSim_TransmitLinMessageContainer](../functions/DsVeosCoSim_TransmitLinMessageContainer.md)

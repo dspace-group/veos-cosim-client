@@ -9,7 +9,7 @@
 
 ## Description
 
-A handle to represent the VEOS CoSim client.
+Represents a VEOS CoSim client handle.
 
 ## Syntax
 

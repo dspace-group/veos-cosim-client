@@ -58,6 +58,6 @@ The name of the LIN cluster.
 
 ## See Also
 
-- [DsVeosCoSim_LinMessageReceivedCallback](../functions/DsVeosCoSim_LinMessageReceivedCallback.md)
-- [DsVeosCoSim_LinMessageContainerReceivedCallback](../functions/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_LinMessageReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageReceivedCallback.md)
+- [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_GetLinControllers](../functions/DsVeosCoSim_GetLinControllers.md)

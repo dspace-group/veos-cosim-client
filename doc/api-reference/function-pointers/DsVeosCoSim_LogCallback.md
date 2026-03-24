@@ -13,7 +13,7 @@
 
 Called each time the VEOS CoSim client receives a log message.
 
-`DsVeosCoSim_LogCallback` can be registered with [DsVeosCoSim_SetLogCallback](DsVeosCoSim_SetLogCallback.md) function.
+`DsVeosCoSim_LogCallback` can be registered with [DsVeosCoSim_SetLogCallback](../functions/DsVeosCoSim_SetLogCallback.md) function.
 
 ## Syntax
 
@@ -40,4 +40,4 @@ This function has no return values.
 
 ## See Also
 
-- [DsVeosCoSim_SetLogCallback](DsVeosCoSim_SetLogCallback.md)
+- [DsVeosCoSim_SetLogCallback](../functions/DsVeosCoSim_SetLogCallback.md)

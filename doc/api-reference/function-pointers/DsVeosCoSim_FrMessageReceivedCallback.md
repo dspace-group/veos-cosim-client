@@ -21,7 +21,7 @@ The `DsVeosCoSim_FrMessageReceivedCallback` callback can be registered with the 
 > [DsVeosCoSim_ReceiveFrMessageContainer](../functions/DsVeosCoSim_ReceiveFrMessageContainer.md).
 
 > [!NOTE]
-> If both, the [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md) callback as well as the `DsVeosCoSim_FrMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md) will be called.
+> If both the [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md) callback and the `DsVeosCoSim_FrMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md) callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.
@@ -31,7 +31,7 @@ If the buffer is full, new messages are discarded.
 ```c
 typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(
     DsVeosCoSim_SimulationTime simulationTime,
-    const DsVeosCoSim_FrController* ethController,
+    const DsVeosCoSim_FrController* frController,
     const DsVeosCoSim_FrMessage* message,
     void* userData
 );
@@ -43,7 +43,7 @@ typedef void (*DsVeosCoSim_FrMessageReceivedCallback)(
 
 The current simulation time.
 
-> const [DsVeosCoSim_FrController](../structures/DsVeosCoSim_FrController.md)* ethController
+> const [DsVeosCoSim_FrController](../structures/DsVeosCoSim_FrController.md)* frController
 
 The FlexRay controller that sent the message.
 

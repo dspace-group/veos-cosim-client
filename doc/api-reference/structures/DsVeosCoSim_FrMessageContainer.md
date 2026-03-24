@@ -30,7 +30,7 @@ typedef struct DsVeosCoSim_FrMessageContainer {
 
 > [DsVeosCoSim_SimulationTime](../simple-types/DsVeosCoSim_SimulationTime.md) timestamp
 
-Contains the virtual simulation time at which the FlexRay message was received. Only for received messages.
+Contains the virtual simulation time at which the FlexRay message container was received. This member is only meaningful for received message containers.
 
 > [DsVeosCoSim_BusControllerId](../simple-types/DsVeosCoSim_BusControllerId.md) controllerId
 
@@ -58,6 +58,6 @@ The FlexRay message payload.
 
 ## See Also
 
-- [DsVeosCoSim_FrMessageContainerReceivedCallback](../functions/DsVeosCoSim_FrMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_ReceiveFrMessageContainer](../functions/DsVeosCoSim_ReceiveFrMessageContainer.md)
 - [DsVeosCoSim_TransmitFrMessageContainer](../functions/DsVeosCoSim_TransmitFrMessageContainer.md)

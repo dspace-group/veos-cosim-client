@@ -33,7 +33,7 @@ The current simulation time.
 
 > const [DsVeosCoSim_IoSignal](../structures/DsVeosCoSim_IoSignal.md)* ioSignal
 
-The ID of the I/O signal that changed its value.
+The I/O signal structure that changed its value.
 
 > uint32_t length
 

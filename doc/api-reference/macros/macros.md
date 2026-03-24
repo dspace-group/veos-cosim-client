@@ -8,7 +8,7 @@
 
 ## Description
 
-Describes all available macros and contstants.
+Describes all available macros and constants.
 
 ## List of Macros and Constants
 
@@ -18,11 +18,11 @@ Defines the maximum length of a CAN message payload.
 
 > [DSVEOSCOSIM_ETH_ADDRESS_LENGTH](DSVEOSCOSIM_ETH_ADDRESS_LENGTH.md)
 
-Defines the length of an ethernet address (MAC address).
+Defines the length of an Ethernet address (MAC address).
 
 > [DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH](DSVEOSCOSIM_ETH_MESSAGE_MAX_LENGTH.md)
 
-Defines the maximum length of an ethernet message payload.
+Defines the maximum length of an Ethernet message payload.
 
 > [DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH](DSVEOSCOSIM_FLEXRAY_MESSAGE_MAX_LENGTH.md)
 
@@ -36,6 +36,6 @@ Defines the maximum length of a LIN message payload.
 
 Defines the conversion factor between DsVeosCoSim_SimulationTime and seconds in data type double.
 
-[DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS](DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS.md)
+> [DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS](DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS.md)
 
 Converts the given simulation time to a double in seconds.

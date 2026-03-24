@@ -40,7 +40,7 @@ The data type of the I/O signal.
 
 > [DsVeosCoSim_SizeKind](../enumerations/DsVeosCoSim_SizeKind.md) sizeKind
 
-The size kind of the the I/O signal.
+The size kind of the I/O signal.
 
 > const char* name
 
@@ -48,6 +48,6 @@ The name of the I/O signal.
 
 ## See Also
 
-- [DsVeosCoSim_IncomingSignalChangedCallback](../functions/DsVeosCoSim_IncomingSignalChangedCallback.md)
+- [DsVeosCoSim_IncomingSignalChangedCallback](../function-pointers/DsVeosCoSim_IncomingSignalChangedCallback.md)
 - [DsVeosCoSim_GetIncomingSignals](../functions/DsVeosCoSim_GetIncomingSignals.md)
 - [DsVeosCoSim_GetOutgoingSignals](../functions/DsVeosCoSim_GetOutgoingSignals.md)

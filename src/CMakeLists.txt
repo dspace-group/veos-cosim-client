@@ -18,15 +18,15 @@ target_sources(
   Communication/LocalChannel.cpp
   Communication/SocketChannel.cpp
   Helpers/Environment.cpp
-  Helpers/ProtocolLogger.cpp
+  Helpers/Logger.cpp
   OsAbstraction/OsUtilities.cpp
   OsAbstraction/Socket.cpp
-  BusBuffer.cpp
+  BusExchange.cpp
   CoSimClient.cpp
   CoSimServer.cpp
   CoSimTypes.cpp
   DsVeosCoSim.cpp
-  IoBuffer.cpp
+  SignalExchange.cpp
   PortMapper.cpp
   Protocol.cpp
 )
@@ -52,6 +52,18 @@ target_compile_definitions(
   DSVEOSCOSIM_EXPORT
 )
 
+target_compile_options(
+  DsVeosCoSim
+  PRIVATE
+  ${DSVEOSCOSIM_WARNINGS}
+)
+
+target_link_libraries(
+  DsVeosCoSim
+  PRIVATE
+  ${DSVEOSCOSIM_FMT_TARGET}
+)
+
 if(WIN32)
   target_compile_definitions(
     DsVeosCoSim
@@ -59,15 +71,7 @@ if(WIN32)
     _CRT_SECURE_NO_WARNINGS
     WIN32_LEAN_AND_MEAN
   )
-endif()
 
-target_compile_options(
-  DsVeosCoSim
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
-
-if(WIN32)
   target_link_libraries(
     DsVeosCoSim
     PRIVATE

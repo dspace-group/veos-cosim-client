@@ -30,7 +30,7 @@ The handle of the VEOS CoSim client.
 
 > uint32_t* linControllersCount
 
-A pointer to the counter of LIN controllers.
+A pointer to the number of LIN controllers.
 
 > const [DsVeosCoSim_LinController](../structures/DsVeosCoSim_LinController.md)** linControllers
 

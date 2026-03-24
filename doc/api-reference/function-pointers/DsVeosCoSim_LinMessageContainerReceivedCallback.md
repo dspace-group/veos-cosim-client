@@ -11,7 +11,7 @@
 
 ## Description
 
-Called when a new LIN message is received from the VEOS CoSim server.
+Called when a new LIN message container is received from the VEOS CoSim server.
 
 The `DsVeosCoSim_LinMessageContainerReceivedCallback` callback can be registered with the [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md) function or the [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md) function.
 
@@ -21,7 +21,7 @@ The `DsVeosCoSim_LinMessageContainerReceivedCallback` callback can be registered
 > [DsVeosCoSim_ReceiveLinMessageContainer](../functions/DsVeosCoSim_ReceiveLinMessageContainer.md).
 
 > [!NOTE]
-> If both, the `DsVeosCoSim_LinMessageContainerReceivedCallback` callback as well as the [DsVeosCoSim_LinMessageReceivedCallback](DsVeosCoSim_LinMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_LinMessageContainerReceivedCallback` will be called.
+> If both the `DsVeosCoSim_LinMessageContainerReceivedCallback` callback and the [DsVeosCoSim_LinMessageReceivedCallback](DsVeosCoSim_LinMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_LinMessageContainerReceivedCallback` callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.
@@ -31,7 +31,7 @@ If the buffer is full, new messages are discarded.
 ```c
 typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(
     DsVeosCoSim_SimulationTime simulationTime,
-    const DsVeosCoSim_LinController* ethController,
+    const DsVeosCoSim_LinController* linController,
     const DsVeosCoSim_LinMessageContainer* messageContainer,
     void* userData
 );
@@ -43,7 +43,7 @@ typedef void (*DsVeosCoSim_LinMessageContainerReceivedCallback)(
 
 The current simulation time.
 
-> const [DsVeosCoSim_LinController](../structures/DsVeosCoSim_LinController.md)* ethController
+> const [DsVeosCoSim_LinController](../structures/DsVeosCoSim_LinController.md)* linController
 
 The LIN controller that sent the message.
 
@@ -53,7 +53,7 @@ A pointer to the received LIN message container.
 
 > void* userData
 
-The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Lin be `NULL`.
+The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
 
 ## Return values
 

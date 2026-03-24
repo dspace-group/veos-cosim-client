@@ -10,9 +10,9 @@
 
 ## Description
 
-Transmits a FlexRay message to the VEOS CoSim server.
+Transmits a FlexRay message container to the VEOS CoSim server.
 
-The `DsVeosCoSim_TransmitFrMessageContainer` function can be called in any callback handler. The timestamp property of transmitted bus messages will be ignored.
+The `DsVeosCoSim_TransmitFrMessageContainer` function can be called in any callback handler. The timestamp property of transmitted FlexRay message containers is ignored.
 
 > [!NOTE]
 > Currently, the VEOS CoSim client cannot buffer more than `512` bus messages for each bus controller.

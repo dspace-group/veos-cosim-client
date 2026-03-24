@@ -10,9 +10,9 @@
 
 ## Description
 
-Transmits an Ethernet message to the VEOS CoSim server.
+Transmits an Ethernet message container to the VEOS CoSim server.
 
-The `DsVeosCoSim_TransmitEthMessageContainer` function can be called in any callback handler. The timestamp property of transmission messages will be ignored.
+The `DsVeosCoSim_TransmitEthMessageContainer` function can be called in any callback handler. The timestamp property of transmitted Ethernet message containers is ignored.
 
 > [!NOTE]
 > Currently, the DsVeosCoSim client cannot buffer more than 512 bus messages for each bus controller.

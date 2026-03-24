@@ -21,7 +21,7 @@ The `DsVeosCoSim_CanMessageReceivedCallback` callback can be registered with the
 > [DsVeosCoSim_ReceiveCanMessageContainer](../functions/DsVeosCoSim_ReceiveCanMessageContainer.md).
 
 > [!NOTE]
-> If both, the [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md) callback as well as the `DsVeosCoSim_CanMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md) will be called.
+> If both the [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md) callback and the `DsVeosCoSim_CanMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md) callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.
@@ -53,7 +53,7 @@ A pointer to the received CAN message
 
 > void* userData
 
-The user data passed to the co-simulation function via the[DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
+The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
 
 ## Return values
 

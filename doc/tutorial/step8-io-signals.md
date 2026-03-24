@@ -36,7 +36,7 @@ The second client reads the signal from the first one and reports on each signal
 
 ## 2 Preconditions
 
-You must have run [Step 7: Running a Polling-Based Simulation](step7-signals.md).
+You must have run [Step 7: Running a Polling-Based Simulation](step7-poll.md).
 
 ## 3 How to modify the polling-based client
 
@@ -89,7 +89,8 @@ void OnCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                   const DsVeosCoSim_CanController* canController,
                   const DsVeosCoSim_CanMessage* message,
                   void* userData) {
-    std::cout << "Received CAN message with ID " << message->id << " with data " << DataToString(message->data, message->length, '-') << " from CAN controller "
+    std::cout << "Received CAN message with ID " << message->id << " with data "
+              << DataToString(message->data, message->length, '-') << " from CAN controller "
               << canController->name << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 
@@ -139,10 +140,12 @@ int main() {
 
         switch (command) {
             case DsVeosCoSim_Command_Step: {
-                std::cout << "Simulation stepped at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation stepped at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 if ((simulationTime % 10000000) == 0) {  // Only every 10 milliseconds
                     double value = DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime);
-                    if (DsVeosCoSim_WriteOutgoingSignal(handle, outgoingSignals[0].id, 1, &value) != DsVeosCoSim_Result_Ok) {
+                    if (DsVeosCoSim_WriteOutgoingSignal(handle, outgoingSignals[0].id, 1, &value)
+                        != DsVeosCoSim_Result_Ok) {
                         DsVeosCoSim_Disconnect(handle);
                         DsVeosCoSim_Destroy(handle);
                         return 1;
@@ -151,16 +154,20 @@ int main() {
                 break;
             }
             case DsVeosCoSim_Command_Start:
-                std::cout << "Simulation started at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation started at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Stop:
-                std::cout << "Simulation stopped at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation stopped at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Pause:
-                std::cout << "Simulation paused at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation paused at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Continue:
-                std::cout << "Simulation continued at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation continued at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
         }
 
@@ -224,12 +231,18 @@ void OnEndStep(DsVeosCoSim_SimulationTime simulationTime, void* userData) {
         return;
     }
 
-    std::cout << "Signal has the value " << value << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+    std::cout << "Signal has the value " << value << " at "
+              << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 
 // Called when an I/O signal has changed
-void OnSignal(DsVeosCoSim_SimulationTime simulationTime, const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value, void* userData) {
-    std::cout << "Signal changed to the value " << *(double*)value << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+void OnSignal(DsVeosCoSim_SimulationTime simulationTime,
+              const DsVeosCoSim_IoSignal* ioSignal,
+              uint32_t length,
+              const void* value,
+              void* userData) {
+    std::cout << "Signal changed to the value " << *(double*)value << " at "
+              << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 
 int main() {
@@ -257,7 +270,7 @@ int main() {
     callbacks.incomingSignalChangedCallback = OnSignal;
     callbacks.simulationEndStepCallback = OnEndStep;
     callbacks.userData = handle;  // Pass the handle to every callback
-    if (DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks) != DsVeosCoSim_Result_Ok) {
+    if (DsVeosCoSim_RunCallbackBasedCoSimulation(handle, callbacks) != DsVeosCoSim_Result_Disconnected) {
         DsVeosCoSim_Disconnect(handle);
         DsVeosCoSim_Destroy(handle);
         return 1;
@@ -353,7 +366,7 @@ the current simulation time in seconds.
 The second client performs a callback-based simulation in which the `OnSignal` function is called when the input signal changes.
 It then prints the new value and the corresponding simulation time.
 
-The `OnEndStep` function is called at the end of each simulation step. It reads the incoming signal that was received first
+The `OnEndStep` function is called at the end of each simulation step. It reads the first incoming signal in the list (`ioSignals[0]`)
 and prints its value and the corresponding simulation time.
 
 ## 5 Running the Co-Simulation

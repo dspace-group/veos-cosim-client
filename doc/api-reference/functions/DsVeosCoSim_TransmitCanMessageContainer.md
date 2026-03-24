@@ -10,9 +10,9 @@
 
 ## Description
 
-Transmits a CAN message to the VEOS CoSim server.
+Transmits a CAN message container to the VEOS CoSim server.
 
-The `DsVeosCoSim_TransmitCanMessageContainer` function can be called in any callback handler. The timestamp property of transmission bus messages will be ignored.
+The `DsVeosCoSim_TransmitCanMessageContainer` function can be called in any callback handler. The timestamp property of transmitted CAN message containers is ignored.
 
 > [!NOTE]
 > Currently, the DsVeosCoSim client cannot buffer more than 512 bus messages for each bus controller.

@@ -16,7 +16,7 @@ Contains all possible severity levels of a log message in descending order of se
 
 ```c
 typedef enum DsVeosCoSim_Severity {
-    DsVeosCoSim_Severity_Error
+    DsVeosCoSim_Severity_Error,
     DsVeosCoSim_Severity_Warning,
     DsVeosCoSim_Severity_Info,
     DsVeosCoSim_Severity_Trace,

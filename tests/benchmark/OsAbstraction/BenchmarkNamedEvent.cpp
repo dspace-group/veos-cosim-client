@@ -1,16 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#ifdef ALL_BENCHMARK_TESTS
-
 #ifdef _WIN32
-
-#include <benchmark/benchmark.h>
 
 #include <string>
 #include <thread>
 
-#include "Helper.h"
-#include "OsUtilities.h"
+#include <benchmark/benchmark.h>
+
+#include "Helper.hpp"
+#include "OsUtilities.hpp"
 
 using namespace DsVeosCoSim;
 
@@ -81,7 +79,5 @@ void EventRoundtrip(benchmark::State& state) {
 BENCHMARK(EventSet);
 BENCHMARK(EventSetAndWait);
 BENCHMARK(EventRoundtrip);
-
-#endif
 
 #endif

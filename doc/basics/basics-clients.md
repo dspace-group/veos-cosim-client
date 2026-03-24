@@ -7,6 +7,7 @@
   - [Workflow](#workflow)
   - [Connecting to a CoSim server](#connecting-to-a-cosim-server)
   - [Callback-based vs. polling-based co-simulation](#callback-based-vs-polling-based-co-simulation)
+  - [Choosing an execution mode](#choosing-an-execution-mode)
   - [Basics on callbacks](#basics-on-callbacks)
   - [Basics on timing](#basics-on-timing)
 
@@ -71,6 +72,8 @@ The local port is also created dynamically by default. For special cases like cr
 >
 > You can use [DsVeosCoSim_ConnectConfig.clientName](../api-reference/structures/DsVeosCoSim_ConnectConfig.md) to provide a name for the client that can be used in VEOS messages for better readability. For example, if you set `DsVeosCoSim_ConnectConfig.clientName = "CustomClient"`, a message might look like this: `dSPACE VEOS CoSim client 'CustomClient' at 127.0.0.1:56248 connected.`.
 
+For a minimal end-to-end example, refer to [Quickstart](../guides/quickstart.md).
+
 ## Callback-based vs. polling-based co-simulation
 
 You can configure the CoSim client for two different co-simulation modes:
@@ -91,7 +94,23 @@ You can configure the CoSim client for two different co-simulation modes:
 
   > **Note**
   >
-  > Once one of these modi is selected, it cannot be changed until the client is disconnected from the server.
+  > Once one of these modes is selected, it cannot be changed until the client is disconnected from the server.
+
+## Choosing an execution mode
+
+Use callback-based co-simulation if:
+
+- your application naturally reacts to library callbacks
+- you want VEOS to drive the simulation loop directly
+- a blocking run function is acceptable
+
+Use polling-based co-simulation if:
+
+- your application already owns the main loop
+- you need explicit control over when commands are processed
+- you integrate DsVeosCoSim into another event-driven system
+
+For the exact call sequence, refer to [Client Lifecycle](../guides/lifecycle.md).
 
 ## Basics on callbacks
 
@@ -115,6 +134,8 @@ Each time the server notifies the client of a new step, the callbacks are receiv
 
 - End step
 
+For callback precedence and receive-function availability rules, refer to [Callback Ordering and Buffering](../guides/callbacks-and-buffering.md).
+
 ## Basics on timing
 
 Each time VEOS receives the simulation start or continue command, the server begins to send steps to the client and stops when a simulation stop, pause, or terminate command is received.
@@ -126,3 +147,5 @@ The client can intervene via the [DsVeosCoSim_SetNextSimulationTime](../api-refe
 If no step size is specified in the JSON file, the server sends only one step at simulation time 0. The simulation is only advanced if the client executes the [DsVeosCoSim_SetNextSimulationTime](../api-reference/functions/DsVeosCoSim_SetNextSimulationTime.md) function. Otherwise, the simulation in VEOS continues without the co-simulator.
 
 Bus messages and I/O signals are always sent between server and client in the context of a step.
+
+For pointer lifetime and ownership recommendations, refer to [Ownership and Lifetime Rules](../guides/ownership.md).

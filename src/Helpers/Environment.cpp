@@ -1,19 +1,20 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "Environment.h"
+#include "Environment.hpp"
 
 #include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <cstdlib>
-#include <sstream>
 #include <string>
+
+#include <fmt/format.h>
 
 namespace DsVeosCoSim {
 
 namespace {
 
 [[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
-    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
+    if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             intValue = std::strtoull(stringValue, &end, 10);
@@ -28,7 +29,7 @@ namespace {
 }
 
 [[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
-    if (char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
+    if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
             hexValue = std::strtoull(stringValue, &end, 16);
@@ -65,14 +66,15 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] bool TryGetSpinCount(const std::string& name, uint32_t& spinCount) {
+[[nodiscard]] uint32_t GetSpinCountInitial() {
+    constexpr uint32_t defaultSpinCount = 512;
+
     size_t intValue{};
-    if (TryGetDecimalValue(name, intValue)) {
-        spinCount = static_cast<uint32_t>(intValue);
-        return true;
+    if (TryGetDecimalValue("VEOS_COSIM_SPIN_COUNT", intValue)) {
+        return static_cast<uint32_t>(intValue);
     }
 
-    return false;
+    return defaultSpinCount;
 }
 
 }  // namespace
@@ -107,43 +109,16 @@ namespace {
     return port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount(const std::string& name, const std::string& part, const std::string& direction) {
-    constexpr uint32_t defaultSpinCount = 0;
-    constexpr char environmentVariableName[] = "VEOS_COSIM_SPIN_COUNT";
-
-    uint32_t spinCount{};
-
-    std::ostringstream directionFullName;
-    directionFullName << environmentVariableName << '_' << name << '.' << part << '.' << direction;
-    if (TryGetSpinCount(directionFullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    std::ostringstream partFullName;
-    partFullName << environmentVariableName << '_' << name << '.' << part;
-    if (TryGetSpinCount(partFullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetSpinCount(fullName.str(), spinCount)) {
-        return spinCount;
-    }
-
-    if (TryGetSpinCount(environmentVariableName, spinCount)) {
-        return spinCount;
-    }
-
-    return defaultSpinCount;
+[[nodiscard]] uint32_t GetSpinCount() {
+    static uint32_t spinCount = GetSpinCountInitial();
+    return spinCount;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(const std::string& name, size_t& mask) {
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
-    std::ostringstream fullName;
-    fullName << environmentVariableName << '_' << name;
-    if (TryGetHexValue(fullName.str(), mask)) {
+    std::string fullName = fmt::format("{}_{}", environmentVariableName, name);
+    if (TryGetHexValue(fullName, mask)) {
         return true;
     }
 

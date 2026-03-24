@@ -9,7 +9,7 @@
 
 ## Description
 
-Defines the length of an ethernet address (MAC address).
+Defines the length of an Ethernet address (MAC address).
 
 ## Syntax
 

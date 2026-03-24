@@ -1,22 +1,24 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "DsVeosCoSim/CoSimClient.h"
+#include "CoSimClient.hpp"
 
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include "BusBuffer.h"
-#include "Channel.h"
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "IoBuffer.h"
-#include "OsUtilities.h"
-#include "PortMapper.h"
-#include "Protocol.h"
+#include <fmt/format.h>
+
+#include "BusExchange.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Logger.hpp"
+#include "OsUtilities.hpp"
+#include "PortMapper.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
+#include "SignalExchange.hpp"
 
 namespace DsVeosCoSim {
 
@@ -33,7 +35,7 @@ enum class ResponderMode {
 class CoSimClientImpl final : public CoSimClient {
 public:
     CoSimClientImpl() = default;
-    ~CoSimClientImpl() override = default;
+    ~CoSimClientImpl() noexcept override = default;
 
     CoSimClientImpl(const CoSimClientImpl&) = delete;
     CoSimClientImpl& operator=(const CoSimClientImpl&) = delete;
@@ -43,12 +45,12 @@ public:
 
     [[nodiscard]] Result Connect(const ConnectConfig& connectConfig) override {
         if (connectConfig.serverName.empty() && (connectConfig.remotePort == 0)) {
-            Logger::Instance().LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
-            return Result::InvalidArgument;
+            LogError("Either ConnectConfig.serverName or ConnectConfig.remotePort must be set.");
+            return CreateInvalidArgument();
         }
 
         if (_isConnected) {
-            return Result::Ok;
+            return CreateOk();
         }
 
         ResetDataFromPreviousConnect();
@@ -60,22 +62,16 @@ public:
 
         CheckResult(CreateProtocol(ProtocolVersion1, _protocol));
 
-        if (!connectConfig.serverName.empty() && _remoteIpAddress.empty() && (connectConfig.remotePort == 0)) {
-            if (!IsOk(LocalConnect())) {
-                _remoteIpAddress = "127.0.0.1";
-                CheckResult(RemoteConnect());
-            }
-        } else {
-            CheckResult(RemoteConnect());
-        }
+        CheckResult(ConnectInternal());
 
         // Co-Sim connect
         CheckResult(SendConnectRequest());
         CheckResultWithMessage(ReceiveConnectResponse(), "Could not receive connect response.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     void Disconnect() override {
+        LogInfo("Disconnecting from dSPACE VEOS CoSim server ...");
         _isConnected = false;
 
         if (_channel) {
@@ -90,28 +86,28 @@ public:
             connectionState = ConnectionState::Disconnected;
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetStepSize(SimulationTime& stepSize) const override {
         CheckResult(EnsureIsConnected());
 
         stepSize = _stepSize;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetCurrentSimulationTime(SimulationTime& simulationTime) const override {
         CheckResult(EnsureIsConnected());
 
         simulationTime = _currentSimulationTime;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetSimulationState(SimulationState& simulationState) const override {
         CheckResult(EnsureIsConnected());
 
         simulationState = _simulationState;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result RunCallbackBasedCoSimulation(const Callbacks& callbacks) override {
@@ -122,12 +118,12 @@ public:
 
         SetThreadAffinity(_serverName);
 
-        if (!IsDisconnected(RunCallbackBasedCoSimulationInternal())) {
+        if (!IsNotConnected(RunCallbackBasedCoSimulationInternal())) {
             CloseConnection();
-            return Result::Error;
+            return CreateError();
         }
 
-        return Result::Disconnected;
+        return CreateNotConnected();
     }
 
     [[nodiscard]] Result StartPollingBasedCoSimulation(const Callbacks& callbacks) override {
@@ -137,7 +133,7 @@ public:
         SetThreadAffinity(_serverName);
 
         _callbacks = callbacks;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command) override {
@@ -145,16 +141,16 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand != Command::None) {
-            Logger::Instance().LogError("Call to FinishCommand() for last command is missing.");
-            return Result::Error;
+            LogError("Call to FinishCommand() for last command is missing.");
+            return CreateError();
         }
 
         if (!IsOk(PollCommandInternal(simulationTime, command))) {
             CloseConnection();
-            return Result::Error;
+            return CreateError();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result FinishCommand() override {
@@ -162,44 +158,44 @@ public:
         CheckResult(EnsureIsInResponderModeNonBlocking());
 
         if (_currentCommand == Command::None) {
-            Logger::Instance().LogError("Call to PollCommand(...) is missing.");
-            return Result::Error;
+            LogError("Call to PollCommand(...) is missing.");
+            return CreateError();
         }
 
         if (!IsOk(FinishCommandInternal())) {
             CloseConnection();
-            return Result::Error;
+            return CreateError();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime) override {
         CheckResult(EnsureIsConnected());
 
         _nextSimulationTime = simulationTime;
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result GetRoundTripTime(std::chrono::nanoseconds& roundTripTime) const override {
+    [[nodiscard]] Result GetRoundTripTime(SimulationTime& roundTripTime) const override {
         CheckResult(EnsureIsConnected());
 
         roundTripTime = _roundTripTime;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Start() override {
         CheckResult(EnsureIsConnected());
 
         _nextCommand.exchange(Command::Start);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Stop() override {
         CheckResult(EnsureIsConnected());
 
         _nextCommand.exchange(Command::Stop);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Terminate(TerminateReason terminateReason) override {
@@ -208,30 +204,28 @@ public:
         switch (terminateReason) {
             case TerminateReason::Finished:
                 _nextCommand.exchange(Command::TerminateFinished);
-                return Result::Ok;
+                return CreateOk();
             case TerminateReason::Error:
                 _nextCommand.exchange(Command::Terminate);
-                return Result::Ok;
+                return CreateOk();
         }
 
-        std::ostringstream oss;
-        oss << "Unknown terminate reason '" << terminateReason << "'.";
-        Logger::Instance().LogError(oss.str());
-        return Result::Error;
+        LogError("Unknown terminate reason '{}'.", terminateReason);
+        return CreateError();
     }
 
     [[nodiscard]] Result Pause() override {
         CheckResult(EnsureIsConnected());
 
         _nextCommand.exchange(Command::Pause);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Continue() override {
         CheckResult(EnsureIsConnected());
 
         _nextCommand.exchange(Command::Continue);
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetIncomingSignals(uint32_t& incomingSignalsCount, const IoSignal*& incomingSignals) const override {
@@ -239,7 +233,7 @@ public:
 
         incomingSignalsCount = static_cast<uint32_t>(_incomingSignalsExtern.size());
         incomingSignals = _incomingSignalsExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetOutgoingSignals(uint32_t& outgoingSignalsCount, const IoSignal*& outgoingSignals) const override {
@@ -247,39 +241,39 @@ public:
 
         outgoingSignalsCount = static_cast<uint32_t>(_outgoingSignalsExtern.size());
         outgoingSignals = _outgoingSignalsExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& signals) const override {
         CheckResult(EnsureIsConnected());
 
         signals = _incomingSignalsExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& signals) const override {
         CheckResult(EnsureIsConnected());
 
         signals = _outgoingSignalsExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Write(outgoingSignalId, length, value);
+        return _signalExchange->Write(outgoingSignalId, length, value);
     }
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Read(incomingSignalId, length, value);
+        return _signalExchange->Read(incomingSignalId, length, value);
     }
 
     [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const override {
         CheckResult(EnsureIsConnected());
 
-        return _ioBuffer->Read(incomingSignalId, length, value);
+        return _signalExchange->Read(incomingSignalId, length, value);
     }
 
     [[nodiscard]] Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const override {
@@ -287,7 +281,7 @@ public:
 
         controllersCount = static_cast<uint32_t>(_canControllersExtern.size());
         controllers = _canControllersExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetEthControllers(uint32_t& controllersCount, const EthController*& controllers) const override {
@@ -295,7 +289,7 @@ public:
 
         controllersCount = static_cast<uint32_t>(_ethControllersExtern.size());
         controllers = _ethControllersExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetLinControllers(uint32_t& controllersCount, const LinController*& controllers) const override {
@@ -303,7 +297,7 @@ public:
 
         controllersCount = static_cast<uint32_t>(_linControllersExtern.size());
         controllers = _linControllersExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetFrControllers(uint32_t& controllersCount, const FrController*& controllers) const override {
@@ -311,133 +305,133 @@ public:
 
         controllersCount = static_cast<uint32_t>(_frControllersExtern.size());
         controllers = _frControllersExtern.data();
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetCanControllers(std::vector<CanController>& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllers = _canControllersExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetEthControllers(std::vector<EthController>& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllers = _ethControllersExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetLinControllers(std::vector<LinController>& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllers = _linControllersExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result GetFrControllers(std::vector<FrController>& controllers) const override {
         CheckResult(EnsureIsConnected());
 
         controllers = _frControllersExtern;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result Transmit(const CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
         CheckResult(CheckCanMessage(message.flags, message.length));
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const EthMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const LinMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const FrMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(message);
+        return _busExchange->Transmit(message);
     }
 
     [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
         CheckResult(CheckCanMessage(messageContainer.flags, messageContainer.length));
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Transmit(messageContainer);
+        return _busExchange->Transmit(messageContainer);
     }
 
     [[nodiscard]] Result Receive(CanMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(EthMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(LinMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(FrMessage& message) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(message);
+        return _busExchange->Receive(message);
     }
 
     [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
     [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const override {
         CheckResult(EnsureIsConnected());
 
-        return _busBuffer->Receive(messageContainer);
+        return _busExchange->Receive(messageContainer);
     }
 
 private:
@@ -467,48 +461,49 @@ private:
         _frControllersExtern.clear();
     }
 
-    [[nodiscard]] Result LocalConnect() {
-        CheckResult(TryConnectToLocalChannel(_serverName, _channel));
-        if (!_channel) {
-            std::ostringstream oss;
-            oss << "Could not connect to local dSPACE VEOS CoSim server '" << _serverName << "'.";
-            Logger::Instance().LogTrace(oss.str());
-            return Result::Error;
+    [[nodiscard]] Result ConnectInternal() {
+        if (!_serverName.empty() && _remoteIpAddress.empty() && (_remotePort == 0)) {
+            if (IsOk(LocalConnect())) {
+                return Result::Ok;
+            }
+
+            _remoteIpAddress = "127.0.0.1";
         }
 
+        return RemoteConnect();
+    }
+
+    [[nodiscard]] Result LocalConnect() {
+        CheckResultWithMessage(TryConnectToLocalChannel(_serverName, _channel),
+                               fmt::format("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName));
+
         _connectionKind = ConnectionKind::Local;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result RemoteConnect() {
         if (_remotePort == 0) {
-            std::ostringstream oss;
-            oss << "Obtaining TCP port of dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << " ...";
-            Logger::Instance().LogInfo(oss.str());
+            LogInfo("Obtaining TCP port of dSPACE VEOS CoSim server '{}' at {} ...", _serverName, _remoteIpAddress);
             CheckResultWithMessage(PortMapperGetPort(_remoteIpAddress, _serverName, _remotePort), "Could not get port from port mapper.");
         }
 
         if (_serverName.empty()) {
-            std::ostringstream oss;
-            oss << "Connecting to dSPACE VEOS CoSim server at " << _remoteIpAddress << ':' << _remotePort << " ...";
-            Logger::Instance().LogInfo(oss.str());
+            LogInfo("Connecting to dSPACE VEOS CoSim server at {}:{} ...", _remoteIpAddress, _remotePort);
         } else {
-            std::ostringstream oss;
-            oss << "Connecting to dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << ':' << _remotePort << " ...";
-            Logger::Instance().LogInfo(oss.str());
+            LogInfo("Connecting to dSPACE VEOS CoSim server '{}' at {}:{} ...", _serverName, _remoteIpAddress, _remotePort);
         }
 
-        CheckResult(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel));
-        CheckBoolWithMessage(_channel, "Could not connect to dSPACE VEOS CoSim server.");
+        CheckResultWithMessage(TryConnectToTcpChannel(_remoteIpAddress, _remotePort, _localPort, ClientTimeoutInMilliseconds, _channel),
+                               "Could not connect to dSPACE VEOS CoSim server.");
 
         _connectionKind = ConnectionKind::Remote;
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result SendConnectRequest() {
-        CheckResultWithMessage(_protocol->SendConnect(_channel->GetWriter(), DsVeosCoSim::ProtocolVersionLatest, {}, _serverName, _clientName),
+    [[nodiscard]] Result SendConnectRequest() const {
+        CheckResultWithMessage(_protocol->SendConnect(_channel->GetWriter(), ProtocolVersionLatest, {}, _serverName, _clientName),
                                "Could not send connect frame.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnConnectOk() {
@@ -541,55 +536,50 @@ private:
         _frControllersExtern = Convert(_frControllers);
 
         if (_connectionKind == ConnectionKind::Local) {
-            std::ostringstream oss;
-            oss << "Connected to local dSPACE VEOS CoSim server '" << _serverName << "'.";
-            Logger::Instance().LogInfo(oss.str());
+            LogInfo("Connected to local dSPACE VEOS CoSim server '{}'.", _serverName);
         } else {
             if (_serverName.empty()) {
-                std::ostringstream oss;
-                oss << "Connected to dSPACE VEOS CoSim server at " << _remoteIpAddress << ':' << _remotePort << '.';
-                Logger::Instance().LogInfo(oss.str());
+                LogInfo("Connected to dSPACE VEOS CoSim server at {}:{}.", _remoteIpAddress, _remotePort);
             } else {
-                std::ostringstream oss;
-                oss << "Connected to dSPACE VEOS CoSim server '" << _serverName << "' at " << _remoteIpAddress << ':' << _remotePort << '.';
-                Logger::Instance().LogInfo(oss.str());
+                LogInfo("Connected to dSPACE VEOS CoSim server '{}' at {}:{}.", _serverName, _remoteIpAddress, _remotePort);
             }
         }
 
-        CheckResult(CreateIoBuffer(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _ioBuffer));
+        CheckResult(
+            CreateSignalExchange(CoSimType::Client, _connectionKind, _serverName, _incomingSignalsExtern, _outgoingSignalsExtern, *_protocol, _signalExchange));
 
-        CheckResult(CreateBusBuffer(CoSimType::Client,
-                                    _connectionKind,
-                                    _serverName,
-                                    _canControllersExtern,
-                                    _ethControllersExtern,
-                                    _linControllersExtern,
-                                    _frControllersExtern,
-                                    *_protocol,
-                                    _busBuffer));
+        CheckResult(CreateBusExchange(CoSimType::Client,
+                                      _connectionKind,
+                                      _serverName,
+                                      _canControllersExtern,
+                                      _ethControllersExtern,
+                                      _linControllersExtern,
+                                      _frControllersExtern,
+                                      *_protocol,
+                                      _busExchange));
 
         _isConnected = true;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnConnectError() const {
         std::string errorString;
         CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorString), "Could not read error frame.");
-        return Result::Error;
+        LogError(errorString);
+        return CreateError();
     }
 
     [[nodiscard]] Result ReceiveConnectResponse() {
         FrameKind frameKind{};
         CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
-        switch (frameKind) {
-            // NOLINT(clang-diagnostic-switch-enum)
+        switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
             case FrameKind::ConnectOk:
                 CheckResultWithMessage(OnConnectOk(), "Could not handle connect ok.");
-                return Result::Ok;
+                return CreateOk();
             case FrameKind::Error:
                 CheckResultWithMessage(OnConnectError(), "Could not handle connect error.");
-                return Result::Error;
+                return CreateError();
             default:
                 return OnUnexpectedFrame(frameKind);
         }
@@ -600,12 +590,11 @@ private:
             FrameKind frameKind{};
             CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
-            switch (frameKind) {
-                // NOLINT(clang-diagnostic-switch-enum)
+            switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
                 case FrameKind::Step: {
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishStep());
@@ -614,7 +603,7 @@ private:
                 case FrameKind::Start:
                     CheckResultWithMessage(OnStart(), "Could not handle start.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishCurrentCommand());
@@ -622,7 +611,7 @@ private:
                 case FrameKind::Stop:
                     CheckResultWithMessage(OnStop(), "Could not handle stop.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishCurrentCommand());
@@ -630,7 +619,7 @@ private:
                 case FrameKind::Terminate:
                     CheckResultWithMessage(OnTerminate(), "Could not handle terminate.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishCurrentCommand());
@@ -638,7 +627,7 @@ private:
                 case FrameKind::Pause:
                     CheckResultWithMessage(OnPause(), "Could not handle pause.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishCurrentCommand());
@@ -646,7 +635,7 @@ private:
                 case FrameKind::Continue:
                     CheckResultWithMessage(OnContinue(), "Could not handle continue.");
                     if (!_isConnected) {
-                        return Result::Disconnected;
+                        return CreateNotConnected();
                     }
 
                     CheckResult(FinishCurrentCommand());
@@ -660,7 +649,7 @@ private:
             }
         }
 
-        return Result::Disconnected;
+        return CreateNotConnected();
     }
 
     [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command) {
@@ -670,8 +659,7 @@ private:
         do {
             FrameKind frameKind{};
             CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
-            switch (frameKind) {
-                // NOLINT(clang-diagnostic-switch-enum)
+            switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
                 case FrameKind::Step:
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     _currentCommand = Command::Step;
@@ -707,7 +695,7 @@ private:
 
         simulationTime = _currentSimulationTime;
         command = _currentCommand;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result FinishCommandInternal() {
@@ -731,7 +719,7 @@ private:
         }
 
         _currentCommand = Command::None;
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnStep() {
@@ -742,20 +730,20 @@ private:
             _callbacks.simulationEndStepCallback(_currentSimulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnStart() {
         CheckResultWithMessage(_protocol->ReadStart(_channel->GetReader(), _currentSimulationTime), "Could not read start frame.");
 
-        _ioBuffer->ClearData();
-        _busBuffer->ClearData();
+        _signalExchange->ClearData();
+        _busExchange->ClearData();
 
         if (_callbacks.simulationStartedCallback) {
             _callbacks.simulationStartedCallback(_currentSimulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnStop() {
@@ -765,7 +753,7 @@ private:
             _callbacks.simulationStoppedCallback(_currentSimulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnTerminate() {
@@ -776,7 +764,7 @@ private:
             _callbacks.simulationTerminatedCallback(_currentSimulationTime, reason);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnPause() {
@@ -786,7 +774,7 @@ private:
             _callbacks.simulationPausedCallback(_currentSimulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnContinue() {
@@ -796,77 +784,77 @@ private:
             _callbacks.simulationContinuedCallback(_currentSimulationTime);
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result OnPing() {
         CheckResultWithMessage(_protocol->ReadPing(_channel->GetReader(), _roundTripTime), "Could not read ping frame.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result FinishStep() {
         Command nextCommand = _nextCommand.exchange({});
         CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(), _nextSimulationTime, nextCommand, _serializeIoData, _serializeBusMessages),
                                "Could not send step ok frame.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result FinishPing() {
         Command nextCommand = _nextCommand.exchange({});
         CheckResultWithMessage(_protocol->SendPingOk(_channel->GetWriter(), nextCommand), "Could not send ping ok frame.");
-        return Result::Ok;
+        return CreateOk();
     }
 
-    [[nodiscard]] Result FinishCurrentCommand() {
+    [[nodiscard]] Result FinishCurrentCommand() const {
         CheckResultWithMessage(_protocol->SendOk(_channel->GetWriter()), "Could not send ok frame.");
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result EnsureIsConnected() const {
         if (!_isConnected) {
-            Logger::Instance().LogError("Not connected.");
-            return Result::Error;
+            LogError("Not connected.");
+            return CreateError();
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     [[nodiscard]] Result EnsureIsInResponderModeBlocking() {
         switch (_responderMode) {
             case ResponderMode::Blocking:
                 // Nothing to do
-                return Result::Ok;
+                return CreateOk();
             case ResponderMode::Unknown:
                 _responderMode = ResponderMode::Blocking;
-                return Result::Ok;
+                return CreateOk();
             case ResponderMode::NonBlocking:
-                Logger::Instance().LogError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
-                return Result::Error;
+                LogError("dSPACE VEOS CoSim is in non-blocking mode. Blocking function call is not allowed.");
+                return CreateError();
         }
 
-        Logger::Instance().LogError("Invalid responder mode.");
-        return Result::Error;
+        LogError("Invalid responder mode.");
+        return CreateError();
     }
 
     [[nodiscard]] Result EnsureIsInResponderModeNonBlocking() {
         switch (_responderMode) {
             case ResponderMode::NonBlocking:
                 // Nothing to do
-                return Result::Ok;
+                return CreateOk();
             case ResponderMode::Unknown:
                 _responderMode = ResponderMode::NonBlocking;
-                return Result::Ok;
+                return CreateOk();
             case ResponderMode::Blocking:
-                Logger::Instance().LogError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
-                return Result::Error;
+                LogError("dSPACE VEOS CoSim is in blocking mode. Non-blocking function call is not allowed.");
+                return CreateError();
         }
 
-        Logger::Instance().LogError("Invalid responder mode.");
-        return Result::Error;
+        LogError("Invalid responder mode.");
+        return CreateError();
     }
 
     void CloseConnection() {
-        Logger::Instance().LogWarning("dSPACE VEOS CoSim server disconnected.");
+        LogWarning("dSPACE VEOS CoSim server disconnected.");
 
         _isConnected = false;
 
@@ -876,33 +864,29 @@ private:
     }
 
     [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind) {
-        std::ostringstream oss;
-        oss << "Received unexpected frame '" << frameKind << "'.";
-        Logger::Instance().LogError(oss.str());
-        return Result::Error;
+        LogError("Received unexpected frame '{}'.", frameKind);
+        return CreateError();
     }
 
     [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length) {
         if (length > CanMessageMaxLength) {
-            Logger::Instance().LogError("CAN message data exceeds maximum length.");
-            return Result::InvalidArgument;
+            LogError("CAN message data exceeds maximum length.");
+            return CreateInvalidArgument();
         }
 
         if (!HasFlag(flags, CanMessageFlags::FlexibleDataRateFormat)) {
             if (length > 8) {
-                Logger::Instance().LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
-                return Result::InvalidArgument;
+                LogError("CAN message flags are invalid. A DLC > 8 requires the flexible data rate format flag.");
+                return CreateInvalidArgument();
             }
 
             if (HasFlag(flags, CanMessageFlags::BitRateSwitch)) {
-                Logger::Instance().LogError(
-                    "CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format "
-                    "flag.");
-                return Result::InvalidArgument;
+                LogError("CAN message flags are invalid. A bit rate switch flag requires the flexible data rate format flag.");
+                return CreateInvalidArgument();
             }
         }
 
-        return Result::Ok;
+        return CreateOk();
     }
 
     std::unique_ptr<Channel> _channel;
@@ -914,7 +898,7 @@ private:
     Callbacks _callbacks{};
     SimulationTime _currentSimulationTime{};
     SimulationTime _nextSimulationTime{};
-    std::chrono::nanoseconds _roundTripTime{};
+    SimulationTime _roundTripTime{};
 
     SimulationTime _stepSize{};
 
@@ -944,23 +928,23 @@ private:
     std::vector<LinController> _linControllersExtern;
     std::vector<FrController> _frControllersExtern;
 
-    std::unique_ptr<IoBuffer> _ioBuffer;
-    std::unique_ptr<BusBuffer> _busBuffer;
+    std::unique_ptr<SignalExchange> _signalExchange;
+    std::unique_ptr<BusExchange> _busExchange;
 
     SerializeFunction _serializeIoData = [&](ChannelWriter& writer) {
-        return _ioBuffer->Serialize(writer);
+        return _signalExchange->Serialize(writer);
     };
 
     SerializeFunction _serializeBusMessages = [&](ChannelWriter& writer) {
-        return _busBuffer->Serialize(writer);
+        return _busExchange->Serialize(writer);
     };
 
     DeserializeFunction _deserializeIoData = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _ioBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _signalExchange->Deserialize(reader, simulationTime, callbacks);
     };
 
     DeserializeFunction _deserializeBusMessages = [&](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-        return _busBuffer->Deserialize(reader, simulationTime, callbacks);
+        return _busExchange->Deserialize(reader, simulationTime, callbacks);
     };
 };
 
@@ -968,7 +952,7 @@ private:
 
 [[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client) {
     client = std::make_unique<CoSimClientImpl>();
-    return Result::Ok;
+    return CreateOk();
 }
 
 }  // namespace DsVeosCoSim

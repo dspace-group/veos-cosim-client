@@ -18,7 +18,7 @@ Represents a bus controller ID.
 
 > [DsVeosCoSim_Handle](DsVeosCoSim_Handle.md)
 
-A handle to represent the VEOS CoSim client.
+Represents a VEOS CoSim client handle.
 
 > [DsVeosCoSim_IoSignalId](DsVeosCoSim_IoSignalId.md)
 

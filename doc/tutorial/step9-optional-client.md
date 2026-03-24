@@ -121,9 +121,9 @@ Run the following command:
 veos-sim info -p State
 ```
 
-## Client output
+## Verification Output
 
-The output of the command `veos-sim info -p State` should both time show the following output:
+The output of the command `veos-sim info -p State` should show the following output:
 
 ```console
 Running

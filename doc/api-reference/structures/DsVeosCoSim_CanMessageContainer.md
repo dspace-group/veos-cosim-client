@@ -30,7 +30,7 @@ typedef struct DsVeosCoSim_CanMessageContainer {
 
 > [DsVeosCoSim_SimulationTime](../simple-types/DsVeosCoSim_SimulationTime.md) timestamp
 
-Contains the virtual simulation time at which the CAN message was received. Only for received messages.
+Contains the virtual simulation time at which the CAN message container was received. This member is only meaningful for received message containers.
 
 > [DsVeosCoSim_BusControllerId](../simple-types/DsVeosCoSim_BusControllerId.md) controllerId
 
@@ -58,6 +58,6 @@ The CAN message payload.
 
 ## See Also
 
-- [DsVeosCoSim_CanMessageContainerReceivedCallback](../functions/DsVeosCoSim_CanMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_CanMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_ReceiveCanMessageContainer](../functions/DsVeosCoSim_ReceiveCanMessageContainer.md)
 - [DsVeosCoSim_TransmitCanMessageContainer](../functions/DsVeosCoSim_TransmitCanMessageContainer.md)

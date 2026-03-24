@@ -12,7 +12,7 @@
 
 Disconnects the VEOS CoSim client from the VEOS CoSim server.
 
-If there is no connection to the VEOS CoSim server, the `DsVeosCoSim_Disconnect` function does not do or return anything.
+If there is no connection to the VEOS CoSim server, calling the `DsVeosCoSim_Disconnect` function has no effect and still returns [DsVeosCoSim_Result_Ok](../enumerations/DsVeosCoSim_Result.md).
 
 If the connection is closed during a running simulation, the simulation terminates with an error.
 

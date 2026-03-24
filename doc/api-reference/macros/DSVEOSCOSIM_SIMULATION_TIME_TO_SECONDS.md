@@ -15,7 +15,8 @@ Converts the given simulation time to a double in seconds.
 ## Syntax
 
 ```c
-#define DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) ((double)(simulationTime) / DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND)
+#define DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) \
+    ((double)(simulationTime) / DSVEOSCOSIM_SIMULATION_TIME_RESOLUTION_PER_SECOND)
 ```
 
 ## Parameters

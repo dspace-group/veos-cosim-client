@@ -10,7 +10,7 @@
 
 ## Description
 
-Starts a co-simulation in non-blocking mode.
+Starts a polling-based co-simulation in non-blocking mode.
 
 ## Syntax
 
@@ -29,7 +29,7 @@ The handle of the VEOS CoSim client.
 
 > [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) callbacks
 
-The callbacks to be set.
+The callbacks to register.
 
 ## Return values
 

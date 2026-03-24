@@ -10,12 +10,12 @@
 
 ## Description
 
-Receives a CAN message from the VEOS CoSim server.
+Receives a CAN message container from the VEOS CoSim server.
 
 > [!NOTE]
-> If the [DsVeosCoSim_CanMessageReceivedCallback](DsVeosCoSim_CanMessageReceivedCallback.md) callback
-> or the [DsVeosCoSim_CanMessageContainerReceivedCallback](DsVeosCoSim_CanMessageContainerReceivedCallback.md) callback is registered,
-> CAN messages cannot be collected using the `DsVeosCoSim_ReceiveCanMessageContainer` function.
+> If the [DsVeosCoSim_CanMessageReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageReceivedCallback.md) callback
+> or the [DsVeosCoSim_CanMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageContainerReceivedCallback.md) callback is registered,
+> CAN message containers cannot be collected using the `DsVeosCoSim_ReceiveCanMessageContainer` function.
 
 ## Syntax
 

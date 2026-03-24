@@ -116,7 +116,8 @@ void OnCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                   const DsVeosCoSim_CanController* canController,
                   const DsVeosCoSim_CanMessage* message,
                   void* userData) {
-    std::cout << "Received CAN message with ID " << message->id << " with data " << DataToString(message->data, message->length, '-') << " from CAN controller "
+    std::cout << "Received CAN message with ID " << message->id << " with data "
+              << DataToString(message->data, message->length, '-') << " from CAN controller "
               << canController->name << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 // END ADDITION
@@ -254,10 +255,10 @@ veos-sim start
 The following listing shows the output produced by the client:
 
 ```console
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.002 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.022 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.042 s.
-Received CAN message with ID 10 and data 00-00 from bus controller CanController at 0.062 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.002 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.022 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.042 s.
+Received CAN message with ID 10 and data 00-00 from CAN controller CanController at 0.062 s.
 ```
 
 ## 7 Cleanup

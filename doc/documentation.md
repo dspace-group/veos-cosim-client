@@ -18,6 +18,10 @@ Provides basics on Co-Simulation.
 
 Provides a simple tutorial to show the concepts of the Co-Simulation.
 
+> [Guides](guides/guides.md)
+
+Provides task-oriented guidance, quickstart material, lifecycle rules, and troubleshooting information.
+
 > [DsVeosCoSim Client API Reference](api-reference/api-reference.md)
 
 Describes the DsVeosCoSim Client API.

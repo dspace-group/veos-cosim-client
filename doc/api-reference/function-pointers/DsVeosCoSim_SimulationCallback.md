@@ -17,7 +17,7 @@ A generic simulation callback function pointer.
 
 ```c
 typedef void (*DsVeosCoSim_SimulationCallback)(
-    DsVeosCoSim_SimulationTime simulationTime, 
+    DsVeosCoSim_SimulationTime simulationTime,
     void* userData
 );
 ```

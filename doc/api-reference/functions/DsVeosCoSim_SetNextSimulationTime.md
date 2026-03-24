@@ -16,7 +16,7 @@ Sets the next simulation time for the given client handle.
 
 ```c
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_SetNextSimulationTime(
-    DsVeosCoSim_Handle handle, 
+    DsVeosCoSim_Handle handle,
     DsVeosCoSim_SimulationTime simulationTime
 );
 ```

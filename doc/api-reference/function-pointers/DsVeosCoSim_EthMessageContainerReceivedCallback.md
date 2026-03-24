@@ -11,7 +11,7 @@
 
 ## Description
 
-Called when a new Ethernet message is received from the VEOS CoSim server.
+Called when a new Ethernet message container is received from the VEOS CoSim server.
 
 The `DsVeosCoSim_EthMessageContainerReceivedCallback` callback can be registered with the [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md) function or the [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md) function.
 
@@ -21,7 +21,7 @@ The `DsVeosCoSim_EthMessageContainerReceivedCallback` callback can be registered
 > [DsVeosCoSim_ReceiveEthMessageContainer](../functions/DsVeosCoSim_ReceiveEthMessageContainer.md).
 
 > [!NOTE]
-> If both, the `DsVeosCoSim_EthMessageContainerReceivedCallback` callback as well as the [DsVeosCoSim_EthMessageReceivedCallback](DsVeosCoSim_EthMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_EthMessageContainerReceivedCallback` will be called.
+> If both the `DsVeosCoSim_EthMessageContainerReceivedCallback` callback and the [DsVeosCoSim_EthMessageReceivedCallback](DsVeosCoSim_EthMessageReceivedCallback.md) callback are registered, only the `DsVeosCoSim_EthMessageContainerReceivedCallback` callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.
@@ -53,7 +53,7 @@ A pointer to the received Ethernet message container.
 
 > void* userData
 
-The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Eth be `NULL`.
+The user data passed to the co-simulation function via the [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) structure. Can be `NULL`.
 
 ## Return values
 

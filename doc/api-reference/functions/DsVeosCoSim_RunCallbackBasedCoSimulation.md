@@ -29,8 +29,10 @@ The handle of the VEOS CoSim client.
 
 > [DsVeosCoSim_Callbacks](../structures/DsVeosCoSim_Callbacks.md) callbacks
 
-The callbacks to be set.
+The callbacks to register.
 
 ## Return values
 
 A [DsVeosCoSim_Result](../enumerations/DsVeosCoSim_Result.md).
+On normal shutdown, this function returns [DsVeosCoSim_Result_Disconnected](../enumerations/DsVeosCoSim_Result.md).
+If the co-simulation loop ends unexpectedly, this function returns [DsVeosCoSim_Result_Error](../enumerations/DsVeosCoSim_Result.md).

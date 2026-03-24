@@ -133,11 +133,17 @@ project(DsVeosCoSimDemo VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+# Optional: if your project already provides fmt, keep this enabled.
+# Otherwise veos-cosim-client uses its bundled copy from third_party/fmt.
+# find_package(fmt CONFIG REQUIRED)
+
 add_subdirectory(veos-cosim-client)
 
 add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE DsVeosCoSim)
 ```
+
+The `veos-cosim-client` directory must include `third_party/fmt` unless your top-level CMake project provides a `fmt::fmt` or `fmt::fmt-header-only` target before `add_subdirectory(veos-cosim-client)`.
 
 ### 5.3 Create Source Code
 
@@ -157,7 +163,7 @@ int main() {
 
 ### 5.4 Create compile_flags.txt
 
-In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt`file with the following content:
+In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt` file with the following content:
 
 ```
 -xc++
@@ -165,7 +171,7 @@ In the `DsVeosCoSimDemo` directory, create the `compile_flags.txt`file with the 
 -Iveos-cosim-client/include
 ```
 
-### 5.4 Build the Client
+### 5.5 Build the Client
 
 In the `DsVeosCoSimDemo` directory, run the following commands to create a `build` directory, configure the build project, and compile the test executable:
 
@@ -179,7 +185,7 @@ cmake --build ./build
 >
 > If you use Visual Studio on Windows, make sure to run these commands in the Visual Studio Developer Command Prompt.
 
-### 5.5 Run Client
+### 5.6 Run Client
 
 Run the executable by running the following command in the directory `DsVeosCoSimDemo`:
 

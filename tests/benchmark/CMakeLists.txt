@@ -9,10 +9,11 @@ target_sources(
   PRIVATE
   Communication/BenchmarkChannel.cpp
   OsAbstraction/BenchmarkNamedEvent.cpp
+  OsAbstraction/BenchmarkShmPipe.cpp
   OsAbstraction/BenchmarkSocket.cpp
-  BenchmarkBusBuffer.cpp
+  BenchmarkBusExchange.cpp
   BenchmarkCoSim.cpp
-  BenchmarkIoBuffer.cpp
+  BenchmarkSignalExchange.cpp
   Program.cpp
 )
 
@@ -20,12 +21,6 @@ target_compile_options(
   DsVeosCoSimBenchmark
   PRIVATE
   ${DSVEOSCOSIM_WARNINGS}
-)
-
-target_compile_definitions(
-  DsVeosCoSimBenchmark
-  PRIVATE
-  ALL_BENCHMARK_TESTS
 )
 
 target_link_libraries(

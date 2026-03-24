@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "Helper.h"
+#include "Helper.hpp"
 
 using namespace DsVeosCoSim;
 

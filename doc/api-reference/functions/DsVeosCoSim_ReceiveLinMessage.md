@@ -13,8 +13,8 @@
 Receives a LIN message from the VEOS CoSim server.
 
 > [!NOTE]
-> If the [DsVeosCoSim_LinMessageReceivedCallback](DsVeosCoSim_LinMessageReceivedCallback.md) callback
-> or the [DsVeosCoSim_LinMessageContainerReceivedCallback](DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback is registered,
+> If the [DsVeosCoSim_LinMessageReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageReceivedCallback.md) callback
+> or the [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md) callback is registered,
 > LIN messages cannot be collected using the `DsVeosCoSim_ReceiveLinMessage` function.
 
 ## Syntax

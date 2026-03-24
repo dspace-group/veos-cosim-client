@@ -29,7 +29,7 @@ typedef struct DsVeosCoSim_EthMessage {
 
 > [DsVeosCoSim_SimulationTime](../simple-types/DsVeosCoSim_SimulationTime.md) timestamp
 
-Contains the virtual simulation time at which the Ethernet message was received. Only for received messages.
+Contains the virtual simulation time at which the Ethernet message was received. This member is only meaningful for received messages.
 
 > [DsVeosCoSim_BusControllerId](../simple-types/DsVeosCoSim_BusControllerId.md) controllerId
 
@@ -53,6 +53,6 @@ The Ethernet message payload.
 
 ## See Also
 
-- [DsVeosCoSim_EthMessageReceivedCallback](../functions/DsVeosCoSim_EthMessageReceivedCallback.md)
+- [DsVeosCoSim_EthMessageReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageReceivedCallback.md)
 - [DsVeosCoSim_ReceiveEthMessage](../functions/DsVeosCoSim_ReceiveEthMessage.md)
 - [DsVeosCoSim_TransmitEthMessage](../functions/DsVeosCoSim_TransmitEthMessage.md)

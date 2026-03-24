@@ -1,17 +1,26 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "OsAbstractionTestHelper.h"
+#include "OsAbstractionTestHelper.hpp"
 
 #include <string>
+#include <string_view>
 
 #include <fmt/format.h>
 
+#include "Logger.hpp"
+#include "Result.hpp"
+#include "Socket.hpp"
+
 #ifdef _WIN32
+
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #include <Windows.h>
+#undef min
 #pragma comment(lib, "Ws2_32.lib")
+
 #else
+
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -23,205 +32,296 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+
 #endif
 
-#include "DsVeosCoSim/CoSimTypes.h"
-#include "Helper.h"
-
 #ifdef _WIN32
-using socklen_t = int32_t;
+
+using SocketLength = int32_t;
 #define CAST(expression) (expression)
+
 #else
+
+using SocketLength = socklen_t;
 #define CAST(expression) static_cast<int32_t>(expression)
+
 #endif
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Socket_InitializeAddress(sockaddr_in& address, const std::string& ipAddress, uint16_t port) {
+[[nodiscard]] int32_t GetLastNetworkError() {
+#ifdef _WIN32
+    return WSAGetLastError();
+#else
+    return errno;
+#endif
+}
+
+[[nodiscard]] Result CreateAddress(const std::string& ipAddress, uint16_t port, sockaddr_in& address) {
     in_addr ipAddressInt{};
     int32_t result = inet_pton(AF_INET, ipAddress.c_str(), &ipAddressInt);
     if (result <= 0) {
-        LogError("Could not convert IP address string to integer.");
-        return Result::Error;
+        LogError(GetLastNetworkError(), "Could not convert IP address string to integer.");
+        return CreateError();
     }
 
     address.sin_family = AF_INET;
     address.sin_addr = ipAddressInt;
     address.sin_port = htons(port);
-    return Result::Ok;
+    return CreateOk();
 }
 
-}  // namespace
-
-[[nodiscard]] Result InternetAddress::Initialize(const std::string& ipAddress, uint16_t port) {
-    auto* address = reinterpret_cast<sockaddr_in*>(_address.data());
-    return Socket_InitializeAddress(*address, ipAddress, port);
-}
-
-UdpSocket::~UdpSocket() {
+void Shutdown(const SocketHandle& socketHandle) {
 #ifdef _WIN32
-    closesocket(_socket);
+    shutdown(socketHandle.Get(), SD_BOTH);
 #else
-    shutdown(_socket, SHUT_RDWR);
-    close(_socket);
+    shutdown(socketHandle.Get(), SHUT_RDWR);
 #endif
 }
 
-[[nodiscard]] Result UdpSocket::Initialize() {
-    _socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (_socket == InvalidSocket) {
-        LogError("Could not create socket.");
-        return Result::Error;
+#ifndef _WIN32
+
+[[nodiscard]] Result CreatePipe(const std::string& name, PipeClient::pipe_t& pipe) {
+    mkfifo(name.c_str(), 0666);
+
+    pipe = open(name.c_str(), O_RDWR | O_CLOEXEC);  // NOLINT(cppcoreguidelines-pro-type-vararg)
+    if (pipe < 0) {
+        LogError("Could not open pipe.");
+        return CreateError();
     }
 
-    return Result::Ok;
+    return CreateOk();
 }
 
-[[nodiscard]] Result UdpSocket::Bind(const std::string& ipAddress, uint16_t port) const {
-    sockaddr_in address{};
-    CheckResult(Socket_InitializeAddress(address, ipAddress, port));
-    int32_t result = bind(_socket, reinterpret_cast<const sockaddr*>(&address), sizeof address);
-    if (result < 0) {
-        LogError("Could not bind.");
-        return Result::Error;
+#endif
+
+#ifdef _WIN32
+
+[[nodiscard]] std::string GetFullPipeName(std::string_view name) {
+    return fmt::format(R"(\\.\pipe\{})", name);
+}
+
+#else
+
+[[nodiscard]] std::string GetFirstPipePath(std::string_view name) {
+    return fmt::format("/tmp/Pipe1{}", name);
+}
+
+[[nodiscard]] std::string GetSecondPipePath(std::string_view name) {
+    return fmt::format("/tmp/Pipe2{}", name);
+}
+
+#endif
+
+}  // namespace
+
+[[nodiscard]] Result InternetAddress::Create(const std::string& ipAddress, uint16_t port, InternetAddress& internetAddress) {
+    sockaddr_in socketAddress{};
+    CheckResult(CreateAddress(ipAddress, port, socketAddress));
+
+    std::array<uint8_t, 16> address{};
+    memcpy(address.data(), &socketAddress, sizeof(address));
+
+    internetAddress = InternetAddress(address);
+    return CreateOk();
+}
+
+UdpSocket::~UdpSocket() noexcept {
+    Shutdown(_socketHandle);
+}
+
+[[nodiscard]] Result UdpSocket::CreateClient(UdpSocket& udpSocket) {
+    SocketHandle socketHandle(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    if (!socketHandle.IsValid()) {
+        LogError(GetLastNetworkError(), "Could not create UDP socket.");
+        return CreateError();
     }
 
-    return Result::Ok;
+    udpSocket = UdpSocket(std::move(socketHandle));
+    return CreateOk();
+}
+
+[[nodiscard]] Result UdpSocket::CreateServer(const std::string& ipAddress, uint16_t port, UdpSocket& udpSocket) {
+    SocketHandle socketHandle(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    if (!socketHandle.IsValid()) {
+        LogError(GetLastNetworkError(), "Could not create UDP socket.");
+        return CreateError();
+    }
+
+    sockaddr_in socketAddress{};
+    CheckResult(CreateAddress(ipAddress, port, socketAddress));
+
+    int32_t result = bind(socketHandle.Get(), reinterpret_cast<const sockaddr*>(&socketAddress), static_cast<SocketLength>(sizeof socketAddress));
+    if (result < 0) {
+        LogError(GetLastNetworkError(), "Could not bind.");
+        return CreateError();
+    }
+
+    udpSocket = UdpSocket(std::move(socketHandle));
+    return CreateOk();
 }
 
 [[nodiscard]] Result UdpSocket::SendTo(const void* source, uint32_t size, const InternetAddress& address) const {
     const auto* sourcePointer = static_cast<const char*>(source);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    auto length = CAST(sendto(_socket, sourcePointer, static_cast<int32_t>(size), 0, reinterpret_cast<const sockaddr*>(&address), addressLength));
-    return length == static_cast<int32_t>(size) ? Result::Ok : Result::Error;
+    auto length = CAST(sendto(_socketHandle.Get(), sourcePointer, static_cast<int32_t>(size), 0, reinterpret_cast<const sockaddr*>(&address), addressLength));
+    if (length != static_cast<int32_t>(size)) {
+        LogError(GetLastNetworkError(), "Could not send.");
+        return CreateError();
+    }
+
+    return CreateOk();
 }
 
 [[nodiscard]] Result UdpSocket::ReceiveFrom(void* destination, uint32_t size, InternetAddress& address) const {
     auto* destinationPointer = static_cast<char*>(destination);
     static auto addressLength = static_cast<socklen_t>(sizeof(sockaddr_in));
-    auto length = CAST(recvfrom(_socket, destinationPointer, static_cast<int32_t>(size), 0, reinterpret_cast<sockaddr*>(&address), &addressLength));
-    return length == static_cast<int32_t>(size) ? Result::Ok : Result::Error;
+    auto length = CAST(recvfrom(_socketHandle.Get(), destinationPointer, static_cast<int32_t>(size), 0, reinterpret_cast<sockaddr*>(&address), &addressLength));
+    if (length != static_cast<int32_t>(size)) {
+        LogError(GetLastNetworkError(), "Could not receive.");
+        return CreateError();
+    }
+
+    return CreateOk();
 }
 
 #ifdef _WIN32
-constexpr uint32_t PipeBufferSize = 1024 * 16;
+
+constexpr uint32_t PipeBufferSize = 65536;
+
 #endif
 
+PipeClient::~PipeClient() noexcept {
 #ifndef _WIN32
-[[nodiscard]] Result Pipe::CreatePipe(const std::string& name, pipe_t& pipe) {
-    mkfifo(name.data(), 0666);
-
-    pipe = open(name.data(), O_RDWR | O_CLOEXEC);
-    if (pipe < 0) {
-        LogError("Could not open pipe.");
-        return Result::Error;
-    }
-
-    return Result::Ok;
-}
-#endif
-
-Pipe::~Pipe() {
-#ifdef _WIN32
-    CloseHandle(_pipe);
-#else
-    close(_pipe1);
-    close(_pipe2);
+    close(_writePipe);
+    close(_readPipe);
 #endif
 }
 
-[[nodiscard]] Result Pipe::Initialize(const std::string& name) {
+[[nodiscard]] Result PipeClient::Connect(std::string_view name, PipeClient& client) {
 #ifdef _WIN32
-    _name = fmt::format(R"(\\.\pipe\{})", name);
-#else
-    CheckResult(CreatePipe(fmt::format("/tmp/Pipe1{}", name), _pipe1));
-    CheckResult(CreatePipe(fmt::format("/tmp/Pipe2{}", name), _pipe2));
-#endif
-    return Result::Ok;
-}
+    std::string fullName = GetFullPipeName(name);
 
-[[nodiscard]] Result Pipe::Accept() {
-#ifdef _WIN32
-    _pipe = CreateNamedPipeA(_name.c_str(),
-                             PIPE_ACCESS_DUPLEX,
-                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-                             1,
-                             PipeBufferSize,
-                             PipeBufferSize,
-                             0,
-                             nullptr);
-
-    if (_pipe == INVALID_HANDLE_VALUE) {
-        LogError("Could not create pipe.");
-        return Result::Error;
-    }
-
-    bool connected = ConnectNamedPipe(_pipe, nullptr) != 0 ? true : GetLastError() == ERROR_PIPE_CONNECTED;
-    if (!connected) {
-        LogError("Could not connect.");
-        return Result::Error;
-    }
-#else
-    _writePipe = _pipe1;
-    _readPipe = _pipe2;
-#endif
-    return Result::Ok;
-}
-
-[[nodiscard]] Result Pipe::Connect() {
-#ifdef _WIN32
+    Handle pipe;
     while (true) {
-        _pipe = CreateFileA(_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-        if (_pipe != INVALID_HANDLE_VALUE) {
+        pipe = Handle(CreateFileA(fullName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
+        if (pipe.IsValid()) {
             break;
         }
 
         DWORD lastError = GetLastError();
         if (lastError != ERROR_PIPE_BUSY) {
             LogError("Could not create pipe.");
-            return Result::Error;
+            return CreateError();
         }
 
-        BOOL result = WaitNamedPipeA(_name.c_str(), 10);
+        BOOL result = WaitNamedPipeA(fullName.c_str(), 10);
         if (result == 0) {
             LogError("Could not create pipe.");
-            return Result::Error;
+            return CreateError();
         }
     }
 
     DWORD dwMode = PIPE_READMODE_MESSAGE;
-    BOOL success = SetNamedPipeHandleState(_pipe, &dwMode, nullptr, nullptr);
+    BOOL success = SetNamedPipeHandleState(pipe.Get(), &dwMode, nullptr, nullptr);
     if (success == 0) {
         LogError("Could not set pipe to message mode.");
-        return Result::Error;
+        return CreateError();
     }
+
+    client = PipeClient();
+    client._pipe = std::move(pipe);
+    return CreateOk();
 #else
-    _writePipe = _pipe2;
-    _readPipe = _pipe1;
+    pipe_t writePipe{};
+    CheckResult(CreatePipe(GetFirstPipePath(name), writePipe));
+
+    pipe_t readPipe{};
+    CheckResult(CreatePipe(GetSecondPipePath(name), readPipe));
+
+    client = PipeClient();
+    client._writePipe = writePipe;
+    client._readPipe = readPipe;
+    return CreateOk();
 #endif
-    return Result::Ok;
 }
 
-[[nodiscard]] Result Pipe::Write(const void* source, uint32_t size) const {
+[[nodiscard]] Result PipeClient::Accept(std::string_view name, PipeClient& client) {
+#ifdef _WIN32
+    std::string fullName = GetFullPipeName(name);
+
+    Handle pipe(CreateNamedPipeA(fullName.c_str(),
+                                 PIPE_ACCESS_DUPLEX,
+                                 PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                                 1,
+                                 PipeBufferSize,
+                                 PipeBufferSize,
+                                 0,
+                                 nullptr));
+    if (!pipe.IsValid()) {
+        LogError("Could not create pipe.");
+        return CreateError();
+    }
+
+    bool connected = ConnectNamedPipe(pipe.Get(), nullptr) != 0 ? true : GetLastError() == ERROR_PIPE_CONNECTED;
+    if (!connected) {
+        LogError("Could not connect.");
+        return CreateError();
+    }
+
+    client = PipeClient();
+    client._pipe = std::move(pipe);
+    return CreateOk();
+#else
+    pipe_t readPipe{};
+    CheckResult(CreatePipe(GetFirstPipePath(name), readPipe));
+
+    pipe_t writePipe{};
+    CheckResult(CreatePipe(GetSecondPipePath(name), writePipe));
+
+    client = PipeClient();
+    client._writePipe = writePipe;
+    client._readPipe = readPipe;
+    return CreateOk();
+#endif
+}
+
+[[nodiscard]] Result PipeClient::Write(const void* source, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
-    BOOL success = WriteFile(_pipe, source, size, &processedSize, nullptr);
-    return (success != 0) && (size == processedSize) ? Result::Ok : Result::Error;
+    BOOL success = WriteFile(_pipe.Get(), source, size, &processedSize, nullptr);
+    if ((success == 0) || (size != processedSize)) {
+        return CreateError();
+    }
+
+    return CreateOk();
 #else
     ssize_t length = write(_writePipe, source, size);
-    return length == static_cast<ssize_t>(size) ? Result::Ok : Result::Error;
+    if (length != static_cast<ssize_t>(size)) {
+        return CreateError();
+    }
+
+    return CreateOk();
 #endif
 }
 
-[[nodiscard]] Result Pipe::Read(void* destination, uint32_t size) const {
+[[nodiscard]] Result PipeClient::Read(void* destination, uint32_t size) const {
 #ifdef _WIN32
     DWORD processedSize = 0;
-    BOOL success = ReadFile(_pipe, destination, size, &processedSize, nullptr);
-    return (success != 0) && (size == processedSize) ? Result::Ok : Result::Error;
+    BOOL success = ReadFile(_pipe.Get(), destination, size, &processedSize, nullptr);
+    if ((success == 0) || (size != processedSize)) {
+        return CreateError();
+    }
+
+    return CreateOk();
 #else
     ssize_t length = read(_readPipe, destination, size);
-    return length == static_cast<ssize_t>(size) ? Result::Ok : Result::Error;
+    if (length != static_cast<ssize_t>(size)) {
+        return CreateError();
+    }
+
+    return CreateOk();
 #endif
 }

@@ -21,7 +21,7 @@ The `DsVeosCoSim_EthMessageReceivedCallback` callback can be registered with the
 > [DsVeosCoSim_ReceiveEthMessageContainer](../functions/DsVeosCoSim_ReceiveEthMessageContainer.md).
 
 > [!NOTE]
-> If both, the [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md) callback as well as the `DsVeosCoSim_EthMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md) will be called.
+> If both the [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md) callback and the `DsVeosCoSim_EthMessageReceivedCallback` callback are registered, only the [DsVeosCoSim_EthMessageContainerReceivedCallback](DsVeosCoSim_EthMessageContainerReceivedCallback.md) callback is called.
 
 However, if the callback is not registered, each received message is buffered. Currently, the buffer size is `512` messages.
 If the buffer is full, new messages are discarded.

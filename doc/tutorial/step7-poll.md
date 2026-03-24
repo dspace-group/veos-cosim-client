@@ -82,7 +82,8 @@ void OnCanMessage(DsVeosCoSim_SimulationTime simulationTime,
                   const DsVeosCoSim_CanController* canController,
                   const DsVeosCoSim_CanMessage* message,
                   void* userData) {
-    std::cout << "Received CAN message with ID " << message->id << " with data " << DataToString(message->data, message->length, '-') << " from CAN controller "
+    std::cout << "Received CAN message with ID " << message->id << " with data "
+              << DataToString(message->data, message->length, '-') << " from CAN controller "
               << canController->name << " at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
 }
 
@@ -151,7 +152,7 @@ int main() {
                 canMessage.data = data;
                 DsVeosCoSim_Result result = DsVeosCoSim_TransmitCanMessage(handle, &canMessage);
                 if (result == DsVeosCoSim_Result_Full) {
-                    // No more place in the internal buffer
+                    // No more space in the internal buffer
                 } else if (result != DsVeosCoSim_Result_Ok) {
                     DsVeosCoSim_Disconnect(handle);
                     DsVeosCoSim_Destroy(handle);
@@ -160,16 +161,20 @@ int main() {
                 break;
             }
             case DsVeosCoSim_Command_Start:
-                std::cout << "Simulation started at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation started at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Stop:
-                std::cout << "Simulation stopped at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation stopped at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Pause:
-                std::cout << "Simulation paused at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation paused at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
             case DsVeosCoSim_Command_Continue:
-                std::cout << "Simulation continued at " << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
+                std::cout << "Simulation continued at "
+                          << DSVEOSCOSIM_SIMULATION_TIME_TO_SECONDS(simulationTime) << " s.\n";
                 break;
         }
 
@@ -259,4 +264,4 @@ veos-sim unload
 
 ## 8 Next Step
 
-Refer to [Step 7: Running a Polling-Based Simulation](step7-poll.md).
+Refer to [Step 8: Handling I/O Signals](step8-io-signals.md).

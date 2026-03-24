@@ -58,6 +58,6 @@ The name of the CAN cluster.
 
 ## See Also
 
-- [DsVeosCoSim_CanMessageReceivedCallback](../functions/DsVeosCoSim_CanMessageReceivedCallback.md)
-- [DsVeosCoSim_CanMessageContainerReceivedCallback](../functions/DsVeosCoSim_CanMessageContainerReceivedCallback.md)
+- [DsVeosCoSim_CanMessageReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageReceivedCallback.md)
+- [DsVeosCoSim_CanMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_GetCanControllers](../functions/DsVeosCoSim_GetCanControllers.md)

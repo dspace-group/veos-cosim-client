@@ -10,12 +10,12 @@
 
 ## Description
 
-Receives a FlexRay message from the VEOS CoSim server.
+Receives a FlexRay message container from the VEOS CoSim server.
 
 > [!NOTE]
-> If the [DsVeosCoSim_FrMessageReceivedCallback](DsVeosCoSim_FrMessageReceivedCallback.md) callback
-> or the [DsVeosCoSim_FrMessageContainerReceivedCallback](DsVeosCoSim_FrMessageContainerReceivedCallback.md) callback is registered,
-> FlexRay messages cannot be collected using the `DsVeosCoSim_ReceiveFrMessageContainer` function.
+> If the [DsVeosCoSim_FrMessageReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageReceivedCallback.md) callback
+> or the [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md) callback is registered,
+> FlexRay message containers cannot be collected using the `DsVeosCoSim_ReceiveFrMessageContainer` function.
 
 ## Syntax
 
