@@ -56,6 +56,7 @@ using SignalExchangeDetail::RemoteSignalExchangePart;
     if (coSimType == CoSimType::Client) {
         signalExchangePart = std::make_unique<LockedSignalExchangePart>(std::move(signalExchangePart));
     }
+
     return CreateOk();
 }
 

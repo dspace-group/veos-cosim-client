@@ -41,12 +41,10 @@ void RunTest(benchmark::State& state, ConnectionKind connectionKind) {
     config.startPortMapper = false;
     config.registerAtPortMapper = false;
 
-    std::unique_ptr<CoSimServer> server;
-    MustBeOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     MustBeOk(server->Load(config));
 
-    std::unique_ptr<CoSimClient> client;
-    MustBeOk(CreateClient(client));
+    std::unique_ptr<CoSimClient> client = CreateClient();
 
     Event connectedEvent;
 

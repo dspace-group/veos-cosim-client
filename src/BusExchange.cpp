@@ -30,8 +30,7 @@ template <typename TBusExchange, typename TController>
                                                 const std::vector<TController>& controllers,
                                                 IProtocol& protocol,
                                                 std::unique_ptr<TBusExchange>& busExchangeTransport) {
-    CheckResult(TBusExchange::Create(coSimType, connectionKind, name, controllers, protocol, busExchangeTransport));
-    return CreateOk();
+    return TBusExchange::Create(coSimType, connectionKind, name, controllers, protocol, busExchangeTransport);
 }
 
 class BusExchangeImpl final : public BusExchange {

@@ -464,7 +464,7 @@ private:
     [[nodiscard]] Result ConnectInternal() {
         if (!_serverName.empty() && _remoteIpAddress.empty() && (_remotePort == 0)) {
             if (IsOk(LocalConnect())) {
-                return Result::Ok;
+                return CreateOk();
             }
 
             _remoteIpAddress = "127.0.0.1";
@@ -950,9 +950,8 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client) {
-    client = std::make_unique<CoSimClientImpl>();
-    return CreateOk();
+[[nodiscard]] std::unique_ptr<CoSimClient> CreateClient() {
+    return std::make_unique<CoSimClientImpl>();
 }
 
 }  // namespace DsVeosCoSim

@@ -14,8 +14,7 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    std::unique_ptr<CoSimClient> coSimClient;
-    CheckResult(CreateClient(coSimClient));
+    std::unique_ptr<CoSimClient> coSimClient = CreateClient();
     ConnectConfig connectConfig{};
     connectConfig.clientName = "PerformanceTestClient";
     connectConfig.serverName = CoSimServerName;

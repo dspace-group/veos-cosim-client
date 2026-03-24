@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -669,9 +670,8 @@ private:
 
 }  // namespace
 
-[[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server) {
-    server = std::make_unique<CoSimServerImpl>();
-    return CreateOk();
+[[nodiscard]] std::unique_ptr<CoSimServer> CreateServer() {
+    return std::make_unique<CoSimServerImpl>();
 }
 
 }  // namespace DsVeosCoSim

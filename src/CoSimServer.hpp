@@ -79,6 +79,6 @@ public:
     [[nodiscard]] virtual Result GetLocalPort(uint16_t& port) const = 0;
 };
 
-[[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server);
+[[nodiscard]] std::unique_ptr<CoSimServer> CreateServer();
 
 }  // namespace DsVeosCoSim

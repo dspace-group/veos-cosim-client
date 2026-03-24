@@ -28,8 +28,7 @@ namespace {
         stopSimulation = true;
     };
 
-    std::unique_ptr<CoSimServer> server;
-    CheckResult(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     CheckResult(server->Load(config));
 
     while (true) {

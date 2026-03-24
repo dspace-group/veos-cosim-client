@@ -87,6 +87,6 @@ public:
     [[nodiscard]] virtual Result Receive(FrMessageContainer& messageContainer) const = 0;
 };
 
-[[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client);
+[[nodiscard]] std::unique_ptr<CoSimClient> CreateClient();
 
 }  // namespace DsVeosCoSim
