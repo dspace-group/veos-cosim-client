@@ -50,23 +50,23 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 bool SendFrMessages;
-bool PrintTurnAroundTime;
+bool PrintRoundTripTime;
 
-time_t lastTimeTurnaroundTimePrinted;
+time_t lastTimeRoundTripTimePrinted;
 
 [[nodiscard]] DsVeosCoSim_Result Disconnect();
 
-void PrintTurnaroundTime() {
+void PrintCurrentRoundTripTime() {
     time_t now{};
     time(&now);
 
-    if (now <= lastTimeTurnaroundTimePrinted) {
+    if (now <= lastTimeRoundTripTimePrinted) {
         return;
     }
 
-    lastTimeTurnaroundTimePrinted = now;
+    lastTimeRoundTripTimePrinted = now;
 
-    if (!PrintTurnAroundTime) {
+    if (!PrintRoundTripTime) {
         return;
     }
 
@@ -114,12 +114,12 @@ void SwitchSendingFrMessages() {
     PrintStatus(SendFrMessages, "FlexRay messages");
 }
 
-void SwitchPrintingTurnAroundTime() {
-    PrintTurnAroundTime = !PrintTurnAroundTime;
-    if (PrintTurnAroundTime) {
-        LogInfo("Enabled Printing Turnaround Time.");
+void SwitchPrintingRoundTripTime() {
+    PrintRoundTripTime = !PrintRoundTripTime;
+    if (PrintRoundTripTime) {
+        LogInfo("Enabled Printing Round-Trip Time.");
     } else {
-        LogInfo("Disabled Printing Turnaround Time.");
+        LogInfo("Disabled Printing Round-Trip Time.");
     }
 }
 
@@ -536,7 +536,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
                 SwitchSendingFrMessages();
                 break;
             case '0':
-                SwitchPrintingTurnAroundTime();
+                SwitchPrintingRoundTripTime();
                 break;
             case 's':
             case 'p':
@@ -575,7 +575,7 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
                 }
             }
 
-            PrintTurnaroundTime();
+            PrintCurrentRoundTripTime();
         }
     });
 
