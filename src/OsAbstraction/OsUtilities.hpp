@@ -134,7 +134,6 @@ public:
     }
 
     [[nodiscard]] uint8_t* GetData() const;
-    [[nodiscard]] size_t GetSize() const;
 
     [[nodiscard]] bool IsValid() const;
 
@@ -202,8 +201,8 @@ private:
 class ShmPipeListener;
 
 class ShmPipeClient final {
-    static constexpr char ServerToClientPostFix[] = "ServerToClient";
-    static constexpr char ClientToServerPostFix[] = "ClientToServer";
+    static constexpr std::string_view ServerToClientPostFix = "ServerToClient";
+    static constexpr std::string_view ClientToServerPostFix = "ClientToServer";
 
     friend class ShmPipeListener;
 
@@ -221,7 +220,7 @@ public:
 
     [[nodiscard]] static Result TryConnect(std::string_view name, ShmPipeClient& client);
 
-    void Disconnect();
+    void Disconnect() const;
 
     [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize);
     [[nodiscard]] Result Send(const void* source, size_t size);

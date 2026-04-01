@@ -9,15 +9,20 @@ target_sources(
   PRIVATE
   Program.cpp
   ServerCoSim.cpp
-  ServerEvents.cpp
-  ServerLocalCommunication.cpp
+  ServerLocalChannel.cpp
   ServerLocalSocket.cpp
   ServerPipe.cpp
-  ServerRemoteCommunication.cpp
-  ServerShmPipe.cpp
+  ServerRemoteChannel.cpp
   ServerTcpSocket.cpp
   ServerUdpSocket.cpp
 )
+
+if(WIN32)
+  target_sources(PerformanceTestServer PRIVATE
+    ServerEvents.cpp
+    ServerShmPipe.cpp
+  )
+endif()
 
 target_compile_options(
   PerformanceTestServer

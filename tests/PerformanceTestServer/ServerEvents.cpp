@@ -11,11 +11,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run() {
+[[nodiscard]] Result RunServerEventsInternal() {
     LogTrace("Events server listening on SHM {} ...", ShmName);
 
     NamedEvent beginEvent;
@@ -42,27 +42,16 @@ namespace {
     return CreateOk();
 }
 
-void EventsServer() {
-    if (!IsOk(Run())) {
+void RunServerEvents() {
+    if (!IsOk(RunServerEventsInternal())) {
         LogError("Could not run Events Server.");
     }
 }
 
 }  // namespace
 
-void StartEventsServer() {
-    std::thread(EventsServer).detach();
+void ServerEvents() {
+    std::thread(RunServerEvents).detach();
 }
-
-}  // namespace DsVeosCoSim
-
-#else
-
-namespace DsVeosCoSim {
-
-void StartEventsServer() {
-}
-
-}  // namespace DsVeosCoSim
 
 #endif

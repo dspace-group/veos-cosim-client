@@ -11,32 +11,30 @@ int main(int argc, char* argv[]) {
     }
 
     if (argc > 1) {
-        RunTcpSocketTest(argv[1]);
-        RunUdpSocketTest(argv[1]);
+        ClientTcpSocket(argv[1]);
+        ClientUdpSocket(argv[1]);
 
-        RunRemoteCommunicationTest(argv[1]);
-        RunCoSimCallbackTest(argv[1]);
-        RunCoSimPollingTest(argv[1]);
+        ClientRemoteChannel(argv[1]);
+        ClientCoSimCallback(argv[1]);
+        ClientCoSimPolling(argv[1]);
     } else {
-        RunTcpSocketTest("127.0.0.1");
-        RunUdpSocketTest("127.0.0.1");
-        RunLocalSocketTest();
-        RunPipeTest();
+        ClientTcpSocket("127.0.0.1");
+        ClientUdpSocket("127.0.0.1");
+        ClientLocalSocket();
+        ClientPipe();
 
 #ifdef _WIN32
-
-        RunEventsTest();
-        RunShmPipeTest();
-
+        ClientEvents();
+        ClientShmPipe();
 #endif
 
-        RunRemoteCommunicationTest("127.0.0.1");
-        RunLocalCommunicationTest();
+        ClientRemoteChannel("127.0.0.1");
+        ClientLocalChannel();
 
-        RunCoSimCallbackTest("127.0.0.1");
-        RunCoSimCallbackTest("");
-        RunCoSimPollingTest("127.0.0.1");
-        RunCoSimPollingTest("");
+        ClientCoSimCallback("127.0.0.1");
+        ClientCoSimCallback("");
+        ClientCoSimPolling("127.0.0.1");
+        ClientCoSimPolling("");
     }
 
     return 0;

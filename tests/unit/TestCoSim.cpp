@@ -87,8 +87,7 @@ TEST_F(TestCoSim, LoadServer) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(false);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
 
     // Act
     Result result = server->Load(config);
@@ -101,8 +100,7 @@ TEST_F(TestCoSim, StartServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
 
     SimulationTime simulationTime = GenerateSimulationTime();
@@ -118,8 +116,7 @@ TEST_F(TestCoSim, StopServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
     AssertOk(server->Start(GenerateSimulationTime()));
 
@@ -136,8 +133,7 @@ TEST_F(TestCoSim, PauseServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
     AssertOk(server->Start(GenerateSimulationTime()));
 
@@ -154,8 +150,7 @@ TEST_F(TestCoSim, ContinueServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
     AssertOk(server->Start(GenerateSimulationTime()));
     AssertOk(server->Pause(GenerateSimulationTime()));
@@ -170,8 +165,7 @@ TEST_F(TestCoSim, TerminateServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
     AssertOk(server->Start(GenerateSimulationTime()));
 
@@ -186,8 +180,7 @@ TEST_F(TestCoSim, StepServerWithoutOptionalClient) {
     // Arrange
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
     AssertOk(server->Start(GenerateSimulationTime()));
 
@@ -207,8 +200,7 @@ TEST_P(TestCoSim, ConnectWithoutServer) {
 
     ConnectConfig connectConfig = CreateConnectConfig(connectionKind, GenerateString("Server名前"), 0);
 
-    std::unique_ptr<CoSimClient> client;
-    AssertOk(CreateClient(client));
+    std::unique_ptr<CoSimClient> client = CreateClient();
 
     // Act
     Result result = client->Connect(connectConfig);
@@ -223,8 +215,7 @@ TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
 
     CoSimServerConfig config = CreateServerConfig(true);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
 
     BackgroundThread backgroundThread(*server);
@@ -233,8 +224,7 @@ TEST_P(TestCoSim, ConnectToServerWithOptionalClient) {
     AssertOk(server->GetLocalPort(port));
 
     ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
-    std::unique_ptr<CoSimClient> client;
-    AssertOk(CreateClient(client));
+    std::unique_ptr<CoSimClient> client = CreateClient();
 
     // Act and assert
     AssertOk(client->Connect(connectConfig));
@@ -246,8 +236,7 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
 
     CoSimServerConfig config = CreateServerConfig(false);
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
 
     BackgroundThread backgroundThread(*server);
@@ -256,8 +245,7 @@ TEST_P(TestCoSim, ConnectToServerWithMandatoryClient) {
     AssertOk(server->GetLocalPort(port));
 
     ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
-    std::unique_ptr<CoSimClient> client;
-    AssertOk(CreateClient(client));
+    std::unique_ptr<CoSimClient> client = CreateClient();
 
     // Act and assert
     AssertOk(client->Connect(connectConfig));
@@ -274,8 +262,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
         stoppedEvent.Set();
     };
 
-    std::unique_ptr<CoSimServer> server;
-    AssertOk(CreateServer(server));
+    std::unique_ptr<CoSimServer> server = CreateServer();
     AssertOk(server->Load(config));
 
     BackgroundThread backgroundThread(*server);
@@ -284,8 +271,7 @@ TEST_P(TestCoSim, DisconnectFromServerWithMandatoryClient) {
     AssertOk(server->GetLocalPort(port));
 
     ConnectConfig connectConfig = CreateConnectConfig(connectionKind, config.serverName, port);
-    std::unique_ptr<CoSimClient> client;
-    AssertOk(CreateClient(client));
+    std::unique_ptr<CoSimClient> client = CreateClient();
     AssertOk(client->Connect(connectConfig));
 
     // Act

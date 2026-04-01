@@ -74,10 +74,10 @@ void EventRoundtrip(benchmark::State& state) {
     thread.join();
 }
 
-}  // namespace
-
 BENCHMARK(EventSet);
 BENCHMARK(EventSetAndWait);
 BENCHMARK(EventRoundtrip);
+
+}  // namespace
 
 #endif

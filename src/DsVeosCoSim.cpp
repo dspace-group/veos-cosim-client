@@ -401,11 +401,7 @@ void DsVeosCoSim_SetLogCallback(DsVeosCoSim_LogCallback logCallback) {
 }
 
 DsVeosCoSim_Handle DsVeosCoSim_Create() {
-    std::unique_ptr<CoSimClient> client;
-    if (!IsOk(CreateClient(client))) {
-        return nullptr;
-    }
-
+    std::unique_ptr<CoSimClient> client = CreateClient();
     return client.release();
 }
 

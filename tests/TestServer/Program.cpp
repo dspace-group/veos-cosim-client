@@ -41,7 +41,7 @@ public:
     ServerWrapper& operator=(ServerWrapper&&) = delete;
 
     [[nodiscard]] Result Load(const CoSimServerConfig& config) {
-        CheckResult(CreateServer(_server));
+        _server = CreateServer();
         _config = config;
         std::scoped_lock lock(_mutex);
         return _server->Load(config);
@@ -306,7 +306,6 @@ void SwitchSendingFrMessages() {
     }
 
     Server->StartBackgroundThread();
-
     return CreateOk();
 }
 

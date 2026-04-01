@@ -129,8 +129,8 @@ void LocalOnChannelIo(benchmark::State& state) {
     RunTest(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
-}  // namespace
-
 BENCHMARK(TcpIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 BENCHMARK(LocalIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 BENCHMARK(LocalOnChannelIo)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+
+}  // namespace

@@ -10,11 +10,11 @@
 #include "Result.hpp"
 #include "Socket.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientTcpSocketInternal(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     SocketClient client;
     CheckResult(SocketClient::TryConnect(host, TcpSocketPort, 0, 1000, client));
 
@@ -32,18 +32,16 @@ namespace {
     return CreateOk();
 }
 
-void TcpSocketTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientTcpSocket(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientTcpSocketInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run TCP Socket Client.");
     }
 }
 
 }  // namespace
 
-void RunTcpSocketTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
+void ClientTcpSocket(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("TCP Socket:");
-    RunPerformanceTest(TcpSocketTest, host);
+    RunPerformanceTest(RunClientTcpSocket, host);
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim

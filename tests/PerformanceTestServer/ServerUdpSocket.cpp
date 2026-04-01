@@ -9,11 +9,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run() {
+[[nodiscard]] Result RunServerUdpSocketInternal() {
     LogTrace("UDP Socket Server is listening on port {} ...", UdpSocketPort);
 
     std::array<char, FrameSize> buffer{};
@@ -34,16 +34,14 @@ namespace {
     return CreateOk();
 }
 
-void UdpSocketServer() {
-    if (!IsOk(Run())) {
+void RunServerUdpSocket() {
+    if (!IsOk(RunServerUdpSocketInternal())) {
         LogError("Could not run UDP Socket Server.");
     }
 }
 
 }  // namespace
 
-void StartUdpSocketServer() {
-    std::thread(UdpSocketServer).detach();
+void ServerUdpSocket() {
+    std::thread(RunServerUdpSocket).detach();
 }
-
-}  // namespace DsVeosCoSim

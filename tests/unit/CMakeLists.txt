@@ -44,3 +44,5 @@ target_link_libraries(
   GTest::gmock
   GTest::gtest
 )
+
+add_test(NAME DsVeosCoSimTest COMMAND DsVeosCoSimTest)

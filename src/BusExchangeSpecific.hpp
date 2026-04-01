@@ -20,7 +20,7 @@
 namespace DsVeosCoSim::BusExchangeDetail {
 
 // This layer selects the transport backend and keeps bus-specific length checks
-// independent from transport details.
+// independent of transport details.
 template <typename TBus>
 class BusExchangeSpecific final {
 public:
@@ -45,7 +45,7 @@ public:
                                        [[maybe_unused]] std::string_view name,
                                        const std::vector<TController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchangeSpecific>& busExchangeFor) {
+                                       std::unique_ptr<BusExchangeSpecific>& busExchangeSpecific) {
         std::unique_ptr<IBusExchangePart<TBus>> outboundPart;
         std::unique_ptr<IBusExchangePart<TBus>> inboundPart;
 
@@ -73,7 +73,7 @@ public:
             inboundPart = std::make_unique<LockedBusExchangePart<TBus>>(std::move(inboundPart));
         }
 
-        busExchangeFor = std::make_unique<BusExchangeSpecific>(std::move(outboundPart), std::move(inboundPart));
+        busExchangeSpecific = std::make_unique<BusExchangeSpecific>(std::move(outboundPart), std::move(inboundPart));
         return CreateOk();
     }
 

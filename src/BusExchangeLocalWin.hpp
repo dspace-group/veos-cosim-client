@@ -5,7 +5,7 @@
 #ifdef _WIN32
 
 #include <atomic>
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -75,14 +75,13 @@ public:
 
         sharedMessageQueue->Initialize(static_cast<uint32_t>(combinedQueueCapacity));
 
-        auto localBusExchangePart = std::make_unique<LocalBusExchangePart>(protocol,
-                                                                           std::move(name),
-                                                                           std::move(controllerRegistry),
-                                                                           sharedMessageCountByController,
-                                                                           sharedMessageQueue,
-                                                                           std::move(sharedMemory));
-        localBusExchangePart->ClearData();
-        busExchangePart = std::move(localBusExchangePart);
+        busExchangePart = std::make_unique<LocalBusExchangePart>(protocol,
+                                                                 std::move(name),
+                                                                 std::move(controllerRegistry),
+                                                                 sharedMessageCountByController,
+                                                                 sharedMessageQueue,
+                                                                 std::move(sharedMemory));
+        busExchangePart->ClearData();
         return CreateOk();
     }
 

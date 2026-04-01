@@ -29,11 +29,12 @@
 
 #endif
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
 std::string LastMessage;
+Severity MinimalSeverity = Severity::Trace;
 
 [[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
     SocketListener listener;
@@ -53,8 +54,6 @@ std::string LastMessage;
 [[nodiscard]] BusMessageId GenerateBusMessageId() {
     return static_cast<BusMessageId>(GenerateU32());
 }
-
-Severity MinimalSeverity = Severity::Trace;
 
 void OnLogCallback(Severity severity, const std::string& message) {
     switch (severity) {
@@ -650,5 +649,3 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerCo
 std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
     return stream << format_as(frControllerContainers);
 }
-
-}  // namespace DsVeosCoSim

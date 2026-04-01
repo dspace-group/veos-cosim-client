@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -23,9 +24,7 @@ using namespace std::chrono;
 
 namespace DsVeosCoSim {
 
-namespace {
-
-class CoSimServerImpl final : public CoSimServer {
+class CoSimServerImpl final : public CoSimServer {  // NOLINT(misc-use-internal-linkage)
 public:
     CoSimServerImpl() = default;
 
@@ -667,11 +666,8 @@ private:
     };
 };
 
-}  // namespace
-
-[[nodiscard]] Result CreateServer(std::unique_ptr<CoSimServer>& server) {
-    server = std::make_unique<CoSimServerImpl>();
-    return CreateOk();
+[[nodiscard]] std::unique_ptr<CoSimServer> CreateServer() {
+    return std::make_unique<CoSimServerImpl>();
 }
 
 }  // namespace DsVeosCoSim

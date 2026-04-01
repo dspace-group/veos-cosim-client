@@ -1,0 +1,147 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "DSVEOSCOSIM_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "base-windows",
+      "hidden": true,
+      "architecture": {
+        "value": "x64"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "base-linux",
+      "hidden": true,
+      "generator": "Ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "win-debug",
+      "displayName": "Windows Debug",
+      "inherits": [
+        "base-windows",
+        "base-debug"
+      ]
+    },
+    {
+      "name": "win-release",
+      "displayName": "Windows Release",
+      "inherits": [
+        "base-windows",
+        "base-release"
+      ]
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "inherits": [
+        "base-linux",
+        "base-debug"
+      ]
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "inherits": [
+        "base-linux",
+        "base-release"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-debug",
+      "configurePreset": "win-debug",
+      "configuration": "Debug",
+      "nativeToolOptions": [
+        "/m"
+      ]
+    },
+    {
+      "name": "win-release",
+      "configurePreset": "win-release",
+      "configuration": "Release",
+      "nativeToolOptions": [
+        "/m"
+      ]
+    },
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "base-test",
+      "hidden": true,
+      "execution": {
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "win-debug",
+      "inherits": "base-test",
+      "configurePreset": "win-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "win-release",
+      "inherits": "base-test",
+      "configurePreset": "win-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-debug",
+      "inherits": "base-test",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "linux-release",
+      "inherits": "base-test",
+      "configurePreset": "linux-release"
+    }
+  ]
+}

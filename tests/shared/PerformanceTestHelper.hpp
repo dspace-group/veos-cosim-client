@@ -7,7 +7,7 @@
 [[maybe_unused]] constexpr uint32_t FrameSize = 24U;
 [[maybe_unused]] constexpr uint16_t UdpSocketPort = 27100;
 [[maybe_unused]] constexpr uint16_t TcpSocketPort = 27101;
-[[maybe_unused]] constexpr uint16_t CommunicationPort = 27102;
+[[maybe_unused]] constexpr uint16_t RemoteChannelPort = 27102;
 [[maybe_unused]] constexpr uint16_t CoSimPort = 27103;
 [[maybe_unused]] constexpr char PipeName[] = "Pipe4711";
 [[maybe_unused]] constexpr char ShmPipeName[] = "ShmPipe4711";

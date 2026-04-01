@@ -26,7 +26,7 @@ TEST_F(TestTypes, DataToString) {
     std::string string = DataToString(data.data(), data.size(), separator);
 
     // Assert
-    ASSERT_STREQ("de/af", string.c_str());
+    ASSERT_EQ(string, "de/af");
 }
 
 TEST_F(TestTypes, SimulationTimeToString) {
@@ -37,7 +37,7 @@ TEST_F(TestTypes, SimulationTimeToString) {
     std::string string = SimulationTimeToString(simulationTime);
 
     // Assert
-    ASSERT_STREQ("0.000000042", string.c_str());
+    ASSERT_EQ(string, "0.000000042");
 }
 
 TEST_F(TestTypes, ResultToString) {
@@ -48,7 +48,7 @@ TEST_F(TestTypes, ResultToString) {
     std::string_view string = format_as(result);
 
     // Assert
-    ASSERT_STREQ("Error", string.data());
+    ASSERT_EQ(string, "Error");
 }
 
 TEST_F(TestTypes, CoSimTypeToString) {
@@ -59,7 +59,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
     std::string_view string = format_as(coSimType);
 
     // Assert
-    ASSERT_STREQ("Server", string.data());
+    ASSERT_EQ(string, "Server");
 }
 
 TEST_F(TestTypes, ConnectionKindToString) {
@@ -70,7 +70,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
     std::string_view string = format_as(connectionKind);
 
     // Assert
-    ASSERT_STREQ("Remote", string.data());
+    ASSERT_EQ(string, "Remote");
 }
 
 TEST_F(TestTypes, CommandToString) {
@@ -81,7 +81,7 @@ TEST_F(TestTypes, CommandToString) {
     std::string_view string = format_as(command);
 
     // Assert
-    ASSERT_STREQ("Start", string.data());
+    ASSERT_EQ(string, "Start");
 }
 
 TEST_F(TestTypes, SeverityToString) {
@@ -92,7 +92,7 @@ TEST_F(TestTypes, SeverityToString) {
     std::string_view string = format_as(severity);
 
     // Assert
-    ASSERT_STREQ("Warning", string.data());
+    ASSERT_EQ(string, "Warning");
 }
 
 TEST_F(TestTypes, TerminateReasonToString) {
@@ -103,7 +103,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
     std::string_view string = format_as(terminateReason);
 
     // Assert
-    ASSERT_STREQ("Finished", string.data());
+    ASSERT_EQ(string, "Finished");
 }
 
 TEST_F(TestTypes, ConnectionStateToString) {
@@ -114,7 +114,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
     std::string_view string = format_as(connectionState);
 
     // Assert
-    ASSERT_STREQ("Disconnected", string.data());
+    ASSERT_EQ(string, "Disconnected");
 }
 
 TEST_F(TestTypes, GetDataTypeSize) {
@@ -136,7 +136,7 @@ TEST_F(TestTypes, DataTypeToString) {
     std::string_view string = format_as(dataType);
 
     // Assert
-    ASSERT_STREQ("Float64", string.data());
+    ASSERT_EQ(string, "Float64");
 }
 
 TEST_F(TestTypes, SizeKindToString) {
@@ -147,7 +147,7 @@ TEST_F(TestTypes, SizeKindToString) {
     std::string_view string = format_as(sizeKind);
 
     // Assert
-    ASSERT_STREQ("Variable", string.data());
+    ASSERT_EQ(string, "Variable");
 }
 
 TEST_F(TestTypes, ValueToString) {
@@ -160,7 +160,7 @@ TEST_F(TestTypes, ValueToString) {
     std::string string = ValueToString(dataType, length, data.data());
 
     // Assert
-    ASSERT_STREQ("4.2 0.000789 200", string.c_str());
+    ASSERT_EQ(string, "4.2 0.000789 200");
 }
 
 TEST_F(TestTypes, SimulationStateToString) {
@@ -171,7 +171,7 @@ TEST_F(TestTypes, SimulationStateToString) {
     std::string_view string = format_as(simulationState);
 
     // Assert
-    ASSERT_STREQ("Stopped", string.data());
+    ASSERT_EQ(string, "Stopped");
 }
 
 TEST_F(TestTypes, ModeToString) {
@@ -182,7 +182,7 @@ TEST_F(TestTypes, ModeToString) {
     std::string_view string = format_as(mode);
 
     // Assert
-    ASSERT_STREQ("<Unused>", string.data());
+    ASSERT_EQ(string, "<Unused>");
 }
 
 TEST_F(TestTypes, IoSignalIdToString) {
@@ -193,7 +193,7 @@ TEST_F(TestTypes, IoSignalIdToString) {
     std::string string = format_as(signalId);
 
     // Assert
-    ASSERT_STREQ("86", string.c_str());
+    ASSERT_EQ(string, "86");
 }
 
 TEST_F(TestTypes, IoSignalToString) {
@@ -211,7 +211,7 @@ TEST_F(TestTypes, IoSignalToString) {
     std::string string = format_as(signal);
 
     // Assert
-    ASSERT_STREQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string.c_str());
+    ASSERT_EQ(string, "IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }");
 }
 
 TEST_F(TestTypes, IoSignalContainerToString) {
@@ -227,7 +227,7 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     std::string string = format_as(signalContainer);
 
     // Assert
-    ASSERT_STREQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string.c_str());
+    ASSERT_EQ(string, "IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }");
 }
 
 TEST_F(TestTypes, IoSignalContainerConvert) {
@@ -271,7 +271,7 @@ TEST_F(TestTypes, IoDataToString) {
     std::string string = IoDataToString(signal, length, &data);
 
     // Assert
-    ASSERT_STREQ("IO Data { Id: 42, Length: 1, Data: 65432 }", string.c_str());
+    ASSERT_EQ(string, "IO Data { Id: 42, Length: 1, Data: 65432 }");
 }
 
 TEST_F(TestTypes, SignalContainersToString) {
@@ -296,10 +296,9 @@ TEST_F(TestTypes, SignalContainersToString) {
     std::string string = format_as(signalContainers);
 
     // Assert
-    ASSERT_STREQ(
-        "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: 44, Length: 45, DataType: Bool, "
-        "SizeKind: Fixed, Name: \"MySignal2\" }]",
-        string.c_str());
+    ASSERT_EQ(string,
+              "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: 44, Length: 45, DataType: Bool, "
+              "SizeKind: Fixed, Name: \"MySignal2\" }]");
 }
 
 TEST_F(TestTypes, SignalContainersConvert) {
@@ -351,7 +350,7 @@ TEST_F(TestTypes, BusControllerIdToString) {
     std::string string = format_as(controllerId);
 
     // Assert
-    ASSERT_STREQ("123", string.c_str());
+    ASSERT_EQ(string, "123");
 }
 
 TEST_F(TestTypes, BusMessageIdToString) {
@@ -362,7 +361,7 @@ TEST_F(TestTypes, BusMessageIdToString) {
     std::string string = format_as(messageId);
 
     // Assert
-    ASSERT_STREQ("234", string.c_str());
+    ASSERT_EQ(string, "234");
 }
 
 TEST_F(TestTypes, CanMessageFlagsToString) {
@@ -373,7 +372,7 @@ TEST_F(TestTypes, CanMessageFlagsToString) {
     std::string string = format_as(flags);
 
     // Assert
-    ASSERT_STREQ("Loopback,Error", string.c_str());
+    ASSERT_EQ(string, "Loopback,Error");
 }
 
 TEST_F(TestTypes, CanControllerToString) {
@@ -395,10 +394,9 @@ TEST_F(TestTypes, CanControllerToString) {
     std::string string = format_as(controller);
 
     // Assert
-    ASSERT_STREQ(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
-        "ClusterName: \"clusterName\" }",
-        string.c_str());
+    ASSERT_EQ(string,
+              "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
+              "ClusterName: \"clusterName\" }");
 }
 
 TEST_F(TestTypes, CanControllerContainerToString) {
@@ -416,10 +414,9 @@ TEST_F(TestTypes, CanControllerContainerToString) {
     std::string string = format_as(controllerContainer);
 
     // Assert
-    ASSERT_STREQ(
-        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
-        "ClusterName: \"clusterName\" }",
-        string.c_str());
+    ASSERT_EQ(std::string("CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: "
+                          "\"channelName\", ClusterName: \"clusterName\" }"),
+              string);
 }
 
 TEST_F(TestTypes, CanControllerContainerConvert) {

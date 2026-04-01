@@ -16,12 +16,12 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateName() {
+[[nodiscard]] std::string GenerateShmPipeName() {
     return GenerateString("ShmPipe");
 }
 
 void EstablishConnection(ShmPipeClient& connectClient, ShmPipeClient& acceptClient) {
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
     AssertOk(ShmPipeListener::Create(name, listener));
@@ -35,7 +35,7 @@ class TestShmPipe : public testing::Test {};
 
 TEST_F(TestShmPipe, CreateListenerShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
 
@@ -48,7 +48,7 @@ TEST_F(TestShmPipe, CreateListenerShouldWork) {
 
 TEST_F(TestShmPipe, ConnectToListeningSocketShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
     AssertOk(ShmPipeListener::Create(name, listener));
@@ -64,7 +64,7 @@ TEST_F(TestShmPipe, ConnectToListeningSocketShouldWork) {
 
 TEST_F(TestShmPipe, ConnectWithoutListeningShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     {
         ShmPipeListener listener;
@@ -82,7 +82,7 @@ TEST_F(TestShmPipe, ConnectWithoutListeningShouldNotWork) {
 
 TEST_F(TestShmPipe, AcceptWithoutConnectShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
     AssertOk(ShmPipeListener::Create(name, listener));
@@ -98,7 +98,7 @@ TEST_F(TestShmPipe, AcceptWithoutConnectShouldNotWork) {
 
 TEST_F(TestShmPipe, AcceptAfterStopShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
     AssertOk(ShmPipeListener::Create(name, listener));
@@ -116,7 +116,7 @@ TEST_F(TestShmPipe, AcceptAfterStopShouldNotWork) {
 
 TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
     AssertOk(ShmPipeListener::Create(name, listener));
@@ -135,7 +135,7 @@ TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
 
 TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -159,7 +159,7 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
 
 TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -183,7 +183,7 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
 
 TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -207,7 +207,7 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
 
 TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateShmPipeName();
 
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;

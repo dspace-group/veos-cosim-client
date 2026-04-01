@@ -22,17 +22,15 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-enum class ResponderMode {
+enum class ResponderMode {  // NOLINT(misc-use-internal-linkage)
     Unknown,
     Blocking,
     NonBlocking
 };
 
-class CoSimClientImpl final : public CoSimClient {
+class CoSimClientImpl final : public CoSimClient {  // NOLINT(misc-use-internal-linkage)
 public:
     CoSimClientImpl() = default;
     ~CoSimClientImpl() noexcept override = default;
@@ -464,7 +462,7 @@ private:
     [[nodiscard]] Result ConnectInternal() {
         if (!_serverName.empty() && _remoteIpAddress.empty() && (_remotePort == 0)) {
             if (IsOk(LocalConnect())) {
-                return Result::Ok;
+                return CreateOk();
             }
 
             _remoteIpAddress = "127.0.0.1";
@@ -591,7 +589,7 @@ private:
             CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
             switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-                case FrameKind::Step: {
+                case FrameKind::Step:
                     CheckResultWithMessage(OnStep(), "Could not handle step.");
                     if (!_isConnected) {
                         return CreateNotConnected();
@@ -599,7 +597,10 @@ private:
 
                     CheckResult(FinishStep());
                     break;
-                }
+                case FrameKind::Ping:
+                    CheckResultWithMessage(OnPing(), "Could not handle ping.");
+                    CheckResult(FinishPing());
+                    break;
                 case FrameKind::Start:
                     CheckResultWithMessage(OnStart(), "Could not handle start.");
                     if (!_isConnected) {
@@ -640,10 +641,6 @@ private:
 
                     CheckResult(FinishCurrentCommand());
                     break;
-                case FrameKind::Ping:
-                    CheckResultWithMessage(OnPing(), "Could not handle ping.");
-                    CheckResult(FinishPing());
-                    break;
                 default:
                     return OnUnexpectedFrame(frameKind);
             }
@@ -665,6 +662,7 @@ private:
                     _currentCommand = Command::Step;
                     break;
                 case FrameKind::Ping:
+                    CheckResultWithMessage(OnPing(), "Could not handle ping.");
                     _currentCommand = Command::Ping;
                     CheckResult(FinishPing());
                     break;
@@ -948,11 +946,8 @@ private:
     };
 };
 
-}  // namespace
-
-[[nodiscard]] Result CreateClient(std::unique_ptr<CoSimClient>& client) {
-    client = std::make_unique<CoSimClientImpl>();
-    return CreateOk();
+[[nodiscard]] std::unique_ptr<CoSimClient> CreateClient() {
+    return std::make_unique<CoSimClientImpl>();
 }
 
 }  // namespace DsVeosCoSim

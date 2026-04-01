@@ -18,25 +18,25 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-struct Param {
+struct TcpChannelParam {
     AddressFamily addressFamily{};
 };
 
-[[nodiscard]] std::vector<Param> GetValues() {
-    std::vector<Param> values;
+[[nodiscard]] std::vector<TcpChannelParam> GetTcpChannelTestParameters() {
+    std::vector<TcpChannelParam> values;
 
     if (IsIpv4SocketSupported()) {
-        values.push_back(Param{AddressFamily::Ipv4});
+        values.push_back(TcpChannelParam{AddressFamily::Ipv4});
     }
 
     if (IsIpv6SocketSupported()) {
-        values.push_back(Param{AddressFamily::Ipv6});
+        values.push_back(TcpChannelParam{AddressFamily::Ipv6});
     }
 
     return values;
 }
 
-void EstablishConnection(const Param& param, std::unique_ptr<Channel>& connectChannel, std::unique_ptr<Channel>& acceptChannel) {
+void EstablishConnection(const TcpChannelParam& param, std::unique_ptr<Channel>& connectChannel, std::unique_ptr<Channel>& acceptChannel) {
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
@@ -48,9 +48,9 @@ void EstablishConnection(const Param& param, std::unique_ptr<Channel>& connectCh
     AssertOk(server->TryAccept(acceptChannel));
 }
 
-class TestTcpChannel : public testing::TestWithParam<Param> {};
+class TestTcpChannel : public testing::TestWithParam<TcpChannelParam> {};
 
-INSTANTIATE_TEST_SUITE_P(, TestTcpChannel, testing::ValuesIn(GetValues()), [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
+INSTANTIATE_TEST_SUITE_P(, TestTcpChannel, testing::ValuesIn(GetTcpChannelTestParameters()), [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
     return fmt::format("{}", info.param.addressFamily);
 });
 
@@ -80,7 +80,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
 
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     uint16_t port{};
@@ -102,7 +102,7 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
 
 TEST_P(TestTcpChannel, Connect) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
@@ -135,7 +135,7 @@ TEST_P(TestTcpChannel, AcceptWithoutConnect) {
 
 TEST_P(TestTcpChannel, Accept) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
@@ -157,7 +157,7 @@ TEST_P(TestTcpChannel, Accept) {
 
 TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -170,12 +170,12 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses) {
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(acceptChannelRemoteAddress.c_str(), "");
+    ASSERT_NE(acceptChannelRemoteAddress, "");
 }
 
 TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -188,7 +188,7 @@ TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses) {
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(connectChannelRemoteAddress.c_str(), "");
+    ASSERT_NE(connectChannelRemoteAddress, "");
 }
 
 TEST_F(TestTcpChannel, ConnectClientUsingHostName) {
@@ -228,7 +228,7 @@ TEST_F(TestTcpChannel, AcceptClientWithHostName) {
 
 TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
     const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
@@ -253,7 +253,7 @@ TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
 
 TEST_P(TestTcpChannel, WriteUInt16ToChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -265,7 +265,7 @@ TEST_P(TestTcpChannel, WriteUInt16ToChannel) {
 
 TEST_P(TestTcpChannel, WriteUInt32ToChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -277,7 +277,7 @@ TEST_P(TestTcpChannel, WriteUInt32ToChannel) {
 
 TEST_P(TestTcpChannel, WriteUInt64ToChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -289,7 +289,7 @@ TEST_P(TestTcpChannel, WriteUInt64ToChannel) {
 
 TEST_P(TestTcpChannel, WriteBufferToChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -301,7 +301,7 @@ TEST_P(TestTcpChannel, WriteBufferToChannel) {
 
 TEST_P(TestTcpChannel, ReadUInt16FromChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -313,7 +313,7 @@ TEST_P(TestTcpChannel, ReadUInt16FromChannel) {
 
 TEST_P(TestTcpChannel, ReadUInt32FromChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -325,7 +325,7 @@ TEST_P(TestTcpChannel, ReadUInt32FromChannel) {
 
 TEST_P(TestTcpChannel, ReadUInt64FromChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -337,7 +337,7 @@ TEST_P(TestTcpChannel, ReadUInt64FromChannel) {
 
 TEST_P(TestTcpChannel, ReadBufferFromChannel) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -349,7 +349,7 @@ TEST_P(TestTcpChannel, ReadBufferFromChannel) {
 
 TEST_P(TestTcpChannel, PingPong) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -361,7 +361,7 @@ TEST_P(TestTcpChannel, PingPong) {
 
 TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -373,7 +373,7 @@ TEST_P(TestTcpChannel, SendTwoFramesAtOnce) {
 
 TEST_P(TestTcpChannel, Stream) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;
@@ -385,7 +385,7 @@ TEST_P(TestTcpChannel, Stream) {
 
 TEST_P(TestTcpChannel, SendAndReceiveBigElement) {
     // Arrange
-    Param param = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<Channel> connectChannel;
     std::unique_ptr<Channel> acceptChannel;

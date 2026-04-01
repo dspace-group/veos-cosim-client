@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstdint>
-#include <cstring>
+#include <cstring>  // IWYU pragma: keep
 #include <string>
 #include <vector>
 
@@ -210,6 +210,133 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
 
 }  // namespace
 
+[[nodiscard]] IoSignal IoSignalContainer::Convert() const {
+    IoSignal ioSignal{};
+    ioSignal.id = id;
+    ioSignal.length = length;
+    ioSignal.dataType = dataType;
+    ioSignal.sizeKind = sizeKind;
+    ioSignal.name = name.c_str();
+    return ioSignal;
+}
+
+[[nodiscard]] CanController CanControllerContainer::Convert() const {
+    CanController canController{};
+    canController.id = id;
+    canController.queueSize = queueSize;
+    canController.bitsPerSecond = bitsPerSecond;
+    canController.flexibleDataRateBitsPerSecond = flexibleDataRateBitsPerSecond;
+    canController.name = name.c_str();
+    canController.channelName = channelName.c_str();
+    canController.clusterName = clusterName.c_str();
+    return canController;
+}
+
+void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const {
+    canMessageContainer.timestamp = timestamp;
+    canMessageContainer.controllerId = controllerId;
+    canMessageContainer.id = id;
+    canMessageContainer.flags = flags;
+    canMessageContainer.length = length;
+    memcpy(canMessageContainer.data.data(), data, length);
+}
+
+void CanMessageContainer::WriteTo(CanMessage& canMessage) const {
+    canMessage.timestamp = timestamp;
+    canMessage.controllerId = controllerId;
+    canMessage.id = id;
+    canMessage.flags = flags;
+    canMessage.length = length;
+    canMessage.data = data.data();
+}
+
+[[nodiscard]] EthController EthControllerContainer::Convert() const {
+    EthController ethController{};
+    ethController.id = id;
+    ethController.queueSize = queueSize;
+    ethController.bitsPerSecond = bitsPerSecond;
+    ethController.macAddress = macAddress;
+    ethController.name = name.c_str();
+    ethController.channelName = channelName.c_str();
+    ethController.clusterName = clusterName.c_str();
+    return ethController;
+}
+
+void EthMessage::WriteTo(EthMessageContainer& ethMessageContainer) const {
+    ethMessageContainer.timestamp = timestamp;
+    ethMessageContainer.controllerId = controllerId;
+    ethMessageContainer.flags = flags;
+    ethMessageContainer.length = length;
+    memcpy(ethMessageContainer.data.data(), data, length);
+}
+
+void EthMessageContainer::WriteTo(EthMessage& ethMessage) const {
+    ethMessage.timestamp = timestamp;
+    ethMessage.controllerId = controllerId;
+    ethMessage.flags = flags;
+    ethMessage.length = length;
+    ethMessage.data = data.data();
+}
+
+[[nodiscard]] LinController LinControllerContainer::Convert() const {
+    LinController controller{};
+    controller.id = id;
+    controller.queueSize = queueSize;
+    controller.bitsPerSecond = bitsPerSecond;
+    controller.type = type;
+    controller.name = name.c_str();
+    controller.channelName = channelName.c_str();
+    controller.clusterName = clusterName.c_str();
+    return controller;
+}
+
+void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const {
+    linMessageContainer.timestamp = timestamp;
+    linMessageContainer.controllerId = controllerId;
+    linMessageContainer.id = id;
+    linMessageContainer.flags = flags;
+    linMessageContainer.length = length;
+    memcpy(linMessageContainer.data.data(), data, length);
+}
+
+void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
+    linMessage.timestamp = timestamp;
+    linMessage.controllerId = controllerId;
+    linMessage.id = id;
+    linMessage.flags = flags;
+    linMessage.length = length;
+    linMessage.data = data.data();
+}
+
+[[nodiscard]] FrController FrControllerContainer::Convert() const {
+    FrController controller{};
+    controller.id = id;
+    controller.queueSize = queueSize;
+    controller.bitsPerSecond = bitsPerSecond;
+    controller.name = name.c_str();
+    controller.channelName = channelName.c_str();
+    controller.clusterName = clusterName.c_str();
+    return controller;
+}
+
+void FrMessage::WriteTo(FrMessageContainer& frMessageContainer) const {
+    frMessageContainer.timestamp = timestamp;
+    frMessageContainer.controllerId = controllerId;
+    frMessageContainer.id = id;
+    frMessageContainer.flags = flags;
+    frMessageContainer.length = length;
+    memcpy(frMessageContainer.data.data(), data, length);
+}
+
+void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
+    frMessage.timestamp = timestamp;
+    frMessage.controllerId = controllerId;
+    frMessage.id = id;
+    frMessage.flags = flags;
+    frMessage.length = length;
+    frMessage.data = data.data();
+}
+
 [[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime) {
     std::string str = std::to_string(simulationTime.count());
 
@@ -229,6 +356,124 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     }
 
     return str;
+}
+
+[[nodiscard]] std::string format_as(const IoSignal& ioSignal) {
+    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
+}
+
+[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal) {
+    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
+}
+
+[[nodiscard]] std::string format_as(const CanController& canController) {
+    return CanControllerToString(canController.id,
+                                 canController.queueSize,
+                                 canController.bitsPerSecond,
+                                 canController.flexibleDataRateBitsPerSecond,
+                                 canController.name,
+                                 canController.channelName,
+                                 canController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const CanControllerContainer& canController) {
+    return CanControllerToString(canController.id,
+                                 canController.queueSize,
+                                 canController.bitsPerSecond,
+                                 canController.flexibleDataRateBitsPerSecond,
+                                 canController.name,
+                                 canController.channelName,
+                                 canController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const CanMessage& canMessage) {
+    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data, canMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage) {
+    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data.data(), canMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const EthController& ethController) {
+    return EthControllerToString(ethController.id,
+                                 ethController.queueSize,
+                                 ethController.bitsPerSecond,
+                                 ethController.macAddress,
+                                 ethController.name,
+                                 ethController.channelName,
+                                 ethController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const EthControllerContainer& ethController) {
+    return EthControllerToString(ethController.id,
+                                 ethController.queueSize,
+                                 ethController.bitsPerSecond,
+                                 ethController.macAddress,
+                                 ethController.name,
+                                 ethController.channelName,
+                                 ethController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const EthMessage& ethMessage) {
+    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data, ethMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage) {
+    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data.data(), ethMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const LinController& linController) {
+    return LinControllerToString(linController.id,
+                                 linController.queueSize,
+                                 linController.bitsPerSecond,
+                                 linController.type,
+                                 linController.name,
+                                 linController.channelName,
+                                 linController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const LinControllerContainer& linController) {
+    return LinControllerToString(linController.id,
+                                 linController.queueSize,
+                                 linController.bitsPerSecond,
+                                 linController.type,
+                                 linController.name,
+                                 linController.channelName,
+                                 linController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const LinMessage& linMessage) {
+    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data, linMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage) {
+    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data.data(), linMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const FrController& frController) {
+    return FrControllerToString(frController.id,
+                                frController.queueSize,
+                                frController.bitsPerSecond,
+                                frController.name,
+                                frController.channelName,
+                                frController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const FrControllerContainer& frController) {
+    return FrControllerToString(frController.id,
+                                frController.queueSize,
+                                frController.bitsPerSecond,
+                                frController.name,
+                                frController.channelName,
+                                frController.clusterName);
+}
+
+[[nodiscard]] std::string format_as(const FrMessage& frMessage) {
+    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data, frMessage.flags);
+}
+
+[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage) {
+    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data.data(), frMessage.flags);
 }
 
 [[nodiscard]] std::string format_as(IoSignalId ioSignalId) {
@@ -405,124 +650,6 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     }
 
     return str;
-}
-
-[[nodiscard]] std::string format_as(const IoSignal& ioSignal) {
-    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
-}
-
-[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal) {
-    return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
-}
-
-[[nodiscard]] std::string format_as(const CanController& canController) {
-    return CanControllerToString(canController.id,
-                                 canController.queueSize,
-                                 canController.bitsPerSecond,
-                                 canController.flexibleDataRateBitsPerSecond,
-                                 canController.name,
-                                 canController.channelName,
-                                 canController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const CanControllerContainer& canController) {
-    return CanControllerToString(canController.id,
-                                 canController.queueSize,
-                                 canController.bitsPerSecond,
-                                 canController.flexibleDataRateBitsPerSecond,
-                                 canController.name,
-                                 canController.channelName,
-                                 canController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const CanMessage& canMessage) {
-    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data, canMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage) {
-    return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data.data(), canMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const EthController& ethController) {
-    return EthControllerToString(ethController.id,
-                                 ethController.queueSize,
-                                 ethController.bitsPerSecond,
-                                 ethController.macAddress,
-                                 ethController.name,
-                                 ethController.channelName,
-                                 ethController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const EthControllerContainer& ethController) {
-    return EthControllerToString(ethController.id,
-                                 ethController.queueSize,
-                                 ethController.bitsPerSecond,
-                                 ethController.macAddress,
-                                 ethController.name,
-                                 ethController.channelName,
-                                 ethController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const EthMessage& ethMessage) {
-    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data, ethMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage) {
-    return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data.data(), ethMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const LinController& linController) {
-    return LinControllerToString(linController.id,
-                                 linController.queueSize,
-                                 linController.bitsPerSecond,
-                                 linController.type,
-                                 linController.name,
-                                 linController.channelName,
-                                 linController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const LinControllerContainer& linController) {
-    return LinControllerToString(linController.id,
-                                 linController.queueSize,
-                                 linController.bitsPerSecond,
-                                 linController.type,
-                                 linController.name,
-                                 linController.channelName,
-                                 linController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const LinMessage& linMessage) {
-    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data, linMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage) {
-    return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data.data(), linMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const FrController& frController) {
-    return FrControllerToString(frController.id,
-                                frController.queueSize,
-                                frController.bitsPerSecond,
-                                frController.name,
-                                frController.channelName,
-                                frController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const FrControllerContainer& frController) {
-    return FrControllerToString(frController.id,
-                                frController.queueSize,
-                                frController.bitsPerSecond,
-                                frController.name,
-                                frController.channelName,
-                                frController.clusterName);
-}
-
-[[nodiscard]] std::string format_as(const FrMessage& frMessage) {
-    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data, frMessage.flags);
-}
-
-[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage) {
-    return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data.data(), frMessage.flags);
 }
 
 [[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
@@ -1057,63 +1184,6 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     return true;
 }
 
-[[nodiscard]] IoSignal IoSignalContainer::Convert() const {
-    IoSignal ioSignal{};
-    ioSignal.id = id;
-    ioSignal.length = length;
-    ioSignal.dataType = dataType;
-    ioSignal.sizeKind = sizeKind;
-    ioSignal.name = name.c_str();
-    return ioSignal;
-}
-
-[[nodiscard]] CanController CanControllerContainer::Convert() const {
-    CanController canController{};
-    canController.id = id;
-    canController.queueSize = queueSize;
-    canController.bitsPerSecond = bitsPerSecond;
-    canController.flexibleDataRateBitsPerSecond = flexibleDataRateBitsPerSecond;
-    canController.name = name.c_str();
-    canController.channelName = channelName.c_str();
-    canController.clusterName = clusterName.c_str();
-    return canController;
-}
-
-[[nodiscard]] EthController EthControllerContainer::Convert() const {
-    EthController ethController{};
-    ethController.id = id;
-    ethController.queueSize = queueSize;
-    ethController.bitsPerSecond = bitsPerSecond;
-    ethController.macAddress = macAddress;
-    ethController.name = name.c_str();
-    ethController.channelName = channelName.c_str();
-    ethController.clusterName = clusterName.c_str();
-    return ethController;
-}
-
-[[nodiscard]] LinController LinControllerContainer::Convert() const {
-    LinController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.type = type;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
-[[nodiscard]] FrController FrControllerContainer::Convert() const {
-    FrController controller{};
-    controller.id = id;
-    controller.queueSize = queueSize;
-    controller.bitsPerSecond = bitsPerSecond;
-    controller.name = name.c_str();
-    controller.channelName = channelName.c_str();
-    controller.clusterName = clusterName.c_str();
-    return controller;
-}
-
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers) {
     std::vector<IoSignal> ioSignals;
     ioSignals.reserve(ioSignalContainers.size());
@@ -1167,76 +1237,6 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     }
 
     return controllers;
-}
-
-void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const {
-    canMessageContainer.timestamp = timestamp;
-    canMessageContainer.controllerId = controllerId;
-    canMessageContainer.id = id;
-    canMessageContainer.flags = flags;
-    canMessageContainer.length = length;
-    memcpy(canMessageContainer.data.data(), data, length);
-}
-
-void CanMessageContainer::WriteTo(CanMessage& canMessage) const {
-    canMessage.timestamp = timestamp;
-    canMessage.controllerId = controllerId;
-    canMessage.id = id;
-    canMessage.flags = flags;
-    canMessage.length = length;
-    canMessage.data = data.data();
-}
-
-void EthMessage::WriteTo(EthMessageContainer& ethMessageContainer) const {
-    ethMessageContainer.timestamp = timestamp;
-    ethMessageContainer.controllerId = controllerId;
-    ethMessageContainer.flags = flags;
-    ethMessageContainer.length = length;
-    memcpy(ethMessageContainer.data.data(), data, length);
-}
-
-void EthMessageContainer::WriteTo(EthMessage& ethMessage) const {
-    ethMessage.timestamp = timestamp;
-    ethMessage.controllerId = controllerId;
-    ethMessage.flags = flags;
-    ethMessage.length = length;
-    ethMessage.data = data.data();
-}
-
-void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const {
-    linMessageContainer.timestamp = timestamp;
-    linMessageContainer.controllerId = controllerId;
-    linMessageContainer.id = id;
-    linMessageContainer.flags = flags;
-    linMessageContainer.length = length;
-    memcpy(linMessageContainer.data.data(), data, length);
-}
-
-void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
-    linMessage.timestamp = timestamp;
-    linMessage.controllerId = controllerId;
-    linMessage.id = id;
-    linMessage.flags = flags;
-    linMessage.length = length;
-    linMessage.data = data.data();
-}
-
-void FrMessage::WriteTo(FrMessageContainer& frMessageContainer) const {
-    frMessageContainer.timestamp = timestamp;
-    frMessageContainer.controllerId = controllerId;
-    frMessageContainer.id = id;
-    frMessageContainer.flags = flags;
-    frMessageContainer.length = length;
-    memcpy(frMessageContainer.data.data(), data, length);
-}
-
-void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
-    frMessage.timestamp = timestamp;
-    frMessage.controllerId = controllerId;
-    frMessage.id = id;
-    frMessage.flags = flags;
-    frMessage.length = length;
-    frMessage.data = data.data();
 }
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType) {

@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -87,8 +87,8 @@ public:
 
         for (auto& [signalId, metaData] : metaDataLookup) {
             SignalState& signalState = signalStates[metaData.signalIndex];
-            SharedDataPtr activePart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfActivePartInShm);
-            SharedDataPtr stagingPart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfStagingPartInShm);
+            auto activePart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfActivePartInShm);
+            auto stagingPart = reinterpret_cast<SharedDataPtr>(sharedMemory.GetData() + signalState.offsetOfStagingPartInShm);
             if (metaData.info.sizeKind == SizeKind::Fixed) {
                 activePart->currentLength = metaData.info.length;
                 stagingPart->currentLength = metaData.info.length;

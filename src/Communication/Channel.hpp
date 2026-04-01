@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstring>
+#include <cstring>  // IWYU pragma: keep
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -135,7 +135,6 @@ public:
 
         blockWriter = BlockWriter(&_writeBuffer[static_cast<size_t>(_writeIndex)], size);
         _writeIndex += sizeToReserve;
-
         return CreateOk();
     }
 
@@ -152,7 +151,6 @@ public:
 
         WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
-
         return CreateOk();
     }
 
@@ -169,7 +167,6 @@ public:
 
         WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
-
         return CreateOk();
     }
 
@@ -186,7 +183,6 @@ public:
 
         WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
         _writeIndex += size;
-
         return CreateOk();
     }
 

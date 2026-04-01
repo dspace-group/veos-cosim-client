@@ -10,7 +10,7 @@
 #include "Event.hpp"
 #include "Logger.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& host) {
     Event connected;
@@ -40,5 +40,3 @@ void RunPerformanceTest(const PerformanceTestFunc& function, const std::string& 
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
-
-}  // namespace DsVeosCoSim

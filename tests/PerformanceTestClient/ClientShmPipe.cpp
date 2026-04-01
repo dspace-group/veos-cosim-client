@@ -13,11 +13,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientShmPipeInternal([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     ShmPipeClient client;
     CheckResult(ShmPipeClient::TryConnect(ShmPipeName, client));
 
@@ -35,20 +35,18 @@ namespace {
     return CreateOk();
 }
 
-void ShmPipeTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientShmPipe(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientShmPipeInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run SHM Pipe Client.");
     }
 }
 
 }  // namespace
 
-void RunShmPipeTest() {  // NOLINT(misc-use-internal-linkage)
+void ClientShmPipe() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("SHM Pipe:");
-    RunPerformanceTest(ShmPipeTest, "");
+    RunPerformanceTest(RunClientShmPipe, "");
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim
 
 #endif

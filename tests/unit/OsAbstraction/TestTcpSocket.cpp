@@ -16,28 +16,28 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-struct Param {
+struct TcpSocketParam {
     AddressFamily addressFamily{};
     bool enableRemoteAccess{};
 };
 
-[[nodiscard]] std::vector<Param> GetValues() {
-    std::vector<Param> values;
+[[nodiscard]] std::vector<TcpSocketParam> GetTcpSocketTestParameters() {
+    std::vector<TcpSocketParam> values;
 
     if (IsIpv4SocketSupported()) {
-        values.push_back(Param{AddressFamily::Ipv4, true});
-        values.push_back(Param{AddressFamily::Ipv4, false});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv4, true});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv4, false});
     }
 
     if (IsIpv6SocketSupported()) {
-        values.push_back(Param{AddressFamily::Ipv6, true});
-        values.push_back(Param{AddressFamily::Ipv6, false});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv6, true});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv6, false});
     }
 
     return values;
 }
 
-void EstablishConnection(const Param& param, SocketClient& connectClient, SocketClient& acceptClient) {
+void EstablishConnection(const TcpSocketParam& param, SocketClient& connectClient, SocketClient& acceptClient) {
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
@@ -49,16 +49,17 @@ void EstablishConnection(const Param& param, SocketClient& connectClient, Socket
     AssertOk(listener.TryAccept(acceptClient));
 }
 
-class TestTcpSocket : public testing::TestWithParam<Param> {};
+class TestTcpSocket : public testing::TestWithParam<TcpSocketParam> {};
 
-INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetValues()), [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
-    std::string access = info.param.enableRemoteAccess ? "Remote" : "Local";
-    return fmt::format("{}_{}", info.param.addressFamily, access);
+INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetTcpSocketTestParameters()), [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
+    TcpSocketParam param = info.param;
+    std::string access = param.enableRemoteAccess ? "Remote" : "Local";
+    return fmt::format("{}_{}", param.addressFamily, access);
 });
 
 TEST_P(TestTcpSocket, CreateSocketShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
 
@@ -71,7 +72,7 @@ TEST_P(TestTcpSocket, CreateSocketShouldWork) {
 
 TEST_P(TestTcpSocket, LocalPortIsNotZero) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
@@ -88,7 +89,7 @@ TEST_P(TestTcpSocket, LocalPortIsNotZero) {
 
 TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
@@ -107,7 +108,7 @@ TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
 
 TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     uint16_t localPort{};
 
@@ -129,7 +130,7 @@ TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
@@ -145,7 +146,7 @@ TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
@@ -163,7 +164,7 @@ TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
@@ -185,7 +186,7 @@ TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
 
 TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -209,7 +210,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
 
 TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -233,7 +234,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
 
 TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -257,7 +258,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
 
 TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -281,7 +282,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
 
 TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -294,12 +295,12 @@ TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(connectClientRemoteAddress.c_str(), "");
+    ASSERT_NE(connectClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -312,12 +313,12 @@ TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) 
 
     // Assert
     AssertOk(result);
-    ASSERT_STRNE(acceptClientRemoteAddress.c_str(), "");
+    ASSERT_NE(acceptClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -329,7 +330,7 @@ TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
 
 TEST_P(TestTcpSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -341,7 +342,7 @@ TEST_P(TestTcpSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
 
 TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -353,7 +354,7 @@ TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
 
 TEST_P(TestTcpSocket, PingPongBeginningWithAcceptClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -365,7 +366,7 @@ TEST_P(TestTcpSocket, PingPongBeginningWithAcceptClientShouldWork) {
 
 TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -377,7 +378,7 @@ TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
 
 TEST_P(TestTcpSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -389,7 +390,7 @@ TEST_P(TestTcpSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork)
 
 TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -401,7 +402,7 @@ TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
 
 TEST_P(TestTcpSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -413,7 +414,7 @@ TEST_P(TestTcpSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
 
 TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -425,7 +426,7 @@ TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
 
 TEST_P(TestTcpSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -435,33 +436,9 @@ TEST_P(TestTcpSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     TestSendAfterDisconnect(acceptClient);
 }
 
-// TEST_P(TestTcpSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
-//     // Arrange
-//     Param param = GetParam();
-
-//     SocketClient connectClient;
-//     SocketClient acceptClient;
-//     EstablishConnection(param, connectClient, acceptClient);
-
-//     // Act and assert
-//     TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
-// }
-
-// TEST_P(TestTcpSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
-//     // Arrange
-//     Param param = GetParam();
-
-//     SocketClient connectClient;
-//     SocketClient acceptClient;
-//     EstablishConnection(param, connectClient, acceptClient);
-
-//     // Act and assert
-//     TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
-// }
-
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -473,7 +450,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
 
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -485,7 +462,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
 
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -497,7 +474,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
 
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
     // Arrange
-    Param param = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;

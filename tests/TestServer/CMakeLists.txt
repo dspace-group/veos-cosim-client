@@ -26,6 +26,5 @@ target_link_libraries(
   TestServer
   PRIVATE
   DsVeosCoSim
-  fmt::fmt
   shared
 )
