@@ -22,11 +22,9 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-class PortMapperServerImpl final : public PortMapperServer {
+class PortMapperServerImpl final : public PortMapperServer {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit PortMapperServerImpl(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol)
         : _server(std::move(channelServer)), _protocol(std::move(protocol)) {
@@ -162,8 +160,6 @@ private:
     Event _stopEvent;
     std::unique_ptr<IProtocol> _protocol;
 };
-
-}  // namespace
 
 [[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer) {
     std::unique_ptr<ChannelServer> channelServer;

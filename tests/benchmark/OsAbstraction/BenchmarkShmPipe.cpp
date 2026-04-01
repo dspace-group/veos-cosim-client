@@ -62,8 +62,8 @@ void ShmPipeRoundtrip(benchmark::State& state) {
     RunTest(state, connectClient, acceptClient);
 }
 
-}  // namespace
-
 BENCHMARK(ShmPipeRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+
+}  // namespace
 
 #endif

@@ -79,7 +79,7 @@ void Local(benchmark::State& state) {
     RunTest(state, ConnectionKind::Local);
 }
 
-}  // namespace
-
 BENCHMARK(Remote);
 BENCHMARK(Local);
+
+}  // namespace

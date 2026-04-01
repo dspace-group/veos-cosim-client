@@ -13,11 +13,9 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 constexpr int32_t DefaultReadPacketSize = 1024;
 
-class SocketChannelWriter final : public ChannelWriter {
+class SocketChannelWriter final : public ChannelWriter {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit SocketChannelWriter(SocketClient& client) : _client(client) {
     }
@@ -51,7 +49,7 @@ private:
     SocketClient& _client;
 };
 
-class SocketChannelReader final : public ChannelReader {
+class SocketChannelReader final : public ChannelReader {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit SocketChannelReader(SocketClient& client) : _client(client) {
         _defaultSizeToRead = DefaultReadPacketSize;
@@ -81,7 +79,7 @@ private:
     SocketClient& _client;
 };
 
-class SocketChannel final : public Channel {
+class SocketChannel final : public Channel {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit SocketChannel(SocketClient client) : _client(std::move(client)), _writer(_client), _reader(_client) {
     }
@@ -117,7 +115,7 @@ private:
     SocketChannelReader _reader;
 };
 
-class TcpChannelServer final : public ChannelServer {
+class TcpChannelServer final : public ChannelServer {  // NOLINT(misc-use-internal-linkage)
 public:
     TcpChannelServer(SocketListener listenerIpv4, SocketListener listenerIpv6, uint16_t port)
         : _listenerIpv4(std::move(listenerIpv4)), _listenerIpv6(std::move(listenerIpv6)), _port(port) {
@@ -196,8 +194,6 @@ private:
 };
 
 #endif
-
-}  // namespace
 
 [[nodiscard]] Result TryConnectToTcpChannel(const std::string& remoteIpAddress,
                                             uint16_t remotePort,

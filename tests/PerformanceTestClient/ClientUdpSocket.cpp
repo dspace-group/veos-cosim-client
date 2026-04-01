@@ -9,11 +9,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientUdpSocketInternal(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     UdpSocket udpSocket;
     CheckResult(UdpSocket::CreateClient(udpSocket));
 
@@ -37,18 +37,16 @@ namespace {
     return CreateOk();
 }
 
-void UdpSocketTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientUdpSocket(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientUdpSocketInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run UDP Socket Client.");
     }
 }
 
 }  // namespace
 
-void RunUdpSocketTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
+void ClientUdpSocket(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     LogTrace("UDP Socket:");
-    RunPerformanceTest(UdpSocketTest, host);
+    RunPerformanceTest(RunClientUdpSocket, host);
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim

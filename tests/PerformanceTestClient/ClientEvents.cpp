@@ -12,11 +12,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientEventsInternal([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     NamedEvent beginEvent;
     CheckResult(NamedEvent::CreateOrOpen(BeginEventName, beginEvent));
 
@@ -45,20 +45,18 @@ namespace {
     return CreateOk();
 }
 
-void EventsTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientEvents(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientEventsInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run Events Client.");
     }
 }
 
 }  // namespace
 
-void RunEventsTest() {  // NOLINT(misc-use-internal-linkage)
+void ClientEvents() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Event:");
-    RunPerformanceTest(EventsTest, "");
+    RunPerformanceTest(RunClientEvents, "");
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim
 
 #endif

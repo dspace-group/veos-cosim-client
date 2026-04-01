@@ -16,12 +16,12 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 using CanBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::CanBus>;
 using EthBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::EthBus>;
 using LinBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::LinBus>;
 using FrBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::FrBus>;
+
+namespace {
 
 template <typename TBusExchange, typename TController>
 [[nodiscard]] Result CreateBusExchangeTransport(CoSimType coSimType,
@@ -33,7 +33,9 @@ template <typename TBusExchange, typename TController>
     return TBusExchange::Create(coSimType, connectionKind, name, controllers, protocol, busExchangeTransport);
 }
 
-class BusExchangeImpl final : public BusExchange {
+}  // namespace
+
+class BusExchangeImpl final : public BusExchange {  // NOLINT(misc-use-internal-linkage)
 public:
     BusExchangeImpl(std::unique_ptr<CanBusExchange> canBusExchange,
                     std::unique_ptr<EthBusExchange> ethBusExchange,
@@ -166,8 +168,6 @@ private:
 
     bool _doFlexRayOperations{};
 };
-
-}  // namespace
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
                                        ConnectionKind connectionKind,

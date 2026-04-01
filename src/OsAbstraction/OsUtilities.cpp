@@ -40,9 +40,9 @@ namespace DsVeosCoSim {
 
 #ifdef _WIN32
 
-namespace {
-
 constexpr size_t ServerSharedMemorySize = 4;
+
+namespace {
 
 [[nodiscard]] int32_t GetLastWindowsError() {
     return static_cast<int32_t>(GetLastError());

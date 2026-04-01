@@ -7,12 +7,12 @@ add_executable(
 target_sources(
   PerformanceTestClient
   PRIVATE
-  ClientCoSimCallbackBased.cpp
-  ClientCoSimPollingBased.cpp
-  ClientLocalCommunication.cpp
+  ClientCoSimCallback.cpp
+  ClientCoSimPolling.cpp
+  ClientLocalChannel.cpp
   ClientLocalSocket.cpp
   ClientPipe.cpp
-  ClientRemoteCommunication.cpp
+  ClientRemoteChannel.cpp
   ClientTcpSocket.cpp
   ClientUdpSocket.cpp
   PerformanceTestClient.cpp

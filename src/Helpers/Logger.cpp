@@ -15,9 +15,9 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 #ifdef _WIN32
+
+namespace {
 
 [[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
@@ -40,9 +40,9 @@ namespace {
     return message;
 }
 
-#endif
-
 }  // namespace
+
+#endif
 
 void LogError(int32_t errorCode, const std::string& message) {
     std::string reason;

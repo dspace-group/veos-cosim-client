@@ -15,6 +15,82 @@ Implementation of a shared library used to create co-simulation clients for dSPA
 
 DsVeosCoSim requires `fmt` for internal string formatting. A standalone build picks up the bundled copy from `third_party/fmt` automatically, so no extra CMake arguments are required as long as that directory is present.
 
+The repository now provides cross-platform CMake presets and wrapper scripts:
+
+- `build.ps1` for native Windows
+- `build.sh` for native Linux and WSL
+
+Defaults:
+
+- Configuration: `Debug`
+- Tests: `ON`
+- WSL uses dedicated output directories (`build/wsl-*`) to avoid interference with native Windows builds.
+
+#### Build with scripts (recommended)
+
+Windows (PowerShell):
+
+```powershell
+./build.ps1
+```
+
+Linux:
+
+```bash
+./build.sh
+```
+
+WSL:
+
+```bash
+./build.sh
+```
+
+Useful options:
+
+- `--config Release` for release builds
+- `--no-test` to skip tests
+- `--clean` to remove the preset-specific build directory before configuring
+- `--preset <name>` to force a specific preset
+
+Examples:
+
+```powershell
+./build.ps1 -Config Release -Clean
+./build.ps1 -Preset win-debug
+```
+
+```bash
+./build.sh --config Release --clean
+./build.sh --no-test
+```
+
+#### Build with CMake presets directly
+
+List available presets:
+
+```console
+cmake --list-presets
+```
+
+Configure/build/test with a preset:
+
+```console
+cmake --preset win-debug
+cmake --build --preset win-debug --config Debug
+./build/win-debug/tests/unit/Debug/DsVeosCoSimTest.exe
+```
+
+Preset families:
+
+- Windows native: `win-debug`, `win-release`
+- Linux native: `linux-debug`, `linux-release`
+- WSL: `wsl-debug`, `wsl-release`
+
+WSL note:
+
+- Use only `wsl-*` presets in WSL. Do not reuse `win-*` or `linux-*` output directories from WSL.
+
 ```console
 cmake -S . -B build
 cmake --build build

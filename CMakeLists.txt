@@ -1,6 +1,6 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.19)
 
 project(DsVeosCoSim VERSION 1.1)
 
@@ -86,8 +86,6 @@ endif()
 add_subdirectory(src)
 
 if(DSVEOSCOSIM_BUILD_TESTS)
-  add_subdirectory(tests)
-
   set(INSTALL_GTEST OFF)
   set(BUILD_GMOCK ON)
   set(gtest_force_shared_crt ON)
@@ -95,7 +93,18 @@ if(DSVEOSCOSIM_BUILD_TESTS)
 
   set(BENCHMARK_ENABLE_INSTALL OFF)
   set(BENCHMARK_INSTALL_DOCS OFF)
+  set(BENCHMARK_ENABLE_TESTING OFF)
   set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
   set(BENCHMARK_USE_BUNDLED_GTEST OFF)
   add_subdirectory(third_party/benchmark EXCLUDE_FROM_ALL)
+
+  add_subdirectory(tests/benchmark)
+  add_subdirectory(tests/PerformanceTestClient)
+  add_subdirectory(tests/PerformanceTestServer)
+  add_subdirectory(tests/shared)
+  add_subdirectory(tests/TestClient)
+  add_subdirectory(tests/TestServer)
+
+  include(CTest)
+  add_subdirectory(tests/unit)
 endif()

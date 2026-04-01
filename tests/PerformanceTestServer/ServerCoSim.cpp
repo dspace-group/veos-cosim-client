@@ -9,11 +9,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run() {
+[[nodiscard]] Result RunServerCoSimInternal() {
     LogTrace("dSPACE VEOS CoSim server is listening ...");
 
     bool stopSimulation = false;
@@ -48,16 +48,14 @@ namespace {
     return CreateOk();
 }
 
-void CoSimServerRun() {
-    if (!IsOk(Run())) {
+void RunServerCoSim() {
+    if (!IsOk(RunServerCoSimInternal())) {
         LogError("Could not run CoSim server.");
     }
 }
 
 }  // namespace
 
-void StartCoSimServer() {
-    std::thread(CoSimServerRun).detach();
+void ServerCoSim() {
+    std::thread(RunServerCoSim).detach();
 }
-
-}  // namespace DsVeosCoSim

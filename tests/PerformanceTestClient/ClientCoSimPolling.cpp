@@ -9,11 +9,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientCoSimPollingInternal(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     std::unique_ptr<CoSimClient> coSimClient = CreateClient();
     ConnectConfig connectConfig{};
     connectConfig.clientName = "PerformanceTestClient";
@@ -56,23 +56,21 @@ namespace {
     return CreateOk();
 }
 
-void CoSimClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientCoSimPolling(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientCoSimPollingInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run CoSim polling client.");
     }
 }
 
 }  // namespace
 
-void RunCoSimPollingTest(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
+void ClientCoSimPolling(const std::string& host) {  // NOLINT(misc-use-internal-linkage)
     if (host.empty()) {
         LogTrace("Local dSPACE VEOS CoSim Polling:");
     } else {
         LogTrace("Remote dSPACE VEOS CoSim Polling:");
     }
 
-    RunPerformanceTest(CoSimClientRun, host);
+    RunPerformanceTest(RunClientCoSimPolling, host);
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim

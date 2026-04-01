@@ -16,7 +16,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateName() {
+[[nodiscard]] std::string GenerateLocalSocketName() {
     return GenerateString("LocalPath");
 }
 
@@ -33,7 +33,7 @@ class TestLocalSocket : public testing::Test {};
 
 TEST_F(TestLocalSocket, CreateListenerShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketListener listener;
 
@@ -46,7 +46,7 @@ TEST_F(TestLocalSocket, CreateListenerShouldWork) {
 
 TEST_F(TestLocalSocket, ConnectToListeningSocketShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(name, listener));
@@ -62,7 +62,7 @@ TEST_F(TestLocalSocket, ConnectToListeningSocketShouldWork) {
 
 TEST_F(TestLocalSocket, ConnectWithoutListeningShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     {
         SocketListener listener;
@@ -80,7 +80,7 @@ TEST_F(TestLocalSocket, ConnectWithoutListeningShouldNotWork) {
 
 TEST_F(TestLocalSocket, AcceptWithoutConnectShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(name, listener));
@@ -96,7 +96,7 @@ TEST_F(TestLocalSocket, AcceptWithoutConnectShouldNotWork) {
 
 TEST_F(TestLocalSocket, AcceptAfterStopShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(name, listener));
@@ -114,7 +114,7 @@ TEST_F(TestLocalSocket, AcceptAfterStopShouldNotWork) {
 
 TEST_F(TestLocalSocket, AcceptWithConnectShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketListener listener;
     AssertOk(SocketListener::Create(name, listener));
@@ -133,7 +133,7 @@ TEST_F(TestLocalSocket, AcceptWithConnectShouldWork) {
 
 TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -157,7 +157,7 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
 
 TEST_F(TestLocalSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -181,7 +181,7 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
 
 TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -205,7 +205,7 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
 
 TEST_F(TestLocalSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -229,7 +229,7 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
 
 TEST_F(TestLocalSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -241,7 +241,7 @@ TEST_F(TestLocalSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
 
 TEST_F(TestLocalSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -253,7 +253,7 @@ TEST_F(TestLocalSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
 
 TEST_F(TestLocalSocket, PingPongBeginningWithConnectClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -265,7 +265,7 @@ TEST_F(TestLocalSocket, PingPongBeginningWithConnectClientShouldWork) {
 
 TEST_F(TestLocalSocket, PingPongBeginningWithAcceptClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -277,7 +277,7 @@ TEST_F(TestLocalSocket, PingPongBeginningWithAcceptClientShouldWork) {
 
 TEST_F(TestLocalSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -289,7 +289,7 @@ TEST_F(TestLocalSocket, SendManyElementsFromConnectClientToAcceptClientShouldWor
 
 TEST_F(TestLocalSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -301,7 +301,7 @@ TEST_F(TestLocalSocket, SendManyElementsFromAcceptClientToConnectClientShouldWor
 
 TEST_F(TestLocalSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -313,7 +313,7 @@ TEST_F(TestLocalSocket, SendBigElementFromConnectClientToAcceptClientShouldWork)
 
 TEST_F(TestLocalSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -325,7 +325,7 @@ TEST_F(TestLocalSocket, SendBigElementFromAcceptClientToConnectClientShouldWork)
 
 TEST_F(TestLocalSocket, SendOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -337,7 +337,7 @@ TEST_F(TestLocalSocket, SendOnDisconnectedConnectClientShouldNotWork) {
 
 TEST_F(TestLocalSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -347,33 +347,9 @@ TEST_F(TestLocalSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
     TestSendAfterDisconnect(acceptClient);
 }
 
-// TEST_F(TestLocalSocket, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
-//     // Arrange
-//     std::string name = GenerateName();
-
-//     SocketClient connectClient;
-//     SocketClient acceptClient;
-//     EstablishConnection(name, connectClient, acceptClient);
-
-//     // Act and assert
-//     TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
-// }
-
-// TEST_F(TestLocalSocket, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
-//     // Arrange
-//     std::string name = GenerateName();
-
-//     SocketClient connectClient;
-//     SocketClient acceptClient;
-//     EstablishConnection(name, connectClient, acceptClient);
-
-//     // Act and assert
-//     TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
-// }
-
 TEST_F(TestLocalSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -385,7 +361,7 @@ TEST_F(TestLocalSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
 
 TEST_F(TestLocalSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -397,7 +373,7 @@ TEST_F(TestLocalSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
 
 TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -409,7 +385,7 @@ TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
 
 TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateLocalSocketName();
 
     SocketClient connectClient;
     SocketClient acceptClient;

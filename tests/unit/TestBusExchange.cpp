@@ -1041,11 +1041,11 @@ TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessageContainers) {
 
     std::unique_ptr<BusExchange> receiverBusExchange;
     AssertOk(CreateBusExchange(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller1, controller2},
-                             *protocol,
-                             receiverBusExchange));
+                               connectionKind,
+                               GetCounterPart(name, connectionKind),
+                               {controller1, controller2},
+                               *protocol,
+                               receiverBusExchange));
 
     std::deque<TMessageContainer> sendMessageContainers;
 
@@ -1102,11 +1102,11 @@ TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessages) {
 
     std::unique_ptr<BusExchange> receiverBusExchange;
     AssertOk(CreateBusExchange(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller1, controller2},
-                             *protocol,
-                             receiverBusExchange));
+                               connectionKind,
+                               GetCounterPart(name, connectionKind),
+                               {controller1, controller2},
+                               *protocol,
+                               receiverBusExchange));
 
     std::vector<TMessageContainer> sendMessageContainers;
     sendMessageContainers.reserve(controller1.queueSize + controller2.queueSize);
@@ -1169,11 +1169,11 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainersByEventWithTransf
 
     std::unique_ptr<BusExchange> receiverBusExchange;
     AssertOk(CreateBusExchange(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller1, controller2},
-                             *protocol,
-                             receiverBusExchange));
+                               connectionKind,
+                               GetCounterPart(name, connectionKind),
+                               {controller1, controller2},
+                               *protocol,
+                               receiverBusExchange));
 
     std::deque<std::tuple<TController, TMessageContainer>> expectedEvents;
 
@@ -1221,11 +1221,11 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessagesByEventWithTransfer) {
 
     std::unique_ptr<BusExchange> receiverBusExchange;
     AssertOk(CreateBusExchange(GetCounterPart(coSimType),
-                             connectionKind,
-                             GetCounterPart(name, connectionKind),
-                             {controller1, controller2},
-                             *protocol,
-                             receiverBusExchange));
+                               connectionKind,
+                               GetCounterPart(name, connectionKind),
+                               {controller1, controller2},
+                               *protocol,
+                               receiverBusExchange));
 
     std::vector<TMessageContainer> sendMessageContainers;
     sendMessageContainers.reserve(controller1.queueSize + controller2.queueSize);
@@ -1377,7 +1377,7 @@ TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainerByEve
 
     // Act and assert
     TestBusExchange<TypeParam>::Transfer(connectionKind, *fakeSenderBusExchange, *receiverBusExchange,
-                                       expectedEvents);  // Should not transfer anything
+                                         expectedEvents);  // Should not transfer anything
 }
 
 TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageByEvent) {
@@ -1422,7 +1422,7 @@ TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageByEvent) {
 
     // Act and assert
     TestBusExchange<TypeParam>::Transfer(connectionKind, *fakeSenderBusExchange, *receiverBusExchange,
-                                       expectedEvents);  // Should not transfer anything
+                                         expectedEvents);  // Should not transfer anything
 }
 
 }  // namespace

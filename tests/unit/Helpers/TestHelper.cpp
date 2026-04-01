@@ -15,7 +15,7 @@
 
 using namespace testing;
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 [[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
@@ -37,20 +37,6 @@ void TestSendAfterDisconnect(SocketClient& client) {
     // Assert
     AssertNotConnected(result);
 }
-
-// TODO: It takes some time to detect a remote disconnect. How to force it?
-// void TestSendAfterDisconnectOnRemoteClient(SocketClient& client1, SocketClient& client2) {
-//     // Arrange
-//     client1.Disconnect();
-
-//     size_t sendValue = GenerateSizeT();
-
-//     // Act
-//     Result result = client2.Send(&sendValue, sizeof(sendValue));  // NOLINT
-
-//     // Assert
-//     AssertNotConnected(result);
-// }
 
 void TestReceiveAfterDisconnect(SocketClient& client) {
     // Arrange
@@ -503,5 +489,3 @@ void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Chan
 
     thread.join();
 }
-
-}  // namespace DsVeosCoSim

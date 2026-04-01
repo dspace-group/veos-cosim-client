@@ -24,9 +24,7 @@ using namespace std::chrono;
 
 namespace DsVeosCoSim {
 
-namespace {
-
-class CoSimServerImpl final : public CoSimServer {
+class CoSimServerImpl final : public CoSimServer {  // NOLINT(misc-use-internal-linkage)
 public:
     CoSimServerImpl() = default;
 
@@ -667,8 +665,6 @@ private:
         return _busExchange->Deserialize(reader, simulationTime, callbacks);
     };
 };
-
-}  // namespace
 
 [[nodiscard]] std::unique_ptr<CoSimServer> CreateServer() {
     return std::make_unique<CoSimServerImpl>();

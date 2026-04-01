@@ -41,5 +41,5 @@ target_link_libraries(
   shared
   PUBLIC
   DsVeosCoSim
-  fmt::fmt
+  ${DSVEOSCOSIM_FMT_TARGET}
 )

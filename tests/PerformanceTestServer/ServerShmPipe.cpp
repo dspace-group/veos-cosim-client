@@ -12,11 +12,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-Result RunForConnected(ShmPipeClient& shmPipeClient) {
+Result RunForConnectedShmPipe(ShmPipeClient& shmPipeClient) {
     std::array<char, FrameSize> buffer{};
 
     while (true) {
@@ -25,7 +25,7 @@ Result RunForConnected(ShmPipeClient& shmPipeClient) {
     }
 }
 
-[[nodiscard]] Result Run() {
+[[nodiscard]] Result RunServerShmPipeInternal() {
     LogTrace("SHM Pipe server is listening on pipe {} ...", ShmPipeName);
 
     ShmPipeListener listener;
@@ -48,24 +48,22 @@ Result RunForConnected(ShmPipeClient& shmPipeClient) {
             return result;
         }
 
-        RunForConnected(client);
+        RunForConnectedShmPipe(client);
     }
 
     return CreateOk();
 }
 
-void ShmPipeServer() {
-    if (!IsOk(Run())) {
+void RunServerShmPipe() {
+    if (!IsOk(RunServerShmPipeInternal())) {
         LogError("Could not run SHM Pipe Server.");
     }
 }
 
 }  // namespace
 
-void StartShmPipeServer() {
-    std::thread(ShmPipeServer).detach();
+void ServerShmPipe() {
+    std::thread(RunServerShmPipe).detach();
 }
-
-}  // namespace DsVeosCoSim
 
 #endif

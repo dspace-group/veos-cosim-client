@@ -19,8 +19,6 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 constexpr size_t MaxStringSize = 65536;
 
 constexpr size_t IoSignalInfoSize = sizeof(IoSignalId) + sizeof(uint32_t) + sizeof(DataType) + sizeof(SizeKind);
@@ -33,9 +31,7 @@ constexpr size_t EthMessageSize = sizeof(SimulationTime) + sizeof(BusControllerI
 constexpr size_t LinMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) + sizeof(LinMessageFlags) + sizeof(uint32_t);
 constexpr size_t FrMessageSize = sizeof(SimulationTime) + sizeof(BusControllerId) + sizeof(BusMessageId) + sizeof(FrMessageFlags) + sizeof(uint32_t);
 
-}  // namespace
-
-class ProtocolV1 : public IProtocol {
+class ProtocolV1 : public IProtocol {  // NOLINT(misc-use-internal-linkage)
 public:
     [[nodiscard]] Result ReadSize(ChannelReader& reader, size_t& size) override {
         uint32_t intSize{};
@@ -1216,7 +1212,7 @@ protected:
     }
 };
 
-class ProtocolV2 : public ProtocolV1 {
+class ProtocolV2 final : public ProtocolV1 {  // NOLINT(misc-use-internal-linkage)
 public:
     [[nodiscard]] Result ReadConnectOk(ChannelReader& reader,
                                        Mode& clientMode,

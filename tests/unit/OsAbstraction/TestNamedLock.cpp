@@ -15,7 +15,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateName() {
+[[nodiscard]] std::string GenerateNamedLockName() {
     return GenerateString("Mutex名前\xF0\x9F\x98\x80");
 }
 
@@ -31,7 +31,7 @@ void DifferentThread(std::string_view name, int32_t& counter) {
 
 TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedLockName();
 
     int32_t counter{};
 

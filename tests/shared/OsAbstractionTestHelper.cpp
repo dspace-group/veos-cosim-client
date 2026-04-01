@@ -35,6 +35,8 @@
 
 #endif
 
+using namespace DsVeosCoSim;
+
 #ifdef _WIN32
 
 using SocketLength = int32_t;
@@ -46,8 +48,6 @@ using SocketLength = socklen_t;
 #define CAST(expression) static_cast<int32_t>(expression)
 
 #endif
-
-using namespace DsVeosCoSim;
 
 namespace {
 

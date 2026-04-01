@@ -1,9 +1,4 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
 build/
-obj/
-tmplin/
-tmpwin/
-.mono/
-
-debug.log
+Testing/

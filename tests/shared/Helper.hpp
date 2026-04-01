@@ -22,8 +22,6 @@
 
 #endif
 
-namespace DsVeosCoSim {
-
 [[maybe_unused]] constexpr int32_t F6 = -64;
 [[maybe_unused]] constexpr int32_t F8 = -66;
 [[maybe_unused]] constexpr int32_t F9 = -67;
@@ -38,10 +36,10 @@ namespace DsVeosCoSim {
 #endif
 
 void InitializeOutput();
-void SetMinimalSeverity(Severity severity);
+void SetMinimalSeverity(DsVeosCoSim::Severity severity);
 
-void MustBeOk(const Result& result);
-void MustBeNotConnected(const Result& result);
+void MustBeOk(const DsVeosCoSim::Result& result);
+void MustBeNotConnected(const DsVeosCoSim::Result& result);
 
 void LogIoData(std::string_view ioDataStr);
 void LogCanMessage(std::string_view canMessageStr);
@@ -53,51 +51,51 @@ void LogFrMessage(std::string_view linMessageStr);
 
 void SetEnvVariable(const std::string& name, const std::string& value);
 
-[[nodiscard]] Result StartUp();
+[[nodiscard]] DsVeosCoSim::Result StartUp();
 
-[[nodiscard]] constexpr const char* GetLoopBackAddress(AddressFamily addressFamily) noexcept {
-    if (addressFamily == AddressFamily::Ipv4) {
+[[nodiscard]] constexpr const char* GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily) noexcept {
+    if (addressFamily == DsVeosCoSim::AddressFamily::Ipv4) {
         return "127.0.0.1";
     }
 
     return "::1";
 }
 
-[[nodiscard]] Result ReceiveComplete(const SocketClient& client, void* buffer, size_t length);
+[[nodiscard]] DsVeosCoSim::Result ReceiveComplete(const DsVeosCoSim::SocketClient& client, void* buffer, size_t length);
 
 #ifdef _WIN32
 
-[[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length);
+[[nodiscard]] DsVeosCoSim::Result ReceiveComplete(DsVeosCoSim::ShmPipeClient& client, void* buffer, size_t length);
 
 #endif
 
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<CanController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange);
+[[nodiscard]] DsVeosCoSim::Result CreateBusExchange(DsVeosCoSim::CoSimType coSimType,
+                                                    DsVeosCoSim::ConnectionKind connectionKind,
+                                                    std::string_view name,
+                                                    const std::vector<DsVeosCoSim::CanController>& controllers,
+                                                    DsVeosCoSim::IProtocol& protocol,
+                                                    std::unique_ptr<DsVeosCoSim::BusExchange>& busExchange);
 
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<EthController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange);
+[[nodiscard]] DsVeosCoSim::Result CreateBusExchange(DsVeosCoSim::CoSimType coSimType,
+                                                    DsVeosCoSim::ConnectionKind connectionKind,
+                                                    std::string_view name,
+                                                    const std::vector<DsVeosCoSim::EthController>& controllers,
+                                                    DsVeosCoSim::IProtocol& protocol,
+                                                    std::unique_ptr<DsVeosCoSim::BusExchange>& busExchange);
 
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<LinController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange);
+[[nodiscard]] DsVeosCoSim::Result CreateBusExchange(DsVeosCoSim::CoSimType coSimType,
+                                                    DsVeosCoSim::ConnectionKind connectionKind,
+                                                    std::string_view name,
+                                                    const std::vector<DsVeosCoSim::LinController>& controllers,
+                                                    DsVeosCoSim::IProtocol& protocol,
+                                                    std::unique_ptr<DsVeosCoSim::BusExchange>& busExchange);
 
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<FrController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange);
+[[nodiscard]] DsVeosCoSim::Result CreateBusExchange(DsVeosCoSim::CoSimType coSimType,
+                                                    DsVeosCoSim::ConnectionKind connectionKind,
+                                                    std::string_view name,
+                                                    const std::vector<DsVeosCoSim::FrController>& controllers,
+                                                    DsVeosCoSim::IProtocol& protocol,
+                                                    std::unique_ptr<DsVeosCoSim::BusExchange>& busExchange);
 
 [[nodiscard]] uint8_t GenerateU8();
 [[nodiscard]] uint16_t GenerateU16();
@@ -115,80 +113,78 @@ template <typename T>
 }
 
 [[nodiscard]] std::string GenerateString(std::string_view prefix);
-[[nodiscard]] SimulationTime GenerateSimulationTime();
-[[nodiscard]] BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);
-[[nodiscard]] BusControllerId GenerateBusControllerId();
-[[nodiscard]] IoSignalId GenerateIoSignalId();
+[[nodiscard]] DsVeosCoSim::SimulationTime GenerateSimulationTime();
+[[nodiscard]] DsVeosCoSim::BusMessageId GenerateBusMessageId(uint32_t min, uint32_t max);
+[[nodiscard]] DsVeosCoSim::BusControllerId GenerateBusControllerId();
+[[nodiscard]] DsVeosCoSim::IoSignalId GenerateIoSignalId();
 [[nodiscard]] std::vector<uint8_t> GenerateBytes(size_t length);
 
-[[nodiscard]] IoSignalContainer CreateSignal();
-[[nodiscard]] IoSignalContainer CreateSignal(DataType dataType);
-[[nodiscard]] IoSignalContainer CreateSignal(DataType dataType, SizeKind sizeKind);
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal();
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal(DsVeosCoSim::DataType dataType);
+[[nodiscard]] DsVeosCoSim::IoSignalContainer CreateSignal(DsVeosCoSim::DataType dataType, DsVeosCoSim::SizeKind sizeKind);
 
-[[nodiscard]] std::vector<uint8_t> GenerateIoData(const IoSignalContainer& signal);
-[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const IoSignalContainer& signal);
+[[nodiscard]] std::vector<uint8_t> GenerateIoData(const DsVeosCoSim::IoSignalContainer& signal);
+[[nodiscard]] std::vector<uint8_t> CreateZeroedIoData(const DsVeosCoSim::IoSignalContainer& signal);
 
-void FillWithRandom(CanControllerContainer& controller);
-void FillWithRandom(EthControllerContainer& controller);
-void FillWithRandom(LinControllerContainer& controller);
-void FillWithRandom(FrControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::CanControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::EthControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::LinControllerContainer& controller);
+void FillWithRandom(DsVeosCoSim::FrControllerContainer& controller);
 
-void FillWithRandom(CanMessageContainer& message, BusControllerId controllerId);
-void FillWithRandom(EthMessageContainer& message, BusControllerId controllerId);
-void FillWithRandom(LinMessageContainer& message, BusControllerId controllerId);
-void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::CanMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::EthMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::LinMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
+void FillWithRandom(DsVeosCoSim::FrMessageContainer& message, DsVeosCoSim::BusControllerId controllerId);
 
-[[nodiscard]] std::vector<IoSignalContainer> CreateSignals(size_t count);
-[[nodiscard]] std::vector<CanControllerContainer> CreateCanControllers(size_t count);
-[[nodiscard]] std::vector<EthControllerContainer> CreateEthControllers(size_t count);
-[[nodiscard]] std::vector<LinControllerContainer> CreateLinControllers(size_t count);
-[[nodiscard]] std::vector<FrControllerContainer> CreateFrControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::IoSignalContainer> CreateSignals(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::CanControllerContainer> CreateCanControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::EthControllerContainer> CreateEthControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::LinControllerContainer> CreateLinControllers(size_t count);
+[[nodiscard]] std::vector<DsVeosCoSim::FrControllerContainer> CreateFrControllers(size_t count);
 
-std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime);
-std::ostream& operator<<(std::ostream& stream, Result result);
-std::ostream& operator<<(std::ostream& stream, CoSimType coSimType);
-std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind);
-std::ostream& operator<<(std::ostream& stream, Command command);
-std::ostream& operator<<(std::ostream& stream, Severity severity);
-std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason);
-std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState);
-std::ostream& operator<<(std::ostream& stream, SimulationState simulationState);
-std::ostream& operator<<(std::ostream& stream, Mode mode);
-std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId);
-std::ostream& operator<<(std::ostream& stream, DataType dataType);
-std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind);
-std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId);
-std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId);
-std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType);
-std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags);
-std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags);
-std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags);
-std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags);
-std::ostream& operator<<(std::ostream& stream, FrameKind frameKind);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::SimulationTime simulationTime);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::Result result);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::CoSimType coSimType);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::ConnectionKind connectionKind);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::Command command);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::Severity severity);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::TerminateReason terminateReason);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::ConnectionState connectionState);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::SimulationState simulationState);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::Mode mode);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::IoSignalId ioSignalId);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::DataType dataType);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::SizeKind sizeKind);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::BusControllerId busControllerId);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::BusMessageId busMessageId);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::LinControllerType linControllerType);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::CanMessageFlags canMessageFlags);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::EthMessageFlags ethMessageFlags);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::LinMessageFlags linMessageFlags);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::FrMessageFlags frMessageFlags);
+std::ostream& operator<<(std::ostream& stream, DsVeosCoSim::FrameKind frameKind);
 
-std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal);
-std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer);
-std::ostream& operator<<(std::ostream& stream, const CanController& canController);
-std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage);
-std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const EthController& ethController);
-std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage);
-std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const LinController& linController);
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage);
-std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer);
-std::ostream& operator<<(std::ostream& stream, const FrController& frController);
-std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer);
-std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage);
-std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::IoSignal& ioSignal);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::IoSignalContainer& ioSignalContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::CanController& canController);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::CanControllerContainer& canControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::CanMessage& canMessage);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::CanMessageContainer& canMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::EthController& ethController);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::EthControllerContainer& ethControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::EthMessage& ethMessage);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::EthMessageContainer& ethMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::LinController& linController);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::LinControllerContainer& frControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::LinMessage& linMessage);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::LinMessageContainer& linMessageContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::FrController& frController);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::FrControllerContainer& frControllerContainer);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::FrMessage& frMessage);
+std::ostream& operator<<(std::ostream& stream, const DsVeosCoSim::FrMessageContainer& frMessageContainer);
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers);
-std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers);
-
-}  // namespace DsVeosCoSim
+std::ostream& operator<<(std::ostream& stream, const std::vector<DsVeosCoSim::IoSignalContainer>& ioSignalContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<DsVeosCoSim::CanControllerContainer>& canControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<DsVeosCoSim::EthControllerContainer>& ethControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<DsVeosCoSim::LinControllerContainer>& linControllerContainers);
+std::ostream& operator<<(std::ostream& stream, const std::vector<DsVeosCoSim::FrControllerContainer>& frControllerContainers);

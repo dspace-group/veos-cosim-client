@@ -11,11 +11,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-Result RunForConnected(Channel& channel) {
+Result RunForConnectedLocalChannel(Channel& channel) {
     std::array<char, FrameSize> buffer{};
 
     while (true) {
@@ -25,8 +25,8 @@ Result RunForConnected(Channel& channel) {
     }
 }
 
-[[nodiscard]] Result Run() {
-    LogTrace("Local communication server is listening ...");
+[[nodiscard]] Result RunServerLocalChannelInternal() {
+    LogTrace("Local channel server is listening ...");
 
     std::unique_ptr<ChannelServer> server;
     CheckResult(CreateLocalChannelServer(LocalChannelName, server));
@@ -50,22 +50,20 @@ Result RunForConnected(Channel& channel) {
             return result;
         }
 
-        RunForConnected(*acceptedChannel);
+        RunForConnectedLocalChannel(*acceptedChannel);
     }
 
     return CreateOk();
 }
 
-void LocalCommunicationServerRun() {
-    if (!IsOk(Run())) {
-        LogError("Could not run local communication server.");
+void RunServerLocalChannel() {
+    if (!IsOk(RunServerLocalChannelInternal())) {
+        LogError("Could not run local channel server.");
     }
 }
 
 }  // namespace
 
-void StartLocalCommunicationServer() {
-    std::thread(LocalCommunicationServerRun).detach();
+void ServerLocalChannel() {
+    std::thread(RunServerLocalChannel).detach();
 }
-
-}  // namespace DsVeosCoSim

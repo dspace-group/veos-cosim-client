@@ -175,8 +175,6 @@ void LocalOnChannelMessages(benchmark::State& state) {
     RunTest<TBus>(state, ConnectionKind::Remote, writerName, readerName, *connectedChannel, *acceptedChannel);
 }
 
-}  // namespace
-
 BENCHMARK_TEMPLATE(TcpMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(TcpMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(TcpMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
@@ -189,3 +187,5 @@ BENCHMARK_TEMPLATE(LocalOnChannelMessages, CanBus)->Arg(1)->Arg(10)->Arg(100)->A
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, EthBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, LinBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
 BENCHMARK_TEMPLATE(LocalOnChannelMessages, FrBus)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+
+}  // namespace

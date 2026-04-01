@@ -22,14 +22,14 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 using SignalExchangeDetail::ISignalExchangePart;
 #ifdef _WIN32
 using SignalExchangeDetail::LocalSignalExchangePart;
 #endif
 using SignalExchangeDetail::LockedSignalExchangePart;
 using SignalExchangeDetail::RemoteSignalExchangePart;
+
+namespace {
 
 [[nodiscard]] Result CreateSignalExchangePart(CoSimType coSimType,
                                               [[maybe_unused]] ConnectionKind connectionKind,
@@ -60,7 +60,9 @@ using SignalExchangeDetail::RemoteSignalExchangePart;
     return CreateOk();
 }
 
-class SignalExchangeImpl final : public SignalExchange {
+}  // namespace
+
+class SignalExchangeImpl final : public SignalExchange {  // NOLINT(misc-use-internal-linkage)
 public:
     SignalExchangeImpl(std::unique_ptr<ISignalExchangePart> writePart, std::unique_ptr<ISignalExchangePart> readPart)
         : _writePart(std::move(writePart)), _readPart(std::move(readPart)) {
@@ -103,8 +105,6 @@ private:
     std::unique_ptr<ISignalExchangePart> _writePart;
     std::unique_ptr<ISignalExchangePart> _readPart;
 };
-
-}  // namespace
 
 [[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,
                                           ConnectionKind connectionKind,

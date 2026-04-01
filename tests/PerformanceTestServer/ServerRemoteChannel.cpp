@@ -10,11 +10,11 @@
 #include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-Result RunForConnected(Channel& channel) {
+Result RunForConnectedRemoteChannel(Channel& channel) {
     std::array<char, FrameSize> buffer{};
 
     while (true) {
@@ -24,13 +24,13 @@ Result RunForConnected(Channel& channel) {
     }
 }
 
-[[nodiscard]] Result Run() {
-    LogTrace("Remote communication server is listening ...");
+[[nodiscard]] Result RunServerRemoteChannelInternal() {
+    LogTrace("Remote channel server is listening ...");
 
     std::unique_ptr<ChannelServer> server;
-    CheckResult(CreateTcpChannelServer(CommunicationPort, true, server));
+    CheckResult(CreateTcpChannelServer(RemoteChannelPort, true, server));
 
-    SetThreadAffinity(std::to_string(CommunicationPort));
+    SetThreadAffinity(std::to_string(RemoteChannelPort));
 
     while (true) {
         std::unique_ptr<Channel> acceptedChannel;
@@ -49,22 +49,20 @@ Result RunForConnected(Channel& channel) {
             return result;
         }
 
-        RunForConnected(*acceptedChannel);
+        RunForConnectedRemoteChannel(*acceptedChannel);
     }
 
     return CreateOk();
 }
 
-void RemoteCommunicationServerRun() {
-    if (!IsOk(Run())) {
-        LogError("Could not run remote communication server.");
+void RunServerRemoteChannel() {
+    if (!IsOk(RunServerRemoteChannelInternal())) {
+        LogError("Could not run remote channel server.");
     }
 }
 
 }  // namespace
 
-void StartRemoteCommunicationServer() {
-    std::thread(RemoteCommunicationServerRun).detach();
+void ServerRemoteChannel() {
+    std::thread(RunServerRemoteChannel).detach();
 }
-
-}  // namespace DsVeosCoSim

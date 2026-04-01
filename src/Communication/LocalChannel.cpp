@@ -15,9 +15,7 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
-class LocalChannelWriter final : public ChannelWriter {
+class LocalChannelWriter final : public ChannelWriter {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit LocalChannelWriter(ShmPipeClient& client) : _client(client) {
         // The local channel does not include the length of the frame
@@ -48,7 +46,7 @@ private:
     ShmPipeClient& _client;
 };
 
-class LocalChannelReader final : public ChannelReader {
+class LocalChannelReader final : public ChannelReader {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit LocalChannelReader(ShmPipeClient& client) : _client(client) {
         _defaultSizeToRead = ShmPipePart::PipeBufferSize;
@@ -100,7 +98,7 @@ private:
     ShmPipeClient& _client;
 };
 
-class LocalChannel final : public Channel {
+class LocalChannel final : public Channel {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit LocalChannel(ShmPipeClient client) : _client(std::move(client)), _writer(_client), _reader(_client) {
     }
@@ -137,7 +135,7 @@ private:
     LocalChannelReader _reader;
 };
 
-class LocalChannelServer final : public ChannelServer {
+class LocalChannelServer final : public ChannelServer {  // NOLINT(misc-use-internal-linkage)
 public:
     explicit LocalChannelServer(ShmPipeListener listener) : _listener(std::move(listener)) {
     }
@@ -164,8 +162,6 @@ public:
 private:
     ShmPipeListener _listener;
 };
-
-}  // namespace
 
 [[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel) {
     ShmPipeClient client{};

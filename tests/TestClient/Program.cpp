@@ -592,7 +592,7 @@ int main(int argc, char** argv) {
     InitializeOutput();
 
     std::string host;
-    std::string name = "CoSimTest";
+    std::string name = "MyCoSim";
 
     for (int32_t i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host") == 0) {

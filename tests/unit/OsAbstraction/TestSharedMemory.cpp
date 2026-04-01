@@ -14,7 +14,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateName() {
+[[nodiscard]] std::string GenerateSharedMemoryName() {
     return GenerateString("SharedMemory名前\xF0\x9F\x98\x80");
 }
 
@@ -22,7 +22,7 @@ class TestSharedMemory : public testing::Test {};
 
 TEST_F(TestSharedMemory, CreateShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateSharedMemoryName();
 
     SharedMemory sharedMemory;
 
@@ -35,7 +35,7 @@ TEST_F(TestSharedMemory, CreateShouldWork) {
 
 TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateSharedMemoryName();
 
     SharedMemory sharedMemory;
     AssertOk(SharedMemory::CreateOrOpen(name, 100, sharedMemory));
@@ -53,7 +53,7 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
 
 TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateSharedMemoryName();
 
     SharedMemory sharedMemory1;
     AssertOk(SharedMemory::CreateOrOpen(name, 100, sharedMemory1));
@@ -75,7 +75,7 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
 
 TEST_F(TestSharedMemory, CouldOpenExisting) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateSharedMemoryName();
 
     SharedMemory sharedMemory1;
     AssertOk(SharedMemory::CreateOrOpen(name, 100, sharedMemory1));
@@ -91,7 +91,7 @@ TEST_F(TestSharedMemory, CouldOpenExisting) {
 
 TEST_F(TestSharedMemory, CouldNotOpenNonExisting) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateSharedMemoryName();
 
     SharedMemory sharedMemory;
 

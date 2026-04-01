@@ -16,7 +16,7 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateName() {
+[[nodiscard]] std::string GenerateNamedEventName() {
     return GenerateString("Event名前\xF0\x9F\x98\x80");
 }
 
@@ -24,7 +24,7 @@ class TestNamedEvent : public testing::Test {};
 
 TEST_F(TestNamedEvent, CreateShouldWork) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
 
@@ -37,7 +37,7 @@ TEST_F(TestNamedEvent, CreateShouldWork) {
 
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEvent) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
     AssertOk(NamedEvent::CreateOrOpen(name, event));
@@ -53,7 +53,7 @@ TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEvent) {
 
 TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEventWithTimeout) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
     AssertOk(NamedEvent::CreateOrOpen(name, event));
@@ -69,7 +69,7 @@ TEST_F(TestNamedEvent, SetAndWaitOnSameNamedEventWithTimeout) {
 
 TEST_F(TestNamedEvent, WaitTwiceOnNamedEvent) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
     AssertOk(NamedEvent::CreateOrOpen(name, event));
@@ -87,7 +87,7 @@ TEST_F(TestNamedEvent, WaitTwiceOnNamedEvent) {
 
 TEST_F(TestNamedEvent, SetTwiceOnNamedEvent) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
     AssertOk(NamedEvent::CreateOrOpen(name, event));
@@ -107,7 +107,7 @@ TEST_F(TestNamedEvent, SetTwiceOnNamedEvent) {
 
 TEST_F(TestNamedEvent, WaitWithoutSetOnNamedEvent) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event;
     AssertOk(NamedEvent::CreateOrOpen(name, event));
@@ -121,7 +121,7 @@ TEST_F(TestNamedEvent, WaitWithoutSetOnNamedEvent) {
 
 TEST_F(TestNamedEvent, SetAndWaitOnDifferentNamedEvents) {
     // Arrange
-    std::string name = GenerateName();
+    std::string name = GenerateNamedEventName();
 
     NamedEvent event1;
     AssertOk(NamedEvent::CreateOrOpen(name, event1));
@@ -151,8 +151,8 @@ void WaitAndSet(std::string_view name1, std::string_view name2) {
 
 TEST_F(TestNamedEvent, SetAndWaitInDifferentThreads) {
     // Arrange
-    std::string name1 = GenerateName();
-    std::string name2 = GenerateName();
+    std::string name1 = GenerateNamedEventName();
+    std::string name2 = GenerateNamedEventName();
 
     NamedEvent event1;
     AssertOk(NamedEvent::CreateOrOpen(name1, event1));

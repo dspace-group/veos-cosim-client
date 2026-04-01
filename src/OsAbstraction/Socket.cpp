@@ -51,8 +51,6 @@
 
 namespace DsVeosCoSim {
 
-namespace {
-
 #ifdef _WIN32
 
 using SocketLength = int32_t;
@@ -60,6 +58,29 @@ constexpr int32_t ErrorCodeInterrupted = WSAEINTR;
 constexpr int32_t ErrorCodeWouldBlock = WSAEWOULDBLOCK;
 constexpr int32_t ErrorCodeConnectionAborted = WSAECONNABORTED;
 constexpr int32_t ErrorCodeConnectionReset = WSAECONNRESET;
+
+#else
+
+using SocketLength = socklen_t;
+constexpr int32_t ErrorCodeInterrupted = EINTR;
+constexpr int32_t ErrorCodeInProgress = EINPROGRESS;
+constexpr int32_t ErrorCodeBrokenPipe = EPIPE;
+constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
+constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
+
+#endif
+
+struct AddressInfoDeleter {  // NOLINT(misc-use-internal-linkage)
+    void operator()(addrinfo* addressInfo) const {
+        freeaddrinfo(addressInfo);
+    }
+};
+
+using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
+
+namespace {
+
+#ifdef _WIN32
 
 int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeout) {
     return WSAPoll(fds, countFds, timeout);
@@ -71,13 +92,6 @@ int32_t DoUnlink(const std::string& path) {
 
 #else
 
-using SocketLength = socklen_t;
-constexpr int32_t ErrorCodeInterrupted = EINTR;
-constexpr int32_t ErrorCodeInProgress = EINPROGRESS;
-constexpr int32_t ErrorCodeBrokenPipe = EPIPE;
-constexpr int32_t ErrorCodeConnectionAborted = ECONNABORTED;
-constexpr int32_t ErrorCodeConnectionReset = ECONNRESET;
-
 int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeout) {
     return poll(fds, countFds, timeout);
 }
@@ -87,14 +101,6 @@ int32_t DoUnlink(const std::string& path) {
 }
 
 #endif
-
-struct AddressInfoDeleter {
-    void operator()(addrinfo* addressInfo) const {
-        freeaddrinfo(addressInfo);
-    }
-};
-
-using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 
 [[nodiscard]] std::string GetLocalPath(std::string_view name) {
     std::string fileName = fmt::format("dSPACE.VEOS.CoSim.{}", name);
@@ -117,7 +123,7 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 [[nodiscard]] Result ConvertToInternetAddress(const std::string& ipAddress, uint16_t port, UniqueAddressInfo& addressInfo) {
     // 5 characters for up to 65536 ports + terminating null
     char portString[6]{};
-    std::snprintf(portString, sizeof(portString), "%u", static_cast<unsigned>(port));  // NOLINT(cppcoreguidelines-pro-type-vararg)
+    (void)std::snprintf(portString, sizeof(portString), "%u", static_cast<unsigned>(port));  // NOLINT(cppcoreguidelines-pro-type-vararg)
 
     addrinfo hints{};
     hints.ai_family = AF_UNSPEC;
@@ -297,7 +303,7 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
 }
 
 [[nodiscard]] Result ConvertAddressFamily(int32_t addressFamily, AddressFamily& convertedAddressFamily) {
-    switch (addressFamily) {  // NOLINT(bugprone-switch-missing-default-case)
+    switch (addressFamily) {
         case AF_UNIX:
             convertedAddressFamily = AddressFamily::Local;
             return CreateOk();
@@ -307,10 +313,10 @@ using UniqueAddressInfo = std::unique_ptr<addrinfo, AddressInfoDeleter>;
         case AF_INET6:
             convertedAddressFamily = AddressFamily::Ipv6;
             return CreateOk();
+        default:
+            LogError("Invalid address family.");
+            return CreateError();
     }
-
-    LogError("Invalid address family.");
-    return CreateError();
 }
 
 [[nodiscard]] Result EnableIpv6Only([[maybe_unused]] const SocketHandle& socketHandle) {

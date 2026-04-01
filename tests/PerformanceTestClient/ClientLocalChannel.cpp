@@ -11,11 +11,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientLocalChannelInternal([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     std::unique_ptr<Channel> channel;
     CheckResult(TryConnectToLocalChannel(LocalChannelName, channel));
 
@@ -37,18 +37,16 @@ namespace {
     return CreateOk();
 }
 
-void LocalCommunicationClientRun(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
-        LogError("Could not run local communication client.");
+void RunClientLocalChannel(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientLocalChannelInternal(host, connectedEvent, counter, isStopped))) {
+        LogError("Could not run local channel client.");
     }
 }
 
 }  // namespace
 
-void RunLocalCommunicationTest() {  // NOLINT(misc-use-internal-linkage)
-    LogTrace("Local Communication:");
-    RunPerformanceTest(LocalCommunicationClientRun, "");
+void ClientLocalChannel() {  // NOLINT(misc-use-internal-linkage)
+    LogTrace("Local Channel:");
+    RunPerformanceTest(RunClientLocalChannel, "");
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim

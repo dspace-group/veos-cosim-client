@@ -12,8 +12,8 @@
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
-#include "SignalExchange.hpp"
 #include "Protocol.hpp"
+#include "SignalExchange.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -198,12 +198,12 @@ TEST_P(TestSignalExchange, CreateWithMultipleIoSignalInfos) {
 
     // Act
     Result result = (CreateSignalExchange(coSimType,
-                                    connectionKind,
-                                    name,
-                                    {incomingSignal1.Convert(), incomingSignal2.Convert()},
-                                    {outgoingSignal1.Convert(), outgoingSignal2.Convert()},
-                                    *_protocol,
-                                    signalExchange));
+                                          connectionKind,
+                                          name,
+                                          {incomingSignal1.Convert(), incomingSignal2.Convert()},
+                                          {outgoingSignal1.Convert(), outgoingSignal2.Convert()},
+                                          *_protocol,
+                                          signalExchange));
 
     // Assert
     AssertOk(result);
@@ -306,12 +306,12 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead) {
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -347,12 +347,12 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue) {
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -393,12 +393,12 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent) {
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -426,12 +426,12 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -464,12 +464,12 @@ TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemo
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -500,12 +500,12 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataAndReceiveEvent) {
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
 
@@ -533,12 +533,12 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataWhereOnlyOneElementChangedAndRe
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -571,12 +571,12 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataWithOnlyChangedLengthAndReceive
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     IoSignalContainer signalCopy = signal;
     signalCopy.length--;
@@ -606,12 +606,12 @@ TEST_P(TestSignalExchange, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedM
 
     std::unique_ptr<SignalExchange> readerSignalExchange;
     AssertOk(CreateSignalExchange(GetCounterPart(coSimType),
-                            connectionKind,
-                            GetCounterPart(name, connectionKind),
-                            incomingSignals,
-                            outgoingSignals,
-                            *_protocol,
-                            readerSignalExchange));
+                                  connectionKind,
+                                  GetCounterPart(name, connectionKind),
+                                  incomingSignals,
+                                  outgoingSignals,
+                                  *_protocol,
+                                  readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));

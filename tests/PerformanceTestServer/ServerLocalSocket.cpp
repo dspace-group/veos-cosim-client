@@ -1,21 +1,20 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include "PerformanceTestServer.hpp"
-
 #include <array>
 #include <thread>
 
 #include "Helper.hpp"
 #include "Logger.hpp"
 #include "PerformanceTestHelper.hpp"
+#include "PerformanceTestServer.hpp"
 #include "Result.hpp"
 #include "Socket.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-Result RunForConnected(SocketClient& client) {
+Result RunForConnectedLocalSocket(SocketClient& client) {
     std::array<char, FrameSize> buffer{};
 
     while (true) {
@@ -24,7 +23,7 @@ Result RunForConnected(SocketClient& client) {
     }
 }
 
-[[nodiscard]] Result Run() {
+[[nodiscard]] Result RunServerLocalSocketInternal() {
     SocketListener listener;
     CheckResult(SocketListener::Create(LocalSocketPath, listener));
 
@@ -47,22 +46,20 @@ Result RunForConnected(SocketClient& client) {
             return result;
         }
 
-        RunForConnected(client);
+        RunForConnectedLocalSocket(client);
     }
 
     return CreateOk();
 }
 
-void LocalSocketServer() {
-    if (!IsOk(Run())) {
+void RunServerLocalSocket() {
+    if (!IsOk(RunServerLocalSocketInternal())) {
         LogError("Could not run Local Socket Server.");
     }
 }
 
 }  // namespace
 
-void StartLocalSocketServer() {
-    std::thread(LocalSocketServer).detach();
+void ServerLocalSocket() {
+    std::thread(RunServerLocalSocket).detach();
 }
-
-}  // namespace DsVeosCoSim

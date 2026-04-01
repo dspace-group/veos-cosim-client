@@ -76,7 +76,7 @@ void LocalChannelRoundtrip(benchmark::State& state) {
     RunTest(state, std::ref(*acceptedChannel), std::ref(*connectedChannel));
 }
 
-}  // namespace
-
 BENCHMARK(TcpChannelRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
 BENCHMARK(LocalChannelRoundtrip)->Arg(1)->Arg(100)->Arg(10000)->Arg(1000000)->Arg(100000000);
+
+}  // namespace

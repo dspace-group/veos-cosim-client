@@ -10,11 +10,11 @@
 #include "PerformanceTestHelper.hpp"
 #include "Result.hpp"
 
-namespace DsVeosCoSim {
+using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] Result Run([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+[[nodiscard]] Result RunClientPipeInternal([[maybe_unused]] const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
     PipeClient client;
     CheckResult(PipeClient::Connect(PipeName, client));
 
@@ -32,18 +32,16 @@ namespace {
     return CreateOk();
 }
 
-void PipeTest(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
-    if (!IsOk(Run(host, connectedEvent, counter, isStopped))) {
+void RunClientPipe(const std::string& host, Event& connectedEvent, uint64_t& counter, const bool& isStopped) {
+    if (!IsOk(RunClientPipeInternal(host, connectedEvent, counter, isStopped))) {
         LogError("Could not run Pipe Client.");
     }
 }
 
 }  // namespace
 
-void RunPipeTest() {  // NOLINT(misc-use-internal-linkage)
+void ClientPipe() {  // NOLINT(misc-use-internal-linkage)
     LogTrace("Pipe:");
-    RunPerformanceTest(PipeTest, "");
+    RunPerformanceTest(RunClientPipe, "");
     LogTrace("");
 }
-
-}  // namespace DsVeosCoSim
