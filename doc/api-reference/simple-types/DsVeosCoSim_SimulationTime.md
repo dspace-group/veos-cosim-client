@@ -42,5 +42,6 @@ typedef int64_t DsVeosCoSim_SimulationTime;
 - [DsVeosCoSim_FrMessageReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageReceivedCallback.md)
 - [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md)
 - [DsVeosCoSim_PollCommand](../functions/DsVeosCoSim_PollCommand.md)
+- [DsVeosCoSim_PollCommand2](../functions/DsVeosCoSim_PollCommand2.md)
 - [DsVeosCoSim_SetNextSimulationTime](../functions/DsVeosCoSim_SetNextSimulationTime.md)
 - [DsVeosCoSim_GetStepSize](../functions/DsVeosCoSim_GetStepSize.md)

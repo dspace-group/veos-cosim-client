@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
 #include <string_view>
@@ -547,7 +548,7 @@ void ShmPipePart::Disconnect() const {
     return CreateOk();
 }
 
-[[nodiscard]] Result ShmPipePart::WaitForData() {
+[[nodiscard]] Result ShmPipePart::WaitForData(uint32_t timeoutInMilliseconds) {
     auto& header = *_sharedMemory.As<Header>();
 
     // Fast path
@@ -561,9 +562,20 @@ void ShmPipePart::Disconnect() const {
 
     CheckResult(_newSpaceEvent.Set());
 
+    bool hasTimeout = timeoutInMilliseconds != Infinite;
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutInMilliseconds);
+
     // Slow path
     while (GetAvailableData(header) == 0) {
-        Result result = _newDataEvent.Wait(1);
+        auto now = std::chrono::steady_clock::now();
+        if (hasTimeout && now >= deadline) {
+            return CreateTimeout();
+        }
+
+        auto remainingMs = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count();
+        uint32_t waitMs = static_cast<uint32_t>(std::min<int64_t>(remainingMs, 1));
+
+        Result result = _newDataEvent.Wait(waitMs);
         if (IsError(result)) {
             return result;
         }
@@ -577,6 +589,10 @@ void ShmPipePart::Disconnect() const {
     }
 
     return CreateOk();
+}
+
+[[nodiscard]] Result ShmPipePart::WaitForData() {
+    return WaitForData(Infinite);
 }
 
 [[nodiscard]] Result ShmPipePart::CheckIfConnectionIsAlive() {
@@ -671,6 +687,10 @@ void ShmPipeClient::Disconnect() const {
 
 [[nodiscard]] Result ShmPipeClient::Send(const void* source, size_t size) {
     return _writer.Write(source, size);
+}
+
+[[nodiscard]] Result ShmPipeClient::WaitForData(uint32_t timeoutInMilliseconds) {
+    return _reader.WaitForData(timeoutInMilliseconds);
 }
 
 [[nodiscard]] bool ShmPipeClient::IsConnected() const {

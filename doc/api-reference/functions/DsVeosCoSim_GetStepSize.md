@@ -15,7 +15,7 @@ Gets the step size of the VEOS CoSim server.
 ## Syntax
 
 ```c
-DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetStepSize(
     DsVeosCoSim_Handle handle,
     DsVeosCoSim_SimulationTime* stepSize
 );

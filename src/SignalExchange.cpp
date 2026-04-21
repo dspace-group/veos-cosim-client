@@ -62,49 +62,36 @@ namespace {
 
 }  // namespace
 
-class SignalExchangeImpl final : public SignalExchange {  // NOLINT(misc-use-internal-linkage)
-public:
-    SignalExchangeImpl(std::unique_ptr<ISignalExchangePart> writePart, std::unique_ptr<ISignalExchangePart> readPart)
-        : _writePart(std::move(writePart)), _readPart(std::move(readPart)) {
-    }
+SignalExchange::SignalExchange(std::unique_ptr<ISignalExchangePart> writePart, std::unique_ptr<ISignalExchangePart> readPart)
+    : _writePart(std::move(writePart)), _readPart(std::move(readPart)) {
+}
 
-    ~SignalExchangeImpl() noexcept override = default;
+SignalExchange::~SignalExchange() noexcept = default;
 
-    SignalExchangeImpl(const SignalExchangeImpl&) = delete;
-    SignalExchangeImpl& operator=(const SignalExchangeImpl&) = delete;
+void SignalExchange::ClearData() const {
+    _readPart->ClearData();
+    _writePart->ClearData();
+}
 
-    SignalExchangeImpl(SignalExchangeImpl&&) = delete;
-    SignalExchangeImpl& operator=(SignalExchangeImpl&&) = delete;
+[[nodiscard]] Result SignalExchange::Write(IoSignalId signalId, uint32_t length, const void* value) const {
+    return _writePart->Write(signalId, length, value);
+}
 
-    void ClearData() const override {
-        _readPart->ClearData();
-        _writePart->ClearData();
-    }
+[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, void* value) const {
+    return _readPart->Read(signalId, length, value);
+}
 
-    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) const override {
-        return _writePart->Write(signalId, length, value);
-    }
+[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, const void** value) const {
+    return _readPart->Read(signalId, length, value);
+}
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) const override {
-        return _readPart->Read(signalId, length, value);
-    }
+[[nodiscard]] Result SignalExchange::Serialize(ChannelWriter& writer) const {
+    return _writePart->Serialize(writer);
+}
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) const override {
-        return _readPart->Read(signalId, length, value);
-    }
-
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) const override {
-        return _writePart->Serialize(writer);
-    }
-
-    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const override {
-        return _readPart->Deserialize(reader, simulationTime, callbacks);
-    }
-
-private:
-    std::unique_ptr<ISignalExchangePart> _writePart;
-    std::unique_ptr<ISignalExchangePart> _readPart;
-};
+[[nodiscard]] Result SignalExchange::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const {
+    return _readPart->Deserialize(reader, simulationTime, callbacks);
+}
 
 [[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,
                                           ConnectionKind connectionKind,
@@ -126,7 +113,7 @@ private:
     std::unique_ptr<ISignalExchangePart> readPart;
     CheckResult(CreateSignalExchangePart(coSimType, connectionKind, name, *readSignals, protocol, false, readPart));
 
-    signalExchange = std::make_unique<SignalExchangeImpl>(std::move(writePart), std::move(readPart));
+    signalExchange = std::make_unique<SignalExchange>(std::move(writePart), std::move(readPart));
     signalExchange->ClearData();
     return CreateOk();
 }

@@ -10,7 +10,7 @@
 
 ## Description
 
-Contains the possible reasons for a termination of the co-simulation.
+Contains the possible reasons for terminating the co-simulation.
 
 ## Syntax
 

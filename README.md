@@ -1,6 +1,6 @@
 # veos-cosim-client
 
-Implementation of a shared library used to create co-simulation clients for dSPACE VEOS.
+Implementation of a C++ library used to create co-simulation clients for dSPACE VEOS.
 
 ## Documentation
 
@@ -15,54 +15,77 @@ Implementation of a shared library used to create co-simulation clients for dSPA
 
 DsVeosCoSim requires `fmt` for internal string formatting. A standalone build picks up the bundled copy from `third_party/fmt` automatically, so no extra CMake arguments are required as long as that directory is present.
 
-The repository now provides cross-platform CMake presets and wrapper scripts:
+The repository provides cross-platform CMake presets, wrapper scripts, and `just` recipes.
 
-- `build.ps1` for native Windows
-- `build.sh` for native Linux and WSL
+- `scripts/build.ps1` for native Windows builds
+- `scripts/build.sh` for native Linux and WSL builds
+- `scripts/test.ps1` and `scripts/test.sh` to build and run the test suite
+- `just build`, `just test`, and `just clean` as optional wrappers around the scripts
 
 Defaults:
 
 - Configuration: `Debug`
 - Tests: `ON`
-- WSL uses dedicated output directories (`build/wsl-*`) to avoid interference with native Windows builds.
+- Output directories follow the active preset, for example `build/win-debug` or `build/linux-debug`
 
 #### Build with scripts (recommended)
 
 Windows (PowerShell):
 
 ```powershell
-./build.ps1
+./scripts/build.ps1
 ```
 
 Linux:
 
 ```bash
-./build.sh
+./scripts/build.sh
 ```
 
 WSL:
 
 ```bash
-./build.sh
+./scripts/build.sh
 ```
 
-Useful options:
+The scripts accept the build configuration as a positional argument:
 
-- `--config Release` for release builds
-- `--no-test` to skip tests
-- `--clean` to remove the preset-specific build directory before configuring
-- `--preset <name>` to force a specific preset
+- PowerShell: `debug|release`
+- Bash: `debug|release`
 
 Examples:
 
 ```powershell
-./build.ps1 -Config Release -Clean
-./build.ps1 -Preset win-debug
+./scripts/build.ps1
+./scripts/build.ps1 Release
 ```
 
 ```bash
-./build.sh --config Release --clean
-./build.sh --no-test
+./scripts/build.sh
+./scripts/build.sh release
+```
+
+To build and run tests with the wrapper scripts:
+
+```powershell
+./scripts/test.ps1
+./scripts/test.ps1 Release
+```
+
+```bash
+./scripts/test.sh
+./scripts/test.sh release
+```
+
+If you use MSVC on Windows, run the PowerShell scripts from a Visual Studio Developer PowerShell or Developer Command Prompt.
+
+#### Build with `just`
+
+```console
+just build
+just build config=release
+just test
+just clean
 ```
 
 #### Build with CMake presets directly
@@ -73,27 +96,39 @@ List available presets:
 cmake --list-presets
 ```
 
-Configure/build/test with a preset:
+Configure, build, and test with a preset:
 
 ```console
 cmake --preset win-debug
-cmake --build --preset win-debug --config Debug
-./build/win-debug/tests/unit/Debug/DsVeosCoSimTest.exe
+cmake --build --preset win-debug
+ctest --preset win-debug
 ```
 
 Preset families:
 
 - Windows native: `win-debug`, `win-release`
-- Linux native: `linux-debug`, `linux-release`
-- WSL: `wsl-debug`, `wsl-release`
+- Linux and WSL: `linux-debug`, `linux-release`
+
+Linux example:
+
+```console
+cmake --preset linux-debug
+cmake --build --preset linux-debug
+ctest --preset linux-debug
+```
 
 WSL note:
 
-- Use only `wsl-*` presets in WSL. Do not reuse `win-*` or `linux-*` output directories from WSL.
+- Use the `linux-*` presets in WSL.
+
+#### Build without presets
+
+If you prefer not to use presets, a plain CMake build works well with single-config generators such as Ninja on Linux or WSL:
 
 ```console
-cmake -S . -B build
+cmake -S . -B build -DDSVEOSCOSIM_BUILD_TESTS=ON
 cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
 ### As a subdirectory in another CMake project

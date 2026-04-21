@@ -183,11 +183,17 @@ cmake --build ./build
 
 > [!Note]
 >
-> If you use Visual Studio on Windows, make sure to run these commands in the Visual Studio Developer Command Prompt.
+> If you use MSVC on Windows, make sure to run these commands in the Visual Studio Developer Command Prompt.
 
 ### 5.6 Run Client
 
-Run the executable by running the following command in the directory `DsVeosCoSimDemo`:
+Run the executable by using the command that matches your generator in the directory `DsVeosCoSimDemo`:
+
+```console
+./build/DsVeosCoSimDemo
+```
+
+On Windows with a multi-config generator such as Visual Studio, use:
 
 ```console
 ./build/Debug/DsVeosCoSimDemo

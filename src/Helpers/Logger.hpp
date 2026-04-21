@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -47,16 +48,24 @@ public:
     }
 
     void SetLogCallback(LogCallback logCallback) {
+        std::lock_guard lock(_mutex);
         _logCallback = std::move(logCallback);
     }
 
     void Log(Severity severity, const std::string& message) const {
-        if (auto logCallback = _logCallback; logCallback) {
+        LogCallback logCallback;
+        {
+            std::lock_guard lock(_mutex);
+            logCallback = _logCallback;
+        }
+
+        if (logCallback) {
             logCallback(severity, message);
         }
     }
 
 private:
+    mutable std::mutex _mutex;
     LogCallback _logCallback;
 };
 
@@ -77,10 +86,6 @@ inline void LogInfo(const std::string& message) {
 inline void LogTrace(const std::string& message) {
     Logger::Instance().Log(Severity::Trace, message);
 }
-
-void LogProtBegin(const std::string& message);
-void LogProtEnd(const std::string& message);
-void LogProtData(const std::string& message);
 
 template <typename... TArgs>
 void LogError(int32_t errorCode, fmt::format_string<TArgs...> formatString, TArgs&&... args) {

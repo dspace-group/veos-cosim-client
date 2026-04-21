@@ -120,6 +120,7 @@ public:
 
     [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) const;
     [[nodiscard]] Result Send(const void* source, size_t size) const;
+    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds) const;
 
     [[nodiscard]] bool IsConnected() const;
 

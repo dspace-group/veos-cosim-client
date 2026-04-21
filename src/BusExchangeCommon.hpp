@@ -20,9 +20,7 @@ struct CanBus {
     using Message = CanMessage;
     using MessageContainer = CanMessageContainer;
     using Controller = CanController;
-#ifdef _WIN32
     static constexpr std::string_view ShmNamePart = ".Can.";
-#endif
     static constexpr std::string_view DisplayName = "CAN";
     static constexpr uint32_t MessageMaxLength = CanMessageMaxLength;
 };
@@ -31,9 +29,7 @@ struct EthBus {
     using Message = EthMessage;
     using MessageContainer = EthMessageContainer;
     using Controller = EthController;
-#ifdef _WIN32
     static constexpr std::string_view ShmNamePart = ".Eth.";
-#endif
     static constexpr std::string_view DisplayName = "Ethernet";
     static constexpr uint32_t MessageMaxLength = EthMessageMaxLength;
 };
@@ -42,9 +38,7 @@ struct LinBus {
     using Message = LinMessage;
     using MessageContainer = LinMessageContainer;
     using Controller = LinController;
-#ifdef _WIN32
     static constexpr std::string_view ShmNamePart = ".Lin.";
-#endif
     static constexpr std::string_view DisplayName = "LIN";
     static constexpr uint32_t MessageMaxLength = LinMessageMaxLength;
 };
@@ -53,9 +47,7 @@ struct FrBus {
     using Message = FrMessage;
     using MessageContainer = FrMessageContainer;
     using Controller = FrController;
-#ifdef _WIN32
     static constexpr std::string_view ShmNamePart = ".FlexRay.";
-#endif
     static constexpr std::string_view DisplayName = "FlexRay";
     static constexpr uint32_t MessageMaxLength = FrMessageMaxLength;
 };

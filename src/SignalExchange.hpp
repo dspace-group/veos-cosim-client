@@ -12,14 +12,19 @@
 #include "Protocol.hpp"
 #include "Result.hpp"
 
+// Forward declaration to avoid including implementation header
+namespace DsVeosCoSim::SignalExchangeDetail {
+
+class ISignalExchangePart;
+
+}  // namespace DsVeosCoSim::SignalExchangeDetail
+
 namespace DsVeosCoSim {
 
-class SignalExchange {
-protected:
-    SignalExchange() = default;
-
+class SignalExchange final {
 public:
-    virtual ~SignalExchange() noexcept = default;
+    SignalExchange(std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> writePart, std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> readPart);
+    ~SignalExchange() noexcept;
 
     SignalExchange(const SignalExchange&) = delete;
     SignalExchange& operator=(const SignalExchange&) = delete;
@@ -27,14 +32,18 @@ public:
     SignalExchange(SignalExchange&&) = delete;
     SignalExchange& operator=(SignalExchange&&) = delete;
 
-    virtual void ClearData() const = 0;
+    void ClearData() const;
 
-    [[nodiscard]] virtual Result Write(IoSignalId signalId, uint32_t length, const void* value) const = 0;
-    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, void* value) const = 0;
-    [[nodiscard]] virtual Result Read(IoSignalId signalId, uint32_t& length, const void** value) const = 0;
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) const;
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) const;
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) const;
 
-    [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) const = 0;
-    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const = 0;
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) const;
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const;
+
+private:
+    std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> _writePart;
+    std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> _readPart;
 };
 
 [[nodiscard]] Result CreateSignalExchange(CoSimType coSimType,

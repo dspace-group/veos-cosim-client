@@ -9,7 +9,6 @@ target_sources(
   shared
   PRIVATE
   Helper.cpp
-  OsAbstractionTestHelper.cpp
 )
 
 target_include_directories(

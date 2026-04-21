@@ -55,11 +55,13 @@ Use [DsVeosCoSim_StartPollingBasedCoSimulation](../api-reference/functions/DsVeo
 
 After startup, use the following sequence repeatedly:
 
-1. Call [DsVeosCoSim_PollCommand](../api-reference/functions/DsVeosCoSim_PollCommand.md).
+1. Call [DsVeosCoSim_PollCommand](../api-reference/functions/DsVeosCoSim_PollCommand.md) or [DsVeosCoSim_PollCommand2](../api-reference/functions/DsVeosCoSim_PollCommand2.md).
 2. Process the returned command.
 3. Call [DsVeosCoSim_FinishCommand](../api-reference/functions/DsVeosCoSim_FinishCommand.md).
 
-If you call `PollCommand` twice in a row without `FinishCommand`, the client reports an error. If you call `FinishCommand` without a preceding `PollCommand`, the client reports an error as well.
+If you poll twice in a row without `FinishCommand`, the client reports an error. If you call `FinishCommand` without a preceding successful poll, the client reports an error as well.
+
+Use `DsVeosCoSim_PollCommand2` if you need a bounded wait time or a non-blocking poll by passing `0` as the timeout.
 
 ## Important Rules
 

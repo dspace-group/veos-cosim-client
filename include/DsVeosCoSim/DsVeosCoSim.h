@@ -1412,6 +1412,19 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle h
                                                             DsVeosCoSim_Command* command);
 
 /**
+ * \brief Polls a command for the co-simulation for the given handle, returning after the given timeout if no command
+ *        has arrived.
+ * \param handle                The handle.
+ * \param simulationTime        The simulation time as an out value.
+ * \param command               The command as an out value.
+ * \param timeoutInMilliseconds The maximum time to wait in milliseconds. Use 0 for non-blocking.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PollCommand2(DsVeosCoSim_Handle handle,
+                                                             DsVeosCoSim_SimulationTime* simulationTime,
+                                                             DsVeosCoSim_Command* command,
+                                                             uint32_t timeoutInMilliseconds);
+
+/**
  * \brief Finishes the last polled command.
  * \param handle    The handle.
  */

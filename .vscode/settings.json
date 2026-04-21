@@ -1,4 +1,5 @@
 {
+  "cmake.useCMakePresets": "always",
   "cSpell.words": [
     "autoconnect",
     "AUTOSAR",

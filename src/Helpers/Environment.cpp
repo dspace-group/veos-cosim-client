@@ -14,13 +14,13 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
+[[nodiscard]] bool TryGetEnvValue(const std::string& name, size_t& value, int base) {
     if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
-            intValue = std::strtoull(stringValue, &end, 10);
+            value = std::strtoull(stringValue, &end, base);
         } else {
-            intValue = std::strtoul(stringValue, &end, 10);
+            value = std::strtoul(stringValue, &end, base);
         }
 
         return true;
@@ -29,19 +29,12 @@ namespace {
     return false;
 }
 
+[[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
+    return TryGetEnvValue(name, intValue, 10);
+}
+
 [[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
-    if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
-        char* end{};
-        if constexpr (sizeof(void*) == 8) {
-            hexValue = std::strtoull(stringValue, &end, 16);
-        } else {
-            hexValue = std::strtoul(stringValue, &end, 16);
-        }
-
-        return true;
-    }
-
-    return false;
+    return TryGetEnvValue(name, hexValue, 16);
 }
 
 [[nodiscard]] bool GetBoolValue(const std::string& name) {

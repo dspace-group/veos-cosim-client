@@ -8,29 +8,7 @@
       "name": "(Windows) Launch Test",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/unit/DsVeosCoSimTest.exe",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "console": "externalTerminal"
-    },
-    {
-      "name": "(Windows) Launch Performance Test Client",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/PerformanceTestClient/PerformanceTestClient.exe",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "console": "externalTerminal"
-    },
-    {
-      "name": "(Windows) Launch Performance Test Server",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/PerformanceTestServer/PerformanceTestServer.exe",
+      "program": "${workspaceFolder}/build/win-debug/tests/unit/Debug/DsVeosCoSimTest.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -41,7 +19,7 @@
       "name": "(Windows) Launch Test Client",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/TestClient/TestClient.exe",
+      "program": "${workspaceFolder}/build/win-debug/tests/TestClient/Debug/TestClient.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -52,18 +30,7 @@
       "name": "(Windows) Launch Test Server",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/TestServer/TestServer.exe",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "console": "externalTerminal"
-    },
-    {
-      "name": "(Windows) Launch Benchmark",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/tmpwin/Debug/tests/benchmark/DsVeosCoSimBenchmark.exe",
+      "program": "${workspaceFolder}/build/win-debug/tests/TestServer/Debug/TestServer.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -74,7 +41,7 @@
       "name": "(Linux) Launch Test",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmplin/Debug/tests/unit/DsVeosCoSimTest",
+      "program": "${workspaceFolder}/build/linux-debug/tests/unit/Debug/DsVeosCoSimTest",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -94,54 +61,10 @@
       ]
     },
     {
-      "name": "(Linux) Launch Performance Test Client",
-      "type": "cppdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/tmplin/Debug/tests/PerformanceTestClient/PerformanceTestClient",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "setupCommands": [
-        {
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        },
-        {
-          "text": "-gdb-set disassembly-flavor intel",
-          "ignoreFailures": true
-        }
-      ]
-    },
-    {
-      "name": "(Linux) Launch Performance Test Server",
-      "type": "cppdbg",
-      "request": "launch",
-      "program": "${workspaceFolder}/tmplin/Debug/tests/PerformanceTestServer/PerformanceTestServer",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "setupCommands": [
-        {
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        },
-        {
-          "text": "-gdb-set disassembly-flavor intel",
-          "ignoreFailures": true
-        }
-      ]
-    },
-    {
       "name": "(Linux) Launch Test Client",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmplin/Debug/tests/TestClient/TestClient",
+      "program": "${workspaceFolder}/build/linux-debug/tests/TestClient/Debug/TestClient",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -163,7 +86,7 @@
       "name": "(Linux) Launch Test Server",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/tmplin/Debug/tests/TestServer/TestServer",
+      "program": "${workspaceFolder}/build/linux-debug/tests/TestServer/Debug/TestServer",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

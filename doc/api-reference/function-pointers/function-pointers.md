@@ -3,10 +3,10 @@
 > [⬆️ Go to DsVeosCoSim Client API Reference](../api-reference.md)
 
 - [Function Pointers](#function-pointers)
-  - [Descriptions](#descriptions)
+  - [Description](#description)
   - [List of Function Pointers](#list-of-function-pointers)
 
-## Descriptions
+## Description
 
 Describes all available function pointers.
 

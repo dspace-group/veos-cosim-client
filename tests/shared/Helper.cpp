@@ -3,7 +3,7 @@
 #include "Helper.hpp"
 
 #include <cstdint>
-#include <ostream>
+#include <random>
 #include <string>
 #include <string_view>
 
@@ -18,8 +18,6 @@
 #include <Windows.h>
 #include <conio.h>
 
-#include "OsUtilities.hpp"
-
 #else
 
 #include <termios.h>
@@ -32,9 +30,6 @@
 using namespace DsVeosCoSim;
 
 namespace {
-
-std::string LastMessage;
-Severity MinimalSeverity = Severity::Trace;
 
 [[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
     SocketListener listener;
@@ -58,28 +53,16 @@ Severity MinimalSeverity = Severity::Trace;
 void OnLogCallback(Severity severity, const std::string& message) {
     switch (severity) {
         case Severity::Error:
-            if (MinimalSeverity >= severity) {
-                print(fg(fmt::color::red), "{}\n", message);
-            }
-
+            print(fg(fmt::color::red), "{}\n", message);
             break;
         case Severity::Warning:
-            if (MinimalSeverity >= severity) {
-                print(fg(fmt::color::yellow), "{}\n", message);
-            }
-
+            print(fg(fmt::color::yellow), "{}\n", message);
             break;
         case Severity::Info:
-            if (MinimalSeverity >= severity) {
-                print(fg(fmt::color::white), "{}\n", message);
-            }
-
+            print(fg(fmt::color::white), "{}\n", message);
             break;
         case Severity::Trace:
-            if (MinimalSeverity >= severity) {
-                print(fg(fmt::color::light_gray), "{}\n", message);
-            }
-
+            print(fg(fmt::color::light_gray), "{}\n", message);
             break;
     }
 }
@@ -102,22 +85,6 @@ void InitializeOutput() {
 #endif
 
     Logger::Instance().SetLogCallback(OnLogCallback);
-}
-
-void SetMinimalSeverity(Severity severity) {
-    MinimalSeverity = severity;
-}
-
-void MustBeOk(const Result& result) {
-    if (!IsOk(result)) {
-        exit(1);
-    }
-}
-
-void MustBeNotConnected(const Result& result) {
-    if (!IsNotConnected(result)) {
-        exit(1);
-    }
 }
 
 void LogIoData(std::string_view ioDataStr) {
@@ -180,72 +147,6 @@ void SetEnvVariable(const std::string& name, const std::string& value) {
 #endif
 }
 
-[[nodiscard]] Result ReceiveComplete(const SocketClient& client, void* buffer, size_t length) {
-    auto* bufferPointer = static_cast<uint8_t*>(buffer);
-
-    while (length > 0) {
-        size_t receivedSize{};
-        CheckResult(client.Receive(bufferPointer, length, receivedSize));
-
-        length -= receivedSize;
-        bufferPointer += receivedSize;
-    }
-
-    return CreateOk();
-}
-
-#ifdef _WIN32
-[[nodiscard]] Result ReceiveComplete(ShmPipeClient& client, void* buffer, size_t length) {
-    auto* bufferPointer = static_cast<uint8_t*>(buffer);
-
-    while (length > 0) {
-        size_t receivedSize{};
-        CheckResult(client.Receive(bufferPointer, length, receivedSize));
-
-        length -= receivedSize;
-        bufferPointer += receivedSize;
-    }
-
-    return CreateOk();
-}
-#endif
-
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<CanController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
-    return CreateBusExchange(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busExchange);
-}
-
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<EthController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
-    return CreateBusExchange(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busExchange);
-}
-
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<LinController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
-    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busExchange);
-}
-
-[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
-                                       ConnectionKind connectionKind,
-                                       std::string_view name,
-                                       const std::vector<FrController>& controllers,
-                                       IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
-    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busExchange);
-}
-
 void FillWithRandomData(uint8_t* data, size_t length) {
     for (size_t i = 0; i < length; i++) {
         data[i] = GenerateU8();
@@ -261,13 +162,8 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 }
 
 [[nodiscard]] uint32_t GenerateU32() {
-    static bool first = true;
-    if (first) {
-        srand(42U);  // NOLINT
-        first = false;
-    }
-
-    return static_cast<uint32_t>(rand());  // NOLINT
+    thread_local std::mt19937 rng{42U};
+    return rng();
 }
 
 [[nodiscard]] uint64_t GenerateU64() {
@@ -336,7 +232,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 
 [[nodiscard]] std::vector<uint8_t> GenerateIoData(const IoSignalContainer& signal) {
     std::vector<uint8_t> data = CreateZeroedIoData(signal);
-    data[0]++;
+    FillWithRandomData(data.data(), data.size());
     return data;
 }
 
@@ -348,7 +244,7 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 
 void FillWithRandom(CanControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 1000;
+    controller.queueSize = 10;
     controller.bitsPerSecond = GenerateU64();
     controller.flexibleDataRateBitsPerSecond = GenerateU64();
     controller.name = GenerateString("CanController名前\xF0\x9F\x98\x80");
@@ -358,7 +254,7 @@ void FillWithRandom(CanControllerContainer& controller) {
 
 void FillWithRandom(EthControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 1000;
+    controller.queueSize = 10;
     controller.bitsPerSecond = GenerateU64();
     FillWithRandomData(controller.macAddress.data(), EthAddressLength);
     controller.name = GenerateString("EthController名前\xF0\x9F\x98\x80");
@@ -368,7 +264,7 @@ void FillWithRandom(EthControllerContainer& controller) {
 
 void FillWithRandom(LinControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 1000;
+    controller.queueSize = 10;
     controller.bitsPerSecond = GenerateU64();
     controller.type = GenerateRandom(LinControllerType::Responder, LinControllerType::Commander);
     controller.name = GenerateString("LinController名前\xF0\x9F\x98\x80");
@@ -378,7 +274,7 @@ void FillWithRandom(LinControllerContainer& controller) {
 
 void FillWithRandom(FrControllerContainer& controller) {
     controller.id = GenerateBusControllerId();
-    controller.queueSize = 1000;
+    controller.queueSize = 10;
     controller.bitsPerSecond = GenerateU64();
     controller.name = GenerateString("FrController名前\xF0\x9F\x98\x80");
     controller.channelName = GenerateString("FrChannel名前\xF0\x9F\x98\x80");
@@ -472,180 +368,4 @@ void FillWithRandom(FrMessageContainer& message, BusControllerId controllerId) {
     }
 
     return controllers;
-}
-
-std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
-    return stream << SimulationTimeToString(simulationTime);
-}
-
-std::ostream& operator<<(std::ostream& stream, Result result) {
-    return stream << format_as(result);
-}
-
-std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
-    return stream << format_as(coSimType);
-}
-
-std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
-    return stream << format_as(connectionKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, Command command) {
-    return stream << format_as(command);
-}
-
-std::ostream& operator<<(std::ostream& stream, Severity severity) {
-    return stream << format_as(severity);
-}
-
-std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
-    return stream << format_as(terminateReason);
-}
-
-std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
-    return stream << format_as(connectionState);
-}
-
-std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
-    return stream << format_as(simulationState);
-}
-
-std::ostream& operator<<(std::ostream& stream, Mode mode) {
-    return stream << format_as(mode);
-}
-
-std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
-    return stream << format_as(ioSignalId);
-}
-
-std::ostream& operator<<(std::ostream& stream, DataType dataType) {
-    return stream << format_as(dataType);
-}
-
-std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
-    return stream << format_as(sizeKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
-    return stream << format_as(busControllerId);
-}
-
-std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
-    return stream << format_as(busMessageId);
-}
-
-std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
-    return stream << format_as(linControllerType);
-}
-
-std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
-    return stream << format_as(canMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
-    return stream << format_as(ethMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
-    return stream << format_as(linMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
-    return stream << format_as(frMessageFlags);
-}
-
-std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
-    return stream << format_as(frameKind);
-}
-
-std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
-    return stream << format_as(ioSignal);
-}
-
-std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
-    return stream << format_as(ioSignalContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
-    return stream << format_as(canController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
-    return stream << format_as(canControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
-    return stream << format_as(canMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
-    return stream << format_as(canMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
-    return stream << format_as(ethController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
-    return stream << format_as(ethControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
-    return stream << format_as(ethMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
-    return stream << format_as(ethMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
-    return stream << format_as(linController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
-    return stream << format_as(frControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
-    return stream << format_as(linMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
-    return stream << format_as(linMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
-    return stream << format_as(frController);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
-    return stream << format_as(frControllerContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
-    return stream << format_as(frMessage);
-}
-
-std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
-    return stream << format_as(frMessageContainer);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
-    return stream << format_as(ioSignalContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
-    return stream << format_as(canControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
-    return stream << format_as(ethControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
-    return stream << format_as(linControllerContainers);
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
-    return stream << format_as(frControllerContainers);
 }

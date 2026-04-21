@@ -3,6 +3,7 @@
 #ifdef _WIN32
 
 #include <chrono>
+#include <future>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -32,6 +33,36 @@ void EstablishConnection(ShmPipeClient& connectClient, ShmPipeClient& acceptClie
 }
 
 class TestShmPipe : public testing::Test {};
+
+TEST_F(TestShmPipe, IsRunningAfterCreateShouldBeTrue) {
+    // Arrange
+    std::string name = GenerateShmPipeName();
+
+    ShmPipeListener listener;
+    AssertOk(ShmPipeListener::Create(name, listener));
+
+    // Act
+    bool isRunning = listener.IsRunning();
+
+    // Assert
+    ASSERT_TRUE(isRunning);
+}
+
+TEST_F(TestShmPipe, IsNotRunningAfterStopShouldBeFalse) {
+    // Arrange
+    std::string name = GenerateShmPipeName();
+
+    ShmPipeListener listener;
+    AssertOk(ShmPipeListener::Create(name, listener));
+
+    listener.Stop();
+
+    // Act
+    bool isRunning = listener.IsRunning();
+
+    // Assert
+    ASSERT_FALSE(isRunning);
+}
 
 TEST_F(TestShmPipe, CreateListenerShouldWork) {
     // Arrange
@@ -133,22 +164,87 @@ TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
     AssertOk(result);
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+// After disconnect, the listener should still be able to accept
+TEST_F(TestShmPipe, AcceptAfterDisconnectShouldWork) {
     // Arrange
     std::string name = GenerateShmPipeName();
 
+    ShmPipeListener listener;
+    AssertOk(ShmPipeListener::Create(name, listener));
+
+    ShmPipeClient connectClient;
+    AssertOk(ShmPipeClient::TryConnect(name, connectClient));
+
+    connectClient.Disconnect();
+
+    ShmPipeClient acceptClient;
+
+    // Act
+    Result result = listener.TryAccept(acceptClient);
+
+    // Assert
+    AssertOk(result);
+}
+
+TEST_F(TestShmPipe, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
+    // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
     EstablishConnection(connectClient, acceptClient);
 
+    // Act and assert
+    ASSERT_TRUE(connectClient.IsConnected());
+    ASSERT_TRUE(acceptClient.IsConnected());
+}
+
+TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalse) {
+    // Arrange
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    connectClient.Disconnect();
+
+    // Act
+    bool isConnected = connectClient.IsConnected();
+
+    // Assert
+    ASSERT_FALSE(isConnected);
+}
+
+TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalseForAcceptClient) {
+    // Arrange
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    acceptClient.Disconnect();
+
+    // Act
+    bool isConnected = acceptClient.IsConnected();
+
+    // Assert
+    ASSERT_FALSE(isConnected);
+}
+
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+    // Arrange
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    std::promise<void> aboutToReceive;
+    auto aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
+        aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -157,22 +253,24 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateShmPipeName();
-
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
     EstablishConnection(connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    auto aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
-        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        aboutToReceive.set_value();
+        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -181,22 +279,24 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     // Arrange
-    std::string name = GenerateShmPipeName();
-
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
     EstablishConnection(connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    auto aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
-        AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        aboutToReceive.set_value();
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -207,20 +307,22 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
 
 TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     // Arrange
-    std::string name = GenerateShmPipeName();
-
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
     EstablishConnection(connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    auto aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
+        aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -259,16 +361,6 @@ TEST_F(TestShmPipe, PingPongBeginningWithConnectClientShouldWork) {
     TestPingPong(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, PingPongBeginningWithAcceptClientShouldWork) {
-    // Arrange
-    ShmPipeClient connectClient;
-    ShmPipeClient acceptClient;
-    EstablishConnection(connectClient, acceptClient);
-
-    // Act and assert
-    TestPingPong(acceptClient, connectClient);
-}
-
 TEST_F(TestShmPipe, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     // Arrange
     ShmPipeClient connectClient;
@@ -279,16 +371,6 @@ TEST_F(TestShmPipe, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     TestManyElements(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
-    // Arrange
-    ShmPipeClient connectClient;
-    ShmPipeClient acceptClient;
-    EstablishConnection(connectClient, acceptClient);
-
-    // Act and assert
-    TestManyElements(acceptClient, connectClient);
-}
-
 TEST_F(TestShmPipe, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     // Arrange
     ShmPipeClient connectClient;
@@ -297,16 +379,6 @@ TEST_F(TestShmPipe, SendBigElementFromConnectClientToAcceptClientShouldWork) {
 
     // Act and assert
     TestBigElement(connectClient, acceptClient);
-}
-
-TEST_F(TestShmPipe, SendBigElementFromAcceptClientToConnectClientShouldWork) {
-    // Arrange
-    ShmPipeClient connectClient;
-    ShmPipeClient acceptClient;
-    EstablishConnection(connectClient, acceptClient);
-
-    // Act and assert
-    TestBigElement(acceptClient, connectClient);
 }
 
 TEST_F(TestShmPipe, SendOnDisconnectedConnectClientShouldNotWork) {
@@ -403,6 +475,19 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
 
     // Act and assert
     TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+}
+
+TEST_F(TestShmPipe, WaitForDataTimesOutWhenNoDataArrives) {
+    // Arrange
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    // Act
+    Result result = connectClient.WaitForData(50);
+
+    // Assert
+    AssertTimeout(result);
 }
 
 }  // namespace

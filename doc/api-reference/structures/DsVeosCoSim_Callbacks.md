@@ -68,19 +68,19 @@ Called at the end of a simulation step.
 
 > [DsVeosCoSim_IncomingSignalChangedCallback](../function-pointers/DsVeosCoSim_IncomingSignalChangedCallback.md) incomingSignalChangedCallback
 
-Called when an incoming signal value has changed.
+Called when the value of an incoming I/O signal has changed.
 
 > [DsVeosCoSim_CanMessageReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageReceivedCallback.md) canMessageReceivedCallback
 
-Called when a CAN message is received from VEOS.
+Called when a new CAN message is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_EthMessageReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageReceivedCallback.md) ethMessageReceivedCallback
 
-Called when an Ethernet message is received from VEOS.
+Called when a new Ethernet message is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_LinMessageReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageReceivedCallback.md) linMessageReceivedCallback
 
-Called when a LIN message is received from VEOS.
+Called when a new LIN message is received from the VEOS CoSim server.
 
 > `void*` userData
 
@@ -88,23 +88,23 @@ Arbitrary user data to be passed to every callback.
 
 > [DsVeosCoSim_CanMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_CanMessageContainerReceivedCallback.md) canMessageContainerReceivedCallback
 
-Called when a CAN message container is received from VEOS.
+Called when a new CAN message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_EthMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_EthMessageContainerReceivedCallback.md) ethMessageContainerReceivedCallback
 
-Called when an Ethernet message container is received from VEOS.
+Called when a new Ethernet message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_LinMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_LinMessageContainerReceivedCallback.md) linMessageContainerReceivedCallback
 
-Called when a LIN message container is received from VEOS.
+Called when a new LIN message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_FrMessageContainerReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageContainerReceivedCallback.md) frMessageContainerReceivedCallback
 
-Called when a FlexRay message container is received from VEOS.
+Called when a new FlexRay message container is received from the VEOS CoSim server.
 
 > [DsVeosCoSim_FrMessageReceivedCallback](../function-pointers/DsVeosCoSim_FrMessageReceivedCallback.md) frMessageReceivedCallback
 
-Called when a FlexRay message is received from VEOS.
+Called when a new FlexRay message is received from the VEOS CoSim server.
 
 ## See Also
 

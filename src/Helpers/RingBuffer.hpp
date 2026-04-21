@@ -91,7 +91,7 @@ public:
         return &_items[_readIndex];
     }
 
-    [[nodiscard]] T* TryPeekFront() const noexcept {
+    [[nodiscard]] const T* TryPeekFront() const noexcept {
         if (IsEmpty()) {
             return nullptr;
         }

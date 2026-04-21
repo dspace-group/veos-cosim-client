@@ -71,6 +71,10 @@ public:
     }
 
 protected:
+    [[nodiscard]] Result WaitForDataInternal(uint32_t timeoutInMilliseconds) override {
+        return _client.WaitForData(timeoutInMilliseconds);
+    }
+
     [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override {
         return _client.Receive(destination, size, receivedSize);
     }

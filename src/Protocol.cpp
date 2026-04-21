@@ -182,13 +182,13 @@ public:
     }
 
     [[nodiscard]] Result ReadMessage([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] FrMessageContainer& messageContainer) override {
-        // V1 does not have this functionality
-        return CreateOk();
+        // V1 does not support FlexRay messages
+        return CreateError();
     }
 
     [[nodiscard]] Result WriteMessage([[maybe_unused]] ChannelWriter& writer, [[maybe_unused]] const FrMessageContainer& messageContainer) override {
-        // V1 does not have this functionality
-        return CreateOk();
+        // V1 does not support FlexRay messages
+        return CreateError();
     }
 
     [[nodiscard]] Result ReceiveHeader(ChannelReader& reader, FrameKind& frameKind) override {

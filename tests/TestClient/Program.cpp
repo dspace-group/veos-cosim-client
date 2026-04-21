@@ -1,9 +1,8 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <chrono>
 #include <cstdint>
 #include <cstring>
-#include <ctime>
-#include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -12,12 +11,6 @@
 #include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Helper.hpp"
 #include "Logger.hpp"
-
-#ifdef _WIN32
-
-#include <chrono>
-
-#endif
 
 using namespace DsVeosCoSim;
 using namespace std::chrono_literals;
@@ -34,10 +27,30 @@ namespace {
 
 DsVeosCoSim_Handle Client;
 
-DsVeosCoSim_SimulationState State;
-std::mutex LockState;
+class SimulationState {
+public:
+    void Set(DsVeosCoSim_SimulationState newState) {
+        std::scoped_lock lock(_mutex);
+        _state = newState;
+    }
 
-std::thread SimulationThread;
+    [[nodiscard]] DsVeosCoSim_SimulationState Get() {
+        std::scoped_lock lock(_mutex);
+        return _state;
+    }
+
+    template <typename Func>
+    auto WithLock(Func&& func) {
+        std::scoped_lock lock(_mutex);
+        return std::forward<Func>(func)(_state);
+    }
+
+private:
+    std::mutex _mutex;
+    DsVeosCoSim_SimulationState _state{};
+};
+
+SimulationState SimState;
 
 std::vector<DsVeosCoSim_IoSignal> OutgoingSignals;
 std::vector<DsVeosCoSim_CanController> CanControllers;
@@ -51,29 +64,37 @@ bool SendEthMessages;
 bool SendLinMessages;
 bool SendFrMessages;
 bool PrintRoundTripTime;
+bool PrintStepsPerSecond;
 
-time_t lastTimeRoundTripTimePrinted;
+std::chrono::steady_clock::time_point LastRoundTripTimePrinted;
+
+int64_t PerformanceStepCount;
+std::chrono::steady_clock::time_point PerformanceMeasurementStart;
+bool PerformanceMeasurementActive;
+std::chrono::steady_clock::time_point LastPerformancePrintTime;
+
+DsVeosCoSim_SimulationTime SendLastHalfSecond = -1;
+int64_t SendCounter = 0;
 
 [[nodiscard]] DsVeosCoSim_Result Disconnect();
 
 void PrintCurrentRoundTripTime() {
-    time_t now{};
-    time(&now);
-
-    if (now <= lastTimeRoundTripTimePrinted) {
-        return;
-    }
-
-    lastTimeRoundTripTimePrinted = now;
-
     if (!PrintRoundTripTime) {
         return;
     }
 
+    auto now = std::chrono::steady_clock::now();
+
+    if (now - LastRoundTripTimePrinted < 1s) {
+        return;
+    }
+
+    LastRoundTripTimePrinted = now;
+
     int64_t roundTripTimeInNanoseconds{};
     if (DsVeosCoSim_GetRoundTripTime(Client, &roundTripTimeInNanoseconds) != DsVeosCoSim_Result_Ok) {
         LogError("Could not get round trip time.");
-        (void)Disconnect();
+        return;
     }
 
     if (roundTripTimeInNanoseconds > 0) {
@@ -120,6 +141,59 @@ void SwitchPrintingRoundTripTime() {
         LogInfo("Enabled Printing Round-Trip Time.");
     } else {
         LogInfo("Disabled Printing Round-Trip Time.");
+    }
+}
+
+void StartPerformanceMeasurement() {
+    PerformanceStepCount = 0;
+    PerformanceMeasurementStart = std::chrono::steady_clock::now();
+    PerformanceMeasurementActive = true;
+    LastPerformancePrintTime = {};
+    SendLastHalfSecond = -1;
+    SendCounter = 0;
+}
+
+void StopPerformanceMeasurement() {
+    if (!PerformanceMeasurementActive) {
+        return;
+    }
+
+    PerformanceMeasurementActive = false;
+
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - PerformanceMeasurementStart).count();
+    if (seconds > 0.0) {
+        LogInfo("Performance: {:.1f} steps per second average ({} steps in {:.3f} s).",
+                static_cast<double>(PerformanceStepCount) / seconds,
+                PerformanceStepCount,
+                seconds);
+    }
+}
+
+void PrintCurrentStepsPerSecond() {
+    if (!PerformanceMeasurementActive || !PrintStepsPerSecond) {
+        return;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+
+    if (now - LastPerformancePrintTime < 1s) {
+        return;
+    }
+
+    LastPerformancePrintTime = now;
+
+    double seconds = std::chrono::duration<double>(now - PerformanceMeasurementStart).count();
+    if (seconds > 0.0) {
+        LogInfo("Steps per second: {:.1f} ({} steps in {:.1f} s).", static_cast<double>(PerformanceStepCount) / seconds, PerformanceStepCount, seconds);
+    }
+}
+
+void SwitchPrintingStepsPerSecond() {
+    PrintStepsPerSecond = !PrintStepsPerSecond;
+    if (PrintStepsPerSecond) {
+        LogInfo("Enabled printing steps per second.");
+    } else {
+        LogInfo("Disabled printing steps per second.");
     }
 }
 
@@ -178,53 +252,45 @@ void SwitchPrintingRoundTripTime() {
 }
 
 [[nodiscard]] DsVeosCoSim_Result SendSomeData(DsVeosCoSim_SimulationTime simulationTime) {
-    static DsVeosCoSim_SimulationTime lastHalfSecond = -1;
-    static int64_t counter = 0;
     DsVeosCoSim_SimulationTime currentHalfSecond = simulationTime / 500000000;
-    if (currentHalfSecond == lastHalfSecond) {
+    if (currentHalfSecond == SendLastHalfSecond) {
         return DsVeosCoSim_Result_Ok;
     }
 
-    lastHalfSecond = currentHalfSecond;
-    counter++;
+    SendLastHalfSecond = currentHalfSecond;
+    SendCounter++;
 
-    if (SendIoData && ((counter % 5) == 0)) {
+    if (SendIoData && ((SendCounter % 5) == 0)) {
         for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
             CheckDsVeosCoSimResult(WriteOutGoingSignal(signal));
         }
     }
 
-    if (SendCanMessages && ((counter % 5) == 1)) {
+    if (SendCanMessages && ((SendCounter % 5) == 1)) {
         for (const DsVeosCoSim_CanController& controller : CanControllers) {
             CheckDsVeosCoSimResult(TransmitCanMessage(controller));
         }
     }
 
-    if (SendEthMessages && ((counter % 5) == 2)) {
+    if (SendEthMessages && ((SendCounter % 5) == 2)) {
         for (const DsVeosCoSim_EthController& controller : EthControllers) {
             CheckDsVeosCoSimResult(TransmitEthMessage(controller));
         }
     }
 
-    if (SendLinMessages && ((counter % 5) == 3)) {
+    if (SendLinMessages && ((SendCounter % 5) == 3)) {
         for (const DsVeosCoSim_LinController& controller : LinControllers) {
             CheckDsVeosCoSimResult(TransmitLinMessage(controller));
         }
     }
 
-    if (SendFrMessages && ((counter % 5) == 4)) {
+    if (SendFrMessages && ((SendCounter % 5) == 4)) {
         for (const DsVeosCoSim_FrController& controller : FrControllers) {
             CheckDsVeosCoSimResult(TransmitFrMessage(controller));
         }
     }
 
     return DsVeosCoSim_Result_Ok;
-}
-
-void OnSimulationPostStepCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    if (SendSomeData(simulationTime) != DsVeosCoSim_Result_Ok) {
-        LogError("Could not send data.");
-    }
 }
 
 void OnIncomingSignalChanged([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
@@ -263,40 +329,6 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
     LogFrMessage(DsVeosCoSim_FrMessageContainerToString(messageContainer));
 }
 
-void StartSimulationThread(const std::function<void()>& function) {
-    SimulationThread = std::thread(function);
-}
-
-void OnSimulationStartedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::scoped_lock lock(LockState);
-    LogInfo("Simulation started at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
-    State = DsVeosCoSim_SimulationState_Running;
-}
-
-void OnSimulationStoppedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::scoped_lock lock(LockState);
-    LogInfo("Simulation stopped at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
-    State = DsVeosCoSim_SimulationState_Stopped;
-}
-
-void OnSimulationTerminatedCallback(DsVeosCoSim_SimulationTime simulationTime, DsVeosCoSim_TerminateReason reason, [[maybe_unused]] void* userData) {
-    std::scoped_lock lock(LockState);
-    LogInfo("Simulation terminated with reason {} at {} s.", DsVeosCoSim_TerminateReasonToString(reason), DsVeosCoSim_SimulationTimeToString(simulationTime));
-    State = DsVeosCoSim_SimulationState_Terminated;
-}
-
-void OnSimulationPausedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::scoped_lock lock(LockState);
-    LogInfo("Simulation paused at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
-    State = DsVeosCoSim_SimulationState_Paused;
-}
-
-void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[maybe_unused]] void* userData) {
-    std::scoped_lock lock(LockState);
-    LogInfo("Simulation continued at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
-    State = DsVeosCoSim_SimulationState_Running;
-}
-
 [[nodiscard]] DsVeosCoSim_Result Connect(const std::string& host, const std::string& serverName) {
     LogInfo("Connecting ...");
 
@@ -324,13 +356,16 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     LogTrace("Step size: {} s", DsVeosCoSim_SimulationTimeToString(stepSize));
     LogTrace("");
 
-    CheckDsVeosCoSimResult(DsVeosCoSim_GetSimulationState(Client, &State));
+    DsVeosCoSim_SimulationState initialState{};
+    CheckDsVeosCoSimResult(DsVeosCoSim_GetSimulationState(Client, &initialState));
 
     // This can happen with old clients. In that case we assume the state stopped, so that at least the simulation start
     // can be passed to the server
-    if (State == DsVeosCoSim_SimulationState_Unloaded) {
-        State = DsVeosCoSim_SimulationState_Stopped;
+    if (initialState == DsVeosCoSim_SimulationState_Unloaded) {
+        initialState = DsVeosCoSim_SimulationState_Stopped;
     }
+
+    SimState.Set(initialState);
 
     uint32_t tmpCanControllersCount{};
     const DsVeosCoSim_CanController* tmpCanControllers{};
@@ -422,100 +457,139 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
     return DsVeosCoSim_Result_Ok;
 }
 
-[[noreturn]] void RunCallbackBasedCoSimulation() {
+[[nodiscard]] DsVeosCoSim_Result RunPollingBasedCoSimulation() {
     DsVeosCoSim_Callbacks callbacks{};
-    callbacks.simulationStartedCallback = OnSimulationStartedCallback;
-    callbacks.simulationStoppedCallback = OnSimulationStoppedCallback;
-    callbacks.simulationTerminatedCallback = OnSimulationTerminatedCallback;
-    callbacks.simulationPausedCallback = OnSimulationPausedCallback;
-    callbacks.simulationContinuedCallback = OnSimulationContinuedCallback;
-    callbacks.simulationEndStepCallback = OnSimulationPostStepCallback;
     callbacks.incomingSignalChangedCallback = OnIncomingSignalChanged;
     callbacks.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
     callbacks.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
     callbacks.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
     callbacks.frMessageContainerReceivedCallback = OnFrMessageContainerReceived;
 
-    LogInfo("Running callback-based co-simulation ...");
-    if (DsVeosCoSim_RunCallbackBasedCoSimulation(Client, callbacks) != DsVeosCoSim_Result_Disconnected) {
-        LogError("Callback-based co-simulation finished with an error.");
-        State = DsVeosCoSim_SimulationState_Unloaded;
-        SimulationThread.detach();
-        exit(1);
-    }
+    CheckDsVeosCoSimResult(DsVeosCoSim_StartPollingBasedCoSimulation(Client, callbacks));
 
-    LogInfo("Callback-based co-simulation finished successfully.");
-    SimulationThread.detach();
-    exit(0);
+    LogInfo("Running polling-based co-simulation ...");
+
+    while (true) {
+        DsVeosCoSim_SimulationTime simulationTime{};
+        DsVeosCoSim_Command command{};
+
+        DsVeosCoSim_Result result = DsVeosCoSim_PollCommand2(Client, &simulationTime, &command, 10);
+
+        if (result == DsVeosCoSim_Result_Disconnected) {
+            StopPerformanceMeasurement();
+            LogInfo("Polling-based co-simulation finished successfully.");
+            return DsVeosCoSim_Result_Ok;
+        }
+
+        PrintCurrentRoundTripTime();
+
+        if (result == DsVeosCoSim_Result_Timeout) {
+            continue;
+        }
+
+        if (result != DsVeosCoSim_Result_Ok) {
+            StopPerformanceMeasurement();
+            LogError("Polling-based co-simulation finished with an error.");
+            SimState.Set(DsVeosCoSim_SimulationState_Unloaded);
+            return DsVeosCoSim_Result_Error;
+        }
+
+        switch (command) {
+            case DsVeosCoSim_Command_Start:
+                LogInfo("Simulation started at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                SimState.Set(DsVeosCoSim_SimulationState_Running);
+                StartPerformanceMeasurement();
+                break;
+            case DsVeosCoSim_Command_Stop:
+                LogInfo("Simulation stopped at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                StopPerformanceMeasurement();
+                SimState.Set(DsVeosCoSim_SimulationState_Stopped);
+                break;
+            case DsVeosCoSim_Command_Terminate:
+            case DsVeosCoSim_Command_TerminateFinished:
+                LogInfo("Simulation terminated at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                StopPerformanceMeasurement();
+                SimState.Set(DsVeosCoSim_SimulationState_Terminated);
+                break;
+            case DsVeosCoSim_Command_Pause:
+                LogInfo("Simulation paused at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                StopPerformanceMeasurement();
+                SimState.Set(DsVeosCoSim_SimulationState_Paused);
+                break;
+            case DsVeosCoSim_Command_Continue:
+                LogInfo("Simulation continued at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                SimState.Set(DsVeosCoSim_SimulationState_Running);
+                StartPerformanceMeasurement();
+                break;
+            case DsVeosCoSim_Command_Step:
+                PerformanceStepCount++;
+                PrintCurrentStepsPerSecond();
+
+                if (SendSomeData(simulationTime) != DsVeosCoSim_Result_Ok) {
+                    LogError("Could not send data.");
+                }
+                break;
+            default:
+                break;
+        }
+
+        CheckDsVeosCoSimResult(DsVeosCoSim_FinishCommand(Client));
+    }
 }
 
-[[nodiscard]] DsVeosCoSim_Result Start() {
-    std::scoped_lock lock(LockState);
-
-    DsVeosCoSim_SimulationState state = State;
-    switch (state) {
-        case DsVeosCoSim_SimulationState_Running:
-            LogInfo("Pausing simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_PauseSimulation(Client));
-            break;
-        case DsVeosCoSim_SimulationState_Stopped:
-            LogInfo("Starting simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_StartSimulation(Client));
-            break;
-        case DsVeosCoSim_SimulationState_Paused:
-            LogInfo("Continuing simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_ContinueSimulation(Client));
-            break;
-        default:
-            LogError("Cannot start or pause in state {}.", DsVeosCoSim_SimulationStateToString(State));
-            break;
-    }
-
-    return DsVeosCoSim_Result_Ok;
+[[nodiscard]] DsVeosCoSim_Result ToggleSimulation() {
+    return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
+        switch (state) {
+            case DsVeosCoSim_SimulationState_Running:
+                LogInfo("Pausing simulation ...");
+                return DsVeosCoSim_PauseSimulation(Client);
+            case DsVeosCoSim_SimulationState_Stopped:
+                LogInfo("Starting simulation ...");
+                return DsVeosCoSim_StartSimulation(Client);
+            case DsVeosCoSim_SimulationState_Paused:
+                LogInfo("Continuing simulation ...");
+                return DsVeosCoSim_ContinueSimulation(Client);
+            default:
+                LogError("Cannot start or pause in state {}.", DsVeosCoSim_SimulationStateToString(state));
+                return DsVeosCoSim_Result_Ok;
+        }
+    });
 }
 
 [[nodiscard]] DsVeosCoSim_Result Stop() {
-    std::scoped_lock lock(LockState);
-
-    DsVeosCoSim_SimulationState state = State;
-    switch (state) {
-        case DsVeosCoSim_SimulationState_Stopped:
-            break;
-        case DsVeosCoSim_SimulationState_Running:
-        case DsVeosCoSim_SimulationState_Paused:
-            LogInfo("Stopping simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_StopSimulation(Client));
-            break;
-        default:
-            LogError("Cannot stop in state {}.", DsVeosCoSim_SimulationStateToString(State));
-            break;
-    }
-
-    return DsVeosCoSim_Result_Ok;
+    return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
+        switch (state) {
+            case DsVeosCoSim_SimulationState_Stopped:
+                return DsVeosCoSim_Result_Ok;
+            case DsVeosCoSim_SimulationState_Running:
+            case DsVeosCoSim_SimulationState_Paused:
+                LogInfo("Stopping simulation ...");
+                return DsVeosCoSim_StopSimulation(Client);
+            default:
+                LogError("Cannot stop in state {}.", DsVeosCoSim_SimulationStateToString(state));
+                return DsVeosCoSim_Result_Ok;
+        }
+    });
 }
 
 [[nodiscard]] DsVeosCoSim_Result Terminate() {
-    std::scoped_lock lock(LockState);
-
-    DsVeosCoSim_SimulationState state = State;
-    switch (state) {
-        case DsVeosCoSim_SimulationState_Terminated:
-            break;
-        case DsVeosCoSim_SimulationState_Running:
-        case DsVeosCoSim_SimulationState_Paused:
-        case DsVeosCoSim_SimulationState_Stopped:
-            LogInfo("Terminating simulation ...");
-            CheckDsVeosCoSimResult(DsVeosCoSim_TerminateSimulation(Client, DsVeosCoSim_TerminateReason_Error));
-            break;
-        default:
-            LogError("Cannot terminate in state {}.", DsVeosCoSim_SimulationStateToString(State));
-            break;
-    }
-
-    return DsVeosCoSim_Result_Ok;
+    return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
+        switch (state) {
+            case DsVeosCoSim_SimulationState_Terminated:
+                return DsVeosCoSim_Result_Ok;
+            case DsVeosCoSim_SimulationState_Running:
+            case DsVeosCoSim_SimulationState_Paused:
+            case DsVeosCoSim_SimulationState_Stopped:
+                LogInfo("Terminating simulation ...");
+                return DsVeosCoSim_TerminateSimulation(Client, DsVeosCoSim_TerminateReason_Error);
+            default:
+                LogError("Cannot terminate in state {}.", DsVeosCoSim_SimulationStateToString(state));
+                return DsVeosCoSim_Result_Ok;
+        }
+    });
 }
 
-[[nodiscard]] DsVeosCoSim_Result HandleUserInput() {
+DsVeosCoSim_Result HandleUserInput() {
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
@@ -538,11 +612,14 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
             case '0':
                 SwitchPrintingRoundTripTime();
                 break;
+            case '9':
+                SwitchPrintingStepsPerSecond();
+                break;
             case 's':
             case 'p':
             case 'k':
             case ' ':
-                CheckDsVeosCoSimResult(Start());
+                CheckDsVeosCoSimResult(ToggleSimulation());
                 break;
             case 't':
                 CheckDsVeosCoSimResult(Stop());
@@ -560,30 +637,12 @@ void OnSimulationContinuedCallback(DsVeosCoSim_SimulationTime simulationTime, [[
 [[nodiscard]] DsVeosCoSim_Result HostClient(const std::string& host, const std::string& name) {
     CheckDsVeosCoSimResult(Connect(host, name));
 
-    StartSimulationThread(RunCallbackBasedCoSimulation);
+    // Stopping the listening for a character is complicated, so we just detach the thread
+    std::thread([] {
+        HandleUserInput();
+    }).detach();
 
-    bool connected = true;
-
-    std::thread roundTripTimeThread([&] {
-        while (connected) {
-            std::this_thread::sleep_for(100ms);
-
-            {
-                std::scoped_lock lock(LockState);
-                if (State == DsVeosCoSim_SimulationState_Running) {
-                    continue;
-                }
-            }
-
-            PrintCurrentRoundTripTime();
-        }
-    });
-
-    DsVeosCoSim_Result result = HandleUserInput();
-    connected = false;
-    roundTripTimeThread.join();
-
-    return result;
+    return RunPollingBasedCoSimulation();
 }
 
 }  // namespace
@@ -592,7 +651,7 @@ int main(int argc, char** argv) {
     InitializeOutput();
 
     std::string host;
-    std::string name = "MyCoSim";
+    std::string name = "CoSimTest";
 
     for (int32_t i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--host") == 0) {
@@ -621,9 +680,6 @@ int main(int argc, char** argv) {
     }
 
     DsVeosCoSim_Result result = HostClient(host, name);
-    if (SimulationThread.joinable()) {
-        SimulationThread.join();
-    }
 
     DsVeosCoSim_Destroy(Client);
 

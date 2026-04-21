@@ -103,7 +103,13 @@ veos-sim info -p State
 
 ### 5.4 Run Client
 
-Run the following command in the directory `DsVeosCoSimDemo`:
+Run the client in the directory `DsVeosCoSimDemo` using the command that matches your generator:
+
+```console
+./build/DsVeosCoSimDemo
+```
+
+On Windows with a multi-config generator such as Visual Studio, use:
 
 ```console
 ./build/Debug/DsVeosCoSimDemo

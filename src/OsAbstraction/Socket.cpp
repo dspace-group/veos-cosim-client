@@ -82,8 +82,8 @@ namespace {
 
 #ifdef _WIN32
 
-int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeout) {
-    return WSAPoll(fds, countFds, timeout);
+int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeoutInMilliseconds) {
+    return WSAPoll(fds, countFds, timeoutInMilliseconds);
 }
 
 int32_t DoUnlink(const std::string& path) {
@@ -92,8 +92,8 @@ int32_t DoUnlink(const std::string& path) {
 
 #else
 
-int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeout) {
-    return poll(fds, countFds, timeout);
+int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeoutInMilliseconds) {
+    return poll(fds, countFds, timeoutInMilliseconds);
 }
 
 int32_t DoUnlink(const std::string& path) {
@@ -267,10 +267,6 @@ int32_t DoUnlink(const std::string& path) {
     pfd.fd = socketHandle.Get();
     pfd.events = POLLOUT;
 
-    timeval timeout{};
-    timeout.tv_sec = static_cast<decltype(timeout.tv_sec)>(timeoutInMilliseconds / 1000);
-    timeout.tv_usec = static_cast<decltype(timeout.tv_usec)>(timeoutInMilliseconds % 1000) * 1000;
-
     int32_t pollResult = DoPoll(&pfd, 1, static_cast<int32_t>(timeoutInMilliseconds));
     if (pollResult == 0) {
         return CreateTimeout();
@@ -368,10 +364,6 @@ int32_t DoUnlink(const std::string& path) {
     sockaddr_in6 address{};
     address.sin6_family = AF_INET6;
     address.sin6_port = htons(port);
-
-    // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same
-    // symbol
-    address.sin6_addr = enableRemoteAccess ? in6_addr{} : in6addr_loopback;
 
     if (enableRemoteAccess) {
         // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same symbol
@@ -776,6 +768,28 @@ void SocketClient::Disconnect() {
 
     LogError(GetLastNetworkError(), "Could not receive from remote endpoint.");
     return CreateError();
+}
+
+[[nodiscard]] Result SocketClient::WaitForData(uint32_t timeoutInMilliseconds) const {
+    if (!IsConnected()) {
+        return CreateNotConnected();
+    }
+
+    pollfd pfd{};
+    pfd.fd = _socketHandle.Get();
+    pfd.events = POLLIN;
+
+    int32_t pollResult = DoPoll(&pfd, 1, static_cast<int32_t>(timeoutInMilliseconds));
+    if (pollResult == 0) {
+        return CreateTimeout();
+    }
+
+    if (pollResult < 0) {
+        LogError(GetLastNetworkError(), "Poll failed.");
+        return CreateError();
+    }
+
+    return CreateOk();
 }
 
 [[nodiscard]] Result SocketClient::Send(const void* source, size_t size) const {

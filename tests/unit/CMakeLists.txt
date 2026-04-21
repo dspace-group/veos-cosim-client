@@ -18,7 +18,8 @@ target_sources(
   Helpers/TestHelper.cpp
   Program.cpp
   TestBusExchange.cpp
-  TestCoSim.cpp
+  TestCoSimClient.cpp
+  TestDsVeosCoSim.cpp
   TestSignalExchange.cpp
   TestPortMapper.cpp
   TestProtocol.cpp

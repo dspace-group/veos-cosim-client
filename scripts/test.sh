@@ -15,4 +15,4 @@ echo "==> Running build before test"
 "$SCRIPT_DIR/build.sh" "$CONFIG"
 
 echo "==> Test ($PRESET)"
-ctest --preset "$PRESET"
+ctest --preset "$PRESET" --output-on-failure

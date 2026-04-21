@@ -8,10 +8,10 @@ help:
     @just --list
 
 build config="debug":
-    scripts/build.{{ script_ext }} {{ if os() == "windows" { "-Config" } else { "" } }} {{ config }}
+    scripts/build.{{ script_ext }} {{ config }}
 
 clean config="debug":
-    scripts/clean.{{ script_ext }} {{ if os() == "windows" { "-Config" } else { "" } }} {{ config }}
+    scripts/clean.{{ script_ext }} {{ config }}
 
 test config="debug":
-    scripts/test.{{ script_ext }} {{ if os() == "windows" { "-Config" } else { "" } }} {{ config }}
+    scripts/test.{{ script_ext }} {{ config }}

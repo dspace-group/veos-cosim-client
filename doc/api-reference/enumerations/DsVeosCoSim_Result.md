@@ -21,7 +21,8 @@ typedef enum DsVeosCoSim_Result {
     DsVeosCoSim_Result_Empty,
     DsVeosCoSim_Result_Full,
     DsVeosCoSim_Result_InvalidArgument,
-    DsVeosCoSim_Result_Disconnected
+  DsVeosCoSim_Result_Disconnected,
+  DsVeosCoSim_Result_Timeout
 } DsVeosCoSim_Result;
 ```
 
@@ -51,6 +52,10 @@ The function call failed due to an invalid argument.
 
 The function detected a disconnection from the VEOS CoSim server.
 
+> DsVeosCoSim_Result_Timeout
+
+The function timed out.
+
 ## See Also
 
 - [DsVeosCoSim_Connect](../functions/DsVeosCoSim_Connect.md)
@@ -59,6 +64,7 @@ The function detected a disconnection from the VEOS CoSim server.
 - [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md)
 - [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md)
 - [DsVeosCoSim_PollCommand](../functions/DsVeosCoSim_PollCommand.md)
+- [DsVeosCoSim_PollCommand2](../functions/DsVeosCoSim_PollCommand2.md)
 - [DsVeosCoSim_FinishCommand](../functions/DsVeosCoSim_FinishCommand.md)
 - [DsVeosCoSim_SetNextSimulationTime](../functions/DsVeosCoSim_SetNextSimulationTime.md)
 - [DsVeosCoSim_GetStepSize](../functions/DsVeosCoSim_GetStepSize.md)

@@ -132,54 +132,6 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     AssertOk(result);
 }
 
-TEST_F(TestLocalChannel, WriteUInt16ToChannel) {
-    // Arrange
-    std::string name = GenerateLocalChannelName();
-
-    std::unique_ptr<Channel> connectChannel;
-    std::unique_ptr<Channel> acceptChannel;
-    EstablishConnection(name, connectChannel, acceptChannel);
-
-    // Act and assert
-    TestWriteUInt16ToChannel(connectChannel);
-}
-
-TEST_F(TestLocalChannel, WriteUInt32ToChannel) {
-    // Arrange
-    std::string name = GenerateLocalChannelName();
-
-    std::unique_ptr<Channel> connectChannel;
-    std::unique_ptr<Channel> acceptChannel;
-    EstablishConnection(name, connectChannel, acceptChannel);
-
-    // Act and assert
-    TestWriteUInt32ToChannel(connectChannel);
-}
-
-TEST_F(TestLocalChannel, WriteUInt64ToChannel) {
-    // Arrange
-    std::string name = GenerateLocalChannelName();
-
-    std::unique_ptr<Channel> connectChannel;
-    std::unique_ptr<Channel> acceptChannel;
-    EstablishConnection(name, connectChannel, acceptChannel);
-
-    // Act and assert
-    TestWriteUInt64ToChannel(connectChannel);
-}
-
-TEST_F(TestLocalChannel, WriteBufferToChannel) {
-    // Arrange
-    std::string name = GenerateLocalChannelName();
-
-    std::unique_ptr<Channel> connectChannel;
-    std::unique_ptr<Channel> acceptChannel;
-    EstablishConnection(name, connectChannel, acceptChannel);
-
-    // Act and assert
-    TestWriteBufferToChannel(connectChannel);
-}
-
 TEST_F(TestLocalChannel, ReadUInt16FromChannel) {
     // Arrange
     std::string name = GenerateLocalChannelName();

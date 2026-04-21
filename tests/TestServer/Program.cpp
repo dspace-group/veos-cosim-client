@@ -1,5 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <atomic>
+#include <chrono>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -13,12 +15,6 @@
 #include "Helper.hpp"
 #include "Logger.hpp"
 #include "Result.hpp"
-
-#ifdef _WIN32
-
-#include <chrono>
-
-#endif
 
 using namespace DsVeosCoSim;
 using namespace std::chrono;
@@ -41,8 +37,8 @@ public:
     ServerWrapper& operator=(ServerWrapper&&) = delete;
 
     [[nodiscard]] Result Load(const CoSimServerConfig& config) {
-        _server = CreateServer();
         _config = config;
+        _server = std::make_unique<CoSimServer>();
         std::scoped_lock lock(_mutex);
         return _server->Load(config);
     }
@@ -106,7 +102,7 @@ public:
         _stopBackgroundThreadFlag = false;
         _backgroundThread = std::thread([&] {
             while (!_stopBackgroundThreadFlag) {
-                std::this_thread::sleep_for(1s);
+                std::this_thread::sleep_for(100ms);
                 std::scoped_lock lock(_mutex);
                 SimulationTime roundTripTime{};
                 if (!IsOk(_server->BackgroundService(roundTripTime))) {
@@ -155,7 +151,7 @@ private:
     std::mutex _mutex;
     CoSimServerConfig _config;
 
-    bool _stopBackgroundThreadFlag{};
+    std::atomic<bool> _stopBackgroundThreadFlag{};
     std::thread _backgroundThread;
 };
 
@@ -164,12 +160,21 @@ bool SendCanMessages;
 bool SendEthMessages;
 bool SendLinMessages;
 bool SendFrMessages;
+bool PrintStepsPerSecond;
+
+int64_t PerformanceStepCount;
+std::chrono::steady_clock::time_point PerformanceMeasurementStart;
+bool PerformanceMeasurementActive;
+std::chrono::steady_clock::time_point LastPerformancePrintTime;
 
 bool StopSimulationThreadFlag;
 std::thread SimulationThread;
 std::thread::id SimulationThreadId;
 
 SimulationTime CurrentTime;
+
+SimulationTime SendLastHalfSecond = -1s;
+int64_t SendCounter = 0;
 
 std::unique_ptr<ServerWrapper> Server;
 
@@ -209,6 +214,59 @@ void SwitchSendingFrMessages() {
     PrintStatus(SendFrMessages, "FlexRay messages");
 }
 
+void StartPerformanceMeasurement() {
+    PerformanceStepCount = 0;
+    PerformanceMeasurementStart = std::chrono::steady_clock::now();
+    PerformanceMeasurementActive = true;
+    LastPerformancePrintTime = {};
+    SendLastHalfSecond = -1s;
+    SendCounter = 0;
+}
+
+void StopPerformanceMeasurement() {
+    if (!PerformanceMeasurementActive) {
+        return;
+    }
+
+    PerformanceMeasurementActive = false;
+
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - PerformanceMeasurementStart).count();
+    if (seconds > 0.0) {
+        LogInfo("Performance: {:.1f} steps per second average ({} steps in {:.3f} s).",
+                static_cast<double>(PerformanceStepCount) / seconds,
+                PerformanceStepCount,
+                seconds);
+    }
+}
+
+void PrintCurrentStepsPerSecond() {
+    if (!PerformanceMeasurementActive || !PrintStepsPerSecond) {
+        return;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+
+    if (now - LastPerformancePrintTime < 1s) {
+        return;
+    }
+
+    LastPerformancePrintTime = now;
+
+    double seconds = std::chrono::duration<double>(now - PerformanceMeasurementStart).count();
+    if (seconds > 0.0) {
+        LogInfo("Steps per second: {:.1f} ({} steps in {:.1f} s).", static_cast<double>(PerformanceStepCount) / seconds, PerformanceStepCount, seconds);
+    }
+}
+
+void SwitchPrintingStepsPerSecond() {
+    PrintStepsPerSecond = !PrintStepsPerSecond;
+    if (PrintStepsPerSecond) {
+        LogInfo("Enabled printing steps per second.");
+    } else {
+        LogInfo("Disabled printing steps per second.");
+    }
+}
+
 [[nodiscard]] Result WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     std::vector<uint8_t> data = GenerateBytes(length);
@@ -245,41 +303,39 @@ void SwitchSendingFrMessages() {
 }
 
 [[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
-    static SimulationTime lastHalfSecond = -1s;
-    static int64_t counter = 0;
     SimulationTime currentHalfSecond = simulationTime / 500000000;
-    if (currentHalfSecond == lastHalfSecond) {
+    if (currentHalfSecond == SendLastHalfSecond) {
         return CreateOk();
     }
 
-    lastHalfSecond = currentHalfSecond;
-    counter++;
+    SendLastHalfSecond = currentHalfSecond;
+    SendCounter++;
 
-    if (SendIoData && ((counter % 5) == 0)) {
+    if (SendIoData && ((SendCounter % 5) == 0)) {
         for (const IoSignalContainer& signal : Server->GetIncomingSignals()) {
             CheckResult(WriteOutGoingSignal(signal));
         }
     }
 
-    if (SendCanMessages && ((counter % 5) == 1)) {
+    if (SendCanMessages && ((SendCounter % 5) == 1)) {
         for (const CanControllerContainer& controller : Server->GetCanControllers()) {
             CheckResult(TransmitCanMessage(controller));
         }
     }
 
-    if (SendEthMessages && ((counter % 5) == 2)) {
+    if (SendEthMessages && ((SendCounter % 5) == 2)) {
         for (const EthControllerContainer& controller : Server->GetEthControllers()) {
             CheckResult(TransmitEthMessage(controller));
         }
     }
 
-    if (SendLinMessages && ((counter % 5) == 3)) {
+    if (SendLinMessages && ((SendCounter % 5) == 3)) {
         for (const LinControllerContainer& controller : Server->GetLinControllers()) {
             CheckResult(TransmitLinMessage(controller));
         }
     }
 
-    if (SendFrMessages && ((counter % 5) == 4)) {
+    if (SendFrMessages && ((SendCounter % 5) == 4)) {
         for (const FrControllerContainer& controller : Server->GetFrControllers()) {
             CheckResult(TransmitFrMessage(controller));
         }
@@ -288,15 +344,15 @@ void SwitchSendingFrMessages() {
     return CreateOk();
 }
 
-[[nodiscard]] Result DoSimulation() {
-    Server->StopBackgroundThread();
-
-    SimulationThreadId = std::this_thread::get_id();
+[[nodiscard]] Result DoSimulationLoop() {
     while (!StopSimulationThreadFlag) {
         CheckResult(SendSomeData(CurrentTime));
 
         SimulationTime nextSimulationTime{};
         CheckResult(Server->Step(CurrentTime, nextSimulationTime));
+
+        PerformanceStepCount++;
+        PrintCurrentStepsPerSecond();
 
         if (nextSimulationTime > CurrentTime) {
             CurrentTime = nextSimulationTime;
@@ -305,8 +361,19 @@ void SwitchSendingFrMessages() {
         }
     }
 
-    Server->StartBackgroundThread();
     return CreateOk();
+}
+
+[[nodiscard]] Result DoSimulation() {
+    StartPerformanceMeasurement();
+
+    SimulationThreadId = std::this_thread::get_id();
+
+    Result result = DoSimulationLoop();
+
+    StopPerformanceMeasurement();
+
+    return result;
 }
 
 void StopSimulationThread() {
@@ -549,8 +616,12 @@ void OnSimulationContinuedCallback([[maybe_unused]] SimulationTime simulationTim
 }
 
 void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] TerminateReason terminateReason) {
-    LogInfo("Received simulation continued event.");
+    LogInfo("Received simulation terminated event.");
     std::thread(OnSimulationTerminated).detach();
+}
+
+void OnIncomingSignalChanged([[maybe_unused]] SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value) {
+    LogIoData(IoDataToString(signal, length, value));
 }
 
 void OnCanMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime,
@@ -599,6 +670,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     config.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
     config.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
     config.frMessageContainerReceivedCallback = OnFrMessageContainerReceived;
+    config.incomingSignalChangedCallback = OnIncomingSignalChanged;
     config.canControllers = CreateCanControllers(2);
     config.ethControllers = CreateEthControllers(2);
     config.linControllers = CreateLinControllers(2);
@@ -667,6 +739,9 @@ void UnloadSimulation() {
                 break;
             case '5':
                 SwitchSendingFrMessages();
+                break;
+            case '9':
+                SwitchPrintingStepsPerSecond();
                 break;
             default:
                 LogError("Unknown key.");

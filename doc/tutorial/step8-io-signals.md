@@ -381,7 +381,13 @@ veos-sim load ./DsVeosCoSim2.osa
 
 ### 5.2 Run first Client
 
-Run the following command in the directory `DsVeosCoSimDemo`:
+Run the first client in the directory `DsVeosCoSimDemo` using the command that matches your generator:
+
+```console
+./build/DsVeosCoSimDemo
+```
+
+On Windows with a multi-config generator such as Visual Studio, use:
 
 ```console
 ./build/Debug/DsVeosCoSimDemo
@@ -389,7 +395,13 @@ Run the following command in the directory `DsVeosCoSimDemo`:
 
 ### 5.3 Run second Client
 
-Run the following command in the directory `DsVeosCoSimDemo`:
+Run the second client in the directory `DsVeosCoSimDemo` using the command that matches your generator:
+
+```console
+./build/Client2
+```
+
+On Windows with a multi-config generator such as Visual Studio, use:
 
 ```console
 ./build/Debug/Client2

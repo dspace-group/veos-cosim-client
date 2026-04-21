@@ -14,57 +14,90 @@ using namespace testing;
 
 namespace {
 
-class TestPortMapper : public Test {};
+class TestPortMapper : public Test {
+protected:
+    void SetUp() override {
+        AssertOk(CreatePortMapperServer(true, _portMapperServer));
+    }
 
-TEST_F(TestPortMapper, StartOfServer) {
+    std::unique_ptr<PortMapperServer> _portMapperServer;
+};
+
+TEST_F(TestPortMapper, SetPort) {
     // Arrange
-    std::unique_ptr<PortMapperServer> portMapperServer;
+    std::string serverName = GenerateString("Server名前");
+    uint16_t port = GenerateU16();
 
     // Act
-    Result result = CreatePortMapperServer(false, portMapperServer);
+    Result result = PortMapperSetPort(serverName, port);
 
     // Assert
     AssertOk(result);
+    uint16_t retrievedPort{};
+    AssertOk(PortMapperGetPort("127.0.0.1", serverName, retrievedPort));
+    EXPECT_EQ(port, retrievedPort);
 }
 
-TEST_F(TestPortMapper, SetAndGet) {
+TEST_F(TestPortMapper, UnsetPortOfExistingPort) {
     // Arrange
-    std::unique_ptr<PortMapperServer> portMapperServer;
-    AssertOk(CreatePortMapperServer(false, portMapperServer));
-
     std::string serverName = GenerateString("Server名前");
-
-    uint16_t setPort = GenerateU16();
-
-    uint16_t port{};
+    uint16_t port = GenerateU16();
+    AssertOk(PortMapperSetPort(serverName, port));
 
     // Act
-    AssertOk(PortMapperSetPort(serverName, setPort));
-    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port));
+    Result result = PortMapperUnsetPort(serverName);
 
     // Assert
-    ASSERT_EQ(setPort, port);
+    AssertOk(result);
+    uint16_t retrievedPort{};
+    AssertError(PortMapperGetPort("127.0.0.1", serverName, retrievedPort));
 }
 
-TEST_F(TestPortMapper, SetTwiceAndGet) {
+TEST_F(TestPortMapper, UnsetPortOfNonExistingPort) {
     // Arrange
-    std::unique_ptr<PortMapperServer> portMapperServer;
-    AssertOk(CreatePortMapperServer(false, portMapperServer));
-
     std::string serverName = GenerateString("Server名前");
+    std::string otherServerName = GenerateString("OtherServer名前");
+    uint16_t otherPort = GenerateU16();
+    AssertOk(PortMapperSetPort(otherServerName, otherPort));
 
-    uint16_t setPort1 = GenerateU16();
-    auto setPort2 = static_cast<uint16_t>(setPort1 + 1);
-
-    uint16_t port{};
-
-    // Act
-    AssertOk(PortMapperSetPort(serverName, setPort1));
-    AssertOk(PortMapperSetPort(serverName, setPort2));
-    AssertOk(PortMapperGetPort("127.0.0.1", serverName, port));
+    // Act — PortMapperServer succeeds silently for non-existing entries
+    Result result = PortMapperUnsetPort(serverName);
 
     // Assert
-    ASSERT_EQ(setPort2, port);
+    AssertOk(result);
+    uint16_t retrievedPort{};
+    AssertOk(PortMapperGetPort("127.0.0.1", otherServerName, retrievedPort));
+    EXPECT_EQ(otherPort, retrievedPort);
+}
+
+TEST_F(TestPortMapper, GetPort) {
+    // Arrange
+    std::string serverName = GenerateString("Server名前");
+    uint16_t expectedPort = GenerateU16();
+    AssertOk(PortMapperSetPort(serverName, expectedPort));
+
+    // Act
+    uint16_t port{};
+    Result result = PortMapperGetPort("127.0.0.1", serverName, port);
+
+    // Assert
+    AssertOk(result);
+    EXPECT_EQ(expectedPort, port);
+}
+
+TEST_F(TestPortMapper, GetPortOfNonExistingServer) {
+    // Arrange
+    std::string serverName = GenerateString("Server名前");
+    std::string otherServerName = GenerateString("OtherServer名前");
+    uint16_t otherPort = GenerateU16();
+    AssertOk(PortMapperSetPort(otherServerName, otherPort));
+
+    // Act
+    uint16_t port{};
+    Result result = PortMapperGetPort("127.0.0.1", serverName, port);
+
+    // Assert
+    AssertError(result);
 }
 
 }  // namespace
