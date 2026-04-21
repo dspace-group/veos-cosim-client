@@ -32,29 +32,28 @@ The following steps outline the workflow for creating a CoSim client:
    - For precompiling as a dynamic library, execute the following commands in the folder to which you extracted the DsVeosCoSim.zip archive:
 
      ```console
-     mkdir Debug
-     cd Debug
+     mkdir build
+     cd build
      cmake .. -DBUILD_SHARED_LIBS=ON
-     cmake --build . --config=Debug
+     cmake --build .
      ```
 
-     This produces a dynamic library file in the Src/Debug subdirectory.
+     This produces a dynamic library in the build tree.
 
-     Replace Debug with Release in the listing above to create a release version.
+     For single-config generators, set `-DCMAKE_BUILD_TYPE=Release` during configuration to create a release build.
 
    - For precompiling as a static library, execute the following commands in the folder to which you extracted the DsVeosCoSim.zip archive:
 
      ```console
-     mkdir Debug
-     cd Debug
+     mkdir build
+     cd build
      cmake ..
-     cmake --build . --config Debug
-     cmake --install . --config Debug --prefix ../install
+     cmake --build .
      ```
 
-     This produces a static library file in the install subdirectory.
+     This produces a static library in the build tree.
 
-     Replace Debug with Release in the listing above to create a release version.
+     For single-config generators, set `-DCMAKE_BUILD_TYPE=Release` during configuration to create a release build.
 
 ## Connecting to a CoSim server
 

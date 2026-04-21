@@ -2,21 +2,25 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "BusExchange.hpp"
+#include "Channel.hpp"
 #include "CoSimTypes.hpp"
+#include "Protocol.hpp"
 #include "Result.hpp"
+#include "SignalExchange.hpp"
 
 namespace DsVeosCoSim {
 
-class CoSimClient {
-protected:
-    CoSimClient() = default;
-
+class CoSimClient final {
 public:
-    virtual ~CoSimClient() noexcept = default;
+    CoSimClient();
+    ~CoSimClient() noexcept = default;
 
     CoSimClient(const CoSimClient&) = delete;
     CoSimClient& operator=(const CoSimClient&) = delete;
@@ -24,69 +28,149 @@ public:
     CoSimClient(CoSimClient&&) = delete;
     CoSimClient& operator=(CoSimClient&&) = delete;
 
-    [[nodiscard]] virtual Result Connect(const ConnectConfig& connectConfig) = 0;
-    virtual void Disconnect() = 0;
-    [[nodiscard]] virtual Result GetConnectionState(ConnectionState& connectionState) const = 0;
+    [[nodiscard]] Result Connect(const ConnectConfig& connectConfig);
+    void Disconnect();
+    [[nodiscard]] ConnectionState GetConnectionState() const;
 
-    [[nodiscard]] virtual Result GetStepSize(SimulationTime& stepSize) const = 0;
-    [[nodiscard]] virtual Result GetCurrentSimulationTime(SimulationTime& simulationTime) const = 0;
-    [[nodiscard]] virtual Result GetSimulationState(SimulationState& simulationState) const = 0;
+    [[nodiscard]] Result GetStepSize(SimulationTime& stepSize) const;
+    [[nodiscard]] Result GetCurrentSimulationTime(SimulationTime& simulationTime) const;
+    [[nodiscard]] Result GetSimulationState(SimulationState& simulationState) const;
 
-    [[nodiscard]] virtual Result RunCallbackBasedCoSimulation(const Callbacks& callbacks) = 0;
-    [[nodiscard]] virtual Result StartPollingBasedCoSimulation(const Callbacks& callbacks) = 0;
-    [[nodiscard]] virtual Result PollCommand(SimulationTime& simulationTime, Command& command) = 0;
-    [[nodiscard]] virtual Result FinishCommand() = 0;
-    [[nodiscard]] virtual Result SetNextSimulationTime(SimulationTime simulationTime) = 0;
-    [[nodiscard]] virtual Result GetRoundTripTime(SimulationTime& roundTripTime) const = 0;
+    [[nodiscard]] Result RunCallbackBasedCoSimulation(const Callbacks& callbacks);
+    [[nodiscard]] Result StartPollingBasedCoSimulation(const Callbacks& callbacks);
+    [[nodiscard]] Result PollCommand(SimulationTime& simulationTime, Command& command, uint32_t timeoutInMilliseconds);
+    [[nodiscard]] Result FinishCommand();
+    [[nodiscard]] Result SetNextSimulationTime(SimulationTime simulationTime);
+    [[nodiscard]] Result GetRoundTripTime(SimulationTime& roundTripTime) const;
 
-    [[nodiscard]] virtual Result Start() = 0;
-    [[nodiscard]] virtual Result Stop() = 0;
-    [[nodiscard]] virtual Result Terminate(TerminateReason terminateReason) = 0;
-    [[nodiscard]] virtual Result Pause() = 0;
-    [[nodiscard]] virtual Result Continue() = 0;
+    [[nodiscard]] Result Start();
+    [[nodiscard]] Result Stop();
+    [[nodiscard]] Result Terminate(TerminateReason terminateReason);
+    [[nodiscard]] Result Pause();
+    [[nodiscard]] Result Continue();
 
-    [[nodiscard]] virtual Result GetIncomingSignals(uint32_t& signalsCount, const IoSignal*& signals) const = 0;
-    [[nodiscard]] virtual Result GetOutgoingSignals(uint32_t& signalsCount, const IoSignal*& signals) const = 0;
+    [[nodiscard]] Result GetIncomingSignals(uint32_t& signalsCount, const IoSignal*& signals) const;
+    [[nodiscard]] Result GetOutgoingSignals(uint32_t& signalsCount, const IoSignal*& signals) const;
 
-    [[nodiscard]] virtual Result GetIncomingSignals(std::vector<IoSignal>& signals) const = 0;
-    [[nodiscard]] virtual Result GetOutgoingSignals(std::vector<IoSignal>& signals) const = 0;
+    [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& signals) const;
+    [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& signals) const;
 
-    [[nodiscard]] virtual Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const = 0;
+    [[nodiscard]] Result Write(IoSignalId outgoingSignalId, uint32_t length, const void* value) const;
 
-    [[nodiscard]] virtual Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const = 0;
-    [[nodiscard]] virtual Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const = 0;
+    [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, void* value) const;
+    [[nodiscard]] Result Read(IoSignalId incomingSignalId, uint32_t& length, const void** value) const;
 
-    [[nodiscard]] virtual Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetEthControllers(uint32_t& controllersCount, const EthController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetLinControllers(uint32_t& controllersCount, const LinController*& controllers) const = 0;
-    [[nodiscard]] virtual Result GetFrControllers(uint32_t& controllersCount, const FrController*& controllers) const = 0;
+    [[nodiscard]] Result GetCanControllers(uint32_t& controllersCount, const CanController*& controllers) const;
+    [[nodiscard]] Result GetEthControllers(uint32_t& controllersCount, const EthController*& controllers) const;
+    [[nodiscard]] Result GetLinControllers(uint32_t& controllersCount, const LinController*& controllers) const;
+    [[nodiscard]] Result GetFrControllers(uint32_t& controllersCount, const FrController*& controllers) const;
 
-    [[nodiscard]] virtual Result GetCanControllers(std::vector<CanController>& controllers) const = 0;
-    [[nodiscard]] virtual Result GetEthControllers(std::vector<EthController>& controllers) const = 0;
-    [[nodiscard]] virtual Result GetLinControllers(std::vector<LinController>& controllers) const = 0;
-    [[nodiscard]] virtual Result GetFrControllers(std::vector<FrController>& controllers) const = 0;
+    [[nodiscard]] Result GetCanControllers(std::vector<CanController>& controllers) const;
+    [[nodiscard]] Result GetEthControllers(std::vector<EthController>& controllers) const;
+    [[nodiscard]] Result GetLinControllers(std::vector<LinController>& controllers) const;
+    [[nodiscard]] Result GetFrControllers(std::vector<FrController>& controllers) const;
 
-    [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
+    [[nodiscard]] Result Transmit(const CanMessage& message) const;
+    [[nodiscard]] Result Transmit(const EthMessage& message) const;
+    [[nodiscard]] Result Transmit(const LinMessage& message) const;
+    [[nodiscard]] Result Transmit(const FrMessage& message) const;
 
-    [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const FrMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const;
 
-    [[nodiscard]] virtual Result Receive(CanMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(EthMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(LinMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(FrMessage& message) const = 0;
+    [[nodiscard]] Result Receive(CanMessage& message) const;
+    [[nodiscard]] Result Receive(EthMessage& message) const;
+    [[nodiscard]] Result Receive(LinMessage& message) const;
+    [[nodiscard]] Result Receive(FrMessage& message) const;
 
-    [[nodiscard]] virtual Result Receive(CanMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(EthMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(LinMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(FrMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const;
+
+private:
+    enum class ResponderMode : uint32_t {
+        Unknown,
+        Blocking,
+        NonBlocking
+    };
+
+    void ResetDataFromPreviousConnect();
+    [[nodiscard]] Result ConnectInternal();
+    [[nodiscard]] Result LocalConnect();
+    [[nodiscard]] Result RemoteConnect();
+    [[nodiscard]] Result SendConnectRequest() const;
+    [[nodiscard]] Result OnConnectOk();
+    [[nodiscard]] Result OnConnectError() const;
+    [[nodiscard]] Result ReceiveConnectResponse();
+    [[nodiscard]] Result RunCallbackBasedCoSimulationInternal();
+    [[nodiscard]] Result PollCommandInternal(SimulationTime& simulationTime, Command& command, uint32_t timeoutInMilliseconds);
+    [[nodiscard]] Result FinishCommandInternal();
+    [[nodiscard]] Result OnStep();
+    [[nodiscard]] Result OnStart();
+    [[nodiscard]] Result OnStop();
+    [[nodiscard]] Result OnTerminate();
+    [[nodiscard]] Result OnPause();
+    [[nodiscard]] Result OnContinue();
+    [[nodiscard]] Result OnPing();
+    [[nodiscard]] Result FinishStep();
+    [[nodiscard]] Result FinishPing();
+    [[nodiscard]] Result FinishCurrentCommand() const;
+    [[nodiscard]] Result EnsureIsConnected() const;
+    [[nodiscard]] Result EnsureIsInResponderModeBlocking();
+    [[nodiscard]] Result EnsureIsInResponderModeNonBlocking();
+    void CloseConnection();
+    [[nodiscard]] static Result OnUnexpectedFrame(FrameKind frameKind);
+    [[nodiscard]] static Result CheckCanMessage(CanMessageFlags flags, uint32_t length);
+
+    std::unique_ptr<Channel> _channel;
+    ConnectionKind _connectionKind = ConnectionKind::Remote;
+
+    std::unique_ptr<IProtocol> _protocol;
+
+    bool _isConnected{};
+    Callbacks _callbacks{};
+    SimulationTime _currentSimulationTime{};
+    SimulationTime _nextSimulationTime{};
+    SimulationTime _roundTripTime{};
+
+    SimulationTime _stepSize{};
+
+    SimulationState _simulationState{};
+
+    std::string _remoteIpAddress;
+    std::string _serverName;
+    std::string _clientName;
+    uint16_t _remotePort{};
+    uint16_t _localPort{};
+
+    ResponderMode _responderMode{};
+    Command _currentCommand{};
+    std::atomic<Command> _nextCommand{};
+
+    std::vector<IoSignalContainer> _incomingSignals;
+    std::vector<IoSignalContainer> _outgoingSignals;
+    std::vector<IoSignal> _incomingSignalsExtern;
+    std::vector<IoSignal> _outgoingSignalsExtern;
+
+    std::vector<CanControllerContainer> _canControllers;
+    std::vector<EthControllerContainer> _ethControllers;
+    std::vector<LinControllerContainer> _linControllers;
+    std::vector<FrControllerContainer> _frControllers;
+    std::vector<CanController> _canControllersExtern;
+    std::vector<EthController> _ethControllersExtern;
+    std::vector<LinController> _linControllersExtern;
+    std::vector<FrController> _frControllersExtern;
+
+    std::unique_ptr<SignalExchange> _signalExchange;
+    std::unique_ptr<BusExchange> _busExchange;
+
+    SerializeFunction _serializeIoData;
+    SerializeFunction _serializeBusMessages;
+    DeserializeFunction _deserializeIoData;
+    DeserializeFunction _deserializeBusMessages;
 };
-
-[[nodiscard]] std::unique_ptr<CoSimClient> CreateClient();
 
 }  // namespace DsVeosCoSim

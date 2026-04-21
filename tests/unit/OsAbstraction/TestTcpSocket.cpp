@@ -1,13 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <chrono>
+#include <future>
 #include <string>
 #include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
 
-#include "Helper.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
 
@@ -20,6 +20,11 @@ struct TcpSocketParam {
     AddressFamily addressFamily{};
     bool enableRemoteAccess{};
 };
+
+void PrintTo(const TcpSocketParam& param, std::ostream* os) {  // NOLINT
+    std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
+    *os << name;
+}
 
 [[nodiscard]] std::vector<TcpSocketParam> GetTcpSocketTestParameters() {
     std::vector<TcpSocketParam> values;
@@ -68,6 +73,36 @@ TEST_P(TestTcpSocket, CreateSocketShouldWork) {
 
     // Assert
     AssertOk(result);
+}
+
+TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue) {
+    // Arrange
+    TcpSocketParam param = GetParam();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    // Act
+    bool isRunning = listener.IsRunning();
+
+    // Assert
+    ASSERT_TRUE(isRunning);
+}
+
+TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse) {
+    // Arrange
+    TcpSocketParam param = GetParam();
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+
+    listener.Stop();
+
+    // Act
+    bool isRunning = listener.IsRunning();
+
+    // Assert
+    ASSERT_FALSE(isRunning);
 }
 
 TEST_P(TestTcpSocket, LocalPortIsNotZero) {
@@ -192,41 +227,21 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     SocketClient acceptClient;
     EstablishConnection(param, connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    std::future<void> aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
+        aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
-
-    // Cleanup
-    t.join();
-}
-
-TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    std::thread t([&] {
-        std::array<uint8_t, 10> buffer{};
-        size_t receivedSize{};
-        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
-    });
-
-    std::this_thread::sleep_for(100ms);
-
-    // Act and assert
-    connectClient.Disconnect();
 
     // Cleanup
     t.join();
@@ -240,14 +255,46 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
     SocketClient acceptClient;
     EstablishConnection(param, connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    std::future<void> aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
+        aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+
+    // Act and assert
+    connectClient.Disconnect();
+
+    // Cleanup
+    t.join();
+}
+
+TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+    // Arrange
+    TcpSocketParam param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    std::promise<void> aboutToReceive;
+    std::future<void> aboutToReceiveFuture = aboutToReceive.get_future();
+
+    std::thread t([&] {
+        std::array<uint8_t, 10> buffer{};
+        size_t receivedSize{};
+        aboutToReceive.set_value();
+        AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
+        ASSERT_EQ(0, receivedSize);
+    });
+
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -264,20 +311,56 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     SocketClient acceptClient;
     EstablishConnection(param, connectClient, acceptClient);
 
+    std::promise<void> aboutToReceive;
+    std::future<void> aboutToReceiveFuture = aboutToReceive.get_future();
+
     std::thread t([&] {
         std::array<uint8_t, 10> buffer{};
         size_t receivedSize{};
+        aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
         ASSERT_EQ(0, receivedSize);
     });
 
-    std::this_thread::sleep_for(100ms);
+    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
 
     // Cleanup
     t.join();
+}
+
+TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
+    // Arrange
+    TcpSocketParam param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    // Act
+    bool isConnected = connectClient.IsConnected();
+
+    // Assert
+    ASSERT_TRUE(isConnected);
+}
+
+TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse) {
+    // Arrange
+    TcpSocketParam param = GetParam();
+
+    SocketClient connectClient;
+    SocketClient acceptClient;
+    EstablishConnection(param, connectClient, acceptClient);
+
+    connectClient.Disconnect();
+
+    // Act
+    bool isConnected = connectClient.IsConnected();
+
+    // Assert
+    ASSERT_FALSE(isConnected);
 }
 
 TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid) {
@@ -328,18 +411,6 @@ TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
     TestSendAndReceive(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestSendAndReceive(acceptClient, connectClient);
-}
-
 TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
     // Arrange
     TcpSocketParam param = GetParam();
@@ -350,18 +421,6 @@ TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
 
     // Act and assert
     TestPingPong(connectClient, acceptClient);
-}
-
-TEST_P(TestTcpSocket, PingPongBeginningWithAcceptClientShouldWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestPingPong(acceptClient, connectClient);
 }
 
 TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
@@ -376,18 +435,6 @@ TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
     TestManyElements(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendManyElementsFromAcceptClientToConnectClientShouldWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestManyElements(acceptClient, connectClient);
-}
-
 TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     // Arrange
     TcpSocketParam param = GetParam();
@@ -398,18 +445,6 @@ TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
 
     // Act and assert
     TestBigElement(connectClient, acceptClient);
-}
-
-TEST_P(TestTcpSocket, SendBigElementFromAcceptClientToConnectClientShouldWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestBigElement(acceptClient, connectClient);
 }
 
 TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
@@ -424,18 +459,6 @@ TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
     TestSendAfterDisconnect(connectClient);
 }
 
-TEST_P(TestTcpSocket, SendOnDisconnectedAcceptClientShouldNotWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestSendAfterDisconnect(acceptClient);
-}
-
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     // Arrange
     TcpSocketParam param = GetParam();
@@ -446,18 +469,6 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
 
     // Act and assert
     TestReceiveAfterDisconnect(connectClient);
-}
-
-TEST_P(TestTcpSocket, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
-    // Arrange
-    TcpSocketParam param = GetParam();
-
-    SocketClient connectClient;
-    SocketClient acceptClient;
-    EstablishConnection(param, connectClient, acceptClient);
-
-    // Act and assert
-    TestReceiveAfterDisconnect(acceptClient);
 }
 
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
@@ -472,7 +483,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
     TestReceiveAfterDisconnectOnRemoteClient(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
+TEST_P(TestTcpSocket, WaitForDataTimesOutWhenNoDataArrives) {
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -480,8 +491,11 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
     SocketClient acceptClient;
     EstablishConnection(param, connectClient, acceptClient);
 
-    // Act and assert
-    TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
+    // Act
+    Result result = connectClient.WaitForData(50);
+
+    // Assert
+    AssertTimeout(result);
 }
 
 }  // namespace

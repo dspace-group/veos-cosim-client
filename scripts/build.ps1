@@ -1,11 +1,15 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
 param(
+  [Parameter(Position = 0)]
   [ValidateSet("debug", "release")]
   [string]$Config = "debug"
 )
 
-$Preset = "win-$Config"
+if (-not $Preset) {
+  $Preset = "win-$($Config.ToLowerInvariant())"
+}
+
 $Root = Split-Path $PSScriptRoot -Parent
 
 Write-Host "==> Configure ($Preset)" -ForegroundColor Cyan

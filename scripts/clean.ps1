@@ -1,11 +1,12 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
 param(
+  [Parameter(Position = 0)]
   [ValidateSet("debug", "release")]
   [string]$Config = "debug"
 )
 
-$Preset = "win-$Config"
+$Preset = "win-$($Config.ToLowerInvariant())"
 $Root = Split-Path $PSScriptRoot -Parent
 $BuildDir = Join-Path $Root "build" $Preset
 

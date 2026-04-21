@@ -26,7 +26,7 @@ TEST_F(TestTypes, DataToString) {
     std::string string = DataToString(data.data(), data.size(), separator);
 
     // Assert
-    ASSERT_EQ(string, "de/af");
+    ASSERT_EQ("de/af", string);
 }
 
 TEST_F(TestTypes, SimulationTimeToString) {
@@ -37,7 +37,7 @@ TEST_F(TestTypes, SimulationTimeToString) {
     std::string string = SimulationTimeToString(simulationTime);
 
     // Assert
-    ASSERT_EQ(string, "0.000000042");
+    ASSERT_EQ("0.000000042", string);
 }
 
 TEST_F(TestTypes, ResultToString) {
@@ -48,7 +48,7 @@ TEST_F(TestTypes, ResultToString) {
     std::string_view string = format_as(result);
 
     // Assert
-    ASSERT_EQ(string, "Error");
+    ASSERT_EQ("Error", string);
 }
 
 TEST_F(TestTypes, CoSimTypeToString) {
@@ -59,7 +59,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
     std::string_view string = format_as(coSimType);
 
     // Assert
-    ASSERT_EQ(string, "Server");
+    ASSERT_EQ("Server", string);
 }
 
 TEST_F(TestTypes, ConnectionKindToString) {
@@ -70,7 +70,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
     std::string_view string = format_as(connectionKind);
 
     // Assert
-    ASSERT_EQ(string, "Remote");
+    ASSERT_EQ("Remote", string);
 }
 
 TEST_F(TestTypes, CommandToString) {
@@ -81,7 +81,7 @@ TEST_F(TestTypes, CommandToString) {
     std::string_view string = format_as(command);
 
     // Assert
-    ASSERT_EQ(string, "Start");
+    ASSERT_EQ("Start", string);
 }
 
 TEST_F(TestTypes, SeverityToString) {
@@ -92,7 +92,7 @@ TEST_F(TestTypes, SeverityToString) {
     std::string_view string = format_as(severity);
 
     // Assert
-    ASSERT_EQ(string, "Warning");
+    ASSERT_EQ("Warning", string);
 }
 
 TEST_F(TestTypes, TerminateReasonToString) {
@@ -103,7 +103,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
     std::string_view string = format_as(terminateReason);
 
     // Assert
-    ASSERT_EQ(string, "Finished");
+    ASSERT_EQ("Finished", string);
 }
 
 TEST_F(TestTypes, ConnectionStateToString) {
@@ -114,7 +114,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
     std::string_view string = format_as(connectionState);
 
     // Assert
-    ASSERT_EQ(string, "Disconnected");
+    ASSERT_EQ("Disconnected", string);
 }
 
 TEST_F(TestTypes, GetDataTypeSize) {
@@ -136,7 +136,7 @@ TEST_F(TestTypes, DataTypeToString) {
     std::string_view string = format_as(dataType);
 
     // Assert
-    ASSERT_EQ(string, "Float64");
+    ASSERT_EQ("Float64", string);
 }
 
 TEST_F(TestTypes, SizeKindToString) {
@@ -147,7 +147,7 @@ TEST_F(TestTypes, SizeKindToString) {
     std::string_view string = format_as(sizeKind);
 
     // Assert
-    ASSERT_EQ(string, "Variable");
+    ASSERT_EQ("Variable", string);
 }
 
 TEST_F(TestTypes, ValueToString) {
@@ -160,7 +160,7 @@ TEST_F(TestTypes, ValueToString) {
     std::string string = ValueToString(dataType, length, data.data());
 
     // Assert
-    ASSERT_EQ(string, "4.2 0.000789 200");
+    ASSERT_EQ("4.2 0.000789 200", string);
 }
 
 TEST_F(TestTypes, SimulationStateToString) {
@@ -171,7 +171,7 @@ TEST_F(TestTypes, SimulationStateToString) {
     std::string_view string = format_as(simulationState);
 
     // Assert
-    ASSERT_EQ(string, "Stopped");
+    ASSERT_EQ("Stopped", string);
 }
 
 TEST_F(TestTypes, ModeToString) {
@@ -182,7 +182,7 @@ TEST_F(TestTypes, ModeToString) {
     std::string_view string = format_as(mode);
 
     // Assert
-    ASSERT_EQ(string, "<Unused>");
+    ASSERT_EQ("<Unused>", string);
 }
 
 TEST_F(TestTypes, IoSignalIdToString) {
@@ -193,7 +193,7 @@ TEST_F(TestTypes, IoSignalIdToString) {
     std::string string = format_as(signalId);
 
     // Assert
-    ASSERT_EQ(string, "86");
+    ASSERT_EQ("86", string);
 }
 
 TEST_F(TestTypes, IoSignalToString) {
@@ -211,7 +211,7 @@ TEST_F(TestTypes, IoSignalToString) {
     std::string string = format_as(signal);
 
     // Assert
-    ASSERT_EQ(string, "IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }");
+    ASSERT_EQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerToString) {
@@ -227,7 +227,7 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     std::string string = format_as(signalContainer);
 
     // Assert
-    ASSERT_EQ(string, "IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }");
+    ASSERT_EQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
 TEST_F(TestTypes, IoSignalContainerConvert) {
@@ -271,7 +271,7 @@ TEST_F(TestTypes, IoDataToString) {
     std::string string = IoDataToString(signal, length, &data);
 
     // Assert
-    ASSERT_EQ(string, "IO Data { Id: 42, Length: 1, Data: 65432 }");
+    ASSERT_EQ("IO Data { Id: 42, Length: 1, Data: 65432 }", string);
 }
 
 TEST_F(TestTypes, SignalContainersToString) {
@@ -296,9 +296,10 @@ TEST_F(TestTypes, SignalContainersToString) {
     std::string string = format_as(signalContainers);
 
     // Assert
-    ASSERT_EQ(string,
-              "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: 44, Length: 45, DataType: Bool, "
-              "SizeKind: Fixed, Name: \"MySignal2\" }]");
+    ASSERT_EQ(
+        "[IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal1\" }, IO Signal { Id: 44, Length: 45, DataType: Bool, "
+        "SizeKind: Fixed, Name: \"MySignal2\" }]",
+        string);
 }
 
 TEST_F(TestTypes, SignalContainersConvert) {
@@ -350,7 +351,7 @@ TEST_F(TestTypes, BusControllerIdToString) {
     std::string string = format_as(controllerId);
 
     // Assert
-    ASSERT_EQ(string, "123");
+    ASSERT_EQ("123", string);
 }
 
 TEST_F(TestTypes, BusMessageIdToString) {
@@ -361,7 +362,7 @@ TEST_F(TestTypes, BusMessageIdToString) {
     std::string string = format_as(messageId);
 
     // Assert
-    ASSERT_EQ(string, "234");
+    ASSERT_EQ("234", string);
 }
 
 TEST_F(TestTypes, CanMessageFlagsToString) {
@@ -372,7 +373,7 @@ TEST_F(TestTypes, CanMessageFlagsToString) {
     std::string string = format_as(flags);
 
     // Assert
-    ASSERT_EQ(string, "Loopback,Error");
+    ASSERT_EQ("Loopback,Error", string);
 }
 
 TEST_F(TestTypes, CanControllerToString) {
@@ -394,9 +395,10 @@ TEST_F(TestTypes, CanControllerToString) {
     std::string string = format_as(controller);
 
     // Assert
-    ASSERT_EQ(string,
-              "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
-              "ClusterName: \"clusterName\" }");
+    ASSERT_EQ(
+        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string);
 }
 
 TEST_F(TestTypes, CanControllerContainerToString) {
@@ -414,9 +416,10 @@ TEST_F(TestTypes, CanControllerContainerToString) {
     std::string string = format_as(controllerContainer);
 
     // Assert
-    ASSERT_EQ(std::string("CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: "
-                          "\"channelName\", ClusterName: \"clusterName\" }"),
-              string);
+    ASSERT_EQ(
+        "CAN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, FlexibleDataRateBitsPerSecond: 18, Name: \"name\", ChannelName: "
+        "\"channelName\", ClusterName: \"clusterName\" }",
+        string);
 }
 
 TEST_F(TestTypes, CanControllerContainerConvert) {
@@ -446,6 +449,485 @@ TEST_F(TestTypes, CanControllerContainerConvert) {
     ASSERT_EQ(expectedController, actualController);
 }
 
-// Add more tests
+TEST_F(TestTypes, EthControllerToString) {
+    // Arrange
+    std::string name = "name";
+    std::string channelName = "channelName";
+    std::string clusterName = "clusterName";
+
+    EthController controller{};
+    controller.id = static_cast<BusControllerId>(12);
+    controller.queueSize = 14;
+    controller.bitsPerSecond = 16;
+    controller.name = name.c_str();
+    controller.channelName = channelName.c_str();
+    controller.clusterName = clusterName.c_str();
+
+    // Act
+    std::string string = format_as(controller);
+
+    // Assert
+    ASSERT_EQ(
+        "Ethernet Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, MacAddress: [00:00:00:00:00:00], Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, EthControllerContainerToString) {
+    // Arrange
+    EthControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(12);
+    controllerContainer.queueSize = 14;
+    controllerContainer.bitsPerSecond = 16;
+    controllerContainer.name = "name";
+    controllerContainer.channelName = "channelName";
+    controllerContainer.clusterName = "clusterName";
+
+    // Act
+    std::string string = format_as(controllerContainer);
+
+    // Assert
+    ASSERT_EQ(
+        "Ethernet Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, MacAddress: [00:00:00:00:00:00], Name: \"name\", ChannelName: "
+        "\"channelName\", ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, EthControllerContainerConvert) {
+    // Arrange
+    EthControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(22);
+    controllerContainer.queueSize = 24;
+    controllerContainer.bitsPerSecond = 26;
+    controllerContainer.name = "name1";
+    controllerContainer.channelName = "channelName1";
+    controllerContainer.clusterName = "clusterName1";
+
+    EthController expectedController{};
+    expectedController.id = controllerContainer.id;
+    expectedController.queueSize = controllerContainer.queueSize;
+    expectedController.bitsPerSecond = controllerContainer.bitsPerSecond;
+    expectedController.name = controllerContainer.name.c_str();
+    expectedController.channelName = controllerContainer.channelName.c_str();
+    expectedController.clusterName = controllerContainer.clusterName.c_str();
+
+    // Act
+    EthController actualController = controllerContainer.Convert();
+
+    // Assert
+    ASSERT_EQ(expectedController, actualController);
+}
+
+TEST_F(TestTypes, LinControllerToString) {
+    // Arrange
+    std::string name = "name";
+    std::string channelName = "channelName";
+    std::string clusterName = "clusterName";
+
+    LinController controller{};
+    controller.id = static_cast<BusControllerId>(12);
+    controller.queueSize = 14;
+    controller.bitsPerSecond = 16;
+    controller.name = name.c_str();
+    controller.channelName = channelName.c_str();
+    controller.clusterName = clusterName.c_str();
+
+    // Act
+    std::string string = format_as(controller);
+
+    // Assert
+    ASSERT_EQ(
+        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: <Invalid LinControllerType>, Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, LinControllerContainerToString) {
+    // Arrange
+    LinControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(12);
+    controllerContainer.queueSize = 14;
+    controllerContainer.bitsPerSecond = 16;
+    controllerContainer.name = "name";
+    controllerContainer.channelName = "channelName";
+    controllerContainer.clusterName = "clusterName";
+
+    // Act
+    std::string string = format_as(controllerContainer);
+
+    // Assert
+    ASSERT_EQ(
+        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: <Invalid LinControllerType>, Name: \"name\", ChannelName: "
+        "\"channelName\", ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, LinControllerContainerConvert) {
+    // Arrange
+    LinControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(22);
+    controllerContainer.queueSize = 24;
+    controllerContainer.bitsPerSecond = 26;
+    controllerContainer.name = "name1";
+    controllerContainer.channelName = "channelName1";
+    controllerContainer.clusterName = "clusterName1";
+
+    LinController expectedController{};
+    expectedController.id = controllerContainer.id;
+    expectedController.queueSize = controllerContainer.queueSize;
+    expectedController.bitsPerSecond = controllerContainer.bitsPerSecond;
+    expectedController.name = controllerContainer.name.c_str();
+    expectedController.channelName = controllerContainer.channelName.c_str();
+    expectedController.clusterName = controllerContainer.clusterName.c_str();
+
+    // Act
+    LinController actualController = controllerContainer.Convert();
+
+    // Assert
+    ASSERT_EQ(expectedController, actualController);
+}
+
+TEST_F(TestTypes, FrControllerToString) {
+    // Arrange
+    std::string name = "name";
+    std::string channelName = "channelName";
+    std::string clusterName = "clusterName";
+
+    FrController controller{};
+    controller.id = static_cast<BusControllerId>(12);
+    controller.queueSize = 14;
+    controller.bitsPerSecond = 16;
+    controller.name = name.c_str();
+    controller.channelName = channelName.c_str();
+    controller.clusterName = clusterName.c_str();
+
+    // Act
+    std::string string = format_as(controller);
+
+    // Assert
+    ASSERT_EQ(
+        "FlexRay Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Name: \"name\", ChannelName: \"channelName\", "
+        "ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, FrControllerContainerToString) {
+    // Arrange
+    FrControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(12);
+    controllerContainer.queueSize = 14;
+    controllerContainer.bitsPerSecond = 16;
+    controllerContainer.name = "name";
+    controllerContainer.channelName = "channelName";
+    controllerContainer.clusterName = "clusterName";
+
+    // Act
+    std::string string = format_as(controllerContainer);
+
+    // Assert
+    ASSERT_EQ(
+        "FlexRay Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Name: \"name\", ChannelName: "
+        "\"channelName\", ClusterName: \"clusterName\" }",
+        string);
+}
+
+TEST_F(TestTypes, FrControllerContainerConvert) {
+    // Arrange
+    FrControllerContainer controllerContainer{};
+    controllerContainer.id = static_cast<BusControllerId>(22);
+    controllerContainer.queueSize = 24;
+    controllerContainer.bitsPerSecond = 26;
+    controllerContainer.name = "name1";
+    controllerContainer.channelName = "channelName1";
+    controllerContainer.clusterName = "clusterName1";
+
+    FrController expectedController{};
+    expectedController.id = controllerContainer.id;
+    expectedController.queueSize = controllerContainer.queueSize;
+    expectedController.bitsPerSecond = controllerContainer.bitsPerSecond;
+    expectedController.name = controllerContainer.name.c_str();
+    expectedController.channelName = controllerContainer.channelName.c_str();
+    expectedController.clusterName = controllerContainer.clusterName.c_str();
+
+    // Act
+    FrController actualController = controllerContainer.Convert();
+
+    // Assert
+    ASSERT_EQ(expectedController, actualController);
+}
+
+TEST_F(TestTypes, CanMessageFlagsNoFlagsToString) {
+    // Arrange
+    CanMessageFlags flags{};
+
+    // Act
+    std::string string = format_as(flags);
+
+    // Assert
+    ASSERT_EQ("", string);
+}
+
+TEST_F(TestTypes, EthMessageFlagsToString) {
+    // Arrange
+    EthMessageFlags flags = EthMessageFlags::Loopback | EthMessageFlags::Error;
+
+    // Act
+    std::string string = format_as(flags);
+
+    // Assert
+    ASSERT_EQ("Loopback,Error", string);
+}
+
+TEST_F(TestTypes, LinMessageFlagsToString) {
+    // Arrange
+    LinMessageFlags flags = LinMessageFlags::Response;
+
+    // Act
+    std::string string = format_as(flags);
+
+    // Assert
+    ASSERT_EQ("Response", string);
+}
+
+TEST_F(TestTypes, FrMessageFlagsToString) {
+    // Arrange
+    FrMessageFlags flags = FrMessageFlags::SyncFrame;
+
+    // Act
+    std::string string = format_as(flags);
+
+    // Assert
+    ASSERT_EQ("SyncFrame", string);
+}
+
+TEST_F(TestTypes, CanMessageToString) {
+    // Arrange
+    std::array<uint8_t, 2> data{0xAB, 0xCD};
+
+    CanMessage message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data = data.data();
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("CAN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, CanMessageContainerToString) {
+    // Arrange
+    CanMessageContainer message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data[0] = 0xAB;
+    message.data[1] = 0xCD;
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("CAN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, EthMessageToString) {
+    // Arrange
+    std::array<uint8_t, 2> data{0xAB, 0xCD};
+
+    EthMessage message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.length = 2;
+    message.data = data.data();
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("Ethernet Message { Timestamp: 0.000000042, ControllerId: 5, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, EthMessageContainerToString) {
+    // Arrange
+    EthMessageContainer message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.length = 2;
+    message.data[0] = 0xAB;
+    message.data[1] = 0xCD;
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("Ethernet Message { Timestamp: 0.000000042, ControllerId: 5, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, LinMessageToString) {
+    // Arrange
+    std::array<uint8_t, 2> data{0xAB, 0xCD};
+
+    LinMessage message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data = data.data();
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("LIN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, LinMessageContainerToString) {
+    // Arrange
+    LinMessageContainer message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data[0] = 0xAB;
+    message.data[1] = 0xCD;
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("LIN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, FrMessageToString) {
+    // Arrange
+    std::array<uint8_t, 2> data{0xAB, 0xCD};
+
+    FrMessage message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data = data.data();
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("FlexRay Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, FrMessageContainerToString) {
+    // Arrange
+    FrMessageContainer message{};
+    message.timestamp = SimulationTime{42};
+    message.controllerId = static_cast<BusControllerId>(5);
+    message.id = static_cast<BusMessageId>(10);
+    message.length = 2;
+    message.data[0] = 0xAB;
+    message.data[1] = 0xCD;
+
+    // Act
+    std::string string = format_as(message);
+
+    // Assert
+    ASSERT_EQ("FlexRay Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
+}
+
+TEST_F(TestTypes, ResultOkToString) {
+    // Arrange
+    Result result = CreateOk();
+
+    // Act
+    std::string_view string = format_as(result);
+
+    // Assert
+    ASSERT_EQ("Ok", string);
+}
+
+TEST_F(TestTypes, SimulationStateRunningToString) {
+    // Arrange
+    SimulationState simulationState = SimulationState::Running;
+
+    // Act
+    std::string_view string = format_as(simulationState);
+
+    // Assert
+    ASSERT_EQ("Running", string);
+}
+
+TEST_F(TestTypes, ConnectionStateConnectedToString) {
+    // Arrange
+    ConnectionState connectionState = ConnectionState::Connected;
+
+    // Act
+    std::string_view string = format_as(connectionState);
+
+    // Assert
+    ASSERT_EQ("Connected", string);
+}
+
+TEST_F(TestTypes, DataToStringWithZeroLength) {
+    // Arrange
+    uint8_t data = 0;
+
+    // Act
+    std::string string = DataToString(&data, 0, '/');
+
+    // Assert
+    ASSERT_EQ("", string);
+}
+
+TEST_F(TestTypes, SimulationTimeToStringWithZero) {
+    // Arrange
+    SimulationTime simulationTime{0};
+
+    // Act
+    std::string string = SimulationTimeToString(simulationTime);
+
+    // Assert
+    ASSERT_EQ("0", string);
+}
+
+TEST_F(TestTypes, ValueToStringWithZeroLength) {
+    // Arrange
+    DataType dataType = DataType::Float64;
+    double data = 0.0;
+
+    // Act
+    std::string string = ValueToString(dataType, 0, &data);
+
+    // Assert
+    ASSERT_EQ("", string);
+}
+
+TEST_F(TestTypes, GetDataTypeSizeForAllTypes) {
+    ASSERT_EQ(1U, GetDataTypeSize(DataType::Bool));
+    ASSERT_EQ(1U, GetDataTypeSize(DataType::Int8));
+    ASSERT_EQ(1U, GetDataTypeSize(DataType::UInt8));
+    ASSERT_EQ(2U, GetDataTypeSize(DataType::Int16));
+    ASSERT_EQ(2U, GetDataTypeSize(DataType::UInt16));
+    ASSERT_EQ(4U, GetDataTypeSize(DataType::Int32));
+    ASSERT_EQ(4U, GetDataTypeSize(DataType::UInt32));
+    ASSERT_EQ(4U, GetDataTypeSize(DataType::Float32));
+    ASSERT_EQ(8U, GetDataTypeSize(DataType::Int64));
+    ASSERT_EQ(8U, GetDataTypeSize(DataType::UInt64));
+    ASSERT_EQ(8U, GetDataTypeSize(DataType::Float64));
+}
+
+TEST_F(TestTypes, GetDataTypeSizeForInvalidType) {
+    // Arrange
+    auto invalidType = static_cast<DataType>(255);
+
+    // Act
+    size_t size = GetDataTypeSize(invalidType);
+
+    // Assert
+    ASSERT_EQ(0U, size);
+}
 
 }  // namespace

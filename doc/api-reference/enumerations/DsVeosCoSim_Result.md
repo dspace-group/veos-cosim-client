@@ -21,7 +21,8 @@ typedef enum DsVeosCoSim_Result {
     DsVeosCoSim_Result_Empty,
     DsVeosCoSim_Result_Full,
     DsVeosCoSim_Result_InvalidArgument,
-    DsVeosCoSim_Result_Disconnected
+  DsVeosCoSim_Result_Disconnected,
+  DsVeosCoSim_Result_Timeout
 } DsVeosCoSim_Result;
 ```
 
@@ -50,6 +51,10 @@ The function call failed due to an invalid argument.
 > DsVeosCoSim_Result_Disconnected
 
 The function detected a disconnection from the VEOS CoSim server.
+
+> DsVeosCoSim_Result_Timeout
+
+The function timed out.
 
 ## See Also
 

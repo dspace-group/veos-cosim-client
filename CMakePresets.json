@@ -33,7 +33,8 @@
       "name": "base-windows",
       "hidden": true,
       "architecture": {
-        "value": "x64"
+        "value": "x64",
+        "strategy": "external"
       },
       "condition": {
         "type": "equals",

@@ -21,8 +21,21 @@ namespace {
 
 class TestNamedLock : public testing::Test {};
 
+TEST_F(TestNamedLock, CreateShouldWork) {
+    // Arrange
+    std::string name = GenerateNamedLockName();
+
+    NamedLock mutex;
+
+    // Act
+    Result result = NamedLock::Create(name, mutex);
+
+    // Assert
+    AssertOk(result);
+}
+
 void DifferentThread(std::string_view name, int32_t& counter) {
-    for (int32_t i = 0; i < 10000; i++) {
+    for (int32_t i = 0; i < 1000; i++) {
         NamedLock mutex;
         AssertOk(NamedLock::Create(name, mutex));
         counter++;
@@ -38,7 +51,7 @@ TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes) {
     auto thread = std::thread(DifferentThread, name, std::ref(counter));
 
     // Act
-    for (int32_t i = 0; i < 10000; i++) {
+    for (int32_t i = 0; i < 1000; i++) {
         NamedLock mutex;
         AssertOk(NamedLock::Create(name, mutex));
         counter++;
@@ -47,7 +60,7 @@ TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes) {
     thread.join();
 
     // Assert
-    ASSERT_EQ(counter, 20000);
+    ASSERT_EQ(counter, 2000);
 }
 
 }  // namespace

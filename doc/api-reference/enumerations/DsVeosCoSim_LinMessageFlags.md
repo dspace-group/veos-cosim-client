@@ -68,11 +68,11 @@ For transmit and receive messages. Indicates that the LIN message contains a res
 
 > DsVeosCoSim_LinMessageFlags_WakeEvent
 
-For transmit and receive messages. Indicates that the LIN message contains a wake command.
+For transmit and receive messages. Indicates that the LIN message contains a wake event.
 
 > DsVeosCoSim_LinMessageFlags_SleepEvent
 
-For transmit and receive messages. Indicates that the LIN message contains a sleep command.
+For transmit and receive messages. Indicates that the LIN message contains a sleep event.
 
 > DsVeosCoSim_LinMessageFlags_EnhancedChecksum
 

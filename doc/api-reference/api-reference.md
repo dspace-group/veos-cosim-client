@@ -13,19 +13,19 @@ Describes the DsVeosCoSim Client API.
 ## List of Sections
 
 > [Enumerations](enumerations/enumerations.md)<br>
-> Describes all available Enumerations.
+> Describes all available enumerations.
 
 > [Function Pointers](function-pointers/function-pointers.md)<br>
-> Describes all available Function Pointers.
+> Describes all available function pointers.
 
 > [Functions](functions/functions.md)<br>
-> Describes all available Functions.
+> Describes all available functions.
 
 > [Macros](macros/macros.md)<br>
-> Describes all available Macros.
+> Describes all available macros.
 
 > [Structures](structures/structures.md)<br>
-> Describes all available Structures.
+> Describes all available structures.
 
 > [Simple Types](simple-types/simple-types.md)<br>
-> Describes all available Simple Types.
+> Describes all available simple types.

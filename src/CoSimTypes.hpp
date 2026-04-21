@@ -696,7 +696,6 @@ struct FrMessageContainer {
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers);
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers);
 [[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers);
-
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType);
 
 [[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value);

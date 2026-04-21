@@ -173,6 +173,7 @@ public:
 
     [[nodiscard]] Result Read(void* destination, size_t size, size_t& receivedSize);
     [[nodiscard]] Result Write(const void* source, size_t size);
+    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds);
 
     [[nodiscard]] bool IsConnected() const;
 
@@ -224,6 +225,7 @@ public:
 
     [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize);
     [[nodiscard]] Result Send(const void* source, size_t size);
+    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds);
 
     [[nodiscard]] bool IsConnected() const;
 

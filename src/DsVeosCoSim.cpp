@@ -12,6 +12,7 @@
 #include "CoSimClient.hpp"
 #include "CoSimTypes.hpp"
 #include "Logger.hpp"
+#include "OsUtilities.hpp"
 #include "Result.hpp"
 
 using namespace DsVeosCoSim;
@@ -210,10 +211,6 @@ namespace {
     return static_cast<CoSimClient*>(handle);
 }
 
-[[nodiscard]] ConnectionState* Convert(DsVeosCoSim_ConnectionState* connectionState) {
-    return reinterpret_cast<ConnectionState*>(connectionState);
-}
-
 [[nodiscard]] SimulationTime* Convert(DsVeosCoSim_SimulationTime* simulationTime) {
     return reinterpret_cast<SimulationTime*>(simulationTime);
 }
@@ -246,6 +243,10 @@ namespace {
     return static_cast<ConnectionState>(connectionState);
 }
 
+[[nodiscard]] constexpr DsVeosCoSim_ConnectionState Convert(ConnectionState connectionState) {
+    return static_cast<DsVeosCoSim_ConnectionState>(connectionState);
+}
+
 [[nodiscard]] constexpr SizeKind Convert(DsVeosCoSim_SizeKind sizeKind) {
     return static_cast<SizeKind>(sizeKind);
 }
@@ -271,121 +272,106 @@ namespace {
 }
 
 void InitializeCallbacks(Callbacks& newCallbacks, const DsVeosCoSim_Callbacks& callbacks) {
-    DsVeosCoSim_CanMessageReceivedCallback canMessageReceivedCallback = callbacks.canMessageReceivedCallback;
-    DsVeosCoSim_CanMessageContainerReceivedCallback canMessageContainerReceivedCallback = callbacks.canMessageContainerReceivedCallback;
-    DsVeosCoSim_EthMessageReceivedCallback ethMessageReceivedCallback = callbacks.ethMessageReceivedCallback;
-    DsVeosCoSim_EthMessageContainerReceivedCallback ethMessageContainerReceivedCallback = callbacks.ethMessageContainerReceivedCallback;
-    DsVeosCoSim_LinMessageReceivedCallback linMessageReceivedCallback = callbacks.linMessageReceivedCallback;
-    DsVeosCoSim_LinMessageContainerReceivedCallback linMessageContainerReceivedCallback = callbacks.linMessageContainerReceivedCallback;
-    DsVeosCoSim_FrMessageReceivedCallback frMessageReceivedCallback = callbacks.frMessageReceivedCallback;
-    DsVeosCoSim_FrMessageContainerReceivedCallback frMessageContainerReceivedCallback = callbacks.frMessageContainerReceivedCallback;
-    DsVeosCoSim_IncomingSignalChangedCallback incomingSignalChangedCallback = callbacks.incomingSignalChangedCallback;
-    DsVeosCoSim_SimulationCallback simulationStartedCallback = callbacks.simulationStartedCallback;
-    DsVeosCoSim_SimulationCallback simulationStoppedCallback = callbacks.simulationStoppedCallback;
-    DsVeosCoSim_SimulationCallback simulationPausedCallback = callbacks.simulationPausedCallback;
-    DsVeosCoSim_SimulationCallback simulationContinuedCallback = callbacks.simulationContinuedCallback;
-    DsVeosCoSim_SimulationTerminatedCallback simulationTerminatedCallback = callbacks.simulationTerminatedCallback;
-    DsVeosCoSim_SimulationCallback simulationBeginStepCallback = callbacks.simulationBeginStepCallback;
-    DsVeosCoSim_SimulationCallback simulationEndStepCallback = callbacks.simulationEndStepCallback;
     void* userData = callbacks.userData;
 
-    if (canMessageReceivedCallback) {
-        newCallbacks.canMessageReceivedCallback = [=](SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
-            canMessageReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&message), userData);
+    if (auto cb = callbacks.canMessageReceivedCallback) {
+        newCallbacks.canMessageReceivedCallback = [cb, userData](SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
+            cb(simulationTime.count(), Convert(&controller), Convert(&message), userData);
         };
     }
 
-    if (canMessageContainerReceivedCallback) {
+    if (auto cb = callbacks.canMessageContainerReceivedCallback) {
         newCallbacks.canMessageContainerReceivedCallback =
-            [=](SimulationTime simulationTime, const CanController& canController, const CanMessageContainer& messageContainer) {
-                canMessageContainerReceivedCallback(simulationTime.count(), Convert(&canController), Convert(&messageContainer), userData);
+            [cb, userData](SimulationTime simulationTime, const CanController& canController, const CanMessageContainer& messageContainer) {
+                cb(simulationTime.count(), Convert(&canController), Convert(&messageContainer), userData);
             };
     }
 
-    if (ethMessageReceivedCallback) {
-        newCallbacks.ethMessageReceivedCallback = [=](SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
-            ethMessageReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&message), userData);
+    if (auto cb = callbacks.ethMessageReceivedCallback) {
+        newCallbacks.ethMessageReceivedCallback = [cb, userData](SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
+            cb(simulationTime.count(), Convert(&controller), Convert(&message), userData);
         };
     }
 
-    if (ethMessageContainerReceivedCallback) {
+    if (auto cb = callbacks.ethMessageContainerReceivedCallback) {
         newCallbacks.ethMessageContainerReceivedCallback =
-            [=](SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer) {
-                ethMessageContainerReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
+            [cb, userData](SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer) {
+                cb(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
             };
     }
 
-    if (linMessageReceivedCallback) {
-        newCallbacks.linMessageReceivedCallback = [=](SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
-            linMessageReceivedCallback(simulationTime.count(), Convert(&linController), Convert(&message), userData);
+    if (auto cb = callbacks.linMessageReceivedCallback) {
+        newCallbacks.linMessageReceivedCallback = [cb, userData](SimulationTime simulationTime, const LinController& linController, const LinMessage& message) {
+            cb(simulationTime.count(), Convert(&linController), Convert(&message), userData);
         };
     }
 
-    if (linMessageContainerReceivedCallback) {
+    if (auto cb = callbacks.linMessageContainerReceivedCallback) {
         newCallbacks.linMessageContainerReceivedCallback =
-            [=](SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer) {
-                linMessageContainerReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
+            [cb, userData](SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer) {
+                cb(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
             };
     }
 
-    if (frMessageReceivedCallback) {
-        newCallbacks.frMessageReceivedCallback = [=](SimulationTime simulationTime, const FrController& controller, const FrMessage& message) {
-            frMessageReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&message), userData);
+    if (auto cb = callbacks.frMessageReceivedCallback) {
+        newCallbacks.frMessageReceivedCallback = [cb, userData](SimulationTime simulationTime, const FrController& controller, const FrMessage& message) {
+            cb(simulationTime.count(), Convert(&controller), Convert(&message), userData);
         };
     }
 
-    if (frMessageContainerReceivedCallback) {
+    if (auto cb = callbacks.frMessageContainerReceivedCallback) {
         newCallbacks.frMessageContainerReceivedCallback =
-            [=](SimulationTime simulationTime, const FrController& controller, const FrMessageContainer& messageContainer) {
-                frMessageContainerReceivedCallback(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
+            [cb, userData](SimulationTime simulationTime, const FrController& controller, const FrMessageContainer& messageContainer) {
+                cb(simulationTime.count(), Convert(&controller), Convert(&messageContainer), userData);
             };
     }
 
-    if (incomingSignalChangedCallback) {
-        newCallbacks.incomingSignalChangedCallback = [=](SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value) {
-            incomingSignalChangedCallback(simulationTime.count(), Convert(&ioSignal), length, value, userData);
+    if (auto cb = callbacks.incomingSignalChangedCallback) {
+        newCallbacks.incomingSignalChangedCallback = [cb,
+                                                      userData](SimulationTime simulationTime, const IoSignal& ioSignal, uint32_t length, const void* value) {
+            cb(simulationTime.count(), Convert(&ioSignal), length, value, userData);
         };
     }
 
-    if (simulationStartedCallback) {
-        newCallbacks.simulationStartedCallback = [=](SimulationTime simulationTime) {
-            simulationStartedCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationStartedCallback) {
+        newCallbacks.simulationStartedCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 
-    if (simulationStoppedCallback) {
-        newCallbacks.simulationStoppedCallback = [=](SimulationTime simulationTime) {
-            simulationStoppedCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationStoppedCallback) {
+        newCallbacks.simulationStoppedCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 
-    if (simulationPausedCallback) {
-        newCallbacks.simulationPausedCallback = [=](SimulationTime simulationTime) {
-            simulationPausedCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationPausedCallback) {
+        newCallbacks.simulationPausedCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 
-    if (simulationContinuedCallback) {
-        newCallbacks.simulationContinuedCallback = [=](SimulationTime simulationTime) {
-            simulationContinuedCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationContinuedCallback) {
+        newCallbacks.simulationContinuedCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 
-    if (simulationTerminatedCallback) {
-        newCallbacks.simulationTerminatedCallback = [=](SimulationTime simulationTime, TerminateReason reason) {
-            simulationTerminatedCallback(simulationTime.count(), Convert(reason), userData);
+    if (auto cb = callbacks.simulationTerminatedCallback) {
+        newCallbacks.simulationTerminatedCallback = [cb, userData](SimulationTime simulationTime, TerminateReason reason) {
+            cb(simulationTime.count(), Convert(reason), userData);
         };
     }
 
-    if (simulationBeginStepCallback) {
-        newCallbacks.simulationBeginStepCallback = [=](SimulationTime simulationTime) {
-            simulationBeginStepCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationBeginStepCallback) {
+        newCallbacks.simulationBeginStepCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 
-    if (simulationEndStepCallback) {
-        newCallbacks.simulationEndStepCallback = [=](SimulationTime simulationTime) {
-            simulationEndStepCallback(simulationTime.count(), userData);
+    if (auto cb = callbacks.simulationEndStepCallback) {
+        newCallbacks.simulationEndStepCallback = [cb, userData](SimulationTime simulationTime) {
+            cb(simulationTime.count(), userData);
         };
     }
 }
@@ -401,7 +387,7 @@ void DsVeosCoSim_SetLogCallback(DsVeosCoSim_LogCallback logCallback) {
 }
 
 DsVeosCoSim_Handle DsVeosCoSim_Create() {
-    std::unique_ptr<CoSimClient> client = CreateClient();
+    auto client = std::make_unique<CoSimClient>();
     return client.release();
 }
 
@@ -455,7 +441,8 @@ DsVeosCoSim_Result DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle handle, DsV
 
     CoSimClient* client = Convert(handle);
 
-    return Convert(client->GetConnectionState(*Convert(connectionState)));
+    *connectionState = Convert(client->GetConnectionState());
+    return DsVeosCoSim_Result_Ok;
 }
 
 DsVeosCoSim_Result DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_Callbacks callbacks) {
@@ -487,7 +474,20 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle, DsVeosCoSi
 
     CoSimClient* client = Convert(handle);
 
-    return Convert(client->PollCommand(*Convert(simulationTime), *Convert(command)));
+    return Convert(client->PollCommand(*Convert(simulationTime), *Convert(command), Infinite));
+}
+
+DsVeosCoSim_Result DsVeosCoSim_PollCommand2(DsVeosCoSim_Handle handle,
+                                             DsVeosCoSim_SimulationTime* simulationTime,
+                                             DsVeosCoSim_Command* command,
+                                             uint32_t timeoutInMilliseconds) {
+    CheckNotNull(handle);
+    CheckNotNull(simulationTime);
+    CheckNotNull(command);
+
+    CoSimClient* client = Convert(handle);
+
+    return Convert(client->PollCommand(*Convert(simulationTime), *Convert(command), timeoutInMilliseconds));
 }
 
 DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle) {

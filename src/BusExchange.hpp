@@ -11,14 +11,33 @@
 #include "Protocol.hpp"
 #include "Result.hpp"
 
+// Forward declarations to avoid including implementation headers
+namespace DsVeosCoSim::BusExchangeDetail {
+
+template <typename TBus>
+class BusExchangeSpecific;
+struct CanBus;
+struct EthBus;
+struct LinBus;
+struct FrBus;
+
+}  // namespace DsVeosCoSim::BusExchangeDetail
+
 namespace DsVeosCoSim {
 
-class BusExchange {
-protected:
-    BusExchange() = default;
+class BusExchange final {
+    using CanBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::CanBus>;
+    using EthBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::EthBus>;
+    using LinBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::LinBus>;
+    using FrBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::FrBus>;
 
 public:
-    virtual ~BusExchange() noexcept = default;
+    BusExchange(std::unique_ptr<CanBusExchange> canBusExchange,
+                std::unique_ptr<EthBusExchange> ethBusExchange,
+                std::unique_ptr<LinBusExchange> linBusExchange,
+                std::unique_ptr<FrBusExchange> frBusExchange,
+                bool doFlexRayOperations);
+    ~BusExchange() noexcept;
 
     BusExchange(const BusExchange&) = delete;
     BusExchange& operator=(const BusExchange&) = delete;
@@ -26,30 +45,38 @@ public:
     BusExchange(BusExchange&&) = delete;
     BusExchange& operator=(BusExchange&&) = delete;
 
-    virtual void ClearData() const = 0;
+    void ClearData() const;
 
-    [[nodiscard]] virtual Result Transmit(const CanMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const EthMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const LinMessage& message) const = 0;
-    [[nodiscard]] virtual Result Transmit(const FrMessage& message) const = 0;
+    [[nodiscard]] Result Transmit(const CanMessage& message) const;
+    [[nodiscard]] Result Transmit(const EthMessage& message) const;
+    [[nodiscard]] Result Transmit(const LinMessage& message) const;
+    [[nodiscard]] Result Transmit(const FrMessage& message) const;
 
-    [[nodiscard]] virtual Result Transmit(const CanMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const EthMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const LinMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Transmit(const FrMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] Result Transmit(const CanMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const EthMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const LinMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Transmit(const FrMessageContainer& messageContainer) const;
 
-    [[nodiscard]] virtual Result Receive(CanMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(EthMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(LinMessage& message) const = 0;
-    [[nodiscard]] virtual Result Receive(FrMessage& message) const = 0;
+    [[nodiscard]] Result Receive(CanMessage& message) const;
+    [[nodiscard]] Result Receive(EthMessage& message) const;
+    [[nodiscard]] Result Receive(LinMessage& message) const;
+    [[nodiscard]] Result Receive(FrMessage& message) const;
 
-    [[nodiscard]] virtual Result Receive(CanMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(EthMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(LinMessageContainer& messageContainer) const = 0;
-    [[nodiscard]] virtual Result Receive(FrMessageContainer& messageContainer) const = 0;
+    [[nodiscard]] Result Receive(CanMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(EthMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const;
+    [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const;
 
-    [[nodiscard]] virtual Result Serialize(ChannelWriter& writer) const = 0;
-    [[nodiscard]] virtual Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const = 0;
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) const;
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const;
+
+private:
+    std::unique_ptr<CanBusExchange> _canBusExchange;
+    std::unique_ptr<EthBusExchange> _ethBusExchange;
+    std::unique_ptr<LinBusExchange> _linBusExchange;
+    std::unique_ptr<FrBusExchange> _frBusExchange;
+
+    bool _doFlexRayOperations{};
 };
 
 [[nodiscard]] Result CreateBusExchange(CoSimType coSimType,

@@ -96,8 +96,6 @@ public:
         return CreateOk();
     }
 
-    // The plain message view points directly into the queue storage. The caller
-    // must copy the payload before the queue slot is overwritten by a later push.
     [[nodiscard]] Result Receive(TMessage& message) override {
         TMessageContainer* messageContainer = _queuedMessageContainers.TryPeekFront();
         if (messageContainer == nullptr) {

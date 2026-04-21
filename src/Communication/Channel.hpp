@@ -44,31 +44,8 @@ public:
     BlockWriter(BlockWriter&&) noexcept = default;
     BlockWriter& operator=(BlockWriter&&) noexcept = default;
 
-    void Write(uint16_t value) {
-        size_t size = sizeof(value);
-        if (size > _size) {
-            // Runtime safety check that remains active in release builds
-            throw std::runtime_error("No more space available.");
-        }
-
-        WriteScalarToBuffer(_data, value);
-        _data += size;
-        _size -= size;
-    }
-
-    void Write(uint32_t value) {
-        size_t size = sizeof(value);
-        if (size > _size) {
-            // Runtime safety check that remains active in release builds
-            throw std::runtime_error("No more space available.");
-        }
-
-        WriteScalarToBuffer(_data, value);
-        _data += size;
-        _size -= size;
-    }
-
-    void Write(uint64_t value) {
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    void Write(T value) {
         size_t size = sizeof(value);
         if (size > _size) {
             // Runtime safety check that remains active in release builds
@@ -138,39 +115,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Write(uint16_t value) {
-        auto size = static_cast<int32_t>(sizeof(value));
-        if (BufferSize - _writeIndex < size) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < size) {
-                LogError("No more space available.");
-                return CreateError();
-            }
-        }
-
-        WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
-        _writeIndex += size;
-        return CreateOk();
-    }
-
-    [[nodiscard]] Result Write(uint32_t value) {
-        auto size = static_cast<int32_t>(sizeof(value));
-        if (BufferSize - _writeIndex < size) {
-            CheckResult(EndWrite());
-
-            if (BufferSize - _writeIndex < size) {
-                LogError("No more space available.");
-                return CreateError();
-            }
-        }
-
-        WriteScalarToBuffer(&_writeBuffer[static_cast<size_t>(_writeIndex)], value);
-        _writeIndex += size;
-        return CreateOk();
-    }
-
-    [[nodiscard]] Result Write(uint64_t value) {
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] Result Write(T value) {
         auto size = static_cast<int32_t>(sizeof(value));
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
@@ -235,31 +181,8 @@ public:
     BlockReader(BlockReader&&) noexcept = default;
     BlockReader& operator=(BlockReader&&) noexcept = default;
 
-    void Read(uint16_t& value) {
-        size_t size = sizeof(value);
-        if (size > _size) {
-            // Runtime safety check that remains active in release builds
-            throw std::runtime_error("No more data available.");
-        }
-
-        ReadScalarFromBuffer(_data, value);
-        _data += size;
-        _size -= size;
-    }
-
-    void Read(uint32_t& value) {
-        size_t size = sizeof(value);
-        if (size > _size) {
-            // Runtime safety check that remains active in release builds
-            throw std::runtime_error("No more data available.");
-        }
-
-        ReadScalarFromBuffer(_data, value);
-        _data += size;
-        _size -= size;
-    }
-
-    void Read(uint64_t& value) {
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    void Read(T& value) {
         size_t size = sizeof(value);
         if (size > _size) {
             // Runtime safety check that remains active in release builds
@@ -324,29 +247,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(uint16_t& value) {
-        auto size = static_cast<int32_t>(sizeof(value));
-        while (_endFrameIndex - _readIndex < size) {
-            CheckResult(BeginRead());
-        }
-
-        ReadScalarFromBuffer(&_readBuffer[static_cast<size_t>(_readIndex)], value);
-        _readIndex += size;
-        return CreateOk();
-    }
-
-    [[nodiscard]] Result Read(uint32_t& value) {
-        auto size = static_cast<int32_t>(sizeof(value));
-        while (_endFrameIndex - _readIndex < size) {
-            CheckResult(BeginRead());
-        }
-
-        ReadScalarFromBuffer(&_readBuffer[static_cast<size_t>(_readIndex)], value);
-        _readIndex += size;
-        return CreateOk();
-    }
-
-    [[nodiscard]] Result Read(uint64_t& value) {
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] Result Read(T& value) {
         auto size = static_cast<int32_t>(sizeof(value));
         while (_endFrameIndex - _readIndex < size) {
             CheckResult(BeginRead());
@@ -385,7 +287,16 @@ public:
 
     virtual void EndRead() const = 0;
 
+    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds) {
+        if (_writeIndex > _endFrameIndex) {
+            return CreateOk();
+        }
+
+        return WaitForDataInternal(timeoutInMilliseconds);
+    }
+
 protected:
+    [[nodiscard]] virtual Result WaitForDataInternal(uint32_t timeoutInMilliseconds) = 0;
     [[nodiscard]] virtual Result Receive(void* destination, size_t size, size_t& receivedSize) = 0;
 
     [[nodiscard]] virtual Result BeginRead() {

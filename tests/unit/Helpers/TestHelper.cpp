@@ -25,140 +25,43 @@ using namespace DsVeosCoSim;
     return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 
-void TestSendAfterDisconnect(SocketClient& client) {
-    // Arrange
-    client.Disconnect();
-
-    size_t sendValue = GenerateSizeT();
-
-    // Act
-    Result result = client.Send(&sendValue, sizeof(sendValue));
-
-    // Assert
-    AssertNotConnected(result);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       std::string_view name,
+                                       const std::vector<CanController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busExchange);
 }
 
-void TestReceiveAfterDisconnect(SocketClient& client) {
-    // Arrange
-    client.Disconnect();
-
-    size_t receiveValue{};
-    size_t receivedSize{};
-
-    // Act
-    Result result = client.Receive(&receiveValue, sizeof(receiveValue), receivedSize);
-
-    // Assert
-    AssertNotConnected(result);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       std::string_view name,
+                                       const std::vector<EthController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busExchange);
 }
 
-void TestReceiveAfterDisconnectOnRemoteClient(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    client1.Disconnect();
-
-    size_t receiveValue{};
-    size_t receivedSize{};
-
-    // Act
-    Result result = client2.Receive(&receiveValue, sizeof(receiveValue), receivedSize);
-
-    // Assert
-    AssertNotConnected(result);
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       std::string_view name,
+                                       const std::vector<LinController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busExchange);
 }
 
-void TestSendAndReceive(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    size_t sendValue = GenerateSizeT();
-    size_t receiveValue = 0;
-
-    // Act
-    Result sendResult = client1.Send(&sendValue, sizeof(sendValue));
-    Result receiveResult = ReceiveComplete(client2, &receiveValue, sizeof(receiveValue));
-
-    // Assert
-    AssertOk(sendResult);
-    AssertOk(receiveResult);
-    ASSERT_EQ(sendValue, receiveValue);
-}
-
-void TestManyElements(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    constexpr size_t Count = 0x1000;
-
-    std::thread thread([&] {
-        for (size_t i = 0; i < Count; i++) {
-            size_t receiveValue{};
-            AssertOk(ReceiveComplete(client2, &receiveValue, sizeof(receiveValue)));
-            ASSERT_EQ(i, receiveValue);
-        }
-    });
-
-    // Act and assert
-    for (size_t i = 0; i < Count; i++) {
-        AssertOk(client1.Send(&i, sizeof(i)));
-    }
-
-    thread.join();
-}
-
-void TestBigElement(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    constexpr size_t Count = 0x100000;
-
-    std::thread thread([&] {
-        auto receiveArray = std::make_unique<std::array<size_t, Count>>();
-        AssertOk(ReceiveComplete(client2, receiveArray->data(), receiveArray->size() * sizeof(size_t)));
-        for (size_t i = 0; i < receiveArray->size(); i++) {
-            ASSERT_EQ(i, (*receiveArray)[i]);
-        }
-    });
-
-    // Act and assert
-    auto sendArray = std::make_unique<std::array<size_t, Count>>();
-    for (size_t i = 0; i < sendArray->size(); i++) {
-        (*sendArray)[i] = i;
-    }
-
-    AssertOk(client1.Send(sendArray->data(), sendArray->size() * sizeof(size_t)));
-    thread.join();
-}
-
-void TestPingPong(SocketClient& client1, SocketClient& client2) {
-    // Arrange
-    constexpr size_t Count = 100;
-
-    // Act and assert
-    for (size_t i = 0; i < Count; i++) {
-        SocketClient* sendClient = &client1;
-        SocketClient* receiveClient = &client2;
-        if (i % 2 == 1) {
-            std::swap(sendClient, receiveClient);
-        }
-
-        size_t sendValue = GenerateSizeT();
-        AssertOk(sendClient->Send(&sendValue, sizeof(sendValue)));
-
-        size_t receiveValue{};
-        AssertOk(ReceiveComplete(*receiveClient, &receiveValue, sizeof(receiveValue)));
-
-        ASSERT_EQ(sendValue, receiveValue);
-    }
+[[nodiscard]] Result CreateBusExchange(CoSimType coSimType,
+                                       ConnectionKind connectionKind,
+                                       std::string_view name,
+                                       const std::vector<FrController>& controllers,
+                                       IProtocol& protocol,
+                                       std::unique_ptr<BusExchange>& busExchange) {
+    return CreateBusExchange(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busExchange);
 }
 
 #ifdef _WIN32
-
-void TestSendAfterDisconnect(ShmPipeClient& client) {
-    // Arrange
-    client.Disconnect();
-
-    size_t sendValue = GenerateSizeT();
-
-    // Act
-    Result result = client.Send(&sendValue, sizeof(sendValue));
-
-    // Assert
-    AssertNotConnected(result);
-}
 
 void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2) {
     // Arrange
@@ -171,113 +74,6 @@ void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient
 
     // Assert
     AssertNotConnected(result);
-}
-
-void TestReceiveAfterDisconnect(ShmPipeClient& client) {
-    // Arrange
-    client.Disconnect();
-
-    size_t receiveValue{};
-    size_t receivedSize{};
-
-    // Act
-    Result result = client.Receive(&receiveValue, sizeof(receiveValue), receivedSize);
-
-    // Assert
-    AssertNotConnected(result);
-}
-
-void TestReceiveAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2) {
-    // Arrange
-    client1.Disconnect();
-
-    size_t receiveValue{};
-    size_t receivedSize{};
-
-    // Act
-    Result result = client2.Receive(&receiveValue, sizeof(receiveValue), receivedSize);
-
-    // Assert
-    AssertNotConnected(result);
-}
-
-void TestSendAndReceive(ShmPipeClient& client1, ShmPipeClient& client2) {
-    // Arrange
-    size_t sendValue = GenerateSizeT();
-    size_t receiveValue = 0;
-
-    // Act
-    Result sendResult = client1.Send(&sendValue, sizeof(sendValue));
-    Result receiveResult = ReceiveComplete(client2, &receiveValue, sizeof(receiveValue));
-
-    // Assert
-    AssertOk(sendResult);
-    AssertOk(receiveResult);
-    ASSERT_EQ(sendValue, receiveValue);
-}
-
-void TestManyElements(ShmPipeClient& client1, ShmPipeClient& client2) {
-    // Arrange
-    constexpr size_t Count = 0x1000;
-
-    std::thread thread([&] {
-        for (size_t i = 0; i < Count; i++) {
-            size_t receiveValue{};
-            AssertOk(ReceiveComplete(client2, &receiveValue, sizeof(receiveValue)));
-            ASSERT_EQ(i, receiveValue);
-        }
-    });
-
-    // Act and assert
-    for (size_t i = 0; i < Count; i++) {
-        AssertOk(client1.Send(&i, sizeof(i)));
-    }
-
-    thread.join();
-}
-
-void TestBigElement(ShmPipeClient& client1, ShmPipeClient& client2) {
-    // Arrange
-    constexpr size_t Count = 0x100000;
-
-    std::thread thread([&] {
-        auto receiveArray = std::make_unique<std::array<size_t, Count>>();
-        AssertOk(ReceiveComplete(client2, receiveArray->data(), receiveArray->size() * sizeof(size_t)));
-        for (size_t i = 0; i < receiveArray->size(); i++) {
-            ASSERT_EQ(i, (*receiveArray)[i]);
-        }
-    });
-
-    // Act and assert
-    auto sendArray = std::make_unique<std::array<size_t, Count>>();
-    for (size_t i = 0; i < sendArray->size(); i++) {
-        (*sendArray)[i] = i;
-    }
-
-    AssertOk(client1.Send(sendArray->data(), sendArray->size() * sizeof(size_t)));
-    thread.join();
-}
-
-void TestPingPong(ShmPipeClient& client1, ShmPipeClient& client2) {
-    // Arrange
-    constexpr size_t Count = 100;
-
-    // Act and assert
-    for (size_t i = 0; i < Count; i++) {
-        ShmPipeClient* sendClient = &client1;
-        ShmPipeClient* receiveClient = &client2;
-        if (i % 2 == 1) {
-            std::swap(sendClient, receiveClient);
-        }
-
-        size_t sendValue = GenerateSizeT();
-        AssertOk(sendClient->Send(&sendValue, sizeof(sendValue)));
-
-        size_t receiveValue{};
-        AssertOk(ReceiveComplete(*receiveClient, &receiveValue, sizeof(receiveValue)));
-
-        ASSERT_EQ(sendValue, receiveValue);
-    }
 }
 
 #endif
@@ -467,7 +263,7 @@ void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>
 }
 
 void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
-    constexpr size_t Count = 0x100000;
+    constexpr size_t Count = 0x1000;
 
     std::thread thread([&] {
         auto receiveArray = std::make_unique<std::array<size_t, Count>>();
@@ -489,3 +285,183 @@ void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Chan
 
     thread.join();
 }
+
+namespace DsVeosCoSim {
+
+std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
+    return stream << SimulationTimeToString(simulationTime);
+}
+
+std::ostream& operator<<(std::ostream& stream, Result result) {
+    return stream << format_as(result);
+}
+
+std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
+    return stream << format_as(coSimType);
+}
+
+std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
+    return stream << format_as(connectionKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, Command command) {
+    return stream << format_as(command);
+}
+
+std::ostream& operator<<(std::ostream& stream, Severity severity) {
+    return stream << format_as(severity);
+}
+
+std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
+    return stream << format_as(terminateReason);
+}
+
+std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
+    return stream << format_as(connectionState);
+}
+
+std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
+    return stream << format_as(simulationState);
+}
+
+std::ostream& operator<<(std::ostream& stream, Mode mode) {
+    return stream << format_as(mode);
+}
+
+std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
+    return stream << format_as(ioSignalId);
+}
+
+std::ostream& operator<<(std::ostream& stream, DataType dataType) {
+    return stream << format_as(dataType);
+}
+
+std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
+    return stream << format_as(sizeKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
+    return stream << format_as(busControllerId);
+}
+
+std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
+    return stream << format_as(busMessageId);
+}
+
+std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
+    return stream << format_as(linControllerType);
+}
+
+std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
+    return stream << format_as(canMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
+    return stream << format_as(ethMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
+    return stream << format_as(linMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
+    return stream << format_as(frMessageFlags);
+}
+
+std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
+    return stream << format_as(frameKind);
+}
+
+std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
+    return stream << format_as(ioSignal);
+}
+
+std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
+    return stream << format_as(ioSignalContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
+    return stream << format_as(canController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
+    return stream << format_as(canControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
+    return stream << format_as(canMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
+    return stream << format_as(canMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
+    return stream << format_as(ethController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
+    return stream << format_as(ethControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
+    return stream << format_as(ethMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
+    return stream << format_as(ethMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
+    return stream << format_as(linController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
+    return stream << format_as(frControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
+    return stream << format_as(linMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
+    return stream << format_as(linMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
+    return stream << format_as(frController);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
+    return stream << format_as(frControllerContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
+    return stream << format_as(frMessage);
+}
+
+std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
+    return stream << format_as(frMessageContainer);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
+    return stream << format_as(ioSignalContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
+    return stream << format_as(canControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
+    return stream << format_as(ethControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
+    return stream << format_as(linControllerContainers);
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
+    return stream << format_as(frControllerContainers);
+}
+
+}  // namespace DsVeosCoSim

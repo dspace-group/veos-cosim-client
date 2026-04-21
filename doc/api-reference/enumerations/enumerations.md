@@ -3,12 +3,12 @@
 [⬆️ Go to DsVeosCoSim Client API Reference](../api-reference.md)
 
 - [Enumerations](#enumerations)
-  - [Descriptions](#descriptions)
+  - [Description](#description)
   - [List of Enumerations](#list-of-enumerations)
 
-## Descriptions
+## Description
 
-Describes all available Enumerations.
+Describes all available enumerations.
 
 ## List of Enumerations
 
@@ -32,6 +32,10 @@ Contains valid data types for I/O signals.
 
 Contains the possible flags of an Ethernet message.
 
+> [DsVeosCoSim_FrMessageFlags](DsVeosCoSim_FrMessageFlags.md)
+
+Contains the possible flags of a FlexRay message.
+
 > [DsVeosCoSim_LinControllerType](DsVeosCoSim_LinControllerType.md)
 
 Contains the LIN controller type.
@@ -48,10 +52,14 @@ Contains the possible return values of VEOS CoSim functions.
 
 Contains all possible severity levels of a log message in descending order of severity.
 
+> [DsVeosCoSim_SimulationState](DsVeosCoSim_SimulationState.md)
+
+Contains the possible simulation states.
+
 > [DsVeosCoSim_SizeKind](DsVeosCoSim_SizeKind.md)
 
 Contains information on the I/O signal length type.
 
 > [DsVeosCoSim_TerminateReason](DsVeosCoSim_TerminateReason.md)
 
-Contains the possible reasons for a termination of the co-simulation.
+Contains the possible reasons for terminating the co-simulation.

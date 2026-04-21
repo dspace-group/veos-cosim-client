@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>  // IWYU pragma: keep
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -16,26 +17,24 @@ namespace DsVeosCoSim {
 namespace {
 
 [[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) noexcept {
-    const auto* expectedBytes = static_cast<const uint8_t*>(expected);
-    const auto* actualBytes = static_cast<const uint8_t*>(actual);
-    for (size_t i = 0; i < size; i++) {
-        if (expectedBytes[i] != actualBytes[i]) {
-            return false;
-        }
-    }
-
-    return true;
+    return std::memcmp(expected, actual, size) == 0;
 }
 
 template <typename T, size_t TSize>
 [[nodiscard]] bool Equals(const std::array<T, TSize>& expected, const std::array<T, TSize>& actual) noexcept {
-    for (size_t i = 0; i < TSize; i++) {
-        if (expected[i] != actual[i]) {
-            return false;
-        }
+    return expected == actual;
+}
+
+template <typename TContainer>
+[[nodiscard]] auto ConvertContainers(const std::vector<TContainer>& containers) {
+    using TOut = decltype(std::declval<const TContainer&>().Convert());
+    std::vector<TOut> result;
+    result.reserve(containers.size());
+    for (const auto& container : containers) {
+        result.push_back(container.Convert());
     }
 
-    return true;
+    return result;
 }
 
 void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value) {
@@ -1185,58 +1184,23 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 }
 
 [[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers) {
-    std::vector<IoSignal> ioSignals;
-    ioSignals.reserve(ioSignalContainers.size());
-
-    for (const auto& ioSignalContainer : ioSignalContainers) {
-        ioSignals.push_back(ioSignalContainer.Convert());
-    }
-
-    return ioSignals;
+    return ConvertContainers(ioSignalContainers);
 }
 
 [[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers) {
-    std::vector<CanController> controllers;
-    controllers.reserve(canControllerContainers.size());
-
-    for (const auto& canControllerContainer : canControllerContainers) {
-        controllers.push_back(canControllerContainer.Convert());
-    }
-
-    return controllers;
+    return ConvertContainers(canControllerContainers);
 }
 
 [[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers) {
-    std::vector<EthController> controllers;
-    controllers.reserve(ethControllerContainers.size());
-
-    for (const auto& ethControllerContainer : ethControllerContainers) {
-        controllers.push_back(ethControllerContainer.Convert());
-    }
-
-    return controllers;
+    return ConvertContainers(ethControllerContainers);
 }
 
 [[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers) {
-    std::vector<LinController> controllers;
-    controllers.reserve(linControllerContainers.size());
-
-    for (const auto& linControllerContainer : linControllerContainers) {
-        controllers.push_back(linControllerContainer.Convert());
-    }
-
-    return controllers;
+    return ConvertContainers(linControllerContainers);
 }
 
 [[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers) {
-    std::vector<FrController> controllers;
-    controllers.reserve(frControllerContainers.size());
-
-    for (const auto& frControllerContainer : frControllerContainers) {
-        controllers.push_back(frControllerContainer.Convert());
-    }
-
-    return controllers;
+    return ConvertContainers(frControllerContainers);
 }
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType) {
