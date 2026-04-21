@@ -12,6 +12,8 @@
 
 Starts a polling-based co-simulation in non-blocking mode.
 
+After startup, use [DsVeosCoSim_PollCommand](DsVeosCoSim_PollCommand.md) or [DsVeosCoSim_PollCommand2](DsVeosCoSim_PollCommand2.md) to receive simulation commands.
+
 ## Syntax
 
 ```c

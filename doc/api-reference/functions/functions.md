@@ -88,6 +88,10 @@ Converts a LIN controller type to a string.
 
 Polls the simulator for a command.
 
+> [DsVeosCoSim_PollCommand2](DsVeosCoSim_PollCommand2.md)
+
+Polls the simulator for a command with a configurable timeout.
+
 > [DsVeosCoSim_CommandToString](DsVeosCoSim_CommandToString.md)
 
 Converts a command to a string.

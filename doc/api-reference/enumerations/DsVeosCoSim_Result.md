@@ -64,6 +64,7 @@ The function timed out.
 - [DsVeosCoSim_RunCallbackBasedCoSimulation](../functions/DsVeosCoSim_RunCallbackBasedCoSimulation.md)
 - [DsVeosCoSim_StartPollingBasedCoSimulation](../functions/DsVeosCoSim_StartPollingBasedCoSimulation.md)
 - [DsVeosCoSim_PollCommand](../functions/DsVeosCoSim_PollCommand.md)
+- [DsVeosCoSim_PollCommand2](../functions/DsVeosCoSim_PollCommand2.md)
 - [DsVeosCoSim_FinishCommand](../functions/DsVeosCoSim_FinishCommand.md)
 - [DsVeosCoSim_SetNextSimulationTime](../functions/DsVeosCoSim_SetNextSimulationTime.md)
 - [DsVeosCoSim_GetStepSize](../functions/DsVeosCoSim_GetStepSize.md)

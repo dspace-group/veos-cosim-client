@@ -59,3 +59,4 @@ Continue the simulation.
 ## See Also
 
 - [DsVeosCoSim_PollCommand](../functions/DsVeosCoSim_PollCommand.md)
+- [DsVeosCoSim_PollCommand2](../functions/DsVeosCoSim_PollCommand2.md)

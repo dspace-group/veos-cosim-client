@@ -13,7 +13,7 @@
 
 Finishes the current command in a polling-based simulation.
 
-`DsVeosCoSim_FinishCommand` must be called after each call to [DsVeosCoSim_PollCommand](DsVeosCoSim_PollCommand.md).
+`DsVeosCoSim_FinishCommand` must be called after each successful call to [DsVeosCoSim_PollCommand](DsVeosCoSim_PollCommand.md) or [DsVeosCoSim_PollCommand2](DsVeosCoSim_PollCommand2.md) that returns a command.
 
 ## Syntax
 
@@ -37,3 +37,4 @@ A [DsVeosCoSim_Result](../enumerations/DsVeosCoSim_Result.md).
 
 - [DsVeosCoSim_StartPollingBasedCoSimulation](DsVeosCoSim_StartPollingBasedCoSimulation.md)
 - [DsVeosCoSim_PollCommand](DsVeosCoSim_PollCommand.md)
+- [DsVeosCoSim_PollCommand2](DsVeosCoSim_PollCommand2.md)
