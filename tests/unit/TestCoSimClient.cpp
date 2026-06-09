@@ -849,6 +849,54 @@ TEST_P(TestCoSimClient, PollCommandTimesOutWhenNoCommandArrives) {
     AssertTimeout(result);
 }
 
+TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings) {
+    // Arrange
+    ConnectClientAndServer(GetParam());
+    AssertOk(_client->StartPollingBasedCoSimulation({}));
+
+    constexpr uint32_t timeoutInMilliseconds = 80;
+    constexpr auto pingInterval = std::chrono::milliseconds(10);
+
+    auto serverTask = std::async(std::launch::async, [&]() -> Result {
+        for (size_t i = 0; i < 100; ++i) {
+            CheckResult(_serverProtocol->SendPing(_serverChannel->GetWriter(), SimulationTime(100)));
+
+            Result waitResult = _serverChannel->GetReader().WaitForData(20);
+            if (IsTimeout(waitResult) || IsNotConnected(waitResult)) {
+                return CreateOk();
+            }
+
+            CheckResult(waitResult);
+
+            FrameKind frameKind{};
+            CheckResult(_serverProtocol->ReceiveHeader(_serverChannel->GetReader(), frameKind));
+            if (frameKind != FrameKind::PingOk) {
+                return CreateError();
+            }
+
+            Command command{};
+            CheckResult(_serverProtocol->ReadPingOk(_serverChannel->GetReader(), command));
+
+            std::this_thread::sleep_for(pingInterval);
+        }
+
+        return CreateOk();
+    });
+
+    SimulationTime simulationTime{};
+    Command command{};
+    const auto start = std::chrono::steady_clock::now();
+
+    // Act
+    Result result = _client->PollCommand(simulationTime, command, timeoutInMilliseconds);
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+
+    // Assert
+    AssertTimeout(result);
+    EXPECT_LT(elapsed.count(), static_cast<int64_t>(timeoutInMilliseconds + 80));
+    AssertOk(serverTask.get());
+}
+
 // --- FinishCommand ---
 
 TEST_F(TestCoSimClient, FinishCommandWhenNotConnectedShouldFail) {
