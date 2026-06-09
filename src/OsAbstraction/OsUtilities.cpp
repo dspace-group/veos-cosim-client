@@ -12,16 +12,16 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <string_view>
 #include <utility>
 
 #include <fmt/format.h>
 
-#include <Windows.h>  // IWYU pragma: keep
+#include <Windows.h>
 #undef min
 
-#include <sysinfoapi.h>  // IWYU pragma: keep
+#include <sysinfoapi.h>
 
 #include "Logger.hpp"
 #include "Result.hpp"
@@ -85,9 +85,9 @@ namespace {
 
 // Spin wait with exponential backoff
 template <typename Predicate>
-bool SpinWait(Predicate&& predicate, uint32_t iterations) {
+bool SpinWait(const Predicate& predicate, uint32_t iterations) {
     for (uint32_t i = 0; i < iterations; ++i) {
-        if (std::forward<Predicate>(predicate)()) {
+        if (predicate()) {
             return true;
         }
 
@@ -174,8 +174,7 @@ void NamedEvent::Close() {
         return CreateError();
     }
 
-    BOOL result = SetEvent(_handle.Get());
-    if (result == FALSE) {
+    if (BOOL result = SetEvent(_handle.Get()); result == FALSE) {
         LogError(GetLastWindowsError(), "Could not set event.");
         return CreateError();
     }

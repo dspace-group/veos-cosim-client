@@ -1,6 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
 #include <string>
 #include <string_view>
@@ -8,8 +11,10 @@
 
 #include <gtest/gtest.h>
 
+#include <Result.hpp>
+#include <Socket.hpp>
+
 #include "Helper.hpp"
-#include "Socket.hpp"
 #include "TestHelper.hpp"
 
 using namespace std::chrono_literals;

@@ -3,6 +3,7 @@
 #include "CoSimClient.hpp"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -24,19 +25,22 @@ namespace DsVeosCoSim {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-CoSimClient::CoSimClient()
-    : _serializeIoData([this](ChannelWriter& writer) {
-          return _signalExchange->Serialize(writer);
-      }),
-      _serializeBusMessages([this](ChannelWriter& writer) {
-          return _busExchange->Serialize(writer);
-      }),
-      _deserializeIoData([this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-          return _signalExchange->Deserialize(reader, simulationTime, callbacks);
-      }),
-      _deserializeBusMessages([this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-          return _busExchange->Deserialize(reader, simulationTime, callbacks);
-      }) {
+CoSimClient::CoSimClient() {
+    _serializeIoData = [this](ChannelWriter& writer) {
+        return _signalExchange->Serialize(writer);
+    };
+
+    _serializeBusMessages = [this](ChannelWriter& writer) {
+        return _busExchange->Serialize(writer);
+    };
+
+    _deserializeIoData = [this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _signalExchange->Deserialize(reader, simulationTime, callbacks);
+    };
+
+    _deserializeBusMessages = [this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _busExchange->Deserialize(reader, simulationTime, callbacks);
+    };
 }
 
 [[nodiscard]] Result CoSimClient::Connect(const ConnectConfig& connectConfig) {
@@ -630,8 +634,21 @@ void CoSimClient::ResetDataFromPreviousConnect() {
     simulationTime = _currentSimulationTime;
     command = Command::Terminate;
 
+    const bool hasTimeout = timeoutInMilliseconds != Infinite;
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutInMilliseconds);
+
     do {
-        CheckResult(_channel->GetReader().WaitForData(timeoutInMilliseconds));
+        uint32_t waitTimeoutInMilliseconds = timeoutInMilliseconds;
+        if (hasTimeout) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= deadline) {
+                return CreateTimeout();
+            }
+
+            waitTimeoutInMilliseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count());
+        }
+
+        CheckResult(_channel->GetReader().WaitForData(waitTimeoutInMilliseconds));
 
         FrameKind frameKind{};
         CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));

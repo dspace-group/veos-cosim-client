@@ -1,15 +1,22 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <fmt/format.h>
 
 #include <gtest/gtest.h>
 
-#include "BusExchange.hpp"
-#include "CoSimTypes.hpp"
+#include <BusExchange.hpp>
+#include <Channel.hpp>
+#include <CoSimTypes.hpp>
+#include <Protocol.hpp>
+#include <Result.hpp>
+
 #include "Helper.hpp"
 #include "TestHelper.hpp"
 
@@ -62,7 +69,7 @@ protected:
         _localReceiverChannel.reset();
     }
 
-    void Transfer(ConnectionKind connectionKind, const BusExchange& senderBusExchange, const BusExchange& receiverBusExchange) {
+    static void Transfer(ConnectionKind connectionKind, const BusExchange& senderBusExchange, const BusExchange& receiverBusExchange) {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
@@ -73,8 +80,8 @@ protected:
     }
 
     void Transfer(ConnectionKind connectionKind,
-                  BusExchange& senderBusExchange,
-                  BusExchange& receiverBusExchange,
+                  const BusExchange& senderBusExchange,
+                  const BusExchange& receiverBusExchange,
                   std::deque<std::tuple<TController, TMessageContainer>>& expectedCallbacks) {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
@@ -139,8 +146,8 @@ protected:
     }
 
     void Transfer(ConnectionKind connectionKind,
-                  BusExchange& senderBusExchange,
-                  BusExchange& receiverBusExchange,
+                  const BusExchange& senderBusExchange,
+                  const BusExchange& receiverBusExchange,
                   std::deque<std::tuple<TController, TMessage>>& expectedCallbacks) {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();

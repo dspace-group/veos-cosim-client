@@ -1,19 +1,26 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <cstdint>
+#include <cstring>
 #include <deque>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <fmt/format.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "Channel.hpp"
-#include "CoSimTypes.hpp"
+#include <Channel.hpp>
+#include <CoSimTypes.hpp>
+#include <Protocol.hpp>
+#include <Result.hpp>
+#include <SignalExchange.hpp>
+
 #include "Helper.hpp"
-#include "Protocol.hpp"
-#include "SignalExchange.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -21,21 +28,21 @@ using namespace testing;
 
 namespace {
 
-auto CoSimTypes = Values(CoSimType::Client, CoSimType::Server);
+const auto CoSimTypes = Values(CoSimType::Client, CoSimType::Server);
 
-auto SignalExchangeConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
+const auto SignalExchangeConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
 
-auto DataTypes = Values(DataType::Bool,
-                        DataType::Int8,
-                        DataType::Int16,
-                        DataType::Int32,
-                        DataType::Int64,
-                        DataType::UInt8,
-                        DataType::UInt16,
-                        DataType::UInt32,
-                        DataType::UInt64,
-                        DataType::Float32,
-                        DataType::Float64);
+const auto DataTypes = Values(DataType::Bool,
+                              DataType::Int8,
+                              DataType::Int16,
+                              DataType::Int32,
+                              DataType::Int64,
+                              DataType::UInt8,
+                              DataType::UInt16,
+                              DataType::UInt32,
+                              DataType::UInt64,
+                              DataType::Float32,
+                              DataType::Float64);
 
 struct EventData {
     IoSignalContainer signal{};
@@ -106,7 +113,7 @@ protected:
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
-    static void Transfer(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange) {
+    static void Transfer(const SignalExchange& writerSignalExchange, const SignalExchange& readerSignalExchange) {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
@@ -116,7 +123,9 @@ protected:
         AssertOk(readerSignalExchange.Deserialize(reader, GenerateSimulationTime(), {}));
     }
 
-    static void TransferWithEvents(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange, std::deque<EventData> expectedCallbacks) {
+    static void TransferWithEvents(const SignalExchange& writerSignalExchange,
+                                   const SignalExchange& readerSignalExchange,
+                                   std::deque<EventData> expectedCallbacks) {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
@@ -733,7 +742,7 @@ TEST_P(TestSignalExchange, ReadFromInvalidSignalIdShouldFail) {
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
-    std::vector<IoSignal> incomingSignals = {signal.Convert()};
+    std::vector incomingSignals = {signal.Convert()};
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 
@@ -759,7 +768,7 @@ TEST_P(TestSignalExchange, WriteToIncomingSignalShouldFail) {
 
     IoSignalContainer signal = CreateSignal(dataType, SizeKind::Fixed);
 
-    std::vector<IoSignal> incomingSignals = {signal.Convert()};  // Signal is incoming
+    std::vector incomingSignals = {signal.Convert()};  // Signal is incoming
     std::vector<IoSignal> outgoingSignals;
     SwitchSignals(incomingSignals, outgoingSignals, coSimType);
 

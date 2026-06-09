@@ -8,8 +8,10 @@
 
 #include <gtest/gtest.h>
 
+#include <OsUtilities.hpp>
+#include <Result.hpp>
+
 #include "Helper.hpp"
-#include "OsUtilities.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

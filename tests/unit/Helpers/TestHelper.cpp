@@ -2,8 +2,13 @@
 
 #include "TestHelper.hpp"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <ostream>
 #include <string>
+#include <string_view>
 #include <thread>
 
 #include <fmt/format.h>
@@ -11,11 +16,52 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <BusExchange.hpp>
+#include <Channel.hpp>
+#include <CoSimTypes.hpp>
+#include <Logger.hpp>
+#include <OsUtilities.hpp>
+#include <Protocol.hpp>
+#include <Result.hpp>
+#include <Socket.hpp>
+#include <vector>
+
 #include "Helper.hpp"
 
 using namespace testing;
 
 using namespace DsVeosCoSim;
+
+namespace {
+
+[[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
+    SocketListener listener;
+    CheckResult(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
+
+    return listener.GetLocalPort(localPort);
+}
+
+void SetEnvVariable(const std::string& name, const std::string& value) {
+#ifdef _WIN32
+    std::string environmentString = fmt::format("{}={}", name, value);
+    _putenv(environmentString.c_str());  // NOLINT(misc-include-cleaner)
+#else
+    setenv(name.c_str(), value.c_str(), 1);
+#endif
+}
+
+}  // namespace
+
+[[nodiscard]] Result StartUp() {
+    CheckResult(StartupNetwork());
+
+    uint16_t portMapperPort{};
+    CheckResult(GetNextFreeDynamicPort(portMapperPort));
+
+    std::string portMapperPortString = std::to_string(portMapperPort);
+    SetEnvVariable("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString);
+    return CreateOk();
+}
 
 [[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
@@ -63,7 +109,7 @@ using namespace DsVeosCoSim;
 
 #ifdef _WIN32
 
-void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2) {
+void TestSendAfterDisconnectOnRemoteClient(const ShmPipeClient& client1, ShmPipeClient& client2) {
     // Arrange
     client1.Disconnect();
 
@@ -78,7 +124,7 @@ void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient
 
 #endif
 
-void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt16ToChannel(const std::unique_ptr<Channel>& writeChannel) {
     uint16_t sendValue = GenerateU16();
 
     // Act
@@ -90,7 +136,7 @@ void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt32ToChannel(const std::unique_ptr<Channel>& writeChannel) {
     uint32_t sendValue = GenerateU32();
 
     // Act
@@ -102,7 +148,7 @@ void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteUInt64ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt64ToChannel(const std::unique_ptr<Channel>& writeChannel) {
     uint64_t sendValue = GenerateU64();
 
     // Act
@@ -114,7 +160,7 @@ void TestWriteUInt64ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteBufferToChannel(const std::unique_ptr<Channel>& writeChannel) {
     std::vector<uint8_t> buffer = GenerateBytes(10);
 
     // Act
@@ -126,7 +172,7 @@ void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt16FromChannel(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
     uint16_t sendValue = GenerateU16();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -142,7 +188,7 @@ void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt32FromChannel(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
     uint32_t sendValue = GenerateU32();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -158,7 +204,7 @@ void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt64FromChannel(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
     uint64_t sendValue = GenerateU64();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -174,7 +220,7 @@ void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadBufferFromChannel(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
     std::vector<uint8_t> sendBuffer = GenerateBytes(10);
 
     AssertOk(writeChannel->GetWriter().Write(sendBuffer.data(), sendBuffer.size()));
@@ -191,11 +237,11 @@ void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_THAT(receiveBuffer, ContainerEq(sendBuffer));
 }
 
-void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channel>& secondChannel) {
-    constexpr size_t Count = 100;
+void TestPingPong(const std::unique_ptr<Channel>& firstChannel, const std::unique_ptr<Channel>& secondChannel) {
+    constexpr size_t count = 100;
 
     // Act and assert
-    for (size_t i = 0; i < Count; i++) {
+    for (size_t i = 0; i < count; i++) {
         Channel* sendChannel = firstChannel.get();
         Channel* receiveChannel = secondChannel.get();
         if (i % 2 == 1) {
@@ -214,7 +260,7 @@ void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channe
     }
 }
 
-void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestSendTwoFramesAtOnce(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
     uint32_t sendValue1 = GenerateU32();
     uint64_t sendValue2 = GenerateU64();
     uint32_t receiveValue1{};
@@ -235,15 +281,15 @@ void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
-    constexpr size_t Count = 0x1000;
+void TestStream(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
+    constexpr size_t count = 0x1000;
 
     std::thread thread([&] {
         uint16_t firstValue{};
         AssertOk(readChannel->GetReader().Read(firstValue));
         ASSERT_EQ(static_cast<uint16_t>(42), firstValue);
 
-        for (size_t i = 0; i < Count; i++) {
+        for (size_t i = 0; i < count; i++) {
             size_t receiveValue{};
             AssertOk(readChannel->GetReader().Read(receiveValue));
 
@@ -253,7 +299,7 @@ void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>
 
     // Act and assert
     AssertOk(writeChannel->GetWriter().Write(static_cast<uint16_t>(42)));  // Forcing the following elements to be unaligned
-    for (size_t i = 0; i < Count; i++) {
+    for (size_t i = 0; i < count; i++) {
         AssertOk(writeChannel->GetWriter().Write(i));
     }
 
@@ -262,11 +308,11 @@ void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>
     thread.join();
 }
 
-void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
-    constexpr size_t Count = 0x1000;
+void TestBigElement(const std::unique_ptr<Channel>& writeChannel, const std::unique_ptr<Channel>& readChannel) {
+    constexpr size_t count = 0x1000;
 
     std::thread thread([&] {
-        auto receiveArray = std::make_unique<std::array<size_t, Count>>();
+        auto receiveArray = std::make_unique<std::array<size_t, count>>();
         AssertOk(readChannel->GetReader().Read(receiveArray.get(), receiveArray->size() * sizeof(size_t)));
 
         for (size_t i = 0; i < receiveArray->size(); i++) {
@@ -274,7 +320,7 @@ void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Chan
         }
     });
 
-    auto sendArray = std::make_unique<std::array<size_t, Count>>();
+    auto sendArray = std::make_unique<std::array<size_t, count>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
         (*sendArray)[i] = i;
     }

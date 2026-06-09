@@ -5,7 +5,7 @@
 #ifdef _WIN32
 
 #include <atomic>
-#include <cstddef>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>

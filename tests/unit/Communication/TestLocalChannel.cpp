@@ -5,7 +5,9 @@
 
 #include <gtest/gtest.h>
 
-#include "Channel.hpp"
+#include <Channel.hpp>
+#include <Result.hpp>
+
 #include "Helper.hpp"
 #include "TestHelper.hpp"
 

@@ -3,7 +3,6 @@
 -DDSVEOSCOSIM_EXPORT
 -DWIN32_LEAN_AND_MEAN
 -D_CRT_SECURE_NO_WARNINGS
--DDSVEOSCOSIM_ENABLE_TRACING
 -Wall
 -Wextra
 -pedantic
@@ -12,11 +11,8 @@
 -Isrc/Communication
 -Isrc/Helpers
 -Isrc/OsAbstraction
--Itests/PerformanceTestClient
 -Itests/shared
 -Itests/unit/Helpers
--isystem
-third_party/benchmark/include
 -isystem
 third_party/fmt/include
 -isystem

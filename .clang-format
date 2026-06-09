@@ -13,5 +13,6 @@ IndentWidth: 4
 InsertBraces: true
 InsertNewlineAtEOF: true
 LineEnding: LF
+SortIncludes: CaseInsensitive
 UseTab: false
 WrapNamespaceBodyWithEmptyLines: Always

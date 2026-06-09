@@ -2,9 +2,9 @@
 
 #ifdef _WIN32
 
-#include <cstddef>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
