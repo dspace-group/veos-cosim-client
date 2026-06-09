@@ -2,14 +2,20 @@
 
 #ifdef _WIN32
 
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
 #include <string>
+#include <thread>
 
 #include <gtest/gtest.h>
 
+#include <OsUtilities.hpp>
+#include <Result.hpp>
+
 #include "Helper.hpp"
-#include "OsUtilities.hpp"
 #include "TestHelper.hpp"
 
 using namespace std::chrono_literals;

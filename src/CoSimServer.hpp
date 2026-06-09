@@ -80,14 +80,14 @@ public:
 
     [[nodiscard]] Result BackgroundService(SimulationTime& roundTripTime);
 
-    [[nodiscard]] Result GetLocalPort(uint16_t& port) const;
+    [[nodiscard]] Result GetLocalPort(uint16_t& localPort) const;
 
 private:
-    [[nodiscard]] Result StartInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result StopInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason);
-    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime);
-    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime);
+    [[nodiscard]] Result StartInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] Result StopInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const;
+    [[nodiscard]] Result PauseInternal(SimulationTime simulationTime) const;
+    [[nodiscard]] Result ContinueInternal(SimulationTime simulationTime) const;
     [[nodiscard]] Result StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command);
     [[nodiscard]] Result CloseConnection();
     [[nodiscard]] Result Ping(Command& command);

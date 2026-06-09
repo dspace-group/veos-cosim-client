@@ -24,19 +24,22 @@ namespace DsVeosCoSim {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-CoSimClient::CoSimClient()
-    : _serializeIoData([this](ChannelWriter& writer) {
-          return _signalExchange->Serialize(writer);
-      }),
-      _serializeBusMessages([this](ChannelWriter& writer) {
-          return _busExchange->Serialize(writer);
-      }),
-      _deserializeIoData([this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-          return _signalExchange->Deserialize(reader, simulationTime, callbacks);
-      }),
-      _deserializeBusMessages([this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
-          return _busExchange->Deserialize(reader, simulationTime, callbacks);
-      }) {
+CoSimClient::CoSimClient() {
+    _serializeIoData = [this](ChannelWriter& writer) {
+        return _signalExchange->Serialize(writer);
+    };
+
+    _serializeBusMessages = [this](ChannelWriter& writer) {
+        return _busExchange->Serialize(writer);
+    };
+
+    _deserializeIoData = [this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _signalExchange->Deserialize(reader, simulationTime, callbacks);
+    };
+
+    _deserializeBusMessages = [this](ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) {
+        return _busExchange->Deserialize(reader, simulationTime, callbacks);
+    };
 }
 
 [[nodiscard]] Result CoSimClient::Connect(const ConnectConfig& connectConfig) {

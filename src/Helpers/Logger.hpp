@@ -37,25 +37,28 @@ enum class Severity : uint32_t {
 
 using LogCallback = std::function<void(Severity, const std::string&)>;
 
-class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
+class Logger {
     Logger() = default;
     ~Logger() noexcept = default;
 
 public:
-    static Logger& Instance() {
-        static Logger instance;
-        return instance;
-    }
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+
+    Logger(Logger&&) = delete;
+    Logger& operator=(Logger&&) = delete;
+
+    static Logger& Instance();
 
     void SetLogCallback(LogCallback logCallback) {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         _logCallback = std::move(logCallback);
     }
 
     void Log(Severity severity, const std::string& message) const {
         LogCallback logCallback;
         {
-            std::lock_guard lock(_mutex);
+            std::scoped_lock lock(_mutex);
             logCallback = _logCallback;
         }
 
@@ -88,28 +91,33 @@ inline void LogTrace(const std::string& message) {
 }
 
 template <typename... TArgs>
-void LogError(int32_t errorCode, fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogError(errorCode, fmt::format(formatString, std::forward<TArgs>(args)...));
+std::string FormatLogMessage(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    return fmt::vformat(static_cast<fmt::string_view>(formatString), fmt::make_format_args(args...));
 }
 
 template <typename... TArgs>
-void LogError(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogError(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogError(int32_t errorCode, fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogError(errorCode, FormatLogMessage(formatString, args...));
 }
 
 template <typename... TArgs>
-void LogWarning(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogWarning(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogError(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogError(FormatLogMessage(formatString, args...));
 }
 
 template <typename... TArgs>
-void LogInfo(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogInfo(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogWarning(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogWarning(FormatLogMessage(formatString, args...));
 }
 
 template <typename... TArgs>
-void LogTrace(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogTrace(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogInfo(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogInfo(FormatLogMessage(formatString, args...));
+}
+
+template <typename... TArgs>
+void LogTrace(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogTrace(FormatLogMessage(formatString, args...));
 }
 
 inline void LogProtBegin(const std::string& message) {
@@ -125,18 +133,18 @@ inline void LogProtData(const std::string& message) {
 }
 
 template <typename... TArgs>
-void LogProtBegin(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogProtBegin(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogProtBegin(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogProtBegin(FormatLogMessage(formatString, args...));
 }
 
 template <typename... TArgs>
-void LogProtEnd(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogProtEnd(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogProtEnd(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogProtEnd(FormatLogMessage(formatString, args...));
 }
 
 template <typename... TArgs>
-void LogProtData(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
-    LogProtData(fmt::format(formatString, std::forward<TArgs>(args)...));
+void LogProtData(fmt::format_string<TArgs...> formatString, const TArgs&... args) {
+    LogProtData(FormatLogMessage(formatString, args...));
 }
 
 }  // namespace DsVeosCoSim

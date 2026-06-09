@@ -6,19 +6,22 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <type_traits>
+#include <utility>
 
 #include <gtest/gtest.h>
 
-#include "BusExchange.hpp"
-#include "Channel.hpp"
-#include "CoSimTypes.hpp"
+#include <BusExchange.hpp>
+#include <Channel.hpp>
+#include <CoSimTypes.hpp>
+#include <Protocol.hpp>
+#include <Socket.hpp>
+
 #include "Helper.hpp"
-#include "Protocol.hpp"
-#include "Socket.hpp"
 
 #ifdef _WIN32
 
-#include "OsUtilities.hpp"
+#include <OsUtilities.hpp>
 
 #endif
 
@@ -32,6 +35,8 @@
 #define AssertFull(result) ASSERT_EQ(result, DsVeosCoSim::CreateFull())
 #define AssertEmpty(result) ASSERT_EQ(result, DsVeosCoSim::CreateEmpty())
 
+[[nodiscard]] DsVeosCoSim::Result StartUp();
+
 [[nodiscard]] constexpr const char* GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily) noexcept {
     if (addressFamily == DsVeosCoSim::AddressFamily::Ipv4) {
         return "127.0.0.1";
@@ -40,9 +45,18 @@
     return "::1";
 }
 
+template <typename T, typename = std::void_t<T>>
+struct HasDirectSendReceive : std::false_type {};
+
+template <typename T>
+struct HasDirectSendReceive<T,
+                            std::void_t<decltype(std::declval<T&>().Send(static_cast<const void*>(nullptr), std::declval<size_t>())),
+                                        decltype(std::declval<T&>().Receive(static_cast<void*>(nullptr), std::declval<size_t>(), std::declval<size_t&>()))>>
+    : std::true_type {};
+
 // ReceiveComplete and socket-like test helpers are templates so they work
 // with both SocketClient and ShmPipeClient without duplication.
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 [[nodiscard]] DsVeosCoSim::Result ReceiveComplete(TClient& client, void* buffer, size_t length) {
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
@@ -51,10 +65,11 @@ template <typename TClient>
         length -= receivedSize;
         bufferPointer += receivedSize;
     }
+
     return DsVeosCoSim::CreateOk();
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestSendAfterDisconnect(TClient& client) {
     client.Disconnect();
     size_t sendValue = GenerateSizeT();
@@ -62,7 +77,7 @@ void TestSendAfterDisconnect(TClient& client) {
     AssertNotConnected(result);
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestReceiveAfterDisconnect(TClient& client) {
     client.Disconnect();
     size_t receiveValue{};
@@ -71,7 +86,7 @@ void TestReceiveAfterDisconnect(TClient& client) {
     AssertNotConnected(result);
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestReceiveAfterDisconnectOnRemoteClient(TClient& client1, TClient& client2) {
     client1.Disconnect();
     size_t receiveValue{};
@@ -80,7 +95,7 @@ void TestReceiveAfterDisconnectOnRemoteClient(TClient& client1, TClient& client2
     AssertNotConnected(result);
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestSendAndReceive(TClient& client1, TClient& client2) {
     size_t sendValue = GenerateSizeT();
     size_t receiveValue = 0;
@@ -91,49 +106,54 @@ void TestSendAndReceive(TClient& client1, TClient& client2) {
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestManyElements(TClient& client1, TClient& client2) {
-    constexpr size_t Count = 0x100;
+    constexpr size_t count = 0x100;
     std::thread thread([&] {
-        for (size_t i = 0; i < Count; i++) {
+        for (size_t i = 0; i < count; i++) {
             size_t receiveValue{};
             AssertOk(ReceiveComplete(client2, &receiveValue, sizeof(receiveValue)));
             ASSERT_EQ(i, receiveValue);
         }
     });
-    for (size_t i = 0; i < Count; i++) {
+
+    for (size_t i = 0; i < count; i++) {
         AssertOk(client1.Send(&i, sizeof(i)));
     }
+
     thread.join();
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestBigElement(TClient& client1, TClient& client2) {
-    constexpr size_t Count = 0x1000;
+    constexpr size_t count = 0x1000;
     std::thread thread([&] {
-        auto receiveArray = std::make_unique<std::array<size_t, Count>>();
+        auto receiveArray = std::make_unique<std::array<size_t, count>>();
         AssertOk(ReceiveComplete(client2, receiveArray->data(), receiveArray->size() * sizeof(size_t)));
         for (size_t i = 0; i < receiveArray->size(); i++) {
             ASSERT_EQ(i, (*receiveArray)[i]);
         }
     });
-    auto sendArray = std::make_unique<std::array<size_t, Count>>();
+
+    auto sendArray = std::make_unique<std::array<size_t, count>>();
     for (size_t i = 0; i < sendArray->size(); i++) {
         (*sendArray)[i] = i;
     }
+
     AssertOk(client1.Send(sendArray->data(), sendArray->size() * sizeof(size_t)));
     thread.join();
 }
 
-template <typename TClient>
+template <typename TClient, std::enable_if_t<HasDirectSendReceive<TClient>::value, int> = 0>
 void TestPingPong(TClient& client1, TClient& client2) {
-    constexpr size_t Count = 100;
-    for (size_t i = 0; i < Count; i++) {
+    constexpr size_t count = 100;
+    for (size_t i = 0; i < count; i++) {
         TClient* sendClient = &client1;
         TClient* receiveClient = &client2;
         if (i % 2 == 1) {
             std::swap(sendClient, receiveClient);
         }
+
         size_t sendValue = GenerateSizeT();
         AssertOk(sendClient->Send(&sendValue, sizeof(sendValue)));
         size_t receiveValue{};
@@ -144,7 +164,7 @@ void TestPingPong(TClient& client1, TClient& client2) {
 
 #ifdef _WIN32
 
-void TestSendAfterDisconnectOnRemoteClient(DsVeosCoSim::ShmPipeClient& client1, DsVeosCoSim::ShmPipeClient& client2);
+void TestSendAfterDisconnectOnRemoteClient(const DsVeosCoSim::ShmPipeClient& client1, DsVeosCoSim::ShmPipeClient& client2);
 
 #endif
 
@@ -179,23 +199,23 @@ void TestSendAfterDisconnectOnRemoteClient(DsVeosCoSim::ShmPipeClient& client1, 
                                                     DsVeosCoSim::IProtocol& protocol,
                                                     std::unique_ptr<DsVeosCoSim::BusExchange>& busExchange);
 
-void TestWriteUInt16ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
-void TestWriteUInt32ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
-void TestWriteUInt64ToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
-void TestWriteBufferToChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteUInt16ToChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteUInt32ToChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteUInt64ToChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
+void TestWriteBufferToChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel);
 
-void TestReadUInt16FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
-void TestReadUInt32FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
-void TestReadUInt64FromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
-void TestReadBufferFromChannel(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadUInt16FromChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadUInt32FromChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadUInt64FromChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestReadBufferFromChannel(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
 
-void TestPingPong(std::unique_ptr<DsVeosCoSim::Channel>& firstChannel, std::unique_ptr<DsVeosCoSim::Channel>& secondChannel);
+void TestPingPong(const std::unique_ptr<DsVeosCoSim::Channel>& firstChannel, const std::unique_ptr<DsVeosCoSim::Channel>& secondChannel);
 
-void TestSendTwoFramesAtOnce(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestSendTwoFramesAtOnce(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
 
-void TestStream(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestStream(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
 
-void TestBigElement(std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
+void TestBigElement(const std::unique_ptr<DsVeosCoSim::Channel>& writeChannel, const std::unique_ptr<DsVeosCoSim::Channel>& readChannel);
 
 namespace DsVeosCoSim {
 

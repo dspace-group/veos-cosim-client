@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstdio>   // IWYU pragma: keep
-#include <cstring>  // IWYU pragma: keep
+#include <cstdio>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -20,32 +20,34 @@
 
 #ifdef _WIN32
 
-#include <filesystem>
-
-#include <WS2tcpip.h>
-#include <afunix.h>
 #include <winsock2.h>
+#include <ws2ipdef.h>
+#include <WS2tcpip.h>
 #undef min
+
+// Must be placed after one of the ws2-headers, because it is not self-contained
+#include <afunix.h>
+
+#include <filesystem>
 
 #else
 
-#include <cerrno>
-
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <poll.h>
+#include <pthread.h>
 #include <sys/eventfd.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-
-#include <fcntl.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
 #include <unistd.h>
+
+#include <cerrno>
 
 #endif
 
@@ -319,7 +321,7 @@ int32_t DoUnlink(const std::string& path) {
     // On windows, IPv6 only is enabled by default
 #ifndef _WIN32
     int32_t flags = 1;
-    int32_t result = setsockopt(socketHandle.Get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
+    int32_t result = setsockopt(socketHandle.Get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not enable IPv6 only.");
         return CreateError();
@@ -331,7 +333,7 @@ int32_t DoUnlink(const std::string& path) {
 
 [[nodiscard]] Result EnableReuseAddress(const SocketHandle& socketHandle) {
     int32_t flags = 1;
-    int32_t result = setsockopt(socketHandle.Get(), SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
+    int32_t result = setsockopt(socketHandle.Get(), SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not enable socket option reuse address.");
         return CreateError();
@@ -345,13 +347,12 @@ int32_t DoUnlink(const std::string& path) {
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
 
-    if (enableRemoteAccess) {
-        address.sin_addr.s_addr = INADDR_ANY;
-    } else {
+    // The value for "any" is 0, so that's the default after initializing the variable address
+    if (!enableRemoteAccess) {
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     }
 
-    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
+    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not bind socket.");
         return CreateError();
@@ -365,14 +366,12 @@ int32_t DoUnlink(const std::string& path) {
     address.sin6_family = AF_INET6;
     address.sin6_port = htons(port);
 
-    if (enableRemoteAccess) {
-        // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same symbol
-        address.sin6_addr = in6_addr{};
-    } else {
+    // The value for "any" is 0, so that's the default after initializing the variable address
+    if (!enableRemoteAccess) {
         address.sin6_addr = in6addr_loopback;
     }
 
-    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
+    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), sizeof(address));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not bind socket.");
         return CreateError();
@@ -480,7 +479,7 @@ int32_t DoUnlink(const std::string& path) {
 
 [[nodiscard]] Result EnableNoDelay(const SocketHandle& socketHandle) {
     int32_t flags = 1;
-    int32_t result = setsockopt(socketHandle.Get(), IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
+    int32_t result = setsockopt(socketHandle.Get(), IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&flags), sizeof(flags));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not enable TCP option no delay.");
         return CreateError();

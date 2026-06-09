@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cstddef>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <string_view>

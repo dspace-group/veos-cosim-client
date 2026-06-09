@@ -1,7 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <cstdint>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 #include <string>
