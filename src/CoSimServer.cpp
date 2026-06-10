@@ -46,7 +46,7 @@ CoSimServer::~CoSimServer() noexcept {
     Unload();
 }
 
-[[nodiscard]] Result CoSimServer::Load(const CoSimServerConfig& config) {
+Result CoSimServer::Load(const CoSimServerConfig& config) {
     _enableRemoteAccess = config.enableRemoteAccess;
     _localPort = config.port;
     _serverName = config.serverName;
@@ -96,7 +96,7 @@ void CoSimServer::Unload() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::Start(SimulationTime simulationTime) {
+Result CoSimServer::Start(SimulationTime simulationTime) {
     _simulationState = SimulationState::Running;
 
     if (!_channel) {
@@ -132,7 +132,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Stop(SimulationTime simulationTime) {
+Result CoSimServer::Stop(SimulationTime simulationTime) {
     _simulationState = SimulationState::Stopped;
 
     if (!_channel) {
@@ -146,7 +146,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
+Result CoSimServer::Terminate(SimulationTime simulationTime, TerminateReason reason) {
     _simulationState = SimulationState::Terminated;
 
     if (!_channel) {
@@ -160,7 +160,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Pause(SimulationTime simulationTime) {
+Result CoSimServer::Pause(SimulationTime simulationTime) {
     _simulationState = SimulationState::Paused;
 
     if (!_channel) {
@@ -174,7 +174,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Continue(SimulationTime simulationTime) {
+Result CoSimServer::Continue(SimulationTime simulationTime) {
     _simulationState = SimulationState::Running;
 
     if (!_channel) {
@@ -188,7 +188,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
+Result CoSimServer::Step(SimulationTime simulationTime, SimulationTime& nextSimulationTime) {
     nextSimulationTime = {};
 
     if (!_channel) {
@@ -204,7 +204,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value) const {
+Result CoSimServer::Write(IoSignalId signalId, uint32_t length, const void* value) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -212,7 +212,7 @@ void CoSimServer::Unload() {
     return _signalExchange->Write(signalId, length, value);
 }
 
-[[nodiscard]] Result CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value, bool& valueRead) const {
+Result CoSimServer::Read(IoSignalId signalId, uint32_t& length, const void** value, bool& valueRead) const {
     if (!_channel) {
         valueRead = false;
         return CreateOk();
@@ -222,7 +222,7 @@ void CoSimServer::Unload() {
     return _signalExchange->Read(signalId, length, value);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const CanMessage& message) const {
+Result CoSimServer::Transmit(const CanMessage& message) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -230,7 +230,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(message);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const EthMessage& message) const {
+Result CoSimServer::Transmit(const EthMessage& message) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -238,7 +238,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(message);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const LinMessage& message) const {
+Result CoSimServer::Transmit(const LinMessage& message) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -246,7 +246,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(message);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const FrMessage& message) const {
+Result CoSimServer::Transmit(const FrMessage& message) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -254,7 +254,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(message);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const CanMessageContainer& messageContainer) const {
+Result CoSimServer::Transmit(const CanMessageContainer& messageContainer) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -262,7 +262,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const EthMessageContainer& messageContainer) const {
+Result CoSimServer::Transmit(const EthMessageContainer& messageContainer) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -270,7 +270,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const LinMessageContainer& messageContainer) const {
+Result CoSimServer::Transmit(const LinMessageContainer& messageContainer) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -278,7 +278,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result CoSimServer::Transmit(const FrMessageContainer& messageContainer) const {
+Result CoSimServer::Transmit(const FrMessageContainer& messageContainer) const {
     if (!_channel) {
         return CreateOk();
     }
@@ -286,7 +286,7 @@ void CoSimServer::Unload() {
     return _busExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result CoSimServer::BackgroundService(SimulationTime& roundTripTime) {
+Result CoSimServer::BackgroundService(SimulationTime& roundTripTime) {
     roundTripTime = {};
     if (!_channel) {
         Result result = AcceptChannel();
@@ -315,7 +315,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::GetLocalPort(uint16_t& localPort) const {
+Result CoSimServer::GetLocalPort(uint16_t& localPort) const {
     if (_tcpChannelServer) {
         localPort = _tcpChannelServer->GetLocalPort();
         return CreateOk();
@@ -325,37 +325,37 @@ void CoSimServer::Unload() {
     return CreateError();
 }
 
-[[nodiscard]] Result CoSimServer::StartInternal(SimulationTime simulationTime) const {
+Result CoSimServer::StartInternal(SimulationTime simulationTime) {
     CheckResultWithMessage(_protocol->SendStart(_channel->GetWriter(), simulationTime), "Could not send start frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::StopInternal(SimulationTime simulationTime) const {
+Result CoSimServer::StopInternal(SimulationTime simulationTime) {
     CheckResultWithMessage(_protocol->SendStop(_channel->GetWriter(), simulationTime), "Could not send stop frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::TerminateInternal(SimulationTime simulationTime, TerminateReason reason) const {
+Result CoSimServer::TerminateInternal(SimulationTime simulationTime, TerminateReason reason) {
     CheckResultWithMessage(_protocol->SendTerminate(_channel->GetWriter(), simulationTime, reason), "Could not send terminate frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::PauseInternal(SimulationTime simulationTime) const {
+Result CoSimServer::PauseInternal(SimulationTime simulationTime) {
     CheckResultWithMessage(_protocol->SendPause(_channel->GetWriter(), simulationTime), "Could not send pause frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::ContinueInternal(SimulationTime simulationTime) const {
+Result CoSimServer::ContinueInternal(SimulationTime simulationTime) {
     CheckResultWithMessage(_protocol->SendContinue(_channel->GetWriter(), simulationTime), "Could not send continue frame.");
     CheckResultWithMessage(WaitForOkFrame(), "Could not receive ok frame.");
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command) {
+Result CoSimServer::StepInternal(SimulationTime simulationTime, SimulationTime& nextSimulationTime, Command& command) {
     if (_firstStep) {
         SetThreadAffinity(_serverName);
         _firstStep = false;
@@ -366,7 +366,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::CloseConnection() {
+Result CoSimServer::CloseConnection() {
     LogWarning("dSPACE VEOS CoSim client disconnected.");
 
     _channel.reset();
@@ -378,7 +378,7 @@ void CoSimServer::Unload() {
     return StartAccepting();
 }
 
-[[nodiscard]] Result CoSimServer::Ping(Command& command) {
+Result CoSimServer::Ping(Command& command) {
     auto start = high_resolution_clock::now();
     CheckResultWithMessage(_protocol->SendPing(_channel->GetWriter(), _roundTripTime), "Could not send ping frame.");
     CheckResultWithMessage(WaitForPingOkFrame(command), "Could not receive ping ok frame.");
@@ -387,7 +387,7 @@ void CoSimServer::Unload() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::StartAccepting() {
+Result CoSimServer::StartAccepting() {
     uint16_t port{};
     if (!_tcpChannelServer) {
         CheckResult(CreateTcpChannelServer(_localPort, _enableRemoteAccess, _tcpChannelServer));
@@ -427,7 +427,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::AcceptChannel() {
+Result CoSimServer::AcceptChannel() {
     if (_channel) {
         return CreateOk();
     }
@@ -456,7 +456,7 @@ void CoSimServer::StopAccepting() {
     return CreateError();
 }
 
-[[nodiscard]] Result CoSimServer::OnHandleConnect() {
+Result CoSimServer::OnHandleConnect() {
     uint32_t clientProtocolVersion{};
     std::string clientName;
     uint32_t coSimProtocolVersion = ProtocolVersion1;
@@ -525,7 +525,7 @@ void CoSimServer::StopAccepting() {
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimServer::WaitForOkFrame() const {
+Result CoSimServer::WaitForOkFrame() const {
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -540,7 +540,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::WaitForPingOkFrame(Command& command) const {
+Result CoSimServer::WaitForPingOkFrame(Command& command) const {
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -553,7 +553,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
+Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const {
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -569,7 +569,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
+Result CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const {
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
@@ -586,7 +586,7 @@ void CoSimServer::StopAccepting() {
     }
 }
 
-[[nodiscard]] Result CoSimServer::OnError() const {
+Result CoSimServer::OnError() const {
     std::string errorMessage;
     CheckResultWithMessage(_protocol->ReadError(_channel->GetReader(), errorMessage), "Could not read error frame.");
     LogError(errorMessage);
@@ -644,7 +644,7 @@ void CoSimServer::HandlePendingCommand(Command command) const {
     }
 }
 
-[[nodiscard]] Result CoSimServer::OnUnexpectedFrame(FrameKind frameKind) {
+Result CoSimServer::OnUnexpectedFrame(FrameKind frameKind) {
     LogError("Received unexpected frame '{}'.", frameKind);
     return CreateError();
 }

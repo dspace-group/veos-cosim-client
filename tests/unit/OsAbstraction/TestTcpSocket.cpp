@@ -1,21 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <array>
 #include <chrono>
-#include <cstddef>
-#include <cstdint>
 #include <future>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include <fmt/format.h>
-
 #include <gtest/gtest.h>
 
-#include <Result.hpp>
-#include <Socket.hpp>
-
+#include "Socket.hpp"
 #include "TestHelper.hpp"
 
 using namespace std::chrono_literals;
@@ -71,12 +64,12 @@ INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetTcpSocketTestPara
 
 TEST_P(TestTcpSocket, CreateSocketShouldWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
 
     // Act
-    Result result = SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener);
+    Result result = SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener);
 
     // Assert
     AssertOk(result);
@@ -84,10 +77,10 @@ TEST_P(TestTcpSocket, CreateSocketShouldWork) {
 
 TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     // Act
     bool isRunning = listener.IsRunning();
@@ -98,10 +91,10 @@ TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue) {
 
 TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     listener.Stop();
 
@@ -114,10 +107,10 @@ TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse) {
 
 TEST_P(TestTcpSocket, LocalPortIsNotZero) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     uint16_t localPort{};
 
@@ -131,10 +124,10 @@ TEST_P(TestTcpSocket, LocalPortIsNotZero) {
 
 TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     uint16_t localPort{};
     AssertOk(listener.GetLocalPort(localPort));
@@ -142,7 +135,7 @@ TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
     SocketClient client;
 
     // Act
-    Result result = SocketClient::TryConnect(GetLoopBackAddress(addressFamily), localPort, 0, 0, client);
+    Result result = SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, client);
 
     // Assert
     AssertOk(result);
@@ -150,13 +143,13 @@ TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
 
 TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     uint16_t localPort{};
 
     {
         SocketListener listener;
-        AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+        AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
         AssertOk(listener.GetLocalPort(localPort));
     }
@@ -164,7 +157,7 @@ TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
     SocketClient client;
 
     // Act
-    Result result = SocketClient::TryConnect(GetLoopBackAddress(addressFamily), localPort, 0, 0, client);
+    Result result = SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, client);
 
     // Assert
     AssertNotConnected(result);
@@ -172,10 +165,10 @@ TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     SocketClient client;
 
@@ -188,10 +181,10 @@ TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     listener.Stop();
 
@@ -206,16 +199,16 @@ TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
 
 TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpSocketParam param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(addressFamily, 0, enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
     uint16_t localPort{};
     AssertOk(listener.GetLocalPort(localPort));
 
     SocketClient connectClient;
-    AssertOk(SocketClient::TryConnect(GetLoopBackAddress(addressFamily), localPort, 0, 0, connectClient));
+    AssertOk(SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), localPort, 0, 0, connectClient));
 
     SocketClient acceptClient;
 

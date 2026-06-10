@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -11,14 +10,14 @@
 #include <thread>
 #include <vector>
 
-#include <CoSimServer.hpp>
-#include <CoSimTypes.hpp>
-#include <Logger.hpp>
-#include <Result.hpp>
-
+#include "CoSimServer.hpp"
+#include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
+#include "Result.hpp"
 
 using namespace DsVeosCoSim;
+using namespace std::chrono;
 using namespace std::chrono_literals;
 
 namespace {
@@ -156,33 +155,31 @@ private:
     std::thread _backgroundThread;
 };
 
-struct ServerData {
-    bool sendIoData{};
-    bool sendCanMessages{};
-    bool sendEthMessages{};
-    bool sendLinMessages{};
-    bool sendFrMessages{};
-    bool printStepsPerSecond{};
+bool SendIoData;
+bool SendCanMessages;
+bool SendEthMessages;
+bool SendLinMessages;
+bool SendFrMessages;
+bool PrintStepsPerSecond;
 
-    int64_t performanceStepCount{};
-    std::chrono::steady_clock::time_point performanceMeasurementStart;
-    bool performanceMeasurementActive{};
-    std::chrono::steady_clock::time_point lastPerformancePrintTime;
+int64_t PerformanceStepCount;
+std::chrono::steady_clock::time_point PerformanceMeasurementStart;
+bool PerformanceMeasurementActive;
+std::chrono::steady_clock::time_point LastPerformancePrintTime;
 
-    bool stopSimulationThreadFlag{};
-    std::thread simulationThread;
-    std::thread::id simulationThreadId;
+bool StopSimulationThreadFlag;
+std::thread SimulationThread;
+std::thread::id SimulationThreadId;
 
-    SimulationTime currentTime;
+SimulationTime CurrentTime;
 
-    SimulationTime sendLastHalfSecond = -1s;
-    int64_t sendCounter{};
+SimulationTime SendLastHalfSecond = -1s;
+int64_t SendCounter = 0;
 
-    std::unique_ptr<ServerWrapper> server;
+std::unique_ptr<ServerWrapper> Server;
 
-    std::mutex lockState;
-    SimulationState state{};
-};
+std::mutex LockState;
+SimulationState State;
 
 void PrintStatus(bool value, std::string_view what) {
     if (value) {
@@ -192,251 +189,247 @@ void PrintStatus(bool value, std::string_view what) {
     }
 }
 
-void SwitchSendingIoSignals(ServerData& serverData) {
-    serverData.sendIoData = !serverData.sendIoData;
-    PrintStatus(serverData.sendIoData, "IO data");
+void SwitchSendingIoSignals() {
+    SendIoData = !SendIoData;
+    PrintStatus(SendIoData, "IO data");
 }
 
-void SwitchSendingCanMessages(ServerData& serverData) {
-    serverData.sendCanMessages = !serverData.sendCanMessages;
-    PrintStatus(serverData.sendCanMessages, "CAN messages");
+void SwitchSendingCanMessages() {
+    SendCanMessages = !SendCanMessages;
+    PrintStatus(SendCanMessages, "CAN messages");
 }
 
-void SwitchSendingEthMessages(ServerData& serverData) {
-    serverData.sendEthMessages = !serverData.sendEthMessages;
-    PrintStatus(serverData.sendEthMessages, "Ethernet messages");
+void SwitchSendingEthMessages() {
+    SendEthMessages = !SendEthMessages;
+    PrintStatus(SendEthMessages, "Ethernet messages");
 }
 
-void SwitchSendingLinMessages(ServerData& serverData) {
-    serverData.sendLinMessages = !serverData.sendLinMessages;
-    PrintStatus(serverData.sendLinMessages, "LIN messages");
+void SwitchSendingLinMessages() {
+    SendLinMessages = !SendLinMessages;
+    PrintStatus(SendLinMessages, "LIN messages");
 }
 
-void SwitchSendingFrMessages(ServerData& serverData) {
-    serverData.sendFrMessages = !serverData.sendFrMessages;
-    PrintStatus(serverData.sendFrMessages, "FlexRay messages");
+void SwitchSendingFrMessages() {
+    SendFrMessages = !SendFrMessages;
+    PrintStatus(SendFrMessages, "FlexRay messages");
 }
 
-void StartPerformanceMeasurement(ServerData& serverData) {
-    serverData.performanceStepCount = 0;
-    serverData.performanceMeasurementStart = std::chrono::steady_clock::now();
-    serverData.performanceMeasurementActive = true;
-    serverData.lastPerformancePrintTime = {};
-    serverData.sendLastHalfSecond = -1s;
-    serverData.sendCounter = 0;
+void StartPerformanceMeasurement() {
+    PerformanceStepCount = 0;
+    PerformanceMeasurementStart = std::chrono::steady_clock::now();
+    PerformanceMeasurementActive = true;
+    LastPerformancePrintTime = {};
+    SendLastHalfSecond = -1s;
+    SendCounter = 0;
 }
 
-void StopPerformanceMeasurement(ServerData& serverData) {
-    if (!serverData.performanceMeasurementActive) {
+void StopPerformanceMeasurement() {
+    if (!PerformanceMeasurementActive) {
         return;
     }
 
-    serverData.performanceMeasurementActive = false;
+    PerformanceMeasurementActive = false;
 
-    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - serverData.performanceMeasurementStart).count();
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - PerformanceMeasurementStart).count();
     if (seconds > 0.0) {
         LogInfo("Performance: {:.1f} steps per second average ({} steps in {:.3f} s).",
-                static_cast<double>(serverData.performanceStepCount) / seconds,
-                serverData.performanceStepCount,
+                static_cast<double>(PerformanceStepCount) / seconds,
+                PerformanceStepCount,
                 seconds);
     }
 }
 
-void PrintCurrentStepsPerSecond(ServerData& serverData) {
-    if (!serverData.performanceMeasurementActive || !serverData.printStepsPerSecond) {
+void PrintCurrentStepsPerSecond() {
+    if (!PerformanceMeasurementActive || !PrintStepsPerSecond) {
         return;
     }
 
     auto now = std::chrono::steady_clock::now();
 
-    if (now - serverData.lastPerformancePrintTime < 1s) {
+    if (now - LastPerformancePrintTime < 1s) {
         return;
     }
 
-    serverData.lastPerformancePrintTime = now;
+    LastPerformancePrintTime = now;
 
-    double seconds = std::chrono::duration<double>(now - serverData.performanceMeasurementStart).count();
+    double seconds = std::chrono::duration<double>(now - PerformanceMeasurementStart).count();
     if (seconds > 0.0) {
-        LogInfo("Steps per second: {:.1f} ({} steps in {:.1f} s).",
-                static_cast<double>(serverData.performanceStepCount) / seconds,
-                serverData.performanceStepCount,
-                seconds);
+        LogInfo("Steps per second: {:.1f} ({} steps in {:.1f} s).", static_cast<double>(PerformanceStepCount) / seconds, PerformanceStepCount, seconds);
     }
 }
 
-void SwitchPrintingStepsPerSecond(ServerData& serverData) {
-    serverData.printStepsPerSecond = !serverData.printStepsPerSecond;
-    if (serverData.printStepsPerSecond) {
+void SwitchPrintingStepsPerSecond() {
+    PrintStepsPerSecond = !PrintStepsPerSecond;
+    if (PrintStepsPerSecond) {
         LogInfo("Enabled printing steps per second.");
     } else {
         LogInfo("Disabled printing steps per second.");
     }
 }
 
-[[nodiscard]] Result WriteOutGoingSignal(const ServerData& serverData, const IoSignalContainer& ioSignal) {
+[[nodiscard]] Result WriteOutGoingSignal(const IoSignalContainer& ioSignal) {
     size_t length = GetDataTypeSize(ioSignal.dataType) * ioSignal.length;
     std::vector<uint8_t> data = GenerateBytes(length);
 
-    return serverData.server->Write(ioSignal.id, ioSignal.length, data);
+    return Server->Write(ioSignal.id, ioSignal.length, data);
 }
 
-[[nodiscard]] Result TransmitCanMessage(const ServerData& serverData, const CanControllerContainer& controller) {
+[[nodiscard]] Result TransmitCanMessage(const CanControllerContainer& controller) {
     CanMessageContainer messageContainer{};
     FillWithRandom(messageContainer, controller.id);
 
-    return serverData.server->Transmit(messageContainer);
+    return Server->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result TransmitEthMessage(const ServerData& serverData, const EthControllerContainer& controller) {
+[[nodiscard]] Result TransmitEthMessage(const EthControllerContainer& controller) {
     EthMessageContainer messageContainer{};
     FillWithRandom(messageContainer, controller.id);
 
-    return serverData.server->Transmit(messageContainer);
+    return Server->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result TransmitLinMessage(const ServerData& serverData, const LinControllerContainer& controller) {
+[[nodiscard]] Result TransmitLinMessage(const LinControllerContainer& controller) {
     LinMessageContainer messageContainer{};
     FillWithRandom(messageContainer, controller.id);
 
-    return serverData.server->Transmit(messageContainer);
+    return Server->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result TransmitFrMessage(const ServerData& serverData, const FrControllerContainer& controller) {
+[[nodiscard]] Result TransmitFrMessage(const FrControllerContainer& controller) {
     FrMessageContainer messageContainer{};
     FillWithRandom(messageContainer, controller.id);
 
-    return serverData.server->Transmit(messageContainer);
+    return Server->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result SendSomeData(ServerData& serverData, SimulationTime simulationTime) {
+[[nodiscard]] Result SendSomeData(SimulationTime simulationTime) {
     SimulationTime currentHalfSecond = simulationTime / 500000000;
-    if (currentHalfSecond == serverData.sendLastHalfSecond) {
+    if (currentHalfSecond == SendLastHalfSecond) {
         return CreateOk();
     }
 
-    serverData.sendLastHalfSecond = currentHalfSecond;
-    serverData.sendCounter++;
+    SendLastHalfSecond = currentHalfSecond;
+    SendCounter++;
 
-    if (serverData.sendIoData && ((serverData.sendCounter % 5) == 0)) {
-        for (const IoSignalContainer& signal : serverData.server->GetIncomingSignals()) {
-            CheckResult(WriteOutGoingSignal(serverData, signal));
+    if (SendIoData && ((SendCounter % 5) == 0)) {
+        for (const IoSignalContainer& signal : Server->GetIncomingSignals()) {
+            CheckResult(WriteOutGoingSignal(signal));
         }
     }
 
-    if (serverData.sendCanMessages && ((serverData.sendCounter % 5) == 1)) {
-        for (const CanControllerContainer& controller : serverData.server->GetCanControllers()) {
-            CheckResult(TransmitCanMessage(serverData, controller));
+    if (SendCanMessages && ((SendCounter % 5) == 1)) {
+        for (const CanControllerContainer& controller : Server->GetCanControllers()) {
+            CheckResult(TransmitCanMessage(controller));
         }
     }
 
-    if (serverData.sendEthMessages && ((serverData.sendCounter % 5) == 2)) {
-        for (const EthControllerContainer& controller : serverData.server->GetEthControllers()) {
-            CheckResult(TransmitEthMessage(serverData, controller));
+    if (SendEthMessages && ((SendCounter % 5) == 2)) {
+        for (const EthControllerContainer& controller : Server->GetEthControllers()) {
+            CheckResult(TransmitEthMessage(controller));
         }
     }
 
-    if (serverData.sendLinMessages && ((serverData.sendCounter % 5) == 3)) {
-        for (const LinControllerContainer& controller : serverData.server->GetLinControllers()) {
-            CheckResult(TransmitLinMessage(serverData, controller));
+    if (SendLinMessages && ((SendCounter % 5) == 3)) {
+        for (const LinControllerContainer& controller : Server->GetLinControllers()) {
+            CheckResult(TransmitLinMessage(controller));
         }
     }
 
-    if (serverData.sendFrMessages && ((serverData.sendCounter % 5) == 4)) {
-        for (const FrControllerContainer& controller : serverData.server->GetFrControllers()) {
-            CheckResult(TransmitFrMessage(serverData, controller));
+    if (SendFrMessages && ((SendCounter % 5) == 4)) {
+        for (const FrControllerContainer& controller : Server->GetFrControllers()) {
+            CheckResult(TransmitFrMessage(controller));
         }
     }
 
     return CreateOk();
 }
 
-[[nodiscard]] Result DoSimulationLoop(ServerData& serverData) {
-    while (!serverData.stopSimulationThreadFlag) {
-        CheckResult(SendSomeData(serverData, serverData.currentTime));
+[[nodiscard]] Result DoSimulationLoop() {
+    while (!StopSimulationThreadFlag) {
+        CheckResult(SendSomeData(CurrentTime));
 
         SimulationTime nextSimulationTime{};
-        CheckResult(serverData.server->Step(serverData.currentTime, nextSimulationTime));
+        CheckResult(Server->Step(CurrentTime, nextSimulationTime));
 
-        serverData.performanceStepCount++;
-        PrintCurrentStepsPerSecond(serverData);
+        PerformanceStepCount++;
+        PrintCurrentStepsPerSecond();
 
-        if (nextSimulationTime > serverData.currentTime) {
-            serverData.currentTime = nextSimulationTime;
+        if (nextSimulationTime > CurrentTime) {
+            CurrentTime = nextSimulationTime;
         } else {
-            serverData.currentTime += 1ms;
+            CurrentTime += 1ms;
         }
     }
 
     return CreateOk();
 }
 
-[[nodiscard]] Result DoSimulation(ServerData& serverData) {
-    StartPerformanceMeasurement(serverData);
+[[nodiscard]] Result DoSimulation() {
+    StartPerformanceMeasurement();
 
-    serverData.simulationThreadId = std::this_thread::get_id();
+    SimulationThreadId = std::this_thread::get_id();
 
-    Result result = DoSimulationLoop(serverData);
+    Result result = DoSimulationLoop();
 
-    StopPerformanceMeasurement(serverData);
+    StopPerformanceMeasurement();
 
     return result;
 }
 
-void StopSimulationThread(ServerData& serverData) {
-    serverData.stopSimulationThreadFlag = true;
+void StopSimulationThread() {
+    StopSimulationThreadFlag = true;
 
-    if (serverData.simulationThreadId == std::this_thread::get_id()) {
+    if (SimulationThreadId == std::this_thread::get_id()) {
         // It's called from inside the simulation thread. That won't work. So let the next simulation thread starter
         // join this thread
         return;
     }
 
-    if (serverData.simulationThread.joinable()) {
-        serverData.simulationThread.join();
+    if (SimulationThread.joinable()) {
+        SimulationThread.join();
     }
 
-    serverData.simulationThread = {};
-    serverData.simulationThreadId = {};
+    SimulationThread = {};
+    SimulationThreadId = {};
 }
 
-void StartSimulationThread(ServerData& serverData) {
-    StopSimulationThread(serverData);
+void StartSimulationThread() {
+    StopSimulationThread();
 
-    serverData.stopSimulationThreadFlag = false;
-    serverData.simulationThread = std::thread([&serverData] {
-        (void)DoSimulation(serverData);
-    });
+    StopSimulationThreadFlag = false;
+    SimulationThread = std::thread(DoSimulation);
 }
 
-[[nodiscard]] Result StartOrPauseSimulation(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+[[nodiscard]] Result StartOrPauseSimulation() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Running:
             LogInfo("Pausing ...");
 
-            StopSimulationThread(serverData);
-            CheckResult(serverData.server->Pause(serverData.currentTime));
-            serverData.state = SimulationState::Paused;
+            StopSimulationThread();
+            CheckResult(Server->Pause(CurrentTime));
+            State = SimulationState::Paused;
 
             LogInfo("Paused.");
             break;
         case SimulationState::Stopped:
             LogInfo("Starting ...");
 
-            serverData.currentTime = 0s;
-            CheckResult(serverData.server->Start(serverData.currentTime));
-            serverData.state = SimulationState::Running;
-            StartSimulationThread(serverData);
+            CurrentTime = 0s;
+            CheckResult(Server->Start(CurrentTime));
+            State = SimulationState::Running;
+            StartSimulationThread();
 
             LogInfo("Started.");
             break;
         case SimulationState::Paused:
             LogInfo("Continuing ...");
 
-            CheckResult(serverData.server->Continue(serverData.currentTime));
-            serverData.state = SimulationState::Running;
-            StartSimulationThread(serverData);
+            CheckResult(Server->Continue(CurrentTime));
+            State = SimulationState::Running;
+            StartSimulationThread();
 
             LogInfo("Continued.");
             break;
@@ -448,28 +441,29 @@ void StartSimulationThread(ServerData& serverData) {
     return CreateOk();
 }
 
-void OnSimulationStarted(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+void OnSimulationStarted() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Stopped:
-            serverData.currentTime = 0s;
-            if (!IsOk(serverData.server->Start(serverData.currentTime))) {
+            CurrentTime = 0s;
+            if (!IsOk(Server->Start(CurrentTime))) {
                 LogError("Could not start.");
                 return;
             }
 
-            serverData.state = SimulationState::Running;
-            StartSimulationThread(serverData);
+            State = SimulationState::Running;
+            StartSimulationThread();
             break;
         case SimulationState::Paused:
-            if (!IsOk(serverData.server->Continue(serverData.currentTime))) {
+            if (!IsOk(Server->Continue(CurrentTime))) {
                 LogError("Could not continue.");
                 return;
             }
 
-            serverData.state = SimulationState::Running;
-            StartSimulationThread(serverData);
+            State = SimulationState::Running;
+            StartSimulationThread();
             break;
         default:
             // Ignored
@@ -477,26 +471,27 @@ void OnSimulationStarted(ServerData& serverData) {
     }
 }
 
-[[nodiscard]] Result StopSimulation(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+[[nodiscard]] Result StopSimulation() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Stopped:
             break;
         case SimulationState::Running:
             LogInfo("Stopping ...");
 
-            StopSimulationThread(serverData);
-            CheckResult(serverData.server->Stop(serverData.currentTime));
-            serverData.state = SimulationState::Stopped;
+            StopSimulationThread();
+            CheckResult(Server->Stop(CurrentTime));
+            State = SimulationState::Stopped;
 
             LogInfo("Stopped.");
             break;
         case SimulationState::Paused:
             LogInfo("Stopping ...");
 
-            CheckResult(serverData.server->Stop(serverData.currentTime));
-            serverData.state = SimulationState::Stopped;
+            CheckResult(Server->Stop(CurrentTime));
+            State = SimulationState::Stopped;
 
             LogInfo("Stopped.");
             break;
@@ -508,24 +503,25 @@ void OnSimulationStarted(ServerData& serverData) {
     return CreateOk();
 }
 
-void OnSimulationStopped(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+void OnSimulationStopped() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Running:
-            StopSimulationThread(serverData);
-            if (!IsOk(serverData.server->Stop(serverData.currentTime))) {
+            StopSimulationThread();
+            if (!IsOk(Server->Stop(CurrentTime))) {
                 LogError("Could not stop.");
             }
 
-            serverData.state = SimulationState::Stopped;
+            State = SimulationState::Stopped;
             break;
         case SimulationState::Paused:
-            if (!IsOk(serverData.server->Stop(serverData.currentTime))) {
+            if (!IsOk(Server->Stop(CurrentTime))) {
                 LogError("Could not stop.");
             }
 
-            serverData.state = SimulationState::Stopped;
+            State = SimulationState::Stopped;
             break;
         default:
             // Ignored
@@ -533,17 +529,18 @@ void OnSimulationStopped(ServerData& serverData) {
     }
 }
 
-void OnSimulationPaused(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+void OnSimulationPaused() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Running:
-            if (!IsOk(serverData.server->Pause(serverData.currentTime))) {
+            if (!IsOk(Server->Pause(CurrentTime))) {
                 LogError("Could not pause.");
             }
 
-            StopSimulationThread(serverData);
-            serverData.state = SimulationState::Paused;
+            StopSimulationThread();
+            State = SimulationState::Paused;
             break;
         default:
             // Ignored
@@ -551,10 +548,11 @@ void OnSimulationPaused(ServerData& serverData) {
     }
 }
 
-[[nodiscard]] Result TerminateSimulation(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+[[nodiscard]] Result TerminateSimulation() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Terminated:
             break;
         case SimulationState::Paused:
@@ -562,9 +560,9 @@ void OnSimulationPaused(ServerData& serverData) {
         case SimulationState::Running:
             LogInfo("Terminating ...");
 
-            StopSimulationThread(serverData);
-            CheckResult(serverData.server->Terminate(serverData.currentTime));
-            serverData.state = SimulationState::Terminated;
+            StopSimulationThread();
+            CheckResult(Server->Terminate(CurrentTime));
+            State = SimulationState::Terminated;
 
             LogInfo("Terminated.");
             break;
@@ -576,19 +574,20 @@ void OnSimulationPaused(ServerData& serverData) {
     return CreateOk();
 }
 
-void OnSimulationTerminated(ServerData& serverData) {
-    std::scoped_lock lock(serverData.lockState);
+void OnSimulationTerminated() {
+    std::scoped_lock lock(LockState);
 
-    switch (SimulationState state = serverData.state; state) {
+    SimulationState state = State;
+    switch (state) {
         case SimulationState::Paused:
         case SimulationState::Stopped:
         case SimulationState::Running:
-            if (!IsOk(serverData.server->Terminate(serverData.currentTime))) {
+            if (!IsOk(Server->Terminate(CurrentTime))) {
                 LogError("Could not terminate.");
             }
 
-            StopSimulationThread(serverData);
-            serverData.state = SimulationState::Terminated;
+            StopSimulationThread();
+            State = SimulationState::Terminated;
             break;
         default:
             // Ignored
@@ -596,39 +595,29 @@ void OnSimulationTerminated(ServerData& serverData) {
     }
 }
 
-void OnSimulationStartedCallback(ServerData& serverData) {
+void OnSimulationStartedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation started event.");
-    std::thread([&serverData] {
-        OnSimulationStarted(serverData);
-    }).detach();
+    std::thread(OnSimulationStarted).detach();
 }
 
-void OnSimulationStoppedCallback(ServerData& serverData) {
+void OnSimulationStoppedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation stopped event.");
-    std::thread([&serverData] {
-        OnSimulationStopped(serverData);
-    }).detach();
+    std::thread(OnSimulationStopped).detach();
 }
 
-void OnSimulationPausedCallback(ServerData& serverData) {
+void OnSimulationPausedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation paused event.");
-    std::thread([&serverData] {
-        OnSimulationPaused(serverData);
-    }).detach();
+    std::thread(OnSimulationPaused).detach();
 }
 
-void OnSimulationContinuedCallback(ServerData& serverData) {
+void OnSimulationContinuedCallback([[maybe_unused]] SimulationTime simulationTime) {
     LogInfo("Received simulation continued event.");
-    std::thread([&serverData] {
-        OnSimulationStarted(serverData);
-    }).detach();
+    std::thread(OnSimulationStarted).detach();
 }
 
-void OnSimulationTerminatedCallback(ServerData& serverData) {
+void OnSimulationTerminatedCallback([[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] TerminateReason terminateReason) {
     LogInfo("Received simulation terminated event.");
-    std::thread([&serverData] {
-        OnSimulationTerminated(serverData);
-    }).detach();
+    std::thread(OnSimulationTerminated).detach();
 }
 
 void OnIncomingSignalChanged([[maybe_unused]] SimulationTime simulationTime, const IoSignal& signal, uint32_t length, const void* value) {
@@ -659,11 +648,11 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     LogFrMessage(format_as(messageContainer));
 }
 
-[[nodiscard]] Result LoadSimulation(ServerData& serverData, bool isClientOptional, const std::string& name) {
+[[nodiscard]] Result LoadSimulation(bool isClientOptional, const std::string& name) {
     LogInfo("Loading ...");
 
-    if (serverData.state != SimulationState::Unloaded) {
-        LogError("Could not load in state {}.", serverData.state);
+    if (State != SimulationState::Unloaded) {
+        LogError("Could not load in state {}.", State);
         return CreateOk();
     }
 
@@ -672,21 +661,11 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     config.isClientOptional = isClientOptional;
     config.stepSize = 1ms;
     config.startPortMapper = true;
-    config.simulationStartedCallback = [&serverData](SimulationTime) {
-        OnSimulationStartedCallback(serverData);
-    };
-    config.simulationStoppedCallback = [&serverData](SimulationTime) {
-        OnSimulationStoppedCallback(serverData);
-    };
-    config.simulationPausedCallback = [&serverData](SimulationTime) {
-        OnSimulationPausedCallback(serverData);
-    };
-    config.simulationContinuedCallback = [&serverData](SimulationTime) {
-        OnSimulationContinuedCallback(serverData);
-    };
-    config.simulationTerminatedCallback = [&serverData](SimulationTime, TerminateReason) {
-        OnSimulationTerminatedCallback(serverData);
-    };
+    config.simulationStartedCallback = OnSimulationStartedCallback;
+    config.simulationStoppedCallback = OnSimulationStoppedCallback;
+    config.simulationPausedCallback = OnSimulationPausedCallback;
+    config.simulationContinuedCallback = OnSimulationContinuedCallback;
+    config.simulationTerminatedCallback = OnSimulationTerminatedCallback;
     config.canMessageContainerReceivedCallback = OnCanMessageContainerReceived;
     config.ethMessageContainerReceivedCallback = OnEthMessageContainerReceived;
     config.linMessageContainerReceivedCallback = OnLinMessageContainerReceived;
@@ -699,110 +678,106 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
     config.incomingSignals = CreateSignals(2);
     config.outgoingSignals = CreateSignals(2);
 
-    serverData.server = std::make_unique<ServerWrapper>();
-    CheckResult(serverData.server->Load(config));
+    Server = std::make_unique<ServerWrapper>();
+    CheckResult(Server->Load(config));
 
-    serverData.state = SimulationState::Stopped;
+    State = SimulationState::Stopped;
 
-    serverData.server->StartBackgroundThread();
+    Server->StartBackgroundThread();
 
     LogInfo("Loaded.");
     return CreateOk();
 }
 
-void UnloadSimulation(ServerData& serverData) {
+void UnloadSimulation() {
     LogInfo("Unloading ...");
 
-    StopSimulationThread(serverData);
-    serverData.server.reset();
+    StopSimulationThread();
+    Server.reset();
 
-    serverData.state = SimulationState::Unloaded;
+    State = SimulationState::Unloaded;
 
     LogInfo("Unloaded.");
 }
 
-[[nodiscard]] Result HostServer(ServerData& serverData, bool isClientOptional, const std::string& name) {
-    CheckResult(LoadSimulation(serverData, isClientOptional, name));
+[[nodiscard]] Result HostServer(bool isClientOptional, const std::string& name) {
+    CheckResult(LoadSimulation(isClientOptional, name));
 
     while (true) {
         switch (GetChar()) {
             case CTRL('c'):
                 return CreateOk();
             case 'l':
-                CheckResult(LoadSimulation(serverData, isClientOptional, name));
+                CheckResult(LoadSimulation(isClientOptional, name));
                 break;
             case 'u':
-                UnloadSimulation(serverData);
+                UnloadSimulation();
                 break;
             case 's':
             case 'p':
             case 'k':
             case ' ':
-                CheckResult(StartOrPauseSimulation(serverData));
+                CheckResult(StartOrPauseSimulation());
                 break;
             case 't':
-                CheckResult(StopSimulation(serverData));
+                CheckResult(StopSimulation());
                 break;
             case CTRL('t'):
-                CheckResult(TerminateSimulation(serverData));
+                CheckResult(TerminateSimulation());
                 break;
             case '1':
-                SwitchSendingIoSignals(serverData);
+                SwitchSendingIoSignals();
                 break;
             case '2':
-                SwitchSendingCanMessages(serverData);
+                SwitchSendingCanMessages();
                 break;
             case '3':
-                SwitchSendingEthMessages(serverData);
+                SwitchSendingEthMessages();
                 break;
             case '4':
-                SwitchSendingLinMessages(serverData);
+                SwitchSendingLinMessages();
                 break;
             case '5':
-                SwitchSendingFrMessages(serverData);
+                SwitchSendingFrMessages();
                 break;
             case '9':
-                SwitchPrintingStepsPerSecond(serverData);
+                SwitchPrintingStepsPerSecond();
                 break;
             default:
                 LogError("Unknown key.");
                 break;
         }
     }
+
+    return CreateOk();
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-    try {
-        InitializeOutput();
+    InitializeOutput();
 
-        std::string name = "CoSimTest";
-        bool isClientOptional = false;
+    std::string name = "CoSimTest";
+    bool isClientOptional = false;
 
-        for (int i = 1; i < argc; i++) {
-            if (strcmp(argv[i], "--name") == 0) {
-                if (++i < argc) {
-                    name = argv[i];
-                } else {
-                    LogError("No name specified.");
-                    return 1;
-                }
-            }
-
-            if (strcmp(argv[i], "--client-optional") == 0) {
-                isClientOptional = true;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--name") == 0) {
+            if (++i < argc) {
+                name = argv[i];
+            } else {
+                LogError("No name specified.");
+                return 1;
             }
         }
 
-        ServerData serverData{};
-
-        Result result = HostServer(serverData, isClientOptional, name);
-
-        UnloadSimulation(serverData);
-
-        return IsOk(result) ? 0 : 1;
-    } catch (...) {
-        return 1;
+        if (strcmp(argv[i], "--client-optional") == 0) {
+            isClientOptional = true;
+        }
     }
+
+    Result result = HostServer(isClientOptional, name);
+
+    UnloadSimulation();
+
+    return IsOk(result) ? 0 : 1;
 }

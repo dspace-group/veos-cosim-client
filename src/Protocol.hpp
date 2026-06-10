@@ -12,9 +12,9 @@
 
 namespace DsVeosCoSim {
 
-[[maybe_unused]] constexpr uint32_t ProtocolVersion1 = 0x10000;
-[[maybe_unused]] constexpr uint32_t ProtocolVersion2 = 0x20000;
-[[maybe_unused]] constexpr uint32_t ProtocolVersionLatest = ProtocolVersion2;
+constexpr uint32_t ProtocolVersion1 = 0x10000;                // NOLINT
+constexpr uint32_t ProtocolVersion2 = 0x20000;                // NOLINT
+constexpr uint32_t ProtocolVersionLatest = ProtocolVersion2;  // NOLINT
 
 using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
 using DeserializeFunction = std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;

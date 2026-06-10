@@ -2,16 +2,11 @@
 
 #include <gtest/gtest.h>
 
-#include <Result.hpp>
-
 #include "Helper.hpp"
-#include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
 int main(int argc, char** argv) {
-    InitializeOutput();
-
     if (!IsOk(StartUp())) {
         return 1;
     }

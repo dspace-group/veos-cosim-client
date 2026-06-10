@@ -7,7 +7,10 @@
 #include <string_view>
 #include <vector>
 
-#include <CoSimTypes.hpp>
+#include <fmt/format.h>
+
+#include "CoSimTypes.hpp"
+#include "Result.hpp"  // IWYU pragma: keep
 
 #ifndef CTRL
 #define CTRL(c) ((c) & 037)
@@ -22,6 +25,10 @@ void LogLinMessage(std::string_view linMessageStr);
 void LogFrMessage(std::string_view linMessageStr);
 
 [[nodiscard]] int32_t GetChar();
+
+void SetEnvVariable(const std::string& name, const std::string& value);
+
+[[nodiscard]] DsVeosCoSim::Result StartUp();
 
 [[nodiscard]] uint8_t GenerateU8();
 [[nodiscard]] uint16_t GenerateU16();

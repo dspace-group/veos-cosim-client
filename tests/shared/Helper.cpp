@@ -2,23 +2,21 @@
 
 #include "Helper.hpp"
 
-#include <cstddef>
 #include <cstdint>
 #include <random>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include <fmt/color.h>
-#include <fmt/format.h>
 
-#include <CoSimTypes.hpp>
-#include <Logger.hpp>
+#include "Logger.hpp"
+#include "Result.hpp"
+#include "Socket.hpp"
 
 #ifdef _WIN32
 
-#include <conio.h>
 #include <Windows.h>
+#include <conio.h>
 
 #else
 
@@ -32,6 +30,13 @@
 using namespace DsVeosCoSim;
 
 namespace {
+
+[[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort) {
+    SocketListener listener;
+    CheckResult(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
+
+    return listener.GetLocalPort(localPort);
+}
 
 [[nodiscard]] DataType GenerateDataType() {
     return GenerateRandom(DataType::Bool, DataType::Float64);
@@ -106,17 +111,39 @@ void LogFrMessage(std::string_view linMessageStr) {
 #ifdef _WIN32
     return _getch();
 #else
-    termios oldTerm{};
-    tcgetattr(STDIN_FILENO, &oldTerm);
+    termios oldt{};
+    tcgetattr(STDIN_FILENO, &oldt);
 
-    termios newTerm = oldTerm;
-    newTerm.c_lflag &= ~(ICANON | ECHO);
+    termios newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
 
-    tcsetattr(STDIN_FILENO, TCSANOW, &newTerm);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
     int32_t character = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldTerm);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     return character;
+#endif
+}
+
+[[nodiscard]] Result StartUp() {
+    InitializeOutput();
+
+    CheckResult(StartupNetwork());
+
+    uint16_t portMapperPort{};
+    CheckResult(GetNextFreeDynamicPort(portMapperPort));
+
+    std::string portMapperPortString = std::to_string(portMapperPort);
+    SetEnvVariable("VEOS_COSIM_PORTMAPPER_PORT", portMapperPortString);
+    return CreateOk();
+}
+
+void SetEnvVariable(const std::string& name, const std::string& value) {
+#ifdef _WIN32
+    std::string environmentString = fmt::format("{}={}", name, value);
+    _putenv(environmentString.c_str());
+#else
+    setenv(name.c_str(), value.c_str(), 1);
 #endif
 }
 
@@ -135,8 +162,8 @@ void FillWithRandomData(uint8_t* data, size_t length) {
 }
 
 [[nodiscard]] uint32_t GenerateU32() {
-    thread_local std::mt19937 randomNumberGenerator{42U};
-    return randomNumberGenerator();
+    thread_local std::mt19937 rng{42U};
+    return rng();
 }
 
 [[nodiscard]] uint64_t GenerateU64() {

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
 #include <utility>
 #include <vector>

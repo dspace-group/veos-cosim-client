@@ -2,9 +2,9 @@
 
 #include "Environment.hpp"
 
-#include <cstddef>
+#include <cstddef>  // IWYU pragma: keep
 #include <cstdint>
-#include <cstdlib>
+#include <cstdlib>  // IWYU pragma: keep
 #include <string>
 #include <string_view>
 

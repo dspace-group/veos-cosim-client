@@ -4,11 +4,11 @@
 
 #ifdef _WIN32
 
-#include <cctype>
+#include <cctype>  // IWYU pragma: keep
 #include <cstdint>
 #include <string>
 
-#include <Windows.h>
+#include <Windows.h>  // IWYU pragma: keep
 #undef min
 
 #endif
@@ -43,11 +43,6 @@ namespace {
 }  // namespace
 
 #endif
-
-Logger& Logger::Instance() {
-    static Logger instance;
-    return instance;
-}
 
 void LogError(int32_t errorCode, const std::string& message) {
     std::string reason;
