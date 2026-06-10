@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19)
 
 project(DsVeosCoSim VERSION 1.1)
 
-option(BUILD_SHARED_LIBS "Compile dSPACE VEOS CoSim as a shared library" ON)
+option(BUILD_SHARED_LIBS "Compile dSPACE VEOS CoSim as a shared library" OFF)
 option(DSVEOSCOSIM_BUILD_TESTS "Create tests for dSPACE VEOS CoSim" OFF)
 option(DSVEOSCOSIM_SUPPRESS_VENDORED_FMT_WARNINGS "Disable compiler warnings for the vendored fmt target" ON)
 
@@ -18,15 +18,27 @@ if(MSVC)
     DSVEOSCOSIM_WARNINGS
     /permissive-
     /Wall
-    /wd4061 # enumerator '<enumerator>' in switch of enum '<enum>' is not explicitly handled by a case label
-    /wd4324 # '<structure>': structure was padded due to alignment specifier
-    /wd4514 # '<function>': unreferenced inline function has been removed
-    /wd4625 # copy constructor was implicitly defined as deleted
-    /wd4626 # assignment operator was implicitly defined as deleted
-    /wd4820 # '<bytes>' bytes padding added after data member '<data member>'
-    /wd5026 # move constructor was implicitly defined as deleted
-    /wd5027 # move assignment operator was implicitly defined as deleted
-    /wd5045 # Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+    /wd4061
+    /wd4324
+    /wd4355
+    /wd4514
+    /wd4574
+    /wd4582
+    /wd4623
+    /wd4625
+    /wd4626
+    /wd4668
+    /wd4710
+    /wd4711
+    /wd4820
+    /wd4865
+    /wd4868
+    /wd5026
+    /wd5027
+    /wd5039
+    /wd5045
+    /wd5204
+    /wd5220
   )
 else()
   set(
@@ -41,11 +53,6 @@ if(BUILD_SHARED_LIBS)
   set(DSVEOSCOSIM_TYPE SHARED)
 endif()
 
-if(DSVEOSCOSIM_BUILD_TESTS)
-  set(DSVEOSCOSIM_TYPE STATIC)
-  set(BUILD_SHARED_LIBS OFF)
-endif()
-
 if(TARGET fmt::fmt)
   set(DSVEOSCOSIM_FMT_TARGET fmt::fmt)
 elseif(TARGET fmt::fmt-header-only)
@@ -57,15 +64,11 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/CMakeLists.txt")
 
   add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
 
-  if(DSVEOSCOSIM_SUPPRESS_VENDORED_FMT_WARNINGS)
+  if(DSVEOSCOSIM_SUPPRESS_VENDORED_FMT_WARNINGS AND TARGET fmt)
     if(MSVC)
-      if(TARGET fmt)
-        target_compile_options(fmt PRIVATE /W0)
-      endif()
+      target_compile_options(fmt PRIVATE /W0)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-      if(TARGET fmt)
-        target_compile_options(fmt PRIVATE -w)
-      endif()
+      target_compile_options(fmt PRIVATE -w)
     endif()
   endif()
 

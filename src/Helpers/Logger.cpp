@@ -44,11 +44,6 @@ namespace {
 
 #endif
 
-Logger& Logger::Instance() {
-    static Logger instance;
-    return instance;
-}
-
 void LogError(int32_t errorCode, const std::string& message) {
     std::string reason;
 

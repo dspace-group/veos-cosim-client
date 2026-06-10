@@ -5,14 +5,12 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 
-#include <fmt/base.h>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace DsVeosCoSim {
 
@@ -36,30 +34,11 @@ template <typename TContainer>
         result.push_back(container.Convert());
     }
 
-    return std::move(result);
-}
-
-template <typename TValue>
-[[nodiscard]] std::string ContainerVectorToString(const std::vector<TValue>& values) {
-    std::string result{"["};
-
-    for (size_t index = 0; index < values.size(); ++index) {
-        if (index != 0) {
-            result.append(", ");
-        }
-
-        result.append(fmt::format("{}", values[index]));
-    }
-
-    result.push_back(']');
     return result;
 }
 
 void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value) {
     switch (dataType) {
-        case DataType::Unknown:
-            // Will be handled outside the switch
-            break;
         case DataType::Bool:
             string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
             return;
@@ -673,23 +652,23 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 }
 
 [[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
-    return ContainerVectorToString(ioSignalContainers);
+    return fmt::format("[{}]", fmt::join(ioSignalContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers) {
-    return ContainerVectorToString(canControllerContainers);
+    return fmt::format("[{}]", fmt::join(canControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers) {
-    return ContainerVectorToString(ethControllerContainers);
+    return fmt::format("[{}]", fmt::join(ethControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers) {
-    return ContainerVectorToString(linControllerContainers);
+    return fmt::format("[{}]", fmt::join(linControllerContainers, ", "));
 }
 
 [[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers) {
-    return ContainerVectorToString(frControllerContainers);
+    return fmt::format("[{}]", fmt::join(frControllerContainers, ", "));
 }
 
 [[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) noexcept {
@@ -1226,8 +1205,6 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 
 [[nodiscard]] size_t GetDataTypeSize(DataType dataType) {
     switch (dataType) {
-        case DataType::Unknown:
-            return 0;
         case DataType::Bool:
         case DataType::Int8:
         case DataType::UInt8:

@@ -1,18 +1,13 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <array>
-#include <cstddef>
-#include <cstdint>
 #include <string>
-#include <string_view>
-#include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <CoSimTypes.hpp>
-#include <Logger.hpp>
-#include <Result.hpp>
+#include "CoSimTypes.hpp"
+#include "Result.hpp"
 
 using namespace std::chrono;
 using namespace DsVeosCoSim;
@@ -20,7 +15,7 @@ using namespace testing;
 
 namespace {
 
-class TestTypes : public Test {};
+class TestTypes : public testing::Test {};
 
 TEST_F(TestTypes, DataToString) {
     // Arrange
@@ -58,7 +53,7 @@ TEST_F(TestTypes, ResultToString) {
 
 TEST_F(TestTypes, CoSimTypeToString) {
     // Arrange
-    auto coSimType = CoSimType::Server;
+    CoSimType coSimType = CoSimType::Server;
 
     // Act
     std::string_view string = format_as(coSimType);
@@ -69,7 +64,7 @@ TEST_F(TestTypes, CoSimTypeToString) {
 
 TEST_F(TestTypes, ConnectionKindToString) {
     // Arrange
-    auto connectionKind = ConnectionKind::Remote;
+    ConnectionKind connectionKind = ConnectionKind::Remote;
 
     // Act
     std::string_view string = format_as(connectionKind);
@@ -80,7 +75,7 @@ TEST_F(TestTypes, ConnectionKindToString) {
 
 TEST_F(TestTypes, CommandToString) {
     // Arrange
-    auto command = Command::Start;
+    Command command = Command::Start;
 
     // Act
     std::string_view string = format_as(command);
@@ -91,7 +86,7 @@ TEST_F(TestTypes, CommandToString) {
 
 TEST_F(TestTypes, SeverityToString) {
     // Arrange
-    auto severity = Severity::Warning;
+    Severity severity = Severity::Warning;
 
     // Act
     std::string_view string = format_as(severity);
@@ -102,7 +97,7 @@ TEST_F(TestTypes, SeverityToString) {
 
 TEST_F(TestTypes, TerminateReasonToString) {
     // Arrange
-    auto terminateReason = TerminateReason::Finished;
+    TerminateReason terminateReason = TerminateReason::Finished;
 
     // Act
     std::string_view string = format_as(terminateReason);
@@ -113,7 +108,7 @@ TEST_F(TestTypes, TerminateReasonToString) {
 
 TEST_F(TestTypes, ConnectionStateToString) {
     // Arrange
-    auto connectionState = ConnectionState::Disconnected;
+    ConnectionState connectionState = ConnectionState::Disconnected;
 
     // Act
     std::string_view string = format_as(connectionState);
@@ -124,7 +119,7 @@ TEST_F(TestTypes, ConnectionStateToString) {
 
 TEST_F(TestTypes, GetDataTypeSize) {
     // Arrange
-    auto dataType = DataType::UInt64;
+    DataType dataType = DataType::UInt64;
 
     // Act
     size_t size = GetDataTypeSize(dataType);
@@ -135,7 +130,7 @@ TEST_F(TestTypes, GetDataTypeSize) {
 
 TEST_F(TestTypes, DataTypeToString) {
     // Arrange
-    auto dataType = DataType::Float64;
+    DataType dataType = DataType::Float64;
 
     // Act
     std::string_view string = format_as(dataType);
@@ -146,7 +141,7 @@ TEST_F(TestTypes, DataTypeToString) {
 
 TEST_F(TestTypes, SizeKindToString) {
     // Arrange
-    auto sizeKind = SizeKind::Variable;
+    SizeKind sizeKind = SizeKind::Variable;
 
     // Act
     std::string_view string = format_as(sizeKind);
@@ -157,7 +152,7 @@ TEST_F(TestTypes, SizeKindToString) {
 
 TEST_F(TestTypes, ValueToString) {
     // Arrange
-    auto dataType = DataType::Float64;
+    DataType dataType = DataType::Float64;
     uint32_t length = 3;
     std::vector<double> data{4.2, 0.000789, 200};
 
@@ -170,7 +165,7 @@ TEST_F(TestTypes, ValueToString) {
 
 TEST_F(TestTypes, SimulationStateToString) {
     // Arrange
-    auto simulationState = SimulationState::Stopped;
+    SimulationState simulationState = SimulationState::Stopped;
 
     // Act
     std::string_view string = format_as(simulationState);
@@ -295,7 +290,7 @@ TEST_F(TestTypes, SignalContainersToString) {
     signalContainer2.sizeKind = SizeKind::Fixed;
     signalContainer2.name = "MySignal2";
 
-    std::vector signalContainers = {signalContainer1, signalContainer2};
+    std::vector<IoSignalContainer> signalContainers = {signalContainer1, signalContainer2};
 
     // Act
     std::string string = format_as(signalContainers);
@@ -323,7 +318,7 @@ TEST_F(TestTypes, SignalContainersConvert) {
     signalContainer2.sizeKind = SizeKind::Fixed;
     signalContainer2.name = "MySignal2";
 
-    std::vector signalContainers = {signalContainer1, signalContainer2};
+    std::vector<IoSignalContainer> signalContainers = {signalContainer1, signalContainer2};
 
     IoSignal expectedSignal1{};
     expectedSignal1.id = signalContainer1.id;
@@ -339,7 +334,7 @@ TEST_F(TestTypes, SignalContainersConvert) {
     expectedSignal2.sizeKind = signalContainer2.sizeKind;
     expectedSignal2.name = signalContainer2.name.c_str();
 
-    std::vector expectedSignals = {expectedSignal1, expectedSignal2};
+    std::vector<IoSignal> expectedSignals = {expectedSignal1, expectedSignal2};
 
     // Act
     std::vector<IoSignal> actualContainers = Convert(signalContainers);
@@ -533,7 +528,6 @@ TEST_F(TestTypes, LinControllerToString) {
     controller.id = static_cast<BusControllerId>(12);
     controller.queueSize = 14;
     controller.bitsPerSecond = 16;
-    controller.type = LinControllerType::Commander;
     controller.name = name.c_str();
     controller.channelName = channelName.c_str();
     controller.clusterName = clusterName.c_str();
@@ -543,7 +537,7 @@ TEST_F(TestTypes, LinControllerToString) {
 
     // Assert
     ASSERT_EQ(
-        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: Commander, Name: \"name\", ChannelName: \"channelName\", "
+        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: <Invalid LinControllerType>, Name: \"name\", ChannelName: \"channelName\", "
         "ClusterName: \"clusterName\" }",
         string);
 }
@@ -554,7 +548,6 @@ TEST_F(TestTypes, LinControllerContainerToString) {
     controllerContainer.id = static_cast<BusControllerId>(12);
     controllerContainer.queueSize = 14;
     controllerContainer.bitsPerSecond = 16;
-    controllerContainer.type = LinControllerType::Responder;
     controllerContainer.name = "name";
     controllerContainer.channelName = "channelName";
     controllerContainer.clusterName = "clusterName";
@@ -564,7 +557,7 @@ TEST_F(TestTypes, LinControllerContainerToString) {
 
     // Assert
     ASSERT_EQ(
-        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: Responder, Name: \"name\", ChannelName: "
+        "LIN Controller { Id: 12, QueueSize: 14, BitsPerSecond: 16, Type: <Invalid LinControllerType>, Name: \"name\", ChannelName: "
         "\"channelName\", ClusterName: \"clusterName\" }",
         string);
 }
@@ -687,7 +680,7 @@ TEST_F(TestTypes, EthMessageFlagsToString) {
 
 TEST_F(TestTypes, LinMessageFlagsToString) {
     // Arrange
-    auto flags = LinMessageFlags::Response;
+    LinMessageFlags flags = LinMessageFlags::Response;
 
     // Act
     std::string string = format_as(flags);
@@ -698,7 +691,7 @@ TEST_F(TestTypes, LinMessageFlagsToString) {
 
 TEST_F(TestTypes, FrMessageFlagsToString) {
     // Arrange
-    auto flags = FrMessageFlags::SyncFrame;
+    FrMessageFlags flags = FrMessageFlags::SyncFrame;
 
     // Act
     std::string string = format_as(flags);
@@ -858,7 +851,7 @@ TEST_F(TestTypes, ResultOkToString) {
 
 TEST_F(TestTypes, SimulationStateRunningToString) {
     // Arrange
-    auto simulationState = SimulationState::Running;
+    SimulationState simulationState = SimulationState::Running;
 
     // Act
     std::string_view string = format_as(simulationState);
@@ -869,7 +862,7 @@ TEST_F(TestTypes, SimulationStateRunningToString) {
 
 TEST_F(TestTypes, ConnectionStateConnectedToString) {
     // Arrange
-    auto connectionState = ConnectionState::Connected;
+    ConnectionState connectionState = ConnectionState::Connected;
 
     // Act
     std::string_view string = format_as(connectionState);
@@ -902,7 +895,7 @@ TEST_F(TestTypes, SimulationTimeToStringWithZero) {
 
 TEST_F(TestTypes, ValueToStringWithZeroLength) {
     // Arrange
-    auto dataType = DataType::Float64;
+    DataType dataType = DataType::Float64;
     double data = 0.0;
 
     // Act

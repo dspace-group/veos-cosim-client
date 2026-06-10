@@ -85,9 +85,9 @@ namespace {
 
 // Spin wait with exponential backoff
 template <typename Predicate>
-bool SpinWait(const Predicate& predicate, uint32_t iterations) {
+bool SpinWait(Predicate&& predicate, uint32_t iterations) {
     for (uint32_t i = 0; i < iterations; ++i) {
-        if (predicate()) {
+        if (std::forward<Predicate>(predicate)()) {
             return true;
         }
 
@@ -174,7 +174,8 @@ void NamedEvent::Close() {
         return CreateError();
     }
 
-    if (BOOL result = SetEvent(_handle.Get()); result == FALSE) {
+    BOOL result = SetEvent(_handle.Get());
+    if (result == FALSE) {
         LogError(GetLastWindowsError(), "Could not set event.");
         return CreateError();
     }

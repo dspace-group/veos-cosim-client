@@ -9,10 +9,8 @@
 
 #include <gtest/gtest.h>
 
-#include <Channel.hpp>
-#include <Result.hpp>
-#include <Socket.hpp>
-
+#include "Channel.hpp"
+#include "Socket.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -24,7 +22,7 @@ struct TcpChannelParam {
     bool enableRemoteAccess{};
 };
 
-void PrintTo(const TcpChannelParam& param, std::ostream* os) {  // NOLINT
+[[maybe_unused]] void PrintTo(const TcpChannelParam& param, std::ostream* os) {
     std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
     *os << name;
 }
@@ -90,14 +88,14 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort) {
 
 TEST_P(TestTcpChannel, ConnectWithoutStart) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
-    const char* ipAddress = GetLoopBackAddress(addressFamily);
+    TcpChannelParam param = GetParam();
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     uint16_t port{};
 
     {
         std::unique_ptr<ChannelServer> server;
-        AssertOk(CreateTcpChannelServer(0, enableRemoteAccess, server));
+        AssertOk(CreateTcpChannelServer(0, param.enableRemoteAccess, server));
         port = server->GetLocalPort();
     }
 
@@ -112,11 +110,11 @@ TEST_P(TestTcpChannel, ConnectWithoutStart) {
 
 TEST_P(TestTcpChannel, Connect) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
-    const char* ipAddress = GetLoopBackAddress(addressFamily);
+    TcpChannelParam param = GetParam();
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
-    AssertOk(CreateTcpChannelServer(0, enableRemoteAccess, server));
+    AssertOk(CreateTcpChannelServer(0, param.enableRemoteAccess, server));
     uint16_t port = server->GetLocalPort();
 
     std::unique_ptr<Channel> connectChannel;
@@ -131,10 +129,10 @@ TEST_P(TestTcpChannel, Connect) {
 
 TEST_P(TestTcpChannel, AcceptWithoutConnect) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
+    TcpChannelParam param = GetParam();
 
     std::unique_ptr<ChannelServer> server;
-    AssertOk(CreateTcpChannelServer(0, enableRemoteAccess, server));
+    AssertOk(CreateTcpChannelServer(0, param.enableRemoteAccess, server));
 
     std::unique_ptr<Channel> acceptChannel;
 
@@ -147,11 +145,11 @@ TEST_P(TestTcpChannel, AcceptWithoutConnect) {
 
 TEST_P(TestTcpChannel, Accept) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
-    const char* ipAddress = GetLoopBackAddress(addressFamily);
+    TcpChannelParam param = GetParam();
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
-    AssertOk(CreateTcpChannelServer(0, enableRemoteAccess, server));
+    AssertOk(CreateTcpChannelServer(0, param.enableRemoteAccess, server));
     uint16_t port = server->GetLocalPort();
 
     std::unique_ptr<Channel> connectChannel;
@@ -240,11 +238,11 @@ TEST_F(TestTcpChannel, AcceptClientWithHostName) {
 
 TEST_P(TestTcpChannel, AcceptAfterDisconnect) {
     // Arrange
-    auto [addressFamily, enableRemoteAccess] = GetParam();
-    const char* ipAddress = GetLoopBackAddress(addressFamily);
+    TcpChannelParam param = GetParam();
+    const char* ipAddress = GetLoopBackAddress(param.addressFamily);
 
     std::unique_ptr<ChannelServer> server;
-    AssertOk(CreateTcpChannelServer(0, enableRemoteAccess, server));
+    AssertOk(CreateTcpChannelServer(0, param.enableRemoteAccess, server));
     uint16_t port = server->GetLocalPort();
 
     std::unique_ptr<Channel> connectChannel;

@@ -1,15 +1,12 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <cstdint>
 #include <memory>
 #include <string>
 
 #include <gtest/gtest.h>
 
-#include <PortMapper.hpp>
-#include <Result.hpp>
-
 #include "Helper.hpp"
+#include "PortMapper.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

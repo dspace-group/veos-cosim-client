@@ -20,25 +20,8 @@ namespace DsVeosCoSim {
         return static_cast<TEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs)); \
     }                                                                                       \
                                                                                             \
-    constexpr TEnum operator^(TEnum lhs, TEnum rhs) {                                       \
-        return static_cast<TEnum>(static_cast<uint32_t>(lhs) ^ static_cast<uint32_t>(rhs)); \
-    }                                                                                       \
-                                                                                            \
-    constexpr TEnum operator~(TEnum lhs) {                                                  \
-        return static_cast<TEnum>(~static_cast<uint32_t>(lhs));                             \
-    }                                                                                       \
-                                                                                            \
-    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs) {                                    \
-        lhs = lhs | rhs;                                                                    \
-        return lhs;                                                                         \
-    }                                                                                       \
-                                                                                            \
     constexpr bool HasFlag(TEnum flags, TEnum testFlag) {                                   \
         return (flags & testFlag) == testFlag;                                              \
-    }                                                                                       \
-                                                                                            \
-    constexpr TEnum ClearFlag(TEnum flags, TEnum clearFlag) {                               \
-        return flags & ~clearFlag;                                                          \
     }
 // NOLINTEND
 
@@ -219,8 +202,7 @@ enum class IoSignalId : uint32_t {
 };
 
 enum class DataType : uint32_t {
-    Unknown,
-    Bool,
+    Bool = 1,
     Int8,
     Int16,
     Int32,
@@ -235,8 +217,6 @@ enum class DataType : uint32_t {
 
 [[nodiscard]] constexpr std::string_view format_as(DataType dataType) noexcept {
     switch (dataType) {
-        case DataType::Unknown:
-            return "Unknown";
         case DataType::Bool:
             return "Bool";
         case DataType::Int8:
@@ -265,15 +245,12 @@ enum class DataType : uint32_t {
 }
 
 enum class SizeKind : uint32_t {
-    Unknown,
-    Fixed,
+    Fixed = 1,
     Variable
 };
 
 [[nodiscard]] constexpr std::string_view format_as(SizeKind sizeKind) noexcept {
     switch (sizeKind) {
-        case SizeKind::Unknown:
-            return "Unknown";
         case SizeKind::Fixed:
             return "Fixed";
         case SizeKind::Variable:
@@ -290,15 +267,12 @@ enum class BusMessageId : uint32_t {
 };
 
 enum class LinControllerType : uint32_t {
-    Unknown,
-    Responder,
+    Responder = 1,
     Commander
 };
 
 [[nodiscard]] constexpr std::string_view format_as(LinControllerType linControllerType) noexcept {
     switch (linControllerType) {
-        case LinControllerType::Unknown:
-            return "Unknown";
         case LinControllerType::Responder:
             return "Responder";
         case LinControllerType::Commander:
@@ -309,7 +283,6 @@ enum class LinControllerType : uint32_t {
 }
 
 enum class CanMessageFlags : uint32_t {
-    None = 0,
     Loopback = 1,
     Error = 2,
     Drop = 4,
@@ -321,7 +294,6 @@ enum class CanMessageFlags : uint32_t {
 ENUM_BITMASK_OPS(CanMessageFlags);
 
 enum class EthMessageFlags : uint32_t {
-    None = 0,
     Loopback = 1,
     Error = 2,
     Drop = 4
@@ -330,7 +302,6 @@ enum class EthMessageFlags : uint32_t {
 ENUM_BITMASK_OPS(EthMessageFlags);
 
 enum class LinMessageFlags : uint32_t {
-    None = 0,
     Loopback = 1,
     Error = 2,
     Drop = 4,
@@ -348,7 +319,6 @@ enum class LinMessageFlags : uint32_t {
 ENUM_BITMASK_OPS(LinMessageFlags);
 
 enum class FrMessageFlags : uint32_t {
-    None = 0,
     Loopback = 1,
     Error = 2,
     Drop = 4,
@@ -364,9 +334,7 @@ enum class FrMessageFlags : uint32_t {
 ENUM_BITMASK_OPS(FrMessageFlags);
 
 enum class FrameKind : uint32_t {
-    Unknown,
-
-    Ok,
+    Ok = 1,
     Error,
 
     Connect,
@@ -392,8 +360,6 @@ enum class FrameKind : uint32_t {
 
 [[nodiscard]] constexpr std::string_view format_as(FrameKind frameKind) noexcept {
     switch (frameKind) {
-        case FrameKind::Unknown:
-            return "Unknown";
         case FrameKind::Ping:
             return "Ping";
         case FrameKind::PingOk:

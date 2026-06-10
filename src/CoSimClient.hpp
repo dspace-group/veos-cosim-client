@@ -49,8 +49,8 @@ public:
     [[nodiscard]] Result Pause();
     [[nodiscard]] Result Continue();
 
-    [[nodiscard]] Result GetIncomingSignals(uint32_t& incomingSignalsCount, const IoSignal*& incomingSignals) const;
-    [[nodiscard]] Result GetOutgoingSignals(uint32_t& outgoingSignalsCount, const IoSignal*& outgoingSignals) const;
+    [[nodiscard]] Result GetIncomingSignals(uint32_t& signalsCount, const IoSignal*& signals) const;
+    [[nodiscard]] Result GetOutgoingSignals(uint32_t& signalsCount, const IoSignal*& signals) const;
 
     [[nodiscard]] Result GetIncomingSignals(std::vector<IoSignal>& signals) const;
     [[nodiscard]] Result GetOutgoingSignals(std::vector<IoSignal>& signals) const;

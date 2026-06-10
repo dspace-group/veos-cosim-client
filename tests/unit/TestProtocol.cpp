@@ -1,22 +1,17 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include <fmt/format.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <Channel.hpp>
-#include <CoSimTypes.hpp>
-#include <Protocol.hpp>
-#include <Result.hpp>
-
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Protocol.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -24,7 +19,7 @@ using namespace testing;
 
 namespace {
 
-class TestProtocol : public TestWithParam<ConnectionKind> {
+class TestProtocol : public testing::TestWithParam<ConnectionKind> {
 protected:
     std::unique_ptr<Channel> _senderChannel;
     std::unique_ptr<Channel> _receiverChannel;

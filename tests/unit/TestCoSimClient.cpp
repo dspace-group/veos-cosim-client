@@ -1,27 +1,23 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
 #include <chrono>
-#include <cstdint>
 #include <cstring>
 #include <future>
 #include <memory>
 #include <string>
 #include <thread>
-#include <vector>
 
 #include <fmt/format.h>
 
 #include <gtest/gtest.h>
 
-#include <Channel.hpp>
-#include <CoSimClient.hpp>
-#include <CoSimServer.hpp>
-#include <CoSimTypes.hpp>
-#include <OsUtilities.hpp>
-#include <Protocol.hpp>
-#include <Result.hpp>
-
+#include "Channel.hpp"
+#include "CoSimClient.hpp"
+#include "CoSimServer.hpp"
+#include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "OsUtilities.hpp"
+#include "Protocol.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -88,7 +84,7 @@ protected:
 
     template <typename ServerFunction>
     [[nodiscard]] std::future<Result> RunServer(const ServerFunction& serverFunction) {
-        return std::async(std::launch::async, [this, serverFunction] {
+        return std::async(std::launch::async, [this, serverFunction]() {
             std::unique_ptr<Channel> channel;
             CheckResult(WaitForAccept(channel));
             return serverFunction(*channel, *_serverProtocol);
@@ -97,7 +93,7 @@ protected:
 
     void ConnectClientAndServer(ConnectionKind connectionKind) {
         CustomSetUp(connectionKind);
-        auto serverTask = std::async(std::launch::async, [this] {
+        auto serverTask = std::async(std::launch::async, [this]() {
             CheckResult(WaitForAccept(_serverChannel));
             return AcceptAndSendConnectOk(*_serverChannel, *_serverProtocol);
         });
@@ -475,7 +471,7 @@ TEST_F(TestCoSimClient, GetSimulationStateWhenNotConnectedShouldFail) {
 TEST_P(TestCoSimClient, GetSimulationState) {
     // Arrange
     CustomSetUp(GetParam());
-    auto expectedState = SimulationState::Running;
+    SimulationState expectedState = SimulationState::Running;
     auto serverTask = RunServer([expectedState](Channel& channel, IProtocol& protocol) {
         return AcceptAndSendConnectOk(channel, protocol, SimulationTime{}, expectedState);
     });
@@ -508,8 +504,8 @@ TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationReceivesStartAndTerminate) {
     // Arrange
     ConnectClientAndServer(GetParam());
 
-    SimulationTime startTime(1000);
-    SimulationTime terminateTime(2000);
+    SimulationTime startTime(std::chrono::nanoseconds(1000));
+    SimulationTime terminateTime(std::chrono::nanoseconds(2000));
     bool startCalled = false;
     bool terminateCalled = false;
 
@@ -607,7 +603,7 @@ TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucc
         _serverPort = _server->GetLocalPort();
     }
 
-    auto connectServerTask = std::async(std::launch::async, [this] {
+    auto connectServerTask = std::async(std::launch::async, [this]() {
         CheckResult(WaitForAccept(_serverChannel));
         return AcceptAndSendConnectOk(*_serverChannel, *_serverProtocol);
     });
@@ -641,7 +637,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesStart) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime expectedTime(5000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(5000));
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         CheckResult(_serverProtocol->SendStart(_serverChannel->GetWriter(), expectedTime));
         return CreateOk();
@@ -664,7 +660,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesStop) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime expectedTime(3000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(3000));
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         CheckResult(_serverProtocol->SendStop(_serverChannel->GetWriter(), expectedTime));
         return CreateOk();
@@ -687,7 +683,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesTerminate) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime expectedTime(7000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(7000));
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         CheckResult(_serverProtocol->SendTerminate(_serverChannel->GetWriter(), expectedTime, TerminateReason::Error));
         return CreateOk();
@@ -710,7 +706,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesPause) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime expectedTime(4000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(4000));
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         CheckResult(_serverProtocol->SendPause(_serverChannel->GetWriter(), expectedTime));
         return CreateOk();
@@ -733,7 +729,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesContinue) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime expectedTime(6000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(6000));
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         CheckResult(_serverProtocol->SendContinue(_serverChannel->GetWriter(), expectedTime));
         return CreateOk();
@@ -755,7 +751,7 @@ TEST_P(TestCoSimClient, PollCommandReceivesStep) {
     // Arrange
     ConnectAndStartPolling(GetParam());
 
-    SimulationTime expectedTime(8000);
+    SimulationTime expectedTime(std::chrono::nanoseconds(8000));
 
     auto serverTask = std::async(std::launch::async, [this, expectedTime] {
         SimulationTime nextTime{};
@@ -780,11 +776,11 @@ TEST_P(TestCoSimClient, PollCommandSkipsPingAndReturnsNextCommand) {
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
-    SimulationTime startTime(9000);
+    SimulationTime startTime(std::chrono::nanoseconds(9000));
 
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         // Send Ping first
-        CheckResult(_serverProtocol->SendPing(_serverChannel->GetWriter(), SimulationTime(100)));
+        CheckResult(_serverProtocol->SendPing(_serverChannel->GetWriter(), SimulationTime(std::chrono::nanoseconds(100))));
         // Read PingOk
         FrameKind frameKind{};
         CheckResult(_serverProtocol->ReceiveHeader(_serverChannel->GetReader(), frameKind));
@@ -991,7 +987,7 @@ TEST_P(TestCoSimClient, SetNextSimulationTime) {
     ConnectClientAndServer(GetParam());
 
     // Act
-    Result result = _client->SetNextSimulationTime(SimulationTime(42000));
+    Result result = _client->SetNextSimulationTime(SimulationTime(std::chrono::nanoseconds(42000)));
 
     // Assert
     AssertOk(result);
@@ -1000,7 +996,7 @@ TEST_P(TestCoSimClient, SetNextSimulationTime) {
 TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk) {
     // Arrange
     ConnectAndStartPolling(GetParam());
-    SimulationTime expectedNextTime(42000);
+    SimulationTime expectedNextTime(std::chrono::nanoseconds(42000));
     AssertOk(_client->SetNextSimulationTime(expectedNextTime));
 
     SimulationTime receivedNextTime{};
@@ -1511,14 +1507,14 @@ TEST_P(TestCoSimClient, GetCanControllersReturnsControllersFromConnectOk) {
 
     // Act
     uint32_t count{};
-    const CanController* resultControllers{};
-    Result result = _client->GetCanControllers(count, resultControllers);
+    const CanController* result_controllers{};
+    Result result = _client->GetCanControllers(count, result_controllers);
 
     // Assert
     AssertOk(result);
     ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
-    ASSERT_EQ(controllers[1].id, resultControllers[1].id);
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk) {
@@ -1529,13 +1525,13 @@ TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk) 
     ConnectAndStartPolling(GetParam(), config);
 
     // Act
-    std::vector<CanController> resultControllers;
-    Result result = _client->GetCanControllers(resultControllers);
+    std::vector<CanController> result_controllers;
+    Result result = _client->GetCanControllers(result_controllers);
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, resultControllers.size());
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
+    ASSERT_EQ(1U, result_controllers.size());
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetEthControllers ---
@@ -1562,14 +1558,14 @@ TEST_P(TestCoSimClient, GetEthControllersReturnsControllersFromConnectOk) {
 
     // Act
     uint32_t count{};
-    const EthController* resultControllers{};
-    Result result = _client->GetEthControllers(count, resultControllers);
+    const EthController* result_controllers{};
+    Result result = _client->GetEthControllers(count, result_controllers);
 
     // Assert
     AssertOk(result);
     ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
-    ASSERT_EQ(controllers[1].id, resultControllers[1].id);
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk) {
@@ -1580,13 +1576,13 @@ TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk) 
     ConnectAndStartPolling(GetParam(), config);
 
     // Act
-    std::vector<EthController> resultControllers;
-    Result result = _client->GetEthControllers(resultControllers);
+    std::vector<EthController> result_controllers;
+    Result result = _client->GetEthControllers(result_controllers);
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, resultControllers.size());
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
+    ASSERT_EQ(1U, result_controllers.size());
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetLinControllers ---
@@ -1613,14 +1609,14 @@ TEST_P(TestCoSimClient, GetLinControllersReturnsControllersFromConnectOk) {
 
     // Act
     uint32_t count{};
-    const LinController* resultControllers{};
-    Result result = _client->GetLinControllers(count, resultControllers);
+    const LinController* result_controllers{};
+    Result result = _client->GetLinControllers(count, result_controllers);
 
     // Assert
     AssertOk(result);
     ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
-    ASSERT_EQ(controllers[1].id, resultControllers[1].id);
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk) {
@@ -1631,13 +1627,13 @@ TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk) 
     ConnectAndStartPolling(GetParam(), config);
 
     // Act
-    std::vector<LinController> resultControllers;
-    Result result = _client->GetLinControllers(resultControllers);
+    std::vector<LinController> result_controllers;
+    Result result = _client->GetLinControllers(result_controllers);
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, resultControllers.size());
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
+    ASSERT_EQ(1U, result_controllers.size());
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetFrControllers ---
@@ -1664,14 +1660,14 @@ TEST_F(TestCoSimClient, GetFrControllersReturnsControllersFromConnectOk) {
 
     // Act
     uint32_t count{};
-    const FrController* resultControllers{};
-    Result result = _client->GetFrControllers(count, resultControllers);
+    const FrController* result_controllers{};
+    Result result = _client->GetFrControllers(count, result_controllers);
 
     // Assert
     AssertOk(result);
     ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
-    ASSERT_EQ(controllers[1].id, resultControllers[1].id);
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk) {
@@ -1682,13 +1678,13 @@ TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk) {
     ConnectAndStartPolling(ConnectionKind::Remote, config);
 
     // Act
-    std::vector<FrController> resultControllers;
-    Result result = _client->GetFrControllers(resultControllers);
+    std::vector<FrController> result_controllers;
+    Result result = _client->GetFrControllers(result_controllers);
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, resultControllers.size());
-    ASSERT_EQ(controllers[0].id, resultControllers[0].id);
+    ASSERT_EQ(1U, result_controllers.size());
+    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- CAN Message Validation ---

@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/format.h>
+
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Environment.hpp"
@@ -957,6 +959,10 @@ protected:
         uint64_t tmpValue{};
         reader.Read(tmpValue);
         simulationTime = SimulationTime(tmpValue);
+    }
+
+    [[nodiscard]] static Result WriteSimulationTime(ChannelWriter& writer, SimulationTime value) {
+        return writer.Write(static_cast<uint64_t>(value.count()));
     }
 
     static void WriteSimulationTime(BlockWriter& writer, std::chrono::nanoseconds value) {

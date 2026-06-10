@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+#include <fmt/format.h>
+
 #include "CoSimClient.hpp"
 #include "CoSimTypes.hpp"
 #include "Logger.hpp"

@@ -1,13 +1,11 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <cstdint>
 #include <cstring>
 #include <string>
 
 #include <gtest/gtest.h>
 
-#include <DsVeosCoSim/DsVeosCoSim.h>
-
+#include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Helper.hpp"
 
 using namespace DsVeosCoSim;
@@ -277,9 +275,9 @@ TEST_F(TestDsVeosCoSim, WriteOutgoingSignalNullValueWithNonZeroLengthShouldRetur
 
 namespace {
 
-bool g_logCallbackCalled = false;  // NOLINT - required by C API (plain function pointer, no captures)
+bool g_logCallbackCalled = false;
 
-void TestLogCallback(DsVeosCoSim_Severity /*severity*/, const char* /*message*/) noexcept {
+void TestLogCallback([[maybe_unused]] DsVeosCoSim_Severity severity, [[maybe_unused]] const char* message) {
     g_logCallbackCalled = true;
 }
 
