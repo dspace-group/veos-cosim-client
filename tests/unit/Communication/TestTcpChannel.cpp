@@ -22,7 +22,7 @@ struct TcpChannelParam {
     bool enableRemoteAccess{};
 };
 
-void PrintTo(const TcpChannelParam& param, std::ostream* os) {  // NOLINT
+[[maybe_unused]] void PrintTo(const TcpChannelParam& param, std::ostream* os) {
     std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
     *os << name;
 }

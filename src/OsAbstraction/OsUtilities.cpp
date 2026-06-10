@@ -12,16 +12,16 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <string_view>
 #include <utility>
 
 #include <fmt/format.h>
 
-#include <Windows.h>  // IWYU pragma: keep
+#include <Windows.h>
 #undef min
 
-#include <sysinfoapi.h>  // IWYU pragma: keep
+#include <sysinfoapi.h>
 
 #include "Logger.hpp"
 #include "Result.hpp"

@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 #include <string>

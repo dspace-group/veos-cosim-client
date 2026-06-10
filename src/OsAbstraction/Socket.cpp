@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstdio>   // IWYU pragma: keep
-#include <cstring>  // IWYU pragma: keep
+#include <cstdio>
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <string>

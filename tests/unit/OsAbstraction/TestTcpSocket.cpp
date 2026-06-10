@@ -21,7 +21,7 @@ struct TcpSocketParam {
     bool enableRemoteAccess{};
 };
 
-void PrintTo(const TcpSocketParam& param, std::ostream* os) {  // NOLINT
+[[maybe_unused]] void PrintTo(const TcpSocketParam& param, std::ostream* os) {
     std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
     *os << name;
 }

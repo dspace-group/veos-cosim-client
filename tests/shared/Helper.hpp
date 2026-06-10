@@ -10,7 +10,7 @@
 #include <fmt/format.h>
 
 #include "CoSimTypes.hpp"
-#include "Result.hpp"  // IWYU pragma: keep
+#include "Result.hpp"
 
 #ifndef CTRL
 #define CTRL(c) ((c) & 037)

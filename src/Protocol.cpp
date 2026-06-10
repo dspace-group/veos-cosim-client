@@ -2,7 +2,7 @@
 
 #include "Protocol.hpp"
 
-#include <cstddef>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>

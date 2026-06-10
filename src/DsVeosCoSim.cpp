@@ -478,9 +478,9 @@ DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle handle, DsVeosCoSi
 }
 
 DsVeosCoSim_Result DsVeosCoSim_PollCommand2(DsVeosCoSim_Handle handle,
-                                             DsVeosCoSim_SimulationTime* simulationTime,
-                                             DsVeosCoSim_Command* command,
-                                             uint32_t timeoutInMilliseconds) {
+                                            DsVeosCoSim_SimulationTime* simulationTime,
+                                            DsVeosCoSim_Command* command,
+                                            uint32_t timeoutInMilliseconds) {
     CheckNotNull(handle);
     CheckNotNull(simulationTime);
     CheckNotNull(command);

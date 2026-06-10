@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstdint>
-#include <cstring>  // IWYU pragma: keep
+#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

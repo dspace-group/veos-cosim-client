@@ -89,8 +89,7 @@ TEST(TestDsVeosCoSimLifecycle, AllHandleFunctionsRejectNullHandle) {
     EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StopSimulation(nullptr));
     EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PauseSimulation(nullptr));
     EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ContinueSimulation(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument,
-              DsVeosCoSim_TerminateSimulation(nullptr, DsVeosCoSim_TerminateReason_Finished));
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TerminateSimulation(nullptr, DsVeosCoSim_TerminateReason_Finished));
 
     // IO signals
     EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(nullptr, &count, &signals));
@@ -275,11 +274,13 @@ TEST_F(TestDsVeosCoSim, WriteOutgoingSignalNullValueWithNonZeroLengthShouldRetur
 // --- SetLogCallback ---
 
 namespace {
-bool g_logCallbackCalled = false;  // NOLINT - required by C API (plain function pointer, no captures)
 
-void TestLogCallback(DsVeosCoSim_Severity /*severity*/, const char* /*message*/) {
+bool g_logCallbackCalled = false;
+
+void TestLogCallback([[maybe_unused]] DsVeosCoSim_Severity severity, [[maybe_unused]] const char* message) {
     g_logCallbackCalled = true;
 }
+
 }  // namespace
 
 TEST(TestDsVeosCoSimLifecycle, SetLogCallbackReceivesMessages) {
