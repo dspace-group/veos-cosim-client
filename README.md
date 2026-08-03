@@ -152,3 +152,10 @@ The public header is `include/DsVeosCoSim/DsVeosCoSim.h`.
 - Build it as a static library if you want to link it directly into your executable.
 
 For more detailed setup guidance, refer to [Basics on CoSim Clients](doc/basics/basics-clients.md) and [How to Prepare the CoSim Demo](doc/tutorial/prepare.md).
+
+## API Stability
+
+Changes to the public API in
+[`include/DsVeosCoSim/DsVeosCoSim.h`](include/DsVeosCoSim/DsVeosCoSim.h) are
+gated by an automated API/ABI guard. See **[doc/api-guard.md](doc/api-guard.md)**
+before modifying it.

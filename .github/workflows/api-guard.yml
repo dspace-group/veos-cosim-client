@@ -1,0 +1,38 @@
+name: API Guard
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  api-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install tooling
+        run: sudo apt-get update && sudo apt-get install -y clang python3
+      - name: Regenerate API snapshot
+        run: |
+          ./tools/dump-api.sh > api/DsVeosCoSim.api.txt.new
+      - name: Diff against committed baseline
+        run: |
+          if ! diff -u api/DsVeosCoSim.api.txt api/DsVeosCoSim.api.txt.new; then
+            echo ""
+            echo "::error::Public API changed. If intentional, regenerate the baseline"
+            echo "with 'tools/dump-api.sh > api/DsVeosCoSim.api.txt', commit it, and bump"
+            echo "the MAJOR version (semver) for a breaking change."
+            exit 1
+          fi
+
+  abi-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install tooling
+        run: sudo apt-get update && sudo apt-get install -y abigail-tools cmake ninja-build clang
+      - name: Run ABI diff
+        run: |
+          ./tools/abi-diff.sh

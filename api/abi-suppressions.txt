@@ -1,0 +1,7 @@
+# Copyright dSPACE SE & Co. KG. All rights reserved.
+# libabigail suppression specification.
+[suppress_type]
+  name_regexp = ^fmt::
+
+[suppress_function]
+  name_regexp = ^_
