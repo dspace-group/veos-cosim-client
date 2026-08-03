@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -26,6 +27,20 @@ namespace {
             return DsVeosCoSim_Result_InvalidArgument;       \
         }                                                    \
     } while (0)
+
+[[nodiscard]] DsVeosCoSim_Result CopyStringToBuffer(const std::string& str, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(bufferSize);
+
+    const auto requiredSize = static_cast<uint32_t>(str.size() + 1);
+    if (!buffer || (*bufferSize < requiredSize)) {
+        *bufferSize = requiredSize;
+        return DsVeosCoSim_Result_Full;
+    }
+
+    std::memcpy(buffer, str.c_str(), requiredSize);
+    *bufferSize = requiredSize;
+    return DsVeosCoSim_Result_Ok;
+}
 
 [[nodiscard]] const DsVeosCoSim_CanController* Convert(const CanController* controller) {
     return reinterpret_cast<const DsVeosCoSim_CanController*>(controller);
@@ -922,88 +937,102 @@ DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSi
     return DsVeosCoSim_Result_Ok;
 }
 
-std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime) {
-    return SimulationTimeToString(SimulationTime(simulationTime));
+DsVeosCoSim_Result DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(SimulationTimeToString(SimulationTime(simulationTime)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal) {
-    return format_as(*Convert(ioSignal));
+DsVeosCoSim_Result DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(ioSignal);
+    return CopyStringToBuffer(format_as(*Convert(ioSignal)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller) {
-    return format_as(*Convert(controller));
+DsVeosCoSim_Result DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(controller);
+    return CopyStringToBuffer(format_as(*Convert(controller)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller) {
-    return format_as(*Convert(controller));
+DsVeosCoSim_Result DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(controller);
+    return CopyStringToBuffer(format_as(*Convert(controller)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller) {
-    return format_as(*Convert(controller));
+DsVeosCoSim_Result DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(controller);
+    return CopyStringToBuffer(format_as(*Convert(controller)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller) {
-    return format_as(*Convert(controller));
+DsVeosCoSim_Result DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(controller);
+    return CopyStringToBuffer(format_as(*Convert(controller)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value) {
-    return ValueToString(Convert(dataType), length, value);
+DsVeosCoSim_Result DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(ValueToString(Convert(dataType), length, value), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator) {
-    return DataToString(data, dataLength, separator);
+DsVeosCoSim_Result DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(DataToString(data, dataLength, separator), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value) {
-    return IoDataToString(*Convert(ioSignal), length, value);
+DsVeosCoSim_Result DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(ioSignal);
+    return CopyStringToBuffer(IoDataToString(*Convert(ioSignal), length, value), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message) {
-    return format_as(*Convert(message));
+DsVeosCoSim_Result DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(message);
+    return CopyStringToBuffer(format_as(*Convert(message)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message) {
-    return format_as(*Convert(message));
+DsVeosCoSim_Result DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(message);
+    return CopyStringToBuffer(format_as(*Convert(message)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message) {
-    return format_as(*Convert(message));
+DsVeosCoSim_Result DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(message);
+    return CopyStringToBuffer(format_as(*Convert(message)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message) {
-    return format_as(*Convert(message));
+DsVeosCoSim_Result DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(message);
+    return CopyStringToBuffer(format_as(*Convert(message)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer) {
-    return format_as(*Convert(messageContainer));
+DsVeosCoSim_Result DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(messageContainer);
+    return CopyStringToBuffer(format_as(*Convert(messageContainer)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer) {
-    return format_as(*Convert(messageContainer));
+DsVeosCoSim_Result DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(messageContainer);
+    return CopyStringToBuffer(format_as(*Convert(messageContainer)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer) {
-    return format_as(*Convert(messageContainer));
+DsVeosCoSim_Result DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(messageContainer);
+    return CopyStringToBuffer(format_as(*Convert(messageContainer)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer) {
-    return format_as(*Convert(messageContainer));
+DsVeosCoSim_Result DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer, char* buffer, uint32_t* bufferSize) {
+    CheckNotNull(messageContainer);
+    return CopyStringToBuffer(format_as(*Convert(messageContainer)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags) {
-    return format_as(ConvertCanMessageFlags(flags));
+DsVeosCoSim_Result DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(format_as(ConvertCanMessageFlags(flags)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags) {
-    return format_as(ConvertEthMessageFlags(flags));
+DsVeosCoSim_Result DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(format_as(ConvertEthMessageFlags(flags)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags) {
-    return format_as(ConvertLinMessageFlags(flags));
+DsVeosCoSim_Result DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(format_as(ConvertLinMessageFlags(flags)), buffer, bufferSize);
 }
 
-std::string DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags) {
-    return format_as(ConvertFrMessageFlags(flags));
+DsVeosCoSim_Result DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags, char* buffer, uint32_t* bufferSize) {
+    return CopyStringToBuffer(format_as(ConvertFrMessageFlags(flags)), buffer, bufferSize);
 }
 
 static_assert(CanMessageMaxLength == DSVEOSCOSIM_CAN_MESSAGE_MAX_LENGTH);

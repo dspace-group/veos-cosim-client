@@ -85,9 +85,9 @@ namespace {
 
 // Spin wait with exponential backoff
 template <typename Predicate>
-bool SpinWait(Predicate&& predicate, uint32_t iterations) {
+bool SpinWait(const Predicate& predicate, uint32_t iterations) {
     for (uint32_t i = 0; i < iterations; ++i) {
-        if (std::forward<Predicate>(predicate)()) {
+        if (predicate()) {
             return true;
         }
 
