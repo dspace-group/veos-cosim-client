@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 3.19)
 
 project(DsVeosCoSim VERSION 1.1)
 
-option(BUILD_SHARED_LIBS "Compile dSPACE VEOS CoSim as a shared library" OFF)
+option(BUILD_SHARED_LIBS "Build all libraries (DsVeosCoSim and its dependencies) as shared libraries" OFF)
+option(DSVEOSCOSIM_BUILD_SHARED "Build only DsVeosCoSim as a shared library and bundle its dependencies statically" OFF)
 option(DSVEOSCOSIM_BUILD_TESTS "Create tests for dSPACE VEOS CoSim" OFF)
 option(DSVEOSCOSIM_SUPPRESS_VENDORED_FMT_WARNINGS "Disable compiler warnings for the vendored fmt target" ON)
 
@@ -49,8 +50,14 @@ else()
   )
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS OR DSVEOSCOSIM_BUILD_SHARED)
   set(DSVEOSCOSIM_TYPE SHARED)
+endif()
+
+# Bundle mode: DsVeosCoSim is shared while its dependencies stay static and are linked into it.
+set(DSVEOSCOSIM_BUNDLE_DEPS OFF)
+if(DSVEOSCOSIM_BUILD_SHARED AND NOT BUILD_SHARED_LIBS)
+  set(DSVEOSCOSIM_BUNDLE_DEPS ON)
 endif()
 
 if(TARGET fmt::fmt)
@@ -70,6 +77,19 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/CMakeLists.txt")
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
       target_compile_options(fmt PRIVATE -w)
     endif()
+  endif()
+
+  # Static fmt must be position-independent to be linked into the shared DsVeosCoSim,
+  # and hidden so its symbols are not re-exported from the bundled library.
+  if(DSVEOSCOSIM_BUNDLE_DEPS AND TARGET fmt)
+    set_target_properties(
+      fmt
+      PROPERTIES
+      POSITION_INDEPENDENT_CODE ON
+      C_VISIBILITY_PRESET hidden
+      CXX_VISIBILITY_PRESET hidden
+      VISIBILITY_INLINES_HIDDEN ON
+    )
   endif()
 
   if(TARGET fmt::fmt)

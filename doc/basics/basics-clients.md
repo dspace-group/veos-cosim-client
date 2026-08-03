@@ -34,13 +34,15 @@ The following steps outline the workflow for creating a CoSim client:
      ```console
      mkdir build
      cd build
-     cmake .. -DBUILD_SHARED_LIBS=ON
+     cmake .. -DDSVEOSCOSIM_BUILD_SHARED=ON
      cmake --build .
      ```
 
      This produces a dynamic library in the build tree.
 
      For single-config generators, set `-DCMAKE_BUILD_TYPE=Release` during configuration to create a release build.
+
+     `-DDSVEOSCOSIM_BUILD_SHARED=ON` builds only `DsVeosCoSim` as a shared library and links its dependencies (including the bundled `fmt`) in statically, so you distribute a single library file. This is the recommended option. Alternatively, `-DBUILD_SHARED_LIBS=ON` builds every library as a separate shared library, in which case those dependencies must be distributed alongside `DsVeosCoSim`.
 
    - For precompiling as a static library, execute the following commands in the folder to which you extracted the DsVeosCoSim.zip archive:
 
