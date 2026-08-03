@@ -551,4 +551,320 @@ TEST(TestDsVeosCoSimConversion, FrMessageConversionNullArgs) {
     EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageToMessageContainer(&message, nullptr));
 }
 
+// --- Buffer-based ToString Functions ---
+
+// Runs the common two-call (query-size) contract checks against a ToString function.
+// The callable is invoked as fn(char* buffer, uint32_t* bufferSize).
+template <typename Fn>
+void CheckToStringBuffer(const Fn& fn) {
+    // Query mode: a null buffer returns the required size including the terminating null.
+    uint32_t requiredSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_Full, fn(nullptr, &requiredSize));
+    EXPECT_GT(requiredSize, 0U);
+
+    // A too-small buffer returns Full and reports the required size.
+    if (requiredSize > 1) {
+        char tooSmall = '\1';
+        uint32_t smallSize = 1;
+        EXPECT_EQ(DsVeosCoSim_Result_Full, fn(&tooSmall, &smallSize));
+        EXPECT_EQ(requiredSize, smallSize);
+    }
+
+    // A sufficient buffer succeeds and produces a null-terminated string.
+    std::string buffer(requiredSize, '\1');
+    uint32_t bufferSize = requiredSize;
+    EXPECT_EQ(DsVeosCoSim_Result_Ok, fn(buffer.data(), &bufferSize));
+    EXPECT_EQ(requiredSize, bufferSize);
+    EXPECT_EQ('\0', buffer[requiredSize - 1]);
+    EXPECT_EQ(static_cast<size_t>(requiredSize - 1), std::strlen(buffer.c_str()));
+
+    // A null bufferSize is rejected.
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, fn(buffer.data(), nullptr));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, SimulationTimeToString) {
+    CheckToStringBuffer([](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_SimulationTimeToString(1000000000, buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, IoSignalToString) {
+    DsVeosCoSim_IoSignal signal{};
+    signal.id = 1;
+    signal.length = 4;
+    signal.dataType = DsVeosCoSim_DataType_Int32;
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
+    signal.name = "Signal";
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_IoSignalToString(&signal, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoSignalToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, CanControllerToString) {
+    DsVeosCoSim_CanController controller{};
+    controller.id = 1;
+    controller.queueSize = 10;
+    controller.bitsPerSecond = 500000;
+    controller.flexibleDataRateBitsPerSecond = 2000000;
+    controller.name = "CanController";
+    controller.channelName = "Channel";
+    controller.clusterName = "Cluster";
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_CanControllerToString(&controller, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanControllerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, EthControllerToString) {
+    DsVeosCoSim_EthController controller{};
+    controller.id = 1;
+    controller.queueSize = 10;
+    controller.bitsPerSecond = 1000000000;
+    controller.name = "EthController";
+    controller.channelName = "Channel";
+    controller.clusterName = "Cluster";
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_EthControllerToString(&controller, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthControllerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, LinControllerToString) {
+    DsVeosCoSim_LinController controller{};
+    controller.id = 1;
+    controller.queueSize = 10;
+    controller.bitsPerSecond = 20000;
+    controller.type = DsVeosCoSim_LinControllerType_Commander;
+    controller.name = "LinController";
+    controller.channelName = "Channel";
+    controller.clusterName = "Cluster";
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_LinControllerToString(&controller, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinControllerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, FrControllerToString) {
+    DsVeosCoSim_FrController controller{};
+    controller.id = 1;
+    controller.queueSize = 10;
+    controller.bitsPerSecond = 10000000;
+    controller.name = "FrController";
+    controller.channelName = "Channel";
+    controller.clusterName = "Cluster";
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_FrControllerToString(&controller, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrControllerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, ValueToString) {
+    int32_t value = 42;
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_ValueToString(DsVeosCoSim_DataType_Int32, 1, &value, buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, DataToString) {
+    uint8_t data[4] = {0x01, 0x02, 0x03, 0x04};
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_DataToString(data, sizeof(data), ' ', buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, IoDataToString) {
+    DsVeosCoSim_IoSignal signal{};
+    signal.id = 1;
+    signal.length = 1;
+    signal.dataType = DsVeosCoSim_DataType_Int32;
+    signal.sizeKind = DsVeosCoSim_SizeKind_Fixed;
+    signal.name = "Signal";
+
+    int32_t value = 7;
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_IoDataToString(&signal, 1, &value, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoDataToString(nullptr, 1, &value, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, CanMessageToString) {
+    uint8_t data[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    DsVeosCoSim_CanMessage message{};
+    message.timestamp = 123;
+    message.controllerId = 1;
+    message.id = 100;
+    message.flags = DsVeosCoSim_CanMessageFlags_ExtendedId;
+    message.length = sizeof(data);
+    message.data = data;
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_CanMessageToString(&message, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, EthMessageToString) {
+    uint8_t data[6] = {1, 2, 3, 4, 5, 6};
+    DsVeosCoSim_EthMessage message{};
+    message.timestamp = 123;
+    message.controllerId = 1;
+    message.flags = DsVeosCoSim_EthMessageFlags_Loopback;
+    message.length = sizeof(data);
+    message.data = data;
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_EthMessageToString(&message, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, LinMessageToString) {
+    uint8_t data[4] = {1, 2, 3, 4};
+    DsVeosCoSim_LinMessage message{};
+    message.timestamp = 123;
+    message.controllerId = 1;
+    message.id = 50;
+    message.flags = DsVeosCoSim_LinMessageFlags_Header;
+    message.length = sizeof(data);
+    message.data = data;
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_LinMessageToString(&message, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, FrMessageToString) {
+    uint8_t data[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    DsVeosCoSim_FrMessage message{};
+    message.timestamp = 123;
+    message.controllerId = 1;
+    message.id = 200;
+    message.flags = DsVeosCoSim_FrMessageFlags_Startup;
+    message.length = sizeof(data);
+    message.data = data;
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_FrMessageToString(&message, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, CanMessageContainerToString) {
+    DsVeosCoSim_CanMessageContainer container{};
+    container.timestamp = 123;
+    container.controllerId = 1;
+    container.id = 100;
+    container.flags = DsVeosCoSim_CanMessageFlags_ExtendedId;
+    container.length = 8;
+    FillWithRandomData(container.data, container.length);
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_CanMessageContainerToString(&container, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageContainerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, EthMessageContainerToString) {
+    DsVeosCoSim_EthMessageContainer container{};
+    container.timestamp = 123;
+    container.controllerId = 1;
+    container.flags = DsVeosCoSim_EthMessageFlags_Loopback;
+    container.length = 6;
+    FillWithRandomData(container.data, container.length);
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_EthMessageContainerToString(&container, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageContainerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, LinMessageContainerToString) {
+    DsVeosCoSim_LinMessageContainer container{};
+    container.timestamp = 123;
+    container.controllerId = 1;
+    container.id = 50;
+    container.flags = DsVeosCoSim_LinMessageFlags_Header;
+    container.length = 4;
+    FillWithRandomData(container.data, container.length);
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_LinMessageContainerToString(&container, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageContainerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, FrMessageContainerToString) {
+    DsVeosCoSim_FrMessageContainer container{};
+    container.timestamp = 123;
+    container.controllerId = 1;
+    container.id = 200;
+    container.flags = DsVeosCoSim_FrMessageFlags_Startup | DsVeosCoSim_FrMessageFlags_ChannelA;
+    container.length = 8;
+    FillWithRandomData(container.data, container.length);
+
+    CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_FrMessageContainerToString(&container, buffer, bufferSize);
+    });
+
+    uint32_t bufferSize = 0;
+    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageContainerToString(nullptr, nullptr, &bufferSize));
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, CanMessageFlagsToString) {
+    CheckToStringBuffer([](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags_ExtendedId, buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, EthMessageFlagsToString) {
+    CheckToStringBuffer([](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags_Loopback, buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, LinMessageFlagsToString) {
+    CheckToStringBuffer([](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags_Header, buffer, bufferSize);
+    });
+}
+
+TEST(TestDsVeosCoSimToStringBuffer, FrMessageFlagsToString) {
+    CheckToStringBuffer([](char* buffer, uint32_t* bufferSize) {
+        return DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags_Startup, buffer, bufferSize);
+    });
+}
+
 }  // namespace

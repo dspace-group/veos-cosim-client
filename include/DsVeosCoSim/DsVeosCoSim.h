@@ -7,10 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-#include <string>
-#endif
-
 #if (defined __GNUC__) && (!defined _DOXYGEN)
 #ifdef DSVEOSCOSIM_EXPORT
 #define DSVEOSCOSIM_API __attribute__((__visibility__("default")))
@@ -1647,75 +1643,367 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TransmitFrMessageContainer(DsVeo
  */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle handle, int64_t* roundTripTimeInNanoseconds);
 
+/**
+ * \brief Starts the simulation for the given handle.
+ * \param handle    The handle.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle handle);
+
+/**
+ * \brief Stops the simulation for the given handle.
+ * \param handle    The handle.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle handle);
+
+/**
+ * \brief Pauses the simulation for the given handle.
+ * \param handle    The handle.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PauseSimulation(DsVeosCoSim_Handle handle);
+
+/**
+ * \brief Continues the simulation for the given handle.
+ * \param handle    The handle.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_ContinueSimulation(DsVeosCoSim_Handle handle);
+
+/**
+ * \brief Terminates the simulation for the given handle.
+ * \param handle            The handle.
+ * \param terminateReason   The reason for the termination.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle handle, DsVeosCoSim_TerminateReason terminateReason);
 
+/**
+ * \brief Gets the current simulation time for the given handle.
+ * \param handle            The handle.
+ * \param simulationTime    The current simulation time as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationTime* simulationTime);
 
+/**
+ * \brief Gets the current simulation state for the given handle.
+ * \param handle            The handle.
+ * \param simulationState   The simulation state as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle handle, DsVeosCoSim_SimulationState* simulationState);
 
+/**
+ * \brief Converts the given result to its string representation.
+ * \param result    The result to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ResultToString(DsVeosCoSim_Result result);
+
+/**
+ * \brief Converts the given command to its string representation.
+ * \param command   The command to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_CommandToString(DsVeosCoSim_Command command);
+
+/**
+ * \brief Converts the given severity to its string representation.
+ * \param severity  The severity to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity severity);
+
+/**
+ * \brief Converts the given terminate reason to its string representation.
+ * \param terminateReason   The terminate reason to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason terminateReason);
+
+/**
+ * \brief Converts the given connection state to its string representation.
+ * \param connectionState   The connection state to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState connectionState);
+
+/**
+ * \brief Converts the given simulation state to its string representation.
+ * \param simulationState   The simulation state to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_SimulationStateToString(DsVeosCoSim_SimulationState simulationState);
+
+/**
+ * \brief Converts the given data type to its string representation.
+ * \param dataType  The data type to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType dataType);
+
+/**
+ * \brief Converts the given size kind to its string representation.
+ * \param sizeKind  The size kind to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind sizeKind);
+
+/**
+ * \brief Converts the given LIN controller type to its string representation.
+ * \param linControllerType The LIN controller type to convert.
+ */
 DSVEOSCOSIM_DECL const char* DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType linControllerType);
+
+/**
+ * \brief Gets the size in bytes of the given data type.
+ * \param dataType  The data type for which the size is requested.
+ */
 DSVEOSCOSIM_DECL size_t DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType dataType);
 
+/**
+ * \brief Converts the given CAN message container to a CAN message.
+ * \param messageContainer  The CAN message container to convert.
+ * \param message           The converted CAN message as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteCanMessageContainerToMessage(const DsVeosCoSim_CanMessageContainer* messageContainer,
                                                                                   DsVeosCoSim_CanMessage* message);
+
+/**
+ * \brief Converts the given CAN message to a CAN message container.
+ * \param message           The CAN message to convert.
+ * \param messageContainer  The converted CAN message container as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteCanMessageToMessageContainer(const DsVeosCoSim_CanMessage* message,
                                                                                   DsVeosCoSim_CanMessageContainer* messageContainer);
 
+/**
+ * \brief Converts the given Ethernet message container to an Ethernet message.
+ * \param messageContainer  The Ethernet message container to convert.
+ * \param message           The converted Ethernet message as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteEthMessageContainerToMessage(const DsVeosCoSim_EthMessageContainer* messageContainer,
                                                                                   DsVeosCoSim_EthMessage* message);
+
+/**
+ * \brief Converts the given Ethernet message to an Ethernet message container.
+ * \param message           The Ethernet message to convert.
+ * \param messageContainer  The converted Ethernet message container as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteEthMessageToMessageContainer(const DsVeosCoSim_EthMessage* message,
                                                                                   DsVeosCoSim_EthMessageContainer* messageContainer);
 
+/**
+ * \brief Converts the given LIN message container to a LIN message.
+ * \param messageContainer  The LIN message container to convert.
+ * \param message           The converted LIN message as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteLinMessageContainerToMessage(const DsVeosCoSim_LinMessageContainer* messageContainer,
                                                                                   DsVeosCoSim_LinMessage* message);
+
+/**
+ * \brief Converts the given LIN message to a LIN message container.
+ * \param message           The LIN message to convert.
+ * \param messageContainer  The converted LIN message container as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoSim_LinMessage* message,
                                                                                   DsVeosCoSim_LinMessageContainer* messageContainer);
 
+/**
+ * \brief Converts the given FlexRay message container to a FlexRay message.
+ * \param messageContainer  The FlexRay message container to convert.
+ * \param message           The converted FlexRay message as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageContainerToMessage(const DsVeosCoSim_FrMessageContainer* messageContainer,
                                                                                  DsVeosCoSim_FrMessage* message);
+
+/**
+ * \brief Converts the given FlexRay message to a FlexRay message container.
+ * \param message           The FlexRay message to convert.
+ * \param messageContainer  The converted FlexRay message container as an out value.
+ */
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSim_FrMessage* message,
                                                                                  DsVeosCoSim_FrMessageContainer* messageContainer);
 
-#ifdef __cplusplus
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal);
+/*
+ * The following functions convert a value into its human-readable string representation.
+ * They follow a two-call (query-size) pattern so they are usable from C and C-based wrappers:
+ *   1. Call with buffer == NULL to obtain the required buffer size (including the terminating null) in *bufferSize.
+ *   2. Call again with a buffer of at least that size.
+ * If buffer is NULL or *bufferSize is too small, *bufferSize is set to the required size and DsVeosCoSim_Result_Full
+ * is returned. On success the null-terminated string is written to buffer, *bufferSize is set to the written size
+ * (including the terminating null) and DsVeosCoSim_Result_Ok is returned.
+ */
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller);
+/**
+ * \brief Converts the given simulation time to its string representation.
+ * \param simulationTime    The simulation time to convert.
+ * \param buffer            The destination buffer, or NULL to query the required size.
+ * \param bufferSize        In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime simulationTime, char* buffer, uint32_t* bufferSize);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator = 0);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value);
+/**
+ * \brief Converts the given I/O signal to its string representation.
+ * \param ioSignal      The I/O signal to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal* ioSignal, char* buffer, uint32_t* bufferSize);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message);
+/**
+ * \brief Converts the given CAN controller to its string representation.
+ * \param controller    The CAN controller to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController* controller, char* buffer, uint32_t* bufferSize);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer);
+/**
+ * \brief Converts the given Ethernet controller to its string representation.
+ * \param controller    The Ethernet controller to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController* controller, char* buffer, uint32_t* bufferSize);
 
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags);
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags);
+/**
+ * \brief Converts the given LIN controller to its string representation.
+ * \param controller    The LIN controller to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController* controller, char* buffer, uint32_t* bufferSize);
 
-#endif
+/**
+ * \brief Converts the given FlexRay controller to its string representation.
+ * \param controller    The FlexRay controller to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController* controller, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given value to its string representation.
+ * \param dataType      The data type of the value.
+ * \param length        The length of the value in element count.
+ * \param value         The value to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_ValueToString(DsVeosCoSim_DataType dataType, uint32_t length, const void* value, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given raw data to its string representation.
+ * \param data          The data to convert.
+ * \param dataLength    The length of the data in bytes.
+ * \param separator     The separator between bytes, or 0 for no separator.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_DataToString(const uint8_t* data, size_t dataLength, char separator, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given I/O signal value to its string representation.
+ * \param ioSignal      The I/O signal describing the value.
+ * \param length        The length of the value in element count.
+ * \param value         The value to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result
+DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal* ioSignal, uint32_t length, const void* value, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given CAN message to its string representation.
+ * \param message       The CAN message to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage* message, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given Ethernet message to its string representation.
+ * \param message       The Ethernet message to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage* message, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given LIN message to its string representation.
+ * \param message       The LIN message to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage* message, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given FlexRay message to its string representation.
+ * \param message       The FlexRay message to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage* message, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given CAN message container to its string representation.
+ * \param messageContainer  The CAN message container to convert.
+ * \param buffer            The destination buffer, or NULL to query the required size.
+ * \param bufferSize        In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer* messageContainer,
+                                                                            char* buffer,
+                                                                            uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given Ethernet message container to its string representation.
+ * \param messageContainer  The Ethernet message container to convert.
+ * \param buffer            The destination buffer, or NULL to query the required size.
+ * \param bufferSize        In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer* messageContainer,
+                                                                            char* buffer,
+                                                                            uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given LIN message container to its string representation.
+ * \param messageContainer  The LIN message container to convert.
+ * \param buffer            The destination buffer, or NULL to query the required size.
+ * \param bufferSize        In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer* messageContainer,
+                                                                            char* buffer,
+                                                                            uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given FlexRay message container to its string representation.
+ * \param messageContainer  The FlexRay message container to convert.
+ * \param buffer            The destination buffer, or NULL to query the required size.
+ * \param bufferSize        In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer* messageContainer,
+                                                                           char* buffer,
+                                                                           uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given CAN message flags to their string representation.
+ * \param flags         The CAN message flags to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags flags, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given Ethernet message flags to their string representation.
+ * \param flags         The Ethernet message flags to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags flags, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given LIN message flags to their string representation.
+ * \param flags         The LIN message flags to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags flags, char* buffer, uint32_t* bufferSize);
+
+/**
+ * \brief Converts the given FlexRay message flags to their string representation.
+ * \param flags         The FlexRay message flags to convert.
+ * \param buffer        The destination buffer, or NULL to query the required size.
+ * \param bufferSize    In: the size of buffer. Out: the required size including the terminating null.
+ */
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags flags, char* buffer, uint32_t* bufferSize);
 
 // NOLINTEND

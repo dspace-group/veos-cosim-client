@@ -25,6 +25,21 @@ namespace {
         }                                        \
     } while (0)
 
+// Calls a two-call (query-size) ToString API and returns the result as a std::string.
+template <typename Func, typename... Args>
+[[nodiscard]] std::string ToStr(const Func& func, Args... args) {
+    uint32_t bufferSize = 0;
+    func(args..., nullptr, &bufferSize);
+
+    std::string result(bufferSize, '\0');
+    func(args..., result.data(), &bufferSize);
+    if (!result.empty()) {
+        result.pop_back();
+    }
+
+    return result;
+}
+
 DsVeosCoSim_Handle Client;
 
 class SimulationState {
@@ -98,7 +113,7 @@ void PrintCurrentRoundTripTime() {
     }
 
     if (roundTripTimeInNanoseconds > 0) {
-        LogTrace("Round trip time: {} ns.", DsVeosCoSim_SimulationTimeToString(roundTripTimeInNanoseconds));
+        LogTrace("Round trip time: {} ns.", ToStr(DsVeosCoSim_SimulationTimeToString, roundTripTimeInNanoseconds));
     }
 }
 
@@ -298,35 +313,35 @@ void OnIncomingSignalChanged([[maybe_unused]] DsVeosCoSim_SimulationTime simulat
                              uint32_t length,
                              const void* value,
                              [[maybe_unused]] void* userData) {
-    LogIoData(DsVeosCoSim_IoDataToString(ioSignal, length, value));
+    LogIoData(ToStr(DsVeosCoSim_IoDataToString, ioSignal, length, value));
 }
 
 void OnCanMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_CanController* controller,
                                    const DsVeosCoSim_CanMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    LogCanMessage(DsVeosCoSim_CanMessageContainerToString(messageContainer));
+    LogCanMessage(ToStr(DsVeosCoSim_CanMessageContainerToString, messageContainer));
 }
 
 void OnEthMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_EthController* controller,
                                    const DsVeosCoSim_EthMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    LogEthMessage(DsVeosCoSim_EthMessageContainerToString(messageContainer));
+    LogEthMessage(ToStr(DsVeosCoSim_EthMessageContainerToString, messageContainer));
 }
 
 void OnLinMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                    [[maybe_unused]] const DsVeosCoSim_LinController* controller,
                                    const DsVeosCoSim_LinMessageContainer* messageContainer,
                                    [[maybe_unused]] void* userData) {
-    LogLinMessage(DsVeosCoSim_LinMessageContainerToString(messageContainer));
+    LogLinMessage(ToStr(DsVeosCoSim_LinMessageContainerToString, messageContainer));
 }
 
 void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime simulationTime,
                                   [[maybe_unused]] const DsVeosCoSim_FrController* controller,
                                   const DsVeosCoSim_FrMessageContainer* messageContainer,
                                   [[maybe_unused]] void* userData) {
-    LogFrMessage(DsVeosCoSim_FrMessageContainerToString(messageContainer));
+    LogFrMessage(ToStr(DsVeosCoSim_FrMessageContainerToString, messageContainer));
 }
 
 [[nodiscard]] DsVeosCoSim_Result Connect(const std::string& host, const std::string& serverName) {
@@ -353,7 +368,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
 
     DsVeosCoSim_SimulationTime stepSize{};
     CheckDsVeosCoSimResult(DsVeosCoSim_GetStepSize(Client, &stepSize));
-    LogTrace("Step size: {} s", DsVeosCoSim_SimulationTimeToString(stepSize));
+    LogTrace("Step size: {} s", ToStr(DsVeosCoSim_SimulationTimeToString, stepSize));
     LogTrace("");
 
     DsVeosCoSim_SimulationState initialState{};
@@ -374,7 +389,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         CanControllers = std::vector<DsVeosCoSim_CanController>(tmpCanControllers, tmpCanControllers + tmpCanControllersCount);
         LogTrace("Found the following CAN controllers:");
         for (const DsVeosCoSim_CanController& controller : CanControllers) {
-            LogTrace("  {}", DsVeosCoSim_CanControllerToString(&controller));
+            LogTrace("  {}", ToStr(DsVeosCoSim_CanControllerToString, &controller));
         }
 
         LogTrace("");
@@ -387,7 +402,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         EthControllers = std::vector<DsVeosCoSim_EthController>(tmpEthControllers, tmpEthControllers + tmpEthControllersCount);
         LogTrace("Found the following Ethernet controllers:");
         for (const DsVeosCoSim_EthController& controller : EthControllers) {
-            LogTrace("  {}", DsVeosCoSim_EthControllerToString(&controller));
+            LogTrace("  {}", ToStr(DsVeosCoSim_EthControllerToString, &controller));
         }
 
         LogTrace("");
@@ -400,7 +415,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         LinControllers = std::vector<DsVeosCoSim_LinController>(tmpLinControllers, tmpLinControllers + tmpLinControllersCount);
         LogTrace("Found the following LIN controllers:");
         for (const DsVeosCoSim_LinController& controller : LinControllers) {
-            LogTrace("  {}", DsVeosCoSim_LinControllerToString(&controller));
+            LogTrace("  {}", ToStr(DsVeosCoSim_LinControllerToString, &controller));
         }
 
         LogTrace("");
@@ -413,7 +428,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         FrControllers = std::vector<DsVeosCoSim_FrController>(tmpFrControllers, tmpFrControllers + tmpFrControllersCount);
         LogTrace("Found the following FlexRay controllers:");
         for (const DsVeosCoSim_FrController& controller : FrControllers) {
-            LogTrace("  {}", DsVeosCoSim_FrControllerToString(&controller));
+            LogTrace("  {}", ToStr(DsVeosCoSim_FrControllerToString, &controller));
         }
 
         LogTrace("");
@@ -426,7 +441,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         LogTrace("Found the following incoming signals:");
         for (uint32_t i = 0; i < tmpIncomingSignalsCount; i++) {
             const DsVeosCoSim_IoSignal& signal = tmpIncomingSignals[i];
-            LogTrace("  {}", DsVeosCoSim_IoSignalToString(&signal));
+            LogTrace("  {}", ToStr(DsVeosCoSim_IoSignalToString, &signal));
         }
 
         LogTrace("");
@@ -439,7 +454,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
         OutgoingSignals = std::vector<DsVeosCoSim_IoSignal>(tmpOutgoingSignals, tmpOutgoingSignals + tmpOutgoingSignalsCount);
         LogTrace("Found the following outgoing signals:");
         for (const DsVeosCoSim_IoSignal& signal : OutgoingSignals) {
-            LogTrace("  {}", DsVeosCoSim_IoSignalToString(&signal));
+            LogTrace("  {}", ToStr(DsVeosCoSim_IoSignalToString, &signal));
         }
 
         LogTrace("");
@@ -496,28 +511,28 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
 
         switch (command) {
             case DsVeosCoSim_Command_Start:
-                LogInfo("Simulation started at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                LogInfo("Simulation started at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
                 SimState.Set(DsVeosCoSim_SimulationState_Running);
                 StartPerformanceMeasurement();
                 break;
             case DsVeosCoSim_Command_Stop:
-                LogInfo("Simulation stopped at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                LogInfo("Simulation stopped at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
                 StopPerformanceMeasurement();
                 SimState.Set(DsVeosCoSim_SimulationState_Stopped);
                 break;
             case DsVeosCoSim_Command_Terminate:
             case DsVeosCoSim_Command_TerminateFinished:
-                LogInfo("Simulation terminated at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                LogInfo("Simulation terminated at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
                 StopPerformanceMeasurement();
                 SimState.Set(DsVeosCoSim_SimulationState_Terminated);
                 break;
             case DsVeosCoSim_Command_Pause:
-                LogInfo("Simulation paused at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                LogInfo("Simulation paused at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
                 StopPerformanceMeasurement();
                 SimState.Set(DsVeosCoSim_SimulationState_Paused);
                 break;
             case DsVeosCoSim_Command_Continue:
-                LogInfo("Simulation continued at {} s.", DsVeosCoSim_SimulationTimeToString(simulationTime));
+                LogInfo("Simulation continued at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
                 SimState.Set(DsVeosCoSim_SimulationState_Running);
                 StartPerformanceMeasurement();
                 break;

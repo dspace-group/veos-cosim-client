@@ -12,15 +12,17 @@
 
 Formats raw byte data as a string.
 
-This function is only available in C++.
+This function follows a two-call pattern. Call it once with `buffer` set to `NULL` to obtain the required buffer size (including the terminating null) in `bufferSize`, then call it again with a buffer of at least that size.
 
 ## Syntax
 
 ```cpp
-extern DSVEOSCOSIM_API std::string DsVeosCoSim_DataToString(
+DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_DataToString(
     const uint8_t* data,
     size_t dataLength,
-    char separator = 0
+    char separator,
+    char* buffer,
+    uint32_t* bufferSize
 );
 ```
 
@@ -38,8 +40,16 @@ The number of bytes to format.
 
 The separator character used while formatting.
 
+> char* buffer
+
+The destination buffer, or `NULL` to query the required buffer size.
+
+> uint32_t* bufferSize
+
+On input, the size of `buffer`. On output, the required size including the terminating null.
+
 ## Return values
 
-> std::string
+> [DsVeosCoSim_Result](../enumerations/DsVeosCoSim_Result.md)
 
-A string representation of the byte data.
+`DsVeosCoSim_Result_Ok` on success. `DsVeosCoSim_Result_Full` if `buffer` is `NULL` or too small; in that case the required size (including the terminating null) is written to `bufferSize`. `DsVeosCoSim_Result_InvalidArgument` if a required argument is `NULL`.
