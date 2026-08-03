@@ -1,0 +1,123 @@
+enum DsVeosCoSim_Command { DsVeosCoSim_Command_None=; DsVeosCoSim_Command_Step=; DsVeosCoSim_Command_Start=; DsVeosCoSim_Command_Stop=; DsVeosCoSim_Command_Terminate=; DsVeosCoSim_Command_Pause=; DsVeosCoSim_Command_Continue=; DsVeosCoSim_Command_TerminateFinished=; DsVeosCoSim_Command_Ping=; DsVeosCoSim_Command_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_ConnectionState { DsVeosCoSim_ConnectionState_Disconnected=; DsVeosCoSim_ConnectionState_Connected=; DsVeosCoSim_ConnectionState_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_DataType { DsVeosCoSim_DataType_Bool=; DsVeosCoSim_DataType_Int8=; DsVeosCoSim_DataType_Int16=; DsVeosCoSim_DataType_Int32=; DsVeosCoSim_DataType_Int64=; DsVeosCoSim_DataType_UInt8=; DsVeosCoSim_DataType_UInt16=; DsVeosCoSim_DataType_UInt32=; DsVeosCoSim_DataType_UInt64=; DsVeosCoSim_DataType_Float32=; DsVeosCoSim_DataType_Float64=; DsVeosCoSim_DataType_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_LinControllerType { DsVeosCoSim_LinControllerType_Responder=; DsVeosCoSim_LinControllerType_Commander=; DsVeosCoSim_LinControllerType_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_Result { DsVeosCoSim_Result_Ok=; DsVeosCoSim_Result_Error=; DsVeosCoSim_Result_Empty=; DsVeosCoSim_Result_Full=; DsVeosCoSim_Result_InvalidArgument=; DsVeosCoSim_Result_Disconnected=; DsVeosCoSim_Result_Timeout=; DsVeosCoSim_Result_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_Severity { DsVeosCoSim_Severity_Error=; DsVeosCoSim_Severity_Warning=; DsVeosCoSim_Severity_Info=; DsVeosCoSim_Severity_Trace=; DsVeosCoSim_Severity_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_SimulationState { DsVeosCoSim_SimulationState_Unloaded=; DsVeosCoSim_SimulationState_Stopped=; DsVeosCoSim_SimulationState_Running=; DsVeosCoSim_SimulationState_Paused=; DsVeosCoSim_SimulationState_Terminated=; DsVeosCoSim_SimulationState_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_SizeKind { DsVeosCoSim_SizeKind_Fixed=; DsVeosCoSim_SizeKind_Variable=; DsVeosCoSim_SizeKind_INT_MAX_SENTINEL_DO_NOT_USE_= }
+enum DsVeosCoSim_TerminateReason { DsVeosCoSim_TerminateReason_Finished=; DsVeosCoSim_TerminateReason_Error=; DsVeosCoSim_TerminateReason_INT_MAX_SENTINEL_DO_NOT_USE_= }
+fn DsVeosCoSim_CanControllerToString(const DsVeosCoSim_CanController *) -> std::string
+fn DsVeosCoSim_CanMessageContainerToString(const DsVeosCoSim_CanMessageContainer *) -> std::string
+fn DsVeosCoSim_CanMessageFlagsToString(DsVeosCoSim_CanMessageFlags) -> std::string
+fn DsVeosCoSim_CanMessageToString(const DsVeosCoSim_CanMessage *) -> std::string
+fn DsVeosCoSim_CommandToString(DsVeosCoSim_Command) -> const char *
+fn DsVeosCoSim_Connect(DsVeosCoSim_Handle, DsVeosCoSim_ConnectConfig) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ConnectionStateToString(DsVeosCoSim_ConnectionState) -> const char *
+fn DsVeosCoSim_ContinueSimulation(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_Create() -> DsVeosCoSim_Handle
+fn DsVeosCoSim_DataToString(const uint8_t *, size_t, char) -> std::string
+fn DsVeosCoSim_DataTypeToString(DsVeosCoSim_DataType) -> const char *
+fn DsVeosCoSim_Destroy(DsVeosCoSim_Handle) -> void
+fn DsVeosCoSim_Disconnect(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_EthControllerToString(const DsVeosCoSim_EthController *) -> std::string
+fn DsVeosCoSim_EthMessageContainerToString(const DsVeosCoSim_EthMessageContainer *) -> std::string
+fn DsVeosCoSim_EthMessageFlagsToString(DsVeosCoSim_EthMessageFlags) -> std::string
+fn DsVeosCoSim_EthMessageToString(const DsVeosCoSim_EthMessage *) -> std::string
+fn DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_FrControllerToString(const DsVeosCoSim_FrController *) -> std::string
+fn DsVeosCoSim_FrMessageContainerToString(const DsVeosCoSim_FrMessageContainer *) -> std::string
+fn DsVeosCoSim_FrMessageFlagsToString(DsVeosCoSim_FrMessageFlags) -> std::string
+fn DsVeosCoSim_FrMessageToString(const DsVeosCoSim_FrMessage *) -> std::string
+fn DsVeosCoSim_GetCanControllers(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_CanController **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetConnectionState(DsVeosCoSim_Handle, DsVeosCoSim_ConnectionState *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetCurrentSimulationTime(DsVeosCoSim_Handle, DsVeosCoSim_SimulationTime *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType) -> size_t
+fn DsVeosCoSim_GetEthControllers(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_EthController **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetFrControllers(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_FrController **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetIncomingSignals(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_IoSignal **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetLinControllers(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_LinController **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetOutgoingSignals(DsVeosCoSim_Handle, uint32_t *, const DsVeosCoSim_IoSignal **) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetRoundTripTime(DsVeosCoSim_Handle, int64_t *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetSimulationState(DsVeosCoSim_Handle, DsVeosCoSim_SimulationState *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_GetStepSize(DsVeosCoSim_Handle, DsVeosCoSim_SimulationTime *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_IoDataToString(const DsVeosCoSim_IoSignal *, uint32_t, const void *) -> std::string
+fn DsVeosCoSim_IoSignalToString(const DsVeosCoSim_IoSignal *) -> std::string
+fn DsVeosCoSim_LinControllerToString(const DsVeosCoSim_LinController *) -> std::string
+fn DsVeosCoSim_LinControllerTypeToString(DsVeosCoSim_LinControllerType) -> const char *
+fn DsVeosCoSim_LinMessageContainerToString(const DsVeosCoSim_LinMessageContainer *) -> std::string
+fn DsVeosCoSim_LinMessageFlagsToString(DsVeosCoSim_LinMessageFlags) -> std::string
+fn DsVeosCoSim_LinMessageToString(const DsVeosCoSim_LinMessage *) -> std::string
+fn DsVeosCoSim_PauseSimulation(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_PollCommand(DsVeosCoSim_Handle, DsVeosCoSim_SimulationTime *, DsVeosCoSim_Command *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_PollCommand2(DsVeosCoSim_Handle, DsVeosCoSim_SimulationTime *, DsVeosCoSim_Command *, uint32_t) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReadIncomingSignal(DsVeosCoSim_Handle, DsVeosCoSim_IoSignalId, uint32_t *, void *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveCanMessage(DsVeosCoSim_Handle, DsVeosCoSim_CanMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveCanMessageContainer(DsVeosCoSim_Handle, DsVeosCoSim_CanMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveEthMessage(DsVeosCoSim_Handle, DsVeosCoSim_EthMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveEthMessageContainer(DsVeosCoSim_Handle, DsVeosCoSim_EthMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveFrMessage(DsVeosCoSim_Handle, DsVeosCoSim_FrMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveFrMessageContainer(DsVeosCoSim_Handle, DsVeosCoSim_FrMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveLinMessage(DsVeosCoSim_Handle, DsVeosCoSim_LinMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ReceiveLinMessageContainer(DsVeosCoSim_Handle, DsVeosCoSim_LinMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ResultToString(DsVeosCoSim_Result) -> const char *
+fn DsVeosCoSim_RunCallbackBasedCoSimulation(DsVeosCoSim_Handle, DsVeosCoSim_Callbacks) -> DsVeosCoSim_Result
+fn DsVeosCoSim_SetLogCallback(DsVeosCoSim_LogCallback) -> void
+fn DsVeosCoSim_SetNextSimulationTime(DsVeosCoSim_Handle, DsVeosCoSim_SimulationTime) -> DsVeosCoSim_Result
+fn DsVeosCoSim_SeverityToString(DsVeosCoSim_Severity) -> const char *
+fn DsVeosCoSim_SimulationStateToString(DsVeosCoSim_SimulationState) -> const char *
+fn DsVeosCoSim_SimulationTimeToString(DsVeosCoSim_SimulationTime) -> std::string
+fn DsVeosCoSim_SizeKindToString(DsVeosCoSim_SizeKind) -> const char *
+fn DsVeosCoSim_StartPollingBasedCoSimulation(DsVeosCoSim_Handle, DsVeosCoSim_Callbacks) -> DsVeosCoSim_Result
+fn DsVeosCoSim_StartSimulation(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_StopSimulation(DsVeosCoSim_Handle) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TerminateReasonToString(DsVeosCoSim_TerminateReason) -> const char *
+fn DsVeosCoSim_TerminateSimulation(DsVeosCoSim_Handle, DsVeosCoSim_TerminateReason) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitCanMessage(DsVeosCoSim_Handle, const DsVeosCoSim_CanMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitCanMessageContainer(DsVeosCoSim_Handle, const DsVeosCoSim_CanMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitEthMessage(DsVeosCoSim_Handle, const DsVeosCoSim_EthMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitEthMessageContainer(DsVeosCoSim_Handle, const DsVeosCoSim_EthMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitFrMessage(DsVeosCoSim_Handle, const DsVeosCoSim_FrMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitFrMessageContainer(DsVeosCoSim_Handle, const DsVeosCoSim_FrMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitLinMessage(DsVeosCoSim_Handle, const DsVeosCoSim_LinMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_TransmitLinMessageContainer(DsVeosCoSim_Handle, const DsVeosCoSim_LinMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_ValueToString(DsVeosCoSim_DataType, uint32_t, const void *) -> std::string
+fn DsVeosCoSim_WriteCanMessageContainerToMessage(const DsVeosCoSim_CanMessageContainer *, DsVeosCoSim_CanMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteCanMessageToMessageContainer(const DsVeosCoSim_CanMessage *, DsVeosCoSim_CanMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteEthMessageContainerToMessage(const DsVeosCoSim_EthMessageContainer *, DsVeosCoSim_EthMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteEthMessageToMessageContainer(const DsVeosCoSim_EthMessage *, DsVeosCoSim_EthMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteFrMessageContainerToMessage(const DsVeosCoSim_FrMessageContainer *, DsVeosCoSim_FrMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteFrMessageToMessageContainer(const DsVeosCoSim_FrMessage *, DsVeosCoSim_FrMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteLinMessageContainerToMessage(const DsVeosCoSim_LinMessageContainer *, DsVeosCoSim_LinMessage *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteLinMessageToMessageContainer(const DsVeosCoSim_LinMessage *, DsVeosCoSim_LinMessageContainer *) -> DsVeosCoSim_Result
+fn DsVeosCoSim_WriteOutgoingSignal(DsVeosCoSim_Handle, DsVeosCoSim_IoSignalId, uint32_t, const void *) -> DsVeosCoSim_Result
+struct DsVeosCoSim_Callbacks {  }
+struct DsVeosCoSim_Callbacks { simulationStartedCallback: DsVeosCoSim_SimulationCallback; simulationStoppedCallback: DsVeosCoSim_SimulationCallback; simulationTerminatedCallback: DsVeosCoSim_SimulationTerminatedCallback; simulationPausedCallback: DsVeosCoSim_SimulationCallback; simulationContinuedCallback: DsVeosCoSim_SimulationCallback; simulationBeginStepCallback: DsVeosCoSim_SimulationCallback; simulationEndStepCallback: DsVeosCoSim_SimulationCallback; incomingSignalChangedCallback: DsVeosCoSim_IncomingSignalChangedCallback; canMessageReceivedCallback: DsVeosCoSim_CanMessageReceivedCallback; ethMessageReceivedCallback: DsVeosCoSim_EthMessageReceivedCallback; linMessageReceivedCallback: DsVeosCoSim_LinMessageReceivedCallback; userData: void *; canMessageContainerReceivedCallback: DsVeosCoSim_CanMessageContainerReceivedCallback; ethMessageContainerReceivedCallback: DsVeosCoSim_EthMessageContainerReceivedCallback; linMessageContainerReceivedCallback: DsVeosCoSim_LinMessageContainerReceivedCallback; frMessageContainerReceivedCallback: DsVeosCoSim_FrMessageContainerReceivedCallback; frMessageReceivedCallback: DsVeosCoSim_FrMessageReceivedCallback }
+struct DsVeosCoSim_CanController {  }
+struct DsVeosCoSim_CanController { id: DsVeosCoSim_BusControllerId; queueSize: uint32_t; bitsPerSecond: uint64_t; flexibleDataRateBitsPerSecond: uint64_t; name: const char *; channelName: const char *; clusterName: const char * }
+struct DsVeosCoSim_CanMessage {  }
+struct DsVeosCoSim_CanMessage { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; id: uint32_t; flags: DsVeosCoSim_CanMessageFlags; length: uint32_t; data: const uint8_t * }
+struct DsVeosCoSim_CanMessageContainer {  }
+struct DsVeosCoSim_CanMessageContainer { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; reserved: uint32_t; id: uint32_t; flags: DsVeosCoSim_CanMessageFlags; length: uint32_t; data: uint8_t[64] }
+struct DsVeosCoSim_ConnectConfig {  }
+struct DsVeosCoSim_ConnectConfig { remoteIpAddress: const char *; serverName: const char *; clientName: const char *; remotePort: uint16_t; localPort: uint16_t }
+struct DsVeosCoSim_EthController {  }
+struct DsVeosCoSim_EthController { id: DsVeosCoSim_BusControllerId; queueSize: uint32_t; bitsPerSecond: uint64_t; macAddress: uint8_t[6]; name: const char *; channelName: const char *; clusterName: const char * }
+struct DsVeosCoSim_EthMessage {  }
+struct DsVeosCoSim_EthMessage { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; reserved: uint32_t; flags: DsVeosCoSim_EthMessageFlags; length: uint32_t; data: const uint8_t * }
+struct DsVeosCoSim_EthMessageContainer {  }
+struct DsVeosCoSim_EthMessageContainer { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; reserved: uint32_t; flags: DsVeosCoSim_EthMessageFlags; length: uint32_t; data: uint8_t[9018] }
+struct DsVeosCoSim_FrController {  }
+struct DsVeosCoSim_FrController { id: DsVeosCoSim_BusControllerId; queueSize: uint32_t; bitsPerSecond: uint64_t; name: const char *; channelName: const char *; clusterName: const char * }
+struct DsVeosCoSim_FrMessage {  }
+struct DsVeosCoSim_FrMessage { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; id: uint32_t; flags: DsVeosCoSim_FrMessageFlags; length: uint32_t; data: const uint8_t * }
+struct DsVeosCoSim_FrMessageContainer {  }
+struct DsVeosCoSim_FrMessageContainer { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; reserved: uint32_t; id: uint32_t; flags: DsVeosCoSim_FrMessageFlags; length: uint32_t; data: uint8_t[254] }
+struct DsVeosCoSim_IoSignal {  }
+struct DsVeosCoSim_IoSignal { id: DsVeosCoSim_IoSignalId; length: uint32_t; dataType: DsVeosCoSim_DataType; sizeKind: DsVeosCoSim_SizeKind; name: const char * }
+struct DsVeosCoSim_LinController {  }
+struct DsVeosCoSim_LinController { id: DsVeosCoSim_BusControllerId; queueSize: uint32_t; bitsPerSecond: uint64_t; type: DsVeosCoSim_LinControllerType; name: const char *; channelName: const char *; clusterName: const char * }
+struct DsVeosCoSim_LinMessage {  }
+struct DsVeosCoSim_LinMessage { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; id: uint32_t; flags: DsVeosCoSim_LinMessageFlags; length: uint32_t; data: const uint8_t * }
+struct DsVeosCoSim_LinMessageContainer {  }
+struct DsVeosCoSim_LinMessageContainer { timestamp: DsVeosCoSim_SimulationTime; controllerId: DsVeosCoSim_BusControllerId; reserved: uint32_t; id: uint32_t; flags: DsVeosCoSim_LinMessageFlags; length: uint32_t; data: uint8_t[8] }

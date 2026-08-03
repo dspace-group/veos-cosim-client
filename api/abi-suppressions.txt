@@ -1,0 +1,27 @@
+# Copyright dSPACE SE & Co. KG. All rights reserved.
+# libabigail suppression specification.
+
+# Only the public DsVeosCoSim_* C API is part of the contract.
+# Suppress bundled/internal C++ implementation details and the C++ stdlib,
+# which vary by toolchain and are not part of the public ABI.
+
+[suppress_type]
+  name_regexp = ^std::
+
+[suppress_function]
+  name_regexp = ^std::
+
+[suppress_type]
+  name_regexp = ^__gnu_cxx::
+
+[suppress_function]
+  name_regexp = ^__gnu_cxx::
+
+[suppress_type]
+  name_regexp = ^fmt::
+
+[suppress_function]
+  name_regexp = ^fmt::
+
+[suppress_function]
+  name_regexp = ^_
