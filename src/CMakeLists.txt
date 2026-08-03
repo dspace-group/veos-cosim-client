@@ -10,6 +10,9 @@ set_target_properties(
   PROPERTIES
   SOVERSION 1
   VERSION 1.1.0
+  C_VISIBILITY_PRESET hidden
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN ON
 )
 
 target_sources(

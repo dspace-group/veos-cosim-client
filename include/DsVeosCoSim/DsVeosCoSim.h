@@ -4,10 +4,10 @@
 
 // NOLINTBEGIN
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
-#include <cstddef>
 #include <string>
 #endif
 
