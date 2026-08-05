@@ -425,7 +425,13 @@ enum {
      * \brief CAN message is a CANFD message.
      *        For received and transmitted messages.
      */
-    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32
+    DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat = 32,
+
+    /**
+     * \brief CAN message is a wake event.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_CanMessageFlags_WakeEvent = 64,
 };
 
 /**
@@ -453,7 +459,13 @@ enum {
      * \brief Ethernet message was dropped due to a full buffer at the dSPACE VEOS CoSim server.
      *        For received messages only.
      */
-    DsVeosCoSim_EthMessageFlags_Drop = 4
+    DsVeosCoSim_EthMessageFlags_Drop = 4,
+
+    /**
+     * \brief Ethernet message is a wake event.
+     *        For received and transmitted messages.
+     */
+    DsVeosCoSim_EthMessageFlags_WakeEvent = 8,
 };
 
 /**

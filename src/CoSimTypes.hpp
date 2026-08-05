@@ -288,7 +288,8 @@ enum class CanMessageFlags : uint32_t {
     Drop = 4,
     ExtendedId = 8,
     BitRateSwitch = 16,
-    FlexibleDataRateFormat = 32
+    FlexibleDataRateFormat = 32,
+    WakeEvent = 64
 };
 
 ENUM_BITMASK_OPS(CanMessageFlags);
@@ -296,7 +297,8 @@ ENUM_BITMASK_OPS(CanMessageFlags);
 enum class EthMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
-    Drop = 4
+    Drop = 4,
+    WakeEvent = 8
 };
 
 ENUM_BITMASK_OPS(EthMessageFlags);
