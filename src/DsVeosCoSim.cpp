@@ -1124,11 +1124,13 @@ static_assert(CanMessageFlags::Drop == ConvertCanMessageFlags(DsVeosCoSim_CanMes
 static_assert(CanMessageFlags::ExtendedId == ConvertCanMessageFlags(DsVeosCoSim_CanMessageFlags_ExtendedId));
 static_assert(CanMessageFlags::BitRateSwitch == ConvertCanMessageFlags(DsVeosCoSim_CanMessageFlags_BitRateSwitch));
 static_assert(CanMessageFlags::FlexibleDataRateFormat == ConvertCanMessageFlags(DsVeosCoSim_CanMessageFlags_FlexibleDataRateFormat));
+static_assert(CanMessageFlags::WakeEvent == ConvertCanMessageFlags(DsVeosCoSim_CanMessageFlags_WakeEvent));
 
 static_assert(sizeof(EthMessageFlags) == sizeof(DsVeosCoSim_EthMessageFlags));
 static_assert(EthMessageFlags::Loopback == ConvertEthMessageFlags(DsVeosCoSim_EthMessageFlags_Loopback));
 static_assert(EthMessageFlags::Error == ConvertEthMessageFlags(DsVeosCoSim_EthMessageFlags_Error));
 static_assert(EthMessageFlags::Drop == ConvertEthMessageFlags(DsVeosCoSim_EthMessageFlags_Drop));
+static_assert(EthMessageFlags::WakeEvent == ConvertEthMessageFlags(DsVeosCoSim_EthMessageFlags_WakeEvent));
 
 static_assert(sizeof(LinMessageFlags) == sizeof(DsVeosCoSim_LinMessageFlags));
 static_assert(LinMessageFlags::Loopback == ConvertLinMessageFlags(DsVeosCoSim_LinMessageFlags_Loopback));

@@ -514,6 +514,10 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
         str.append(",FlexibleDataRateFormat");
     }
 
+    if (HasFlag(canMessageFlags, CanMessageFlags::WakeEvent)) {
+        str.append(",WakeEvent");
+    }
+
     if (!str.empty()) {
         str.erase(0, 1);
     }
@@ -534,6 +538,10 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Drop)) {
         str.append(",Drop");
+    }
+
+    if (HasFlag(ethMessageFlags, EthMessageFlags::WakeEvent)) {
+        str.append(",WakeEvent");
     }
 
     if (!str.empty()) {
