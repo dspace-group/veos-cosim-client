@@ -22,6 +22,15 @@ namespace DsVeosCoSim {
                                                                                             \
     constexpr bool HasFlag(TEnum flags, TEnum testFlag) {                                   \
         return (flags & testFlag) == testFlag;                                              \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs) {                                    \
+        lhs = lhs | rhs;                                                                    \
+        return lhs;                                                                         \
+    }                                                                                       \
+                                                                                            \
+    constexpr TEnum ClearFlag(const TEnum flags, const TEnum clearFlag) noexcept {          \
+        return flags & ~clearFlag;                                                          \
     }
 // NOLINTEND
 
