@@ -29,6 +29,10 @@ namespace DsVeosCoSim {
         return lhs;                                                                         \
     }                                                                                       \
                                                                                             \
+    constexpr TEnum operator~(TEnum lhs) {                                                  \
+        return static_cast<TEnum>(~static_cast<uint32_t>(lhs));                             \
+    }                                                                                       \
+                                                                                            \
     constexpr TEnum ClearFlag(const TEnum flags, const TEnum clearFlag) noexcept {          \
         return flags & ~clearFlag;                                                          \
     }
