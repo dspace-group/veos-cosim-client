@@ -2,6 +2,8 @@
 
 #include "PortMapper.hpp"
 
+#include <fmt/format.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -9,8 +11,6 @@
 #include <thread>
 #include <unordered_map>
 #include <utility>
-
-#include <fmt/format.h>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -25,13 +25,14 @@ namespace DsVeosCoSim {
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
 PortMapperServer::PortMapperServer(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol)
-    : _server(std::move(channelServer)), _protocol(std::move(protocol)) {
-    _thread = std::thread([this] {
-        RunPortMapperServer();
-    });
+    : _server(std::move(channelServer))
+    , _protocol(std::move(protocol))
+{
+    _thread = std::thread([this] { RunPortMapperServer(); });
 }
 
-PortMapperServer::~PortMapperServer() noexcept {
+PortMapperServer::~PortMapperServer() noexcept
+{
     _stopEvent.Set();
 
     if (_thread.joinable()) {
@@ -39,7 +40,8 @@ PortMapperServer::~PortMapperServer() noexcept {
     }
 }
 
-void PortMapperServer::RunPortMapperServer() {
+void PortMapperServer::RunPortMapperServer()
+{
     constexpr uint32_t timeoutInMilliseconds = 10U;
     while (!_stopEvent.Wait(timeoutInMilliseconds)) {
         Result result = CheckForClient();
@@ -49,34 +51,37 @@ void PortMapperServer::RunPortMapperServer() {
     }
 }
 
-Result PortMapperServer::CheckForClient() {
+Result PortMapperServer::CheckForClient()
+{
     std::unique_ptr<Channel> channel;
     CheckResult(_server->TryAccept(channel));
     CheckResultWithMessage(HandleClient(*channel), "Port mapper client disconnected unexpectedly.");
     return CreateOk();
 }
 
-Result PortMapperServer::HandleClient(Channel& channel) {
+Result PortMapperServer::HandleClient(Channel& channel)
+{
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(channel.GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::GetPort:
-            CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
-            return CreateOk();
-        case FrameKind::SetPort:
-            CheckResultWithMessage(HandleSetPort(channel), "Could not handle set port request.");
-            return CreateOk();
-        case FrameKind::UnsetPort:
-            CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
-            return CreateOk();
-        default:
-            LogError("Received unexpected frame '{}'.", frameKind);
-            return CreateError();
+    case FrameKind::GetPort:
+        CheckResultWithMessage(HandleGetPort(channel), "Could not handle get port request.");
+        return CreateOk();
+    case FrameKind::SetPort:
+        CheckResultWithMessage(HandleSetPort(channel), "Could not handle set port request.");
+        return CreateOk();
+    case FrameKind::UnsetPort:
+        CheckResultWithMessage(HandleUnsetPort(channel), "Could not handle unset port request.");
+        return CreateOk();
+    default:
+        LogError("Received unexpected frame '{}'.", frameKind);
+        return CreateError();
     }
 }
 
-Result PortMapperServer::HandleGetPort(Channel& channel) {
+Result PortMapperServer::HandleGetPort(Channel& channel)
+{
     std::string name;
     CheckResultWithMessage(_protocol->ReadGetPort(channel.GetReader(), name), "Could not read get port frame.");
 
@@ -95,7 +100,8 @@ Result PortMapperServer::HandleGetPort(Channel& channel) {
     return CreateOk();
 }
 
-Result PortMapperServer::HandleSetPort(Channel& channel) {
+Result PortMapperServer::HandleSetPort(Channel& channel)
+{
     std::string name;
     uint16_t port = 0;
     CheckResultWithMessage(_protocol->ReadSetPort(channel.GetReader(), name, port), "Could not read set port frame.");
@@ -114,7 +120,8 @@ Result PortMapperServer::HandleSetPort(Channel& channel) {
     return CreateOk();
 }
 
-Result PortMapperServer::HandleUnsetPort(Channel& channel) {
+Result PortMapperServer::HandleUnsetPort(Channel& channel)
+{
     std::string name;
     CheckResultWithMessage(_protocol->ReadUnsetPort(channel.GetReader(), name), "Could not read unset port frame.");
 
@@ -132,7 +139,8 @@ Result PortMapperServer::HandleUnsetPort(Channel& channel) {
     return CreateOk();
 }
 
-void PortMapperServer::DumpEntries() {
+void PortMapperServer::DumpEntries()
+{
     if (_ports.empty()) {
         LogTrace("No PortMapper Ports.");
     } else {
@@ -144,7 +152,8 @@ void PortMapperServer::DumpEntries() {
     }
 }
 
-[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer) {
+[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer)
+{
     std::unique_ptr<ChannelServer> channelServer;
     CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
 
@@ -156,35 +165,38 @@ void PortMapperServer::DumpEntries() {
 
 namespace {
 
-[[nodiscard]] Result ConnectToPortMapper(const std::string& ipAddress, std::unique_ptr<Channel>& channel, std::unique_ptr<IProtocol>& protocol) {
+[[nodiscard]] Result ConnectToPortMapper(const std::string& ipAddress, std::unique_ptr<Channel>& channel, std::unique_ptr<IProtocol>& protocol)
+{
     CheckResult(TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
     CheckResult(CreateProtocol(ProtocolVersion1, protocol));
     return CreateOk();
 }
 
-[[nodiscard]] Result ReadOkOrError(IProtocol& protocol, Channel& channel, std::string_view callerName) {
+[[nodiscard]] Result ReadOkOrError(IProtocol& protocol, Channel& channel, std::string_view callerName)
+{
     FrameKind frameKind{};
     CheckResult(protocol.ReceiveHeader(channel.GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::Ok:
-            CheckResultWithMessage(protocol.ReadOk(channel.GetReader()), "Could not read ok frame.");
-            return CreateOk();
-        case FrameKind::Error: {
-            std::string errorString;
-            CheckResultWithMessage(protocol.ReadError(channel.GetReader(), errorString), "Could not read error frame.");
-            LogError(errorString);
-            return CreateError();
-        }
-        default:
-            LogError("{}: Received unexpected frame '{}'.", callerName, frameKind);
-            return CreateError();
+    case FrameKind::Ok:
+        CheckResultWithMessage(protocol.ReadOk(channel.GetReader()), "Could not read ok frame.");
+        return CreateOk();
+    case FrameKind::Error: {
+        std::string errorString;
+        CheckResultWithMessage(protocol.ReadError(channel.GetReader(), errorString), "Could not read error frame.");
+        LogError(errorString);
+        return CreateError();
+    }
+    default:
+        LogError("{}: Received unexpected frame '{}'.", callerName, frameKind);
+        return CreateError();
     }
 }
 
 }  // namespace
 
-[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, std::string_view serverName, uint16_t& port) {
+[[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, std::string_view serverName, uint16_t& port)
+{
     if (IsPortMapperClientVerbose()) {
         LogTrace("PortMapperGetPort(ipAddress: '{}', serverName: '{}')", ipAddress, serverName);
     }
@@ -199,22 +211,23 @@ namespace {
     CheckResult(protocol->ReceiveHeader(channel->GetReader(), frameKind));
 
     switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-        case FrameKind::GetPortOk:
-            CheckResultWithMessage(protocol->ReadGetPortOk(channel->GetReader(), port), "Could not receive port ok frame.");
-            return CreateOk();
-        case FrameKind::Error: {
-            std::string errorMessage;
-            CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage), "Could not read error frame.");
-            LogError(errorMessage);
-            return CreateError();
-        }
-        default:
-            LogError("PortMapperGetPort: Received unexpected frame '{}'.", frameKind);
-            return CreateError();
+    case FrameKind::GetPortOk:
+        CheckResultWithMessage(protocol->ReadGetPortOk(channel->GetReader(), port), "Could not receive port ok frame.");
+        return CreateOk();
+    case FrameKind::Error: {
+        std::string errorMessage;
+        CheckResultWithMessage(protocol->ReadError(channel->GetReader(), errorMessage), "Could not read error frame.");
+        LogError(errorMessage);
+        return CreateError();
+    }
+    default:
+        LogError("PortMapperGetPort: Received unexpected frame '{}'.", frameKind);
+        return CreateError();
     }
 }
 
-[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port) {
+[[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port)
+{
     std::unique_ptr<Channel> channel;
     std::unique_ptr<IProtocol> protocol;
     CheckResult(ConnectToPortMapper("127.0.0.1", channel, protocol));
@@ -223,7 +236,8 @@ namespace {
     return ReadOkOrError(*protocol, *channel, "PortMapperSetPort");
 }
 
-[[nodiscard]] Result PortMapperUnsetPort(std::string_view name) {
+[[nodiscard]] Result PortMapperUnsetPort(std::string_view name)
+{
     std::unique_ptr<Channel> channel;
     std::unique_ptr<IProtocol> protocol;
     CheckResult(ConnectToPortMapper("127.0.0.1", channel, protocol));

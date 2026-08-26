@@ -26,10 +26,12 @@ using SignalMetaDataPtr = SignalMetaData*;
 // The registry keeps lookup-by-id while also assigning a dense signal index for
 // buffer-backed storage vectors.
 class SignalRegistry final {
-    explicit SignalRegistry(std::unordered_map<IoSignalId, SignalMetaData> metaDataLookup) : _metaDataLookup(std::move(metaDataLookup)) {
+    explicit SignalRegistry(std::unordered_map<IoSignalId, SignalMetaData> metaDataLookup)
+        : _metaDataLookup(std::move(metaDataLookup))
+    {
     }
 
-public:
+  public:
     SignalRegistry() = default;
     ~SignalRegistry() noexcept = default;
 
@@ -39,7 +41,8 @@ public:
     SignalRegistry(SignalRegistry&&) noexcept = default;
     SignalRegistry& operator=(SignalRegistry&&) noexcept = default;
 
-    [[nodiscard]] static Result Create(const std::vector<IoSignal>& ioSignals, SignalRegistry& signalRegistry) {
+    [[nodiscard]] static Result Create(const std::vector<IoSignal>& ioSignals, SignalRegistry& signalRegistry)
+    {
         std::unordered_map<IoSignalId, SignalMetaData> metaDataLookup;
         metaDataLookup.reserve(ioSignals.size());
 
@@ -77,7 +80,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result FindMetaData(IoSignalId signalId, SignalMetaDataPtr& metaData) {
+    [[nodiscard]] Result FindMetaData(IoSignalId signalId, SignalMetaDataPtr& metaData)
+    {
         auto search = _metaDataLookup.find(signalId);
         if (search != _metaDataLookup.end()) {
             metaData = &search->second;
@@ -88,16 +92,17 @@ public:
         return CreateError();
     }
 
-    [[nodiscard]] std::unordered_map<IoSignalId, SignalMetaData>& GetMetaDataLookup() {
+    [[nodiscard]] std::unordered_map<IoSignalId, SignalMetaData>& GetMetaDataLookup()
+    {
         return _metaDataLookup;
     }
 
-private:
+  private:
     std::unordered_map<IoSignalId, SignalMetaData> _metaDataLookup;
 };
 
 class ISignalExchangePart {
-public:
+  public:
     ISignalExchangePart() = default;
     virtual ~ISignalExchangePart() noexcept = default;
 

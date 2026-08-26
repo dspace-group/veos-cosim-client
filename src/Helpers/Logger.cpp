@@ -4,11 +4,11 @@
 
 #ifdef _WIN32
 
+#include <Windows.h>
+
 #include <cctype>
 #include <cstdint>
 #include <string>
-
-#include <Windows.h>
 #undef min
 
 #endif
@@ -19,7 +19,8 @@ namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode) {
+[[nodiscard]] std::string GetEnglishErrorMessage(int32_t errorCode)
+{
     constexpr DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     constexpr DWORD languageId = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
     char* buffer = nullptr;
@@ -44,7 +45,8 @@ namespace {
 
 #endif
 
-void LogError(int32_t errorCode, const std::string& message) {
+void LogError(int32_t errorCode, const std::string& message)
+{
     std::string reason;
 
 #ifdef _WIN32

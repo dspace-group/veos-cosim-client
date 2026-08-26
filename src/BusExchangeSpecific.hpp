@@ -2,12 +2,12 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
 #include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "BusExchangeCommon.hpp"
 #include "BusExchangeLocked.hpp"
@@ -23,13 +23,15 @@ namespace DsVeosCoSim::BusExchangeDetail {
 // independent of transport details.
 template <typename TBus>
 class BusExchangeSpecific final {
-public:
+  public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
 
     BusExchangeSpecific(std::unique_ptr<IBusExchangePart<TBus>> outboundPart, std::unique_ptr<IBusExchangePart<TBus>> inboundPart)
-        : _outboundPart(std::move(outboundPart)), _inboundPart(std::move(inboundPart)) {
+        : _outboundPart(std::move(outboundPart))
+        , _inboundPart(std::move(inboundPart))
+    {
     }
 
     ~BusExchangeSpecific() noexcept = default;
@@ -45,7 +47,8 @@ public:
                                        [[maybe_unused]] std::string_view name,
                                        const std::vector<TController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchangeSpecific>& busExchangeSpecific) {
+                                       std::unique_ptr<BusExchangeSpecific>& busExchangeSpecific)
+    {
         std::unique_ptr<IBusExchangePart<TBus>> outboundPart;
         std::unique_ptr<IBusExchangePart<TBus>> inboundPart;
 
@@ -77,42 +80,50 @@ public:
         return CreateOk();
     }
 
-    void ClearData() const {
+    void ClearData() const
+    {
         _outboundPart->ClearData();
         _inboundPart->ClearData();
     }
 
-    [[nodiscard]] Result Transmit(const TMessage& message) const {
+    [[nodiscard]] Result Transmit(const TMessage& message) const
+    {
         CheckResult(CheckMessageLength(message.length));
         return _outboundPart->Transmit(message);
     }
 
-    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) const {
+    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) const
+    {
         CheckResult(CheckMessageLength(messageContainer.length));
         return _outboundPart->Transmit(messageContainer);
     }
 
-    [[nodiscard]] Result Receive(TMessage& message) const {
+    [[nodiscard]] Result Receive(TMessage& message) const
+    {
         return _inboundPart->Receive(message);
     }
 
-    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) const {
+    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) const
+    {
         return _inboundPart->Receive(messageContainer);
     }
 
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) const {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) const
+    {
         return _outboundPart->Serialize(writer);
     }
 
     [[nodiscard]] Result Deserialize(ChannelReader& reader,
                                      SimulationTime simulationTime,
                                      const BusMessageCallback<TBus>& messageCallback,
-                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) const {
+                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) const
+    {
         return _inboundPart->Deserialize(reader, simulationTime, messageCallback, messageContainerCallback);
     }
 
-private:
-    [[nodiscard]] static Result CheckMessageLength(uint32_t length) {
+  private:
+    [[nodiscard]] static Result CheckMessageLength(uint32_t length)
+    {
         if (length > TBus::MessageMaxLength) {
             LogError("{} message data exceeds maximum length.", TBus::DisplayName);
             return CreateInvalidArgument();

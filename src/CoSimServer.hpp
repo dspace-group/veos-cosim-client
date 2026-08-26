@@ -44,7 +44,7 @@ struct CoSimServerConfig {
 };
 
 class CoSimServer final {
-public:
+  public:
     CoSimServer();
     ~CoSimServer() noexcept;
 
@@ -82,7 +82,7 @@ public:
 
     [[nodiscard]] Result GetLocalPort(uint16_t& port) const;
 
-private:
+  private:
     [[nodiscard]] Result StartInternal(SimulationTime simulationTime);
     [[nodiscard]] Result StopInternal(SimulationTime simulationTime);
     [[nodiscard]] Result TerminateInternal(SimulationTime simulationTime, TerminateReason reason);

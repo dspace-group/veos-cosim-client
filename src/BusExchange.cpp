@@ -26,87 +26,106 @@ BusExchange::BusExchange(std::unique_ptr<CanBusExchange> canBusExchange,
                          std::unique_ptr<LinBusExchange> linBusExchange,
                          std::unique_ptr<FrBusExchange> frBusExchange,
                          bool doFlexRayOperations)
-    : _canBusExchange(std::move(canBusExchange)),
-      _ethBusExchange(std::move(ethBusExchange)),
-      _linBusExchange(std::move(linBusExchange)),
-      _frBusExchange(std::move(frBusExchange)),
-      _doFlexRayOperations(doFlexRayOperations) {
+    : _canBusExchange(std::move(canBusExchange))
+    , _ethBusExchange(std::move(ethBusExchange))
+    , _linBusExchange(std::move(linBusExchange))
+    , _frBusExchange(std::move(frBusExchange))
+    , _doFlexRayOperations(doFlexRayOperations)
+{
 }
 
 BusExchange::~BusExchange() noexcept = default;
 
-void BusExchange::ClearData() const {
+void BusExchange::ClearData() const
+{
     _canBusExchange->ClearData();
     _ethBusExchange->ClearData();
     _linBusExchange->ClearData();
     _frBusExchange->ClearData();
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const CanMessage& message) const {
+[[nodiscard]] Result BusExchange::Transmit(const CanMessage& message) const
+{
     return _canBusExchange->Transmit(message);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const EthMessage& message) const {
+[[nodiscard]] Result BusExchange::Transmit(const EthMessage& message) const
+{
     return _ethBusExchange->Transmit(message);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const LinMessage& message) const {
+[[nodiscard]] Result BusExchange::Transmit(const LinMessage& message) const
+{
     return _linBusExchange->Transmit(message);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const FrMessage& message) const {
+[[nodiscard]] Result BusExchange::Transmit(const FrMessage& message) const
+{
     return _frBusExchange->Transmit(message);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const CanMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Transmit(const CanMessageContainer& messageContainer) const
+{
     return _canBusExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const EthMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Transmit(const EthMessageContainer& messageContainer) const
+{
     return _ethBusExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const LinMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Transmit(const LinMessageContainer& messageContainer) const
+{
     return _linBusExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Transmit(const FrMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Transmit(const FrMessageContainer& messageContainer) const
+{
     return _frBusExchange->Transmit(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Receive(CanMessage& message) const {
+[[nodiscard]] Result BusExchange::Receive(CanMessage& message) const
+{
     return _canBusExchange->Receive(message);
 }
 
-[[nodiscard]] Result BusExchange::Receive(EthMessage& message) const {
+[[nodiscard]] Result BusExchange::Receive(EthMessage& message) const
+{
     return _ethBusExchange->Receive(message);
 }
 
-[[nodiscard]] Result BusExchange::Receive(LinMessage& message) const {
+[[nodiscard]] Result BusExchange::Receive(LinMessage& message) const
+{
     return _linBusExchange->Receive(message);
 }
 
-[[nodiscard]] Result BusExchange::Receive(FrMessage& message) const {
+[[nodiscard]] Result BusExchange::Receive(FrMessage& message) const
+{
     return _frBusExchange->Receive(message);
 }
 
-[[nodiscard]] Result BusExchange::Receive(CanMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Receive(CanMessageContainer& messageContainer) const
+{
     return _canBusExchange->Receive(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Receive(EthMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Receive(EthMessageContainer& messageContainer) const
+{
     return _ethBusExchange->Receive(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Receive(LinMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Receive(LinMessageContainer& messageContainer) const
+{
     return _linBusExchange->Receive(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Receive(FrMessageContainer& messageContainer) const {
+[[nodiscard]] Result BusExchange::Receive(FrMessageContainer& messageContainer) const
+{
     return _frBusExchange->Receive(messageContainer);
 }
 
-[[nodiscard]] Result BusExchange::Serialize(ChannelWriter& writer) const {
+[[nodiscard]] Result BusExchange::Serialize(ChannelWriter& writer) const
+{
     CheckResultWithMessage(_canBusExchange->Serialize(writer), "Could not transmit CAN messages.");
     CheckResultWithMessage(_ethBusExchange->Serialize(writer), "Could not transmit Ethernet messages.");
     CheckResultWithMessage(_linBusExchange->Serialize(writer), "Could not transmit LIN messages.");
@@ -118,7 +137,8 @@ void BusExchange::ClearData() const {
     return CreateOk();
 }
 
-[[nodiscard]] Result BusExchange::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const {
+[[nodiscard]] Result BusExchange::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const
+{
     CheckResultWithMessage(
         _canBusExchange->Deserialize(reader, simulationTime, callbacks.canMessageReceivedCallback, callbacks.canMessageContainerReceivedCallback),
         "Could not receive CAN messages.");
@@ -146,7 +166,8 @@ void BusExchange::ClearData() const {
                                        const std::vector<LinController>& linControllers,
                                        const std::vector<FrController>& frControllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
+                                       std::unique_ptr<BusExchange>& busExchange)
+{
     std::unique_ptr<CanBusExchange> canBusExchange;
     CheckResult(CanBusExchange::Create(coSimType, connectionKind, name, canControllers, protocol, canBusExchange));
 

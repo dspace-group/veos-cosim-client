@@ -8,6 +8,9 @@
 
 #ifdef _WIN32
 
+#include <Windows.h>
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -15,10 +18,6 @@
 #include <cstring>
 #include <string_view>
 #include <utility>
-
-#include <fmt/format.h>
-
-#include <Windows.h>
 #undef min
 
 #include <sysinfoapi.h>
@@ -45,11 +44,13 @@ constexpr size_t ServerSharedMemorySize = 4;
 
 namespace {
 
-[[nodiscard]] int32_t GetLastWindowsError() {
+[[nodiscard]] int32_t GetLastWindowsError()
+{
     return static_cast<int32_t>(GetLastError());
 }
 
-[[nodiscard]] Result Utf8ToWide(const std::string& utf8String, std::wstring& utf16String) {
+[[nodiscard]] Result Utf8ToWide(const std::string& utf8String, std::wstring& utf16String)
+{
     if (utf8String.empty()) {
         utf16String = L"";
         return CreateOk();
@@ -71,21 +72,25 @@ namespace {
     return CreateOk();
 }
 
-[[nodiscard]] Result GetFullNamedEventName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullNamedEventName(std::string_view name, std::wstring& fullName)
+{
     return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim.Event.{}", name), fullName);
 }
 
-[[nodiscard]] Result GetFullTestNamedLockName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullTestNamedLockName(std::string_view name, std::wstring& fullName)
+{
     return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim.Mutex.{}", name), fullName);
 }
 
-[[nodiscard]] Result GetFullSharedMemoryName(std::string_view name, std::wstring& fullName) {
+[[nodiscard]] Result GetFullSharedMemoryName(std::string_view name, std::wstring& fullName)
+{
     return Utf8ToWide(fmt::format("Local\\dSPACE.VEOS.CoSim.SharedMemory.{}", name), fullName);
 }
 
 // Spin wait with exponential backoff
 template <typename Predicate>
-bool SpinWait(const Predicate& predicate, uint32_t iterations) {
+bool SpinWait(const Predicate& predicate, uint32_t iterations)
+{
     for (uint32_t i = 0; i < iterations; ++i) {
         if (predicate()) {
             return true;
@@ -110,7 +115,8 @@ bool SpinWait(const Predicate& predicate, uint32_t iterations) {
 
 }  // namespace
 
-void Handle::Reset(void* newHandle) {
+void Handle::Reset(void* newHandle)
+{
     if (IsValid()) {
         CloseHandle(_handle);
     }
@@ -118,39 +124,45 @@ void Handle::Reset(void* newHandle) {
     _handle = newHandle;
 }
 
-[[nodiscard]] bool Handle::IsValid() const {
+[[nodiscard]] bool Handle::IsValid() const
+{
     return (_handle != nullptr) && (_handle != INVALID_HANDLE_VALUE);
 }
 
-[[nodiscard]] Result Handle::Wait() const {
+[[nodiscard]] Result Handle::Wait() const
+{
     return Wait(Infinite);
 }
 
-[[nodiscard]] Result Handle::Wait(uint32_t milliseconds) const {
+[[nodiscard]] Result Handle::Wait(uint32_t milliseconds) const
+{
     if (!IsValid()) {
         LogError("Handle is not initialized.");
         return CreateError();
     }
 
     switch (DWORD result = WaitForSingleObject(_handle, milliseconds); result) {
-        case WAIT_OBJECT_0:
-            return CreateOk();
-        case WAIT_TIMEOUT:
-            return CreateTimeout();
-        case WAIT_ABANDONED:
-        case WAIT_FAILED:
-            LogError(GetLastWindowsError(), "Could not wait for handle.");
-            return CreateError();
-        default:
-            LogError(GetLastWindowsError(), "Could not wait for handle. Invalid result.");
-            return CreateError();
+    case WAIT_OBJECT_0:
+        return CreateOk();
+    case WAIT_TIMEOUT:
+        return CreateTimeout();
+    case WAIT_ABANDONED:
+    case WAIT_FAILED:
+        LogError(GetLastWindowsError(), "Could not wait for handle.");
+        return CreateError();
+    default:
+        LogError(GetLastWindowsError(), "Could not wait for handle. Invalid result.");
+        return CreateError();
     }
 }
 
-NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
+NamedEvent::NamedEvent(Handle handle)
+    : _handle(std::move(handle))
+{
 }
 
-[[nodiscard]] Result NamedEvent::CreateOrOpen(std::string_view name, NamedEvent& namedEvent) {
+[[nodiscard]] Result NamedEvent::CreateOrOpen(std::string_view name, NamedEvent& namedEvent)
+{
     std::wstring fullName;
     CheckResult(GetFullNamedEventName(name, fullName));
 
@@ -164,11 +176,13 @@ NamedEvent::NamedEvent(Handle handle) : _handle(std::move(handle)) {
     return CreateOk();
 }
 
-void NamedEvent::Close() {
+void NamedEvent::Close()
+{
     _handle.Reset();
 }
 
-[[nodiscard]] Result NamedEvent::Set() const {
+[[nodiscard]] Result NamedEvent::Set() const
+{
     if (!IsValid()) {
         LogError("Not initialized.");
         return CreateError();
@@ -183,28 +197,35 @@ void NamedEvent::Close() {
     return CreateOk();
 }
 
-[[nodiscard]] Result NamedEvent::Wait() const {
+[[nodiscard]] Result NamedEvent::Wait() const
+{
     // Check if valid will be done in Handle::Wait
     return _handle.Wait();
 }
 
-[[nodiscard]] Result NamedEvent::Wait(uint32_t milliseconds) const {
+[[nodiscard]] Result NamedEvent::Wait(uint32_t milliseconds) const
+{
     // Check if valid will be done in Handle::Wait
     return _handle.Wait(milliseconds);
 }
 
-[[nodiscard]] bool NamedEvent::IsValid() const {
+[[nodiscard]] bool NamedEvent::IsValid() const
+{
     return _handle.IsValid();
 }
 
-NamedLock::NamedLock(Handle handle) : _handle(std::move(handle)) {
+NamedLock::NamedLock(Handle handle)
+    : _handle(std::move(handle))
+{
 }
 
-NamedLock::~NamedLock() noexcept {
+NamedLock::~NamedLock() noexcept
+{
     ReleaseMutex(_handle.Get());
 }
 
-[[nodiscard]] Result NamedLock::Create(std::string_view name, NamedLock& namedMutex) {
+[[nodiscard]] Result NamedLock::Create(std::string_view name, NamedLock& namedMutex)
+{
     std::wstring fullName;
     CheckResult(GetFullTestNamedLockName(name, fullName));
 
@@ -220,19 +241,29 @@ NamedLock::~NamedLock() noexcept {
     return CreateOk();
 }
 
-SharedMemory::SharedMemory(Handle handle, size_t size, void* data) : _handle(std::move(handle)), _size(size), _data(data) {
+SharedMemory::SharedMemory(Handle handle, size_t size, void* data)
+    : _handle(std::move(handle))
+    , _size(size)
+    , _data(data)
+{
 }
 
-SharedMemory::~SharedMemory() noexcept {
+SharedMemory::~SharedMemory() noexcept
+{
     Close();
 }
 
-SharedMemory::SharedMemory(SharedMemory&& other) noexcept : _handle(std::move(other._handle)), _size(other._size), _data(other._data) {
+SharedMemory::SharedMemory(SharedMemory&& other) noexcept
+    : _handle(std::move(other._handle))
+    , _size(other._size)
+    , _data(other._data)
+{
     other._size = {};
     other._data = {};
 }
 
-SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
+SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept
+{
     if (this != &other) {
         Close();
         _size = other._size;
@@ -245,7 +276,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     return *this;
 }
 
-[[nodiscard]] Result SharedMemory::CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory) {
+[[nodiscard]] Result SharedMemory::CreateOrOpen(std::string_view name, size_t size, SharedMemory& sharedMemory)
+{
     std::wstring fullName;
     CheckResult(GetFullSharedMemoryName(name, fullName));
 
@@ -267,7 +299,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     return CreateOk();
 }
 
-[[nodiscard]] Result SharedMemory::TryOpenExisting(std::string_view name, size_t size, SharedMemory& sharedMemory) {
+[[nodiscard]] Result SharedMemory::TryOpenExisting(std::string_view name, size_t size, SharedMemory& sharedMemory)
+{
     std::wstring fullName;
     CheckResult(GetFullSharedMemoryName(name, fullName));
 
@@ -286,7 +319,8 @@ SharedMemory& SharedMemory::operator=(SharedMemory&& other) noexcept {
     return CreateOk();
 }
 
-void SharedMemory::Close() {
+void SharedMemory::Close()
+{
     if (!IsValid()) {
         return;
     }
@@ -300,29 +334,34 @@ void SharedMemory::Close() {
     _size = 0;
 }
 
-[[nodiscard]] uint8_t* SharedMemory::GetData() const {
+[[nodiscard]] uint8_t* SharedMemory::GetData() const
+{
     return static_cast<uint8_t*>(_data);
 }
 
-[[nodiscard]] bool SharedMemory::IsValid() const {
+[[nodiscard]] bool SharedMemory::IsValid() const
+{
     return _data != nullptr && _handle.IsValid();
 }
 
 ShmPipePart::ShmPipePart(NamedEvent newDataEvent, NamedEvent newSpaceEvent, SharedMemory sharedMemory, bool isWriter, bool isServer)
-    : _newDataEvent(std::move(newDataEvent)),
-      _newSpaceEvent(std::move(newSpaceEvent)),
-      _sharedMemory(std::move(sharedMemory)),
-      _spinCount(GetSpinCount()),
-      _isWriter(isWriter),
-      _isServer(isServer) {
+    : _newDataEvent(std::move(newDataEvent))
+    , _newSpaceEvent(std::move(newSpaceEvent))
+    , _sharedMemory(std::move(sharedMemory))
+    , _spinCount(GetSpinCount())
+    , _isWriter(isWriter)
+    , _isServer(isServer)
+{
     SetOwnPid(GetCurrentProcessIdCached());
 }
 
-ShmPipePart::~ShmPipePart() noexcept {
+ShmPipePart::~ShmPipePart() noexcept
+{
     Disconnect();
 }
 
-[[nodiscard]] Result ShmPipePart::Create(std::string_view name, bool isWriter, bool isServer, ShmPipePart& pipe) {
+[[nodiscard]] Result ShmPipePart::Create(std::string_view name, bool isWriter, bool isServer, ShmPipePart& pipe)
+{
     NamedLock mutex;
     CheckResult(NamedLock::Create(name, mutex));
 
@@ -363,7 +402,8 @@ ShmPipePart::~ShmPipePart() noexcept {
     return CreateOk();
 }
 
-void ShmPipePart::Disconnect() const {
+void ShmPipePart::Disconnect() const
+{
     if (!_sharedMemory.IsValid()) {
         return;
     }
@@ -371,7 +411,8 @@ void ShmPipePart::Disconnect() const {
     SetOwnPid(0);
 }
 
-[[nodiscard]] Result ShmPipePart::Read(void* destination, size_t size, size_t& receivedSize) {
+[[nodiscard]] Result ShmPipePart::Read(void* destination, size_t size, size_t& receivedSize)
+{
     if (_isWriter) {
         LogError("Pipe is writer.");
         return CreateError();
@@ -415,7 +456,8 @@ void ShmPipePart::Disconnect() const {
     return _newSpaceEvent.Set();
 }
 
-[[nodiscard]] Result ShmPipePart::Write(const void* source, size_t size) {
+[[nodiscard]] Result ShmPipePart::Write(const void* source, size_t size)
+{
     if (!_isWriter) {
         LogError("Pipe is reader.");
         return CreateError();
@@ -458,25 +500,30 @@ void ShmPipePart::Disconnect() const {
     return _newDataEvent.Set();
 }
 
-[[nodiscard]] bool ShmPipePart::IsConnected() const {
+[[nodiscard]] bool ShmPipePart::IsConnected() const
+{
     return _sharedMemory.IsValid() && (GetOwnPid() != 0);
 }
 
-[[nodiscard]] uint32_t ShmPipePart::MaskIndex(uint32_t index) {
+[[nodiscard]] uint32_t ShmPipePart::MaskIndex(uint32_t index)
+{
     return index & (PipeBufferSize - 1);
 }
 
-[[nodiscard]] uint32_t ShmPipePart::GetAvailableSpace(const Header& header) {
+[[nodiscard]] uint32_t ShmPipePart::GetAvailableSpace(const Header& header)
+{
     return PipeBufferSize - GetAvailableData(header);
 }
 
-[[nodiscard]] uint32_t ShmPipePart::GetAvailableData(const Header& header) {
+[[nodiscard]] uint32_t ShmPipePart::GetAvailableData(const Header& header)
+{
     uint32_t writeIndex = header.writeIndex.load(std::memory_order_acquire);
     uint32_t readIndex = header.readIndex.load(std::memory_order_acquire);
     return writeIndex - readIndex;
 }
 
-[[nodiscard]] Result ShmPipePart::EnsureConnected() {
+[[nodiscard]] Result ShmPipePart::EnsureConnected()
+{
     if (!_sharedMemory.IsValid()) {
         return CreateNotConnected();
     }
@@ -516,15 +563,12 @@ void ShmPipePart::Disconnect() const {
     return CreateOk();
 }
 
-[[nodiscard]] Result ShmPipePart::WaitForSpace() {
+[[nodiscard]] Result ShmPipePart::WaitForSpace()
+{
     auto& header = *_sharedMemory.As<Header>();
 
     // Fast path
-    if (SpinWait(
-            [&header] {
-                return GetAvailableSpace(header) > 0;
-            },
-            _spinCount)) {
+    if (SpinWait([&header] { return GetAvailableSpace(header) > 0; }, _spinCount)) {
         return CreateOk();
     }
 
@@ -548,15 +592,12 @@ void ShmPipePart::Disconnect() const {
     return CreateOk();
 }
 
-[[nodiscard]] Result ShmPipePart::WaitForData(uint32_t timeoutInMilliseconds) {
+[[nodiscard]] Result ShmPipePart::WaitForData(uint32_t timeoutInMilliseconds)
+{
     auto& header = *_sharedMemory.As<Header>();
 
     // Fast path
-    if (SpinWait(
-            [&header] {
-                return GetAvailableData(header) > 0;
-            },
-            _spinCount)) {
+    if (SpinWait([&header] { return GetAvailableData(header) > 0; }, _spinCount)) {
         return CreateOk();
     }
 
@@ -591,11 +632,13 @@ void ShmPipePart::Disconnect() const {
     return CreateOk();
 }
 
-[[nodiscard]] Result ShmPipePart::WaitForData() {
+[[nodiscard]] Result ShmPipePart::WaitForData()
+{
     return WaitForData(Infinite);
 }
 
-[[nodiscard]] Result ShmPipePart::CheckIfConnectionIsAlive() {
+[[nodiscard]] Result ShmPipePart::CheckIfConnectionIsAlive()
+{
     static constexpr uint32_t ConnectionTimeoutInMilliseconds = 5000U;
 
     uint32_t ownPid = GetOwnPid();
@@ -632,7 +675,8 @@ void ShmPipePart::Disconnect() const {
     return CreateError();
 }
 
-void ShmPipePart::SetOwnPid(uint32_t pid) const {
+void ShmPipePart::SetOwnPid(uint32_t pid) const
+{
     auto& header = *_sharedMemory.As<Header>();
     if (_isServer) {
         header.serverPid.store(pid, std::memory_order_release);
@@ -641,20 +685,26 @@ void ShmPipePart::SetOwnPid(uint32_t pid) const {
     }
 }
 
-[[nodiscard]] uint32_t ShmPipePart::GetOwnPid() const {
+[[nodiscard]] uint32_t ShmPipePart::GetOwnPid() const
+{
     auto& header = *_sharedMemory.As<Header>();
     return _isServer ? header.serverPid.load(std::memory_order_acquire) : header.clientPid.load(std::memory_order_acquire);
 }
 
-[[nodiscard]] uint32_t ShmPipePart::GetCounterPartPid() const {
+[[nodiscard]] uint32_t ShmPipePart::GetCounterPartPid() const
+{
     auto& header = *_sharedMemory.As<Header>();
     return _isServer ? header.clientPid.load(std::memory_order_acquire) : header.serverPid.load(std::memory_order_acquire);
 }
 
-ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader) : _writer(std::move(writer)), _reader(std::move(reader)) {
+ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader)
+    : _writer(std::move(writer))
+    , _reader(std::move(reader))
+{
 }
 
-[[nodiscard]] Result ShmPipeClient::TryConnect(std::string_view name, ShmPipeClient& client) {
+[[nodiscard]] Result ShmPipeClient::TryConnect(std::string_view name, ShmPipeClient& client)
+{
     NamedLock mutex;
     CheckResult(NamedLock::Create(name, mutex));
 
@@ -676,31 +726,40 @@ ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader) : _writer(s
     return CreateOk();
 }
 
-void ShmPipeClient::Disconnect() const {
+void ShmPipeClient::Disconnect() const
+{
     _writer.Disconnect();
     _reader.Disconnect();
 }
 
-[[nodiscard]] Result ShmPipeClient::Receive(void* destination, size_t size, size_t& receivedSize) {
+[[nodiscard]] Result ShmPipeClient::Receive(void* destination, size_t size, size_t& receivedSize)
+{
     return _reader.Read(destination, size, receivedSize);
 }
 
-[[nodiscard]] Result ShmPipeClient::Send(const void* source, size_t size) {
+[[nodiscard]] Result ShmPipeClient::Send(const void* source, size_t size)
+{
     return _writer.Write(source, size);
 }
 
-[[nodiscard]] Result ShmPipeClient::WaitForData(uint32_t timeoutInMilliseconds) {
+[[nodiscard]] Result ShmPipeClient::WaitForData(uint32_t timeoutInMilliseconds)
+{
     return _reader.WaitForData(timeoutInMilliseconds);
 }
 
-[[nodiscard]] bool ShmPipeClient::IsConnected() const {
+[[nodiscard]] bool ShmPipeClient::IsConnected() const
+{
     return _writer.IsConnected();
 }
 
-ShmPipeListener::ShmPipeListener(std::string name, SharedMemory sharedMemory) : _name(std::move(name)), _sharedMemory(std::move(sharedMemory)) {
+ShmPipeListener::ShmPipeListener(std::string name, SharedMemory sharedMemory)
+    : _name(std::move(name))
+    , _sharedMemory(std::move(sharedMemory))
+{
 }
 
-[[nodiscard]] Result ShmPipeListener::Create(const std::string& name, ShmPipeListener& listener) {
+[[nodiscard]] Result ShmPipeListener::Create(const std::string& name, ShmPipeListener& listener)
+{
     NamedLock mutex;
     CheckResult(NamedLock::Create(name, mutex));
 
@@ -713,11 +772,13 @@ ShmPipeListener::ShmPipeListener(std::string name, SharedMemory sharedMemory) : 
     return CreateOk();
 }
 
-void ShmPipeListener::Stop() {
+void ShmPipeListener::Stop()
+{
     _sharedMemory.Close();
 }
 
-[[nodiscard]] Result ShmPipeListener::TryAccept(ShmPipeClient& client) {
+[[nodiscard]] Result ShmPipeListener::TryAccept(ShmPipeClient& client)
+{
     if (!IsRunning()) {
         LogError("Server is not running.");
         return CreateError();
@@ -744,11 +805,13 @@ void ShmPipeListener::Stop() {
     return CreateOk();
 }
 
-[[nodiscard]] bool ShmPipeListener::IsRunning() const {
+[[nodiscard]] bool ShmPipeListener::IsRunning() const
+{
     return _sharedMemory.IsValid();
 }
 
-[[nodiscard]] bool IsProcessRunning(const Handle& processHandle) {
+[[nodiscard]] bool IsProcessRunning(const Handle& processHandle)
+{
     if (!processHandle.IsValid()) {
         return false;
     }
@@ -758,12 +821,14 @@ void ShmPipeListener::Stop() {
     return (result != 0) && (exitCode == STILL_ACTIVE);
 }
 
-[[nodiscard]] uint32_t GetCurrentProcessIdCached() {
+[[nodiscard]] uint32_t GetCurrentProcessIdCached()
+{
     static const auto ProcessId = static_cast<uint32_t>(GetCurrentProcessId());
     return ProcessId;
 }
 
-void SetThreadAffinity(std::string_view name) {
+void SetThreadAffinity(std::string_view name)
+{
     size_t mask{};
 
     if (!TryGetAffinityMask(name, mask)) {
@@ -775,7 +840,8 @@ void SetThreadAffinity(std::string_view name) {
 
 #else
 
-void SetThreadAffinity(std::string_view name) {
+void SetThreadAffinity(std::string_view name)
+{
     size_t mask{};
     if (!TryGetAffinityMask(name, mask)) {
         return;

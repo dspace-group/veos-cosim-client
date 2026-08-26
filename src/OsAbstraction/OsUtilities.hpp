@@ -21,24 +21,31 @@ namespace DsVeosCoSim {
 #ifdef _WIN32
 
 class Handle final {
-public:
+  public:
     using handle_t = void*;
 
     Handle() = default;
-    explicit Handle(handle_t handle) : _handle(handle) {
+
+    explicit Handle(handle_t handle)
+        : _handle(handle)
+    {
     }
 
-    ~Handle() noexcept {
+    ~Handle() noexcept
+    {
         Reset();
     }
 
     Handle(const Handle&) = delete;
     Handle& operator=(const Handle&) = delete;
 
-    Handle(Handle&& other) noexcept : _handle(other.Release()) {
+    Handle(Handle&& other) noexcept
+        : _handle(other.Release())
+    {
     }
 
-    Handle& operator=(Handle&& other) noexcept {
+    Handle& operator=(Handle&& other) noexcept
+    {
         if (this != &other) {
             Reset(other.Release());
         }
@@ -46,11 +53,13 @@ public:
         return *this;
     }
 
-    [[nodiscard]] handle_t Get() const noexcept {
+    [[nodiscard]] handle_t Get() const noexcept
+    {
         return _handle;
     }
 
-    [[nodiscard]] handle_t Release() noexcept {
+    [[nodiscard]] handle_t Release() noexcept
+    {
         return std::exchange(_handle, nullptr);
     }
 
@@ -61,14 +70,14 @@ public:
     [[nodiscard]] Result Wait() const;
     [[nodiscard]] Result Wait(uint32_t milliseconds) const;
 
-private:
+  private:
     void* _handle{};
 };
 
 class NamedEvent final {
     explicit NamedEvent(Handle handle);
 
-public:
+  public:
     NamedEvent() = default;
     ~NamedEvent() noexcept = default;
 
@@ -87,14 +96,14 @@ public:
 
     [[nodiscard]] bool IsValid() const;
 
-private:
+  private:
     Handle _handle;
 };
 
 class NamedLock final {
     explicit NamedLock(Handle handle);
 
-public:
+  public:
     NamedLock() = default;
     ~NamedLock() noexcept;
 
@@ -106,14 +115,14 @@ public:
 
     [[nodiscard]] static Result Create(std::string_view name, NamedLock& namedMutex);
 
-private:
+  private:
     Handle _handle;
 };
 
 class SharedMemory final {
     SharedMemory(Handle handle, size_t size, void* data);
 
-public:
+  public:
     SharedMemory() = default;
     ~SharedMemory() noexcept;
 
@@ -129,7 +138,8 @@ public:
     void Close();
 
     template <typename T>
-    [[nodiscard]] T* As() const {
+    [[nodiscard]] T* As() const
+    {
         return static_cast<T*>(_data);
     }
 
@@ -137,7 +147,7 @@ public:
 
     [[nodiscard]] bool IsValid() const;
 
-private:
+  private:
     Handle _handle;
     size_t _size{};
     void* _data{};
@@ -155,7 +165,7 @@ class ShmPipePart {
 
     ShmPipePart(NamedEvent newDataEvent, NamedEvent newSpaceEvent, SharedMemory sharedMemory, bool isWriter, bool isServer);
 
-public:
+  public:
     static constexpr uint32_t PipeBufferSize = 65536;
 
     ShmPipePart() = default;
@@ -177,7 +187,7 @@ public:
 
     [[nodiscard]] bool IsConnected() const;
 
-private:
+  private:
     [[nodiscard]] static uint32_t MaskIndex(uint32_t index);
     [[nodiscard]] static uint32_t GetAvailableSpace(const Header& header);
     [[nodiscard]] static uint32_t GetAvailableData(const Header& header);
@@ -209,7 +219,7 @@ class ShmPipeClient final {
 
     ShmPipeClient(ShmPipePart writer, ShmPipePart reader);
 
-public:
+  public:
     ShmPipeClient() = default;
     ~ShmPipeClient() noexcept = default;
 
@@ -229,7 +239,7 @@ public:
 
     [[nodiscard]] bool IsConnected() const;
 
-private:
+  private:
     ShmPipePart _writer{};
     ShmPipePart _reader{};
 };
@@ -237,7 +247,7 @@ private:
 class ShmPipeListener final {
     ShmPipeListener(std::string name, SharedMemory sharedMemory);
 
-public:
+  public:
     ShmPipeListener() = default;
     ~ShmPipeListener() noexcept = default;
 
@@ -255,7 +265,7 @@ public:
 
     [[nodiscard]] bool IsRunning() const;
 
-private:
+  private:
     std::string _name;
     SharedMemory _sharedMemory;
     uint32_t _lastCounter{};

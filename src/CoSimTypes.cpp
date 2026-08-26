@@ -2,6 +2,9 @@
 
 #include "CoSimTypes.hpp"
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -9,24 +12,24 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
-
 namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) noexcept {
+[[nodiscard]] bool Equals(const void* expected, const void* actual, size_t size) noexcept
+{
     return std::memcmp(expected, actual, size) == 0;
 }
 
 template <typename T, size_t TSize>
-[[nodiscard]] bool Equals(const std::array<T, TSize>& expected, const std::array<T, TSize>& actual) noexcept {
+[[nodiscard]] bool Equals(const std::array<T, TSize>& expected, const std::array<T, TSize>& actual) noexcept
+{
     return expected == actual;
 }
 
 template <typename TContainer>
-[[nodiscard]] auto ConvertContainers(const std::vector<TContainer>& containers) {
+[[nodiscard]] auto ConvertContainers(const std::vector<TContainer>& containers)
+{
     using TOut = decltype(std::declval<const TContainer&>().Convert());
     std::vector<TOut> result;
     result.reserve(containers.size());
@@ -37,47 +40,49 @@ template <typename TContainer>
     return result;
 }
 
-void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value) {
+void DataTypeValueToString(std::string& string, DataType dataType, uint32_t index, const void* value)
+{
     switch (dataType) {
-        case DataType::Bool:
-            string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
-            return;
-        case DataType::Int8:
-            string.append(fmt::to_string(static_cast<const int8_t*>(value)[index]));
-            return;
-        case DataType::Int16:
-            string.append(fmt::to_string(static_cast<const int16_t*>(value)[index]));
-            return;
-        case DataType::Int32:
-            string.append(fmt::to_string(static_cast<const int32_t*>(value)[index]));
-            return;
-        case DataType::Int64:
-            string.append(fmt::to_string(static_cast<const int64_t*>(value)[index]));
-            return;
-        case DataType::UInt8:
-            string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
-            return;
-        case DataType::UInt16:
-            string.append(fmt::to_string(static_cast<const uint16_t*>(value)[index]));
-            return;
-        case DataType::UInt32:
-            string.append(fmt::to_string(static_cast<const uint32_t*>(value)[index]));
-            return;
-        case DataType::UInt64:
-            string.append(fmt::to_string(static_cast<const uint64_t*>(value)[index]));
-            return;
-        case DataType::Float32:
-            string.append(fmt::to_string(static_cast<const float*>(value)[index]));
-            return;
-        case DataType::Float64:
-            string.append(fmt::to_string(static_cast<const double*>(value)[index]));
-            return;
+    case DataType::Bool:
+        string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
+        return;
+    case DataType::Int8:
+        string.append(fmt::to_string(static_cast<const int8_t*>(value)[index]));
+        return;
+    case DataType::Int16:
+        string.append(fmt::to_string(static_cast<const int16_t*>(value)[index]));
+        return;
+    case DataType::Int32:
+        string.append(fmt::to_string(static_cast<const int32_t*>(value)[index]));
+        return;
+    case DataType::Int64:
+        string.append(fmt::to_string(static_cast<const int64_t*>(value)[index]));
+        return;
+    case DataType::UInt8:
+        string.append(fmt::to_string(static_cast<const uint8_t*>(value)[index]));
+        return;
+    case DataType::UInt16:
+        string.append(fmt::to_string(static_cast<const uint16_t*>(value)[index]));
+        return;
+    case DataType::UInt32:
+        string.append(fmt::to_string(static_cast<const uint32_t*>(value)[index]));
+        return;
+    case DataType::UInt64:
+        string.append(fmt::to_string(static_cast<const uint64_t*>(value)[index]));
+        return;
+    case DataType::Float32:
+        string.append(fmt::to_string(static_cast<const float*>(value)[index]));
+        return;
+    case DataType::Float64:
+        string.append(fmt::to_string(static_cast<const double*>(value)[index]));
+        return;
     }
 
     string.append("<Invalid DataType>");
 }
 
-[[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, std::string_view name) {
+[[nodiscard]] std::string IoSignalToString(IoSignalId signalId, uint32_t length, DataType dataType, SizeKind sizeKind, std::string_view name)
+{
     return fmt::format(R"(IO Signal {{ Id: {}, Length: {}, DataType: {}, SizeKind: {}, Name: "{}" }})", signalId, length, dataType, sizeKind, name);
 }
 
@@ -87,7 +92,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 uint64_t flexibleDataRateBitsPerSecond,
                                                 const std::string& name,
                                                 const std::string& channelName,
-                                                const std::string& clusterName) {
+                                                const std::string& clusterName)
+{
     return fmt::format(
         R"(CAN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, FlexibleDataRateBitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
         controllerId,
@@ -104,7 +110,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              BusMessageId messageId,
                                              uint32_t length,
                                              const uint8_t* data,
-                                             CanMessageFlags flags) {
+                                             CanMessageFlags flags)
+{
     return fmt::format("CAN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
                        SimulationTimeToString(timestamp),
                        controllerId,
@@ -120,7 +127,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 std::array<uint8_t, EthAddressLength> macAddress,
                                                 const std::string& name,
                                                 const std::string& channelName,
-                                                const std::string& clusterName) {
+                                                const std::string& clusterName)
+{
     return fmt::format(
         R"(Ethernet Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, MacAddress: [{}], Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
         controllerId,
@@ -136,7 +144,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              BusControllerId controllerId,
                                              uint32_t length,
                                              const uint8_t* data,
-                                             EthMessageFlags flags) {
+                                             EthMessageFlags flags)
+{
     return fmt::format("Ethernet Message {{ Timestamp: {}, ControllerId: {}, Length: {}, Data: {}, Flags: {} }}",
                        SimulationTimeToString(timestamp),
                        controllerId,
@@ -151,7 +160,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                 LinControllerType type,
                                                 const std::string& name,
                                                 const std::string& channelName,
-                                                const std::string& clusterName) {
+                                                const std::string& clusterName)
+{
     return fmt::format(R"(LIN Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Type: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
                        controllerId,
                        queueSize,
@@ -167,7 +177,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                              BusMessageId messageId,
                                              uint32_t length,
                                              const uint8_t* data,
-                                             LinMessageFlags flags) {
+                                             LinMessageFlags flags)
+{
     return fmt::format("LIN Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
                        SimulationTimeToString(timestamp),
                        controllerId,
@@ -182,7 +193,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                                uint64_t bitsPerSecond,
                                                const std::string& name,
                                                const std::string& channelName,
-                                               const std::string& clusterName) {
+                                               const std::string& clusterName)
+{
     return fmt::format(R"(FlexRay Controller {{ Id: {}, QueueSize: {}, BitsPerSecond: {}, Name: "{}", ChannelName: "{}", ClusterName: "{}" }})",
                        controllerId,
                        queueSize,
@@ -197,7 +209,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
                                             BusMessageId messageId,
                                             uint32_t length,
                                             const uint8_t* data,
-                                            FrMessageFlags flags) {
+                                            FrMessageFlags flags)
+{
     return fmt::format("FlexRay Message {{ Timestamp: {}, ControllerId: {}, Id: {}, Length: {}, Data: {}, Flags: {} }}",
                        SimulationTimeToString(timestamp),
                        controllerId,
@@ -209,7 +222,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
 
 }  // namespace
 
-[[nodiscard]] IoSignal IoSignalContainer::Convert() const {
+[[nodiscard]] IoSignal IoSignalContainer::Convert() const
+{
     IoSignal ioSignal{};
     ioSignal.id = id;
     ioSignal.length = length;
@@ -219,7 +233,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     return ioSignal;
 }
 
-[[nodiscard]] CanController CanControllerContainer::Convert() const {
+[[nodiscard]] CanController CanControllerContainer::Convert() const
+{
     CanController canController{};
     canController.id = id;
     canController.queueSize = queueSize;
@@ -231,7 +246,8 @@ void DataTypeValueToString(std::string& string, DataType dataType, uint32_t inde
     return canController;
 }
 
-void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const {
+void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const
+{
     canMessageContainer.timestamp = timestamp;
     canMessageContainer.controllerId = controllerId;
     canMessageContainer.id = id;
@@ -240,7 +256,8 @@ void CanMessage::WriteTo(CanMessageContainer& canMessageContainer) const {
     memcpy(canMessageContainer.data.data(), data, length);
 }
 
-void CanMessageContainer::WriteTo(CanMessage& canMessage) const {
+void CanMessageContainer::WriteTo(CanMessage& canMessage) const
+{
     canMessage.timestamp = timestamp;
     canMessage.controllerId = controllerId;
     canMessage.id = id;
@@ -249,7 +266,8 @@ void CanMessageContainer::WriteTo(CanMessage& canMessage) const {
     canMessage.data = data.data();
 }
 
-[[nodiscard]] EthController EthControllerContainer::Convert() const {
+[[nodiscard]] EthController EthControllerContainer::Convert() const
+{
     EthController ethController{};
     ethController.id = id;
     ethController.queueSize = queueSize;
@@ -261,7 +279,8 @@ void CanMessageContainer::WriteTo(CanMessage& canMessage) const {
     return ethController;
 }
 
-void EthMessage::WriteTo(EthMessageContainer& ethMessageContainer) const {
+void EthMessage::WriteTo(EthMessageContainer& ethMessageContainer) const
+{
     ethMessageContainer.timestamp = timestamp;
     ethMessageContainer.controllerId = controllerId;
     ethMessageContainer.flags = flags;
@@ -269,7 +288,8 @@ void EthMessage::WriteTo(EthMessageContainer& ethMessageContainer) const {
     memcpy(ethMessageContainer.data.data(), data, length);
 }
 
-void EthMessageContainer::WriteTo(EthMessage& ethMessage) const {
+void EthMessageContainer::WriteTo(EthMessage& ethMessage) const
+{
     ethMessage.timestamp = timestamp;
     ethMessage.controllerId = controllerId;
     ethMessage.flags = flags;
@@ -277,7 +297,8 @@ void EthMessageContainer::WriteTo(EthMessage& ethMessage) const {
     ethMessage.data = data.data();
 }
 
-[[nodiscard]] LinController LinControllerContainer::Convert() const {
+[[nodiscard]] LinController LinControllerContainer::Convert() const
+{
     LinController controller{};
     controller.id = id;
     controller.queueSize = queueSize;
@@ -289,7 +310,8 @@ void EthMessageContainer::WriteTo(EthMessage& ethMessage) const {
     return controller;
 }
 
-void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const {
+void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const
+{
     linMessageContainer.timestamp = timestamp;
     linMessageContainer.controllerId = controllerId;
     linMessageContainer.id = id;
@@ -298,7 +320,8 @@ void LinMessage::WriteTo(LinMessageContainer& linMessageContainer) const {
     memcpy(linMessageContainer.data.data(), data, length);
 }
 
-void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
+void LinMessageContainer::WriteTo(LinMessage& linMessage) const
+{
     linMessage.timestamp = timestamp;
     linMessage.controllerId = controllerId;
     linMessage.id = id;
@@ -307,7 +330,8 @@ void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
     linMessage.data = data.data();
 }
 
-[[nodiscard]] FrController FrControllerContainer::Convert() const {
+[[nodiscard]] FrController FrControllerContainer::Convert() const
+{
     FrController controller{};
     controller.id = id;
     controller.queueSize = queueSize;
@@ -318,7 +342,8 @@ void LinMessageContainer::WriteTo(LinMessage& linMessage) const {
     return controller;
 }
 
-void FrMessage::WriteTo(FrMessageContainer& frMessageContainer) const {
+void FrMessage::WriteTo(FrMessageContainer& frMessageContainer) const
+{
     frMessageContainer.timestamp = timestamp;
     frMessageContainer.controllerId = controllerId;
     frMessageContainer.id = id;
@@ -327,7 +352,8 @@ void FrMessage::WriteTo(FrMessageContainer& frMessageContainer) const {
     memcpy(frMessageContainer.data.data(), data, length);
 }
 
-void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
+void FrMessageContainer::WriteTo(FrMessage& frMessage) const
+{
     frMessage.timestamp = timestamp;
     frMessage.controllerId = controllerId;
     frMessage.id = id;
@@ -336,7 +362,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     frMessage.data = data.data();
 }
 
-[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime) {
+[[nodiscard]] std::string SimulationTimeToString(SimulationTime simulationTime)
+{
     std::string str = std::to_string(simulationTime.count());
 
     size_t length = str.size();
@@ -357,15 +384,18 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string format_as(const IoSignal& ioSignal) {
+[[nodiscard]] std::string format_as(const IoSignal& ioSignal)
+{
     return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
 }
 
-[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal) {
+[[nodiscard]] std::string format_as(const IoSignalContainer& ioSignal)
+{
     return IoSignalToString(ioSignal.id, ioSignal.length, ioSignal.dataType, ioSignal.sizeKind, ioSignal.name);
 }
 
-[[nodiscard]] std::string format_as(const CanController& canController) {
+[[nodiscard]] std::string format_as(const CanController& canController)
+{
     return CanControllerToString(canController.id,
                                  canController.queueSize,
                                  canController.bitsPerSecond,
@@ -375,7 +405,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  canController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const CanControllerContainer& canController) {
+[[nodiscard]] std::string format_as(const CanControllerContainer& canController)
+{
     return CanControllerToString(canController.id,
                                  canController.queueSize,
                                  canController.bitsPerSecond,
@@ -385,15 +416,18 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  canController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const CanMessage& canMessage) {
+[[nodiscard]] std::string format_as(const CanMessage& canMessage)
+{
     return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data, canMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage) {
+[[nodiscard]] std::string format_as(const CanMessageContainer& canMessage)
+{
     return CanMessageToString(canMessage.timestamp, canMessage.controllerId, canMessage.id, canMessage.length, canMessage.data.data(), canMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const EthController& ethController) {
+[[nodiscard]] std::string format_as(const EthController& ethController)
+{
     return EthControllerToString(ethController.id,
                                  ethController.queueSize,
                                  ethController.bitsPerSecond,
@@ -403,7 +437,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  ethController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const EthControllerContainer& ethController) {
+[[nodiscard]] std::string format_as(const EthControllerContainer& ethController)
+{
     return EthControllerToString(ethController.id,
                                  ethController.queueSize,
                                  ethController.bitsPerSecond,
@@ -413,15 +448,18 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  ethController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const EthMessage& ethMessage) {
+[[nodiscard]] std::string format_as(const EthMessage& ethMessage)
+{
     return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data, ethMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage) {
+[[nodiscard]] std::string format_as(const EthMessageContainer& ethMessage)
+{
     return EthMessageToString(ethMessage.timestamp, ethMessage.controllerId, ethMessage.length, ethMessage.data.data(), ethMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const LinController& linController) {
+[[nodiscard]] std::string format_as(const LinController& linController)
+{
     return LinControllerToString(linController.id,
                                  linController.queueSize,
                                  linController.bitsPerSecond,
@@ -431,7 +469,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  linController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const LinControllerContainer& linController) {
+[[nodiscard]] std::string format_as(const LinControllerContainer& linController)
+{
     return LinControllerToString(linController.id,
                                  linController.queueSize,
                                  linController.bitsPerSecond,
@@ -441,15 +480,18 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                  linController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const LinMessage& linMessage) {
+[[nodiscard]] std::string format_as(const LinMessage& linMessage)
+{
     return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data, linMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage) {
+[[nodiscard]] std::string format_as(const LinMessageContainer& linMessage)
+{
     return LinMessageToString(linMessage.timestamp, linMessage.controllerId, linMessage.id, linMessage.length, linMessage.data.data(), linMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const FrController& frController) {
+[[nodiscard]] std::string format_as(const FrController& frController)
+{
     return FrControllerToString(frController.id,
                                 frController.queueSize,
                                 frController.bitsPerSecond,
@@ -458,7 +500,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                 frController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const FrControllerContainer& frController) {
+[[nodiscard]] std::string format_as(const FrControllerContainer& frController)
+{
     return FrControllerToString(frController.id,
                                 frController.queueSize,
                                 frController.bitsPerSecond,
@@ -467,27 +510,33 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
                                 frController.clusterName);
 }
 
-[[nodiscard]] std::string format_as(const FrMessage& frMessage) {
+[[nodiscard]] std::string format_as(const FrMessage& frMessage)
+{
     return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data, frMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage) {
+[[nodiscard]] std::string format_as(const FrMessageContainer& frMessage)
+{
     return FrMessageToString(frMessage.timestamp, frMessage.controllerId, frMessage.id, frMessage.length, frMessage.data.data(), frMessage.flags);
 }
 
-[[nodiscard]] std::string format_as(IoSignalId ioSignalId) {
+[[nodiscard]] std::string format_as(IoSignalId ioSignalId)
+{
     return std::to_string(static_cast<uint32_t>(ioSignalId));
 }
 
-[[nodiscard]] std::string format_as(BusControllerId busControllerId) {
+[[nodiscard]] std::string format_as(BusControllerId busControllerId)
+{
     return std::to_string(static_cast<uint32_t>(busControllerId));
 }
 
-[[nodiscard]] std::string format_as(BusMessageId busMessageId) {
+[[nodiscard]] std::string format_as(BusMessageId busMessageId)
+{
     return std::to_string(static_cast<uint32_t>(busMessageId));
 }
 
-[[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags) {
+[[nodiscard]] std::string format_as(CanMessageFlags canMessageFlags)
+{
     std::string str;
 
     if (HasFlag(canMessageFlags, CanMessageFlags::Loopback)) {
@@ -525,7 +574,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags) {
+[[nodiscard]] std::string format_as(EthMessageFlags ethMessageFlags)
+{
     std::string str;
 
     if (HasFlag(ethMessageFlags, EthMessageFlags::Loopback)) {
@@ -551,7 +601,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags) {
+[[nodiscard]] std::string format_as(LinMessageFlags linMessageFlags)
+{
     std::string str;
 
     if (HasFlag(linMessageFlags, LinMessageFlags::Loopback)) {
@@ -609,7 +660,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags) {
+[[nodiscard]] std::string format_as(FrMessageFlags frMessageFlags)
+{
     std::string str;
 
     if (HasFlag(frMessageFlags, FrMessageFlags::Loopback)) {
@@ -659,27 +711,33 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers) {
+[[nodiscard]] std::string format_as(const std::vector<IoSignalContainer>& ioSignalContainers)
+{
     return fmt::format("[{}]", fmt::join(ioSignalContainers, ", "));
 }
 
-[[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<CanControllerContainer>& canControllerContainers)
+{
     return fmt::format("[{}]", fmt::join(canControllerContainers, ", "));
 }
 
-[[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<EthControllerContainer>& ethControllerContainers)
+{
     return fmt::format("[{}]", fmt::join(ethControllerContainers, ", "));
 }
 
-[[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<LinControllerContainer>& linControllerContainers)
+{
     return fmt::format("[{}]", fmt::join(linControllerContainers, ", "));
 }
 
-[[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers) {
+[[nodiscard]] std::string format_as(const std::vector<FrControllerContainer>& frControllerContainers)
+{
     return fmt::format("[{}]", fmt::join(frControllerContainers, ", "));
 }
 
-[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) noexcept {
+[[nodiscard]] bool operator==(const IoSignal& first, const IoSignal& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -703,7 +761,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second) noexcept {
+[[nodiscard]] bool operator==(const IoSignalContainer& first, const IoSignalContainer& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -727,7 +786,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const CanController& first, const CanController& second) noexcept {
+[[nodiscard]] bool operator==(const CanController& first, const CanController& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -759,7 +819,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const CanControllerContainer& first, const CanControllerContainer& second) noexcept {
+[[nodiscard]] bool operator==(const CanControllerContainer& first, const CanControllerContainer& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -791,7 +852,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second) noexcept {
+[[nodiscard]] bool operator==(const CanMessage& first, const CanMessage& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -819,7 +881,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second) noexcept {
+[[nodiscard]] bool operator==(const CanMessageContainer& first, const CanMessageContainer& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -847,7 +910,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const EthController& first, const EthController& second) noexcept {
+[[nodiscard]] bool operator==(const EthController& first, const EthController& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -879,7 +943,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const EthControllerContainer& first, const EthControllerContainer& second) noexcept {
+[[nodiscard]] bool operator==(const EthControllerContainer& first, const EthControllerContainer& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -911,7 +976,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second) noexcept {
+[[nodiscard]] bool operator==(const EthMessage& first, const EthMessage& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -935,7 +1001,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second) noexcept {
+[[nodiscard]] bool operator==(const EthMessageContainer& first, const EthMessageContainer& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -959,7 +1026,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const LinController& first, const LinController& second) noexcept {
+[[nodiscard]] bool operator==(const LinController& first, const LinController& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -991,7 +1059,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second) noexcept {
+[[nodiscard]] bool operator==(const LinControllerContainer& first, const LinControllerContainer& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -1023,7 +1092,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second) noexcept {
+[[nodiscard]] bool operator==(const LinMessage& first, const LinMessage& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -1051,7 +1121,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second) noexcept {
+[[nodiscard]] bool operator==(const LinMessageContainer& first, const LinMessageContainer& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -1079,7 +1150,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const FrController& first, const FrController& second) noexcept {
+[[nodiscard]] bool operator==(const FrController& first, const FrController& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -1107,7 +1179,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const FrControllerContainer& first, const FrControllerContainer& second) noexcept {
+[[nodiscard]] bool operator==(const FrControllerContainer& first, const FrControllerContainer& second) noexcept
+{
     if (first.id != second.id) {
         return false;
     }
@@ -1135,7 +1208,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const FrMessage& first, const FrMessage& second) noexcept {
+[[nodiscard]] bool operator==(const FrMessage& first, const FrMessage& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -1163,7 +1237,8 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] bool operator==(const FrMessageContainer& first, const FrMessageContainer& second) noexcept {
+[[nodiscard]] bool operator==(const FrMessageContainer& first, const FrMessageContainer& second) noexcept
+{
     if (first.timestamp != second.timestamp) {
         return false;
     }
@@ -1191,49 +1266,56 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return true;
 }
 
-[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers) {
+[[nodiscard]] std::vector<IoSignal> Convert(const std::vector<IoSignalContainer>& ioSignalContainers)
+{
     return ConvertContainers(ioSignalContainers);
 }
 
-[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers) {
+[[nodiscard]] std::vector<CanController> Convert(const std::vector<CanControllerContainer>& canControllerContainers)
+{
     return ConvertContainers(canControllerContainers);
 }
 
-[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers) {
+[[nodiscard]] std::vector<EthController> Convert(const std::vector<EthControllerContainer>& ethControllerContainers)
+{
     return ConvertContainers(ethControllerContainers);
 }
 
-[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers) {
+[[nodiscard]] std::vector<LinController> Convert(const std::vector<LinControllerContainer>& linControllerContainers)
+{
     return ConvertContainers(linControllerContainers);
 }
 
-[[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers) {
+[[nodiscard]] std::vector<FrController> Convert(const std::vector<FrControllerContainer>& frControllerContainers)
+{
     return ConvertContainers(frControllerContainers);
 }
 
-[[nodiscard]] size_t GetDataTypeSize(DataType dataType) {
+[[nodiscard]] size_t GetDataTypeSize(DataType dataType)
+{
     switch (dataType) {
-        case DataType::Bool:
-        case DataType::Int8:
-        case DataType::UInt8:
-            return 1;
-        case DataType::Int16:
-        case DataType::UInt16:
-            return 2;
-        case DataType::Int32:
-        case DataType::UInt32:
-        case DataType::Float32:
-            return 4;
-        case DataType::Int64:
-        case DataType::UInt64:
-        case DataType::Float64:
-            return 8;
+    case DataType::Bool:
+    case DataType::Int8:
+    case DataType::UInt8:
+        return 1;
+    case DataType::Int16:
+    case DataType::UInt16:
+        return 2;
+    case DataType::Int32:
+    case DataType::UInt32:
+    case DataType::Float32:
+        return 4;
+    case DataType::Int64:
+    case DataType::UInt64:
+    case DataType::Float64:
+        return 8;
     }
 
     return 0;
 }
 
-[[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value) {
+[[nodiscard]] std::string ValueToString(DataType dataType, uint32_t length, const void* value)
+{
     std::string str;
     for (uint32_t i = 0; i < length; i++) {
         if (i > 0) {
@@ -1246,11 +1328,13 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const {
     return str;
 }
 
-[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value) {
+[[nodiscard]] std::string IoDataToString(const IoSignal& ioSignal, uint32_t length, const void* value)
+{
     return fmt::format("IO Data {{ Id: {}, Length: {}, Data: {} }}", ioSignal.id, length, ValueToString(ioSignal.dataType, length, value));
 }
 
-[[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator) {
+[[nodiscard]] std::string DataToString(const uint8_t* data, size_t dataLength, char separator)
+{
     fmt::memory_buffer result;
     for (uint32_t i = 0; i < dataLength; i++) {
         fmt::format_to(std::back_inserter(result), "{:02x}", data[i]);

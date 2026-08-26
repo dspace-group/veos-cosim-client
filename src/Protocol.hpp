@@ -20,7 +20,7 @@ using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
 using DeserializeFunction = std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
 
 class IProtocol {
-public:
+  public:
     IProtocol() = default;
     virtual ~IProtocol() noexcept = default;
 

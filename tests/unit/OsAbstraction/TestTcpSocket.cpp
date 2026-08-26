@@ -1,12 +1,12 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <future>
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "Socket.hpp"
 #include "TestHelper.hpp"
@@ -21,12 +21,14 @@ struct TcpSocketParam {
     bool enableRemoteAccess{};
 };
 
-[[maybe_unused]] void PrintTo(const TcpSocketParam& param, std::ostream* os) {
+[[maybe_unused]] void PrintTo(const TcpSocketParam& param, std::ostream* os)
+{
     std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
     *os << name;
 }
 
-[[nodiscard]] std::vector<TcpSocketParam> GetTcpSocketTestParameters() {
+[[nodiscard]] std::vector<TcpSocketParam> GetTcpSocketTestParameters()
+{
     std::vector<TcpSocketParam> values;
 
     if (IsIpv4SocketSupported()) {
@@ -42,7 +44,8 @@ struct TcpSocketParam {
     return values;
 }
 
-void EstablishConnection(const TcpSocketParam& param, SocketClient& connectClient, SocketClient& acceptClient) {
+void EstablishConnection(const TcpSocketParam& param, SocketClient& connectClient, SocketClient& acceptClient)
+{
     SocketListener listener;
     AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
 
@@ -62,7 +65,8 @@ INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetTcpSocketTestPara
     return fmt::format("{}_{}", param.addressFamily, access);
 });
 
-TEST_P(TestTcpSocket, CreateSocketShouldWork) {
+TEST_P(TestTcpSocket, CreateSocketShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -75,7 +79,8 @@ TEST_P(TestTcpSocket, CreateSocketShouldWork) {
     AssertOk(result);
 }
 
-TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue) {
+TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -89,7 +94,8 @@ TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue) {
     ASSERT_TRUE(isRunning);
 }
 
-TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse) {
+TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -105,7 +111,8 @@ TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse) {
     ASSERT_FALSE(isRunning);
 }
 
-TEST_P(TestTcpSocket, LocalPortIsNotZero) {
+TEST_P(TestTcpSocket, LocalPortIsNotZero)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -122,7 +129,8 @@ TEST_P(TestTcpSocket, LocalPortIsNotZero) {
     ASSERT_NE(localPort, 0U);
 }
 
-TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
+TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -141,7 +149,8 @@ TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork) {
     AssertOk(result);
 }
 
-TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
+TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -163,7 +172,8 @@ TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
+TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -179,7 +189,8 @@ TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
+TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -197,7 +208,8 @@ TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork) {
     AssertError(result);
 }
 
-TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
+TEST_P(TestTcpSocket, AcceptWithConnectShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -219,7 +231,8 @@ TEST_P(TestTcpSocket, AcceptWithConnectShouldWork) {
     AssertOk(result);
 }
 
-TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -247,7 +260,8 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     t.join();
 }
 
-TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
+TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -275,7 +289,8 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient) {
     t.join();
 }
 
-TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -303,7 +318,8 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     t.join();
 }
 
-TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
+TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -331,7 +347,8 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     t.join();
 }
 
-TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
+TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -346,7 +363,8 @@ TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
     ASSERT_TRUE(isConnected);
 }
 
-TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse) {
+TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -363,7 +381,8 @@ TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse) {
     ASSERT_FALSE(isConnected);
 }
 
-TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid) {
+TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -381,7 +400,8 @@ TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
     ASSERT_NE(connectClientRemoteAddress, "");
 }
 
-TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) {
+TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -399,7 +419,8 @@ TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid) 
     ASSERT_NE(acceptClientRemoteAddress, "");
 }
 
-TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
+TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -411,7 +432,8 @@ TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
     TestSendAndReceive(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
+TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -423,7 +445,8 @@ TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork) {
     TestPingPong(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
+TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -435,7 +458,8 @@ TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
     TestManyElements(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
+TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -447,7 +471,8 @@ TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     TestBigElement(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
+TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -459,7 +484,8 @@ TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork) {
     TestSendAfterDisconnect(connectClient);
 }
 
-TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -471,7 +497,8 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     TestReceiveAfterDisconnect(connectClient);
 }
 
-TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
+TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 
@@ -483,7 +510,8 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
     TestReceiveAfterDisconnectOnRemoteClient(connectClient, acceptClient);
 }
 
-TEST_P(TestTcpSocket, WaitForDataTimesOutWhenNoDataArrives) {
+TEST_P(TestTcpSocket, WaitForDataTimesOutWhenNoDataArrives)
+{
     // Arrange
     TcpSocketParam param = GetParam();
 

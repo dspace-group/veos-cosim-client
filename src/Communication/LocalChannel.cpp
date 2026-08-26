@@ -16,8 +16,10 @@
 namespace DsVeosCoSim {
 
 class LocalChannelWriter final : public ChannelWriter {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit LocalChannelWriter(ShmPipeClient& client) : _client(client) {
+  public:
+    explicit LocalChannelWriter(ShmPipeClient& client)
+        : _client(client)
+    {
         // The local channel does not include the length of the frame
         _writeIndex = 0;
     }
@@ -30,25 +32,29 @@ public:
     LocalChannelWriter(LocalChannelWriter&&) = delete;
     LocalChannelWriter& operator=(LocalChannelWriter&&) = delete;
 
-    [[nodiscard]] Result EndWrite() override {
+    [[nodiscard]] Result EndWrite() override
+    {
         CheckResult(Send(_writeBuffer.data(), static_cast<size_t>(_writeIndex)));
 
         _writeIndex = 0;
         return CreateOk();
     }
 
-protected:
-    [[nodiscard]] Result Send(const uint8_t* buffer, size_t size) override {
+  protected:
+    [[nodiscard]] Result Send(const uint8_t* buffer, size_t size) override
+    {
         return _client.Send(buffer, size);
     }
 
-private:
+  private:
     ShmPipeClient& _client;
 };
 
 class LocalChannelReader final : public ChannelReader {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit LocalChannelReader(ShmPipeClient& client) : _client(client) {
+  public:
+    explicit LocalChannelReader(ShmPipeClient& client)
+        : _client(client)
+    {
         _defaultSizeToRead = ShmPipePart::PipeBufferSize;
     }
 
@@ -60,20 +66,24 @@ public:
     LocalChannelReader(LocalChannelReader&&) = delete;
     LocalChannelReader& operator=(LocalChannelReader&&) = delete;
 
-    void EndRead() const override {
+    void EndRead() const override
+    {
         // The local channel does not include the length of the frame
     }
 
-protected:
-    [[nodiscard]] Result WaitForDataInternal(uint32_t timeoutInMilliseconds) override {
+  protected:
+    [[nodiscard]] Result WaitForDataInternal(uint32_t timeoutInMilliseconds) override
+    {
         return _client.WaitForData(timeoutInMilliseconds);
     }
 
-    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override {
+    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override
+    {
         return _client.Receive(destination, size, receivedSize);
     }
 
-    [[nodiscard]] Result BeginRead() override {
+    [[nodiscard]] Result BeginRead() override
+    {
         // The new local channel has a write index and an end of frame index.
         // The legacy local channel only has a write index. But since the read functions of
         // the channel only operate on the end of frame index, we handle the end of frame index
@@ -98,13 +108,17 @@ protected:
         return CreateOk();
     }
 
-private:
+  private:
     ShmPipeClient& _client;
 };
 
 class LocalChannel final : public Channel {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit LocalChannel(ShmPipeClient client) : _client(std::move(client)), _writer(_client), _reader(_client) {
+  public:
+    explicit LocalChannel(ShmPipeClient client)
+        : _client(std::move(client))
+        , _writer(_client)
+        , _reader(_client)
+    {
     }
 
     ~LocalChannel() noexcept override = default;
@@ -115,24 +129,28 @@ public:
     LocalChannel(LocalChannel&&) = delete;
     LocalChannel& operator=(LocalChannel&&) = delete;
 
-    [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override {
+    [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override
+    {
         remoteAddress.clear();
         return CreateOk();
     }
 
-    void Disconnect() override {
+    void Disconnect() override
+    {
         _client.Disconnect();
     }
 
-    [[nodiscard]] ChannelWriter& GetWriter() override {
+    [[nodiscard]] ChannelWriter& GetWriter() override
+    {
         return _writer;
     }
 
-    [[nodiscard]] ChannelReader& GetReader() override {
+    [[nodiscard]] ChannelReader& GetReader() override
+    {
         return _reader;
     }
 
-private:
+  private:
     ShmPipeClient _client;
 
     LocalChannelWriter _writer;
@@ -140,8 +158,10 @@ private:
 };
 
 class LocalChannelServer final : public ChannelServer {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit LocalChannelServer(ShmPipeListener listener) : _listener(std::move(listener)) {
+  public:
+    explicit LocalChannelServer(ShmPipeListener listener)
+        : _listener(std::move(listener))
+    {
     }
 
     ~LocalChannelServer() noexcept override = default;
@@ -152,29 +172,33 @@ public:
     LocalChannelServer(LocalChannelServer&&) = delete;
     LocalChannelServer& operator=(LocalChannelServer&&) = delete;
 
-    [[nodiscard]] uint16_t GetLocalPort() const override {
+    [[nodiscard]] uint16_t GetLocalPort() const override
+    {
         return 0;
     }
 
-    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override {
+    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override
+    {
         ShmPipeClient client;
         CheckResult(_listener.TryAccept(client));
         channel = std::make_unique<LocalChannel>(std::move(client));
         return CreateOk();
     }
 
-private:
+  private:
     ShmPipeListener _listener;
 };
 
-[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel) {
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel)
+{
     ShmPipeClient client{};
     CheckResult(ShmPipeClient::TryConnect(name, client));
     channel = std::make_unique<LocalChannel>(std::move(client));
     return CreateOk();
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server) {
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server)
+{
     ShmPipeListener listener;
     CheckResult(ShmPipeListener::Create(name, listener));
     server = std::make_unique<LocalChannelServer>(std::move(listener));

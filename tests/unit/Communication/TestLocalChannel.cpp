@@ -1,9 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <gtest/gtest.h>
+
 #include <memory>
 #include <string>
-
-#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "Helper.hpp"
@@ -13,11 +13,13 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateLocalChannelName() {
+[[nodiscard]] std::string GenerateLocalChannelName()
+{
     return GenerateString("LocalChannel");
 }
 
-void EstablishConnection(const std::string& name, std::unique_ptr<Channel>& connectChannel, std::unique_ptr<Channel>& acceptChannel) {
+void EstablishConnection(const std::string& name, std::unique_ptr<Channel>& connectChannel, std::unique_ptr<Channel>& acceptChannel)
+{
     std::unique_ptr<ChannelServer> server;
     AssertOk(CreateLocalChannelServer(name, server));
 
@@ -28,7 +30,8 @@ void EstablishConnection(const std::string& name, std::unique_ptr<Channel>& conn
 
 class TestLocalChannel : public testing::Test {};
 
-TEST_F(TestLocalChannel, StartServer) {
+TEST_F(TestLocalChannel, StartServer)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -41,7 +44,8 @@ TEST_F(TestLocalChannel, StartServer) {
     AssertOk(result);
 }
 
-TEST_F(TestLocalChannel, ConnectWithoutStart) {
+TEST_F(TestLocalChannel, ConnectWithoutStart)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -59,7 +63,8 @@ TEST_F(TestLocalChannel, ConnectWithoutStart) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestLocalChannel, Connect) {
+TEST_F(TestLocalChannel, Connect)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -75,7 +80,8 @@ TEST_F(TestLocalChannel, Connect) {
     AssertOk(result);
 }
 
-TEST_F(TestLocalChannel, AcceptWithoutConnect) {
+TEST_F(TestLocalChannel, AcceptWithoutConnect)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -91,7 +97,8 @@ TEST_F(TestLocalChannel, AcceptWithoutConnect) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestLocalChannel, Accept) {
+TEST_F(TestLocalChannel, Accept)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -111,7 +118,8 @@ TEST_F(TestLocalChannel, Accept) {
 }
 
 // After disconnect, the server should still be able to accept it
-TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
+TEST_F(TestLocalChannel, AcceptAfterDisconnect)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -132,7 +140,8 @@ TEST_F(TestLocalChannel, AcceptAfterDisconnect) {
     AssertOk(result);
 }
 
-TEST_F(TestLocalChannel, ReadUInt16FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt16FromChannel)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -144,7 +153,8 @@ TEST_F(TestLocalChannel, ReadUInt16FromChannel) {
     TestReadUInt16FromChannel(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, ReadUInt32FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt32FromChannel)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -156,7 +166,8 @@ TEST_F(TestLocalChannel, ReadUInt32FromChannel) {
     TestReadUInt32FromChannel(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, ReadUInt64FromChannel) {
+TEST_F(TestLocalChannel, ReadUInt64FromChannel)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -168,7 +179,8 @@ TEST_F(TestLocalChannel, ReadUInt64FromChannel) {
     TestReadUInt64FromChannel(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, ReadBufferFromChannel) {
+TEST_F(TestLocalChannel, ReadBufferFromChannel)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -180,7 +192,8 @@ TEST_F(TestLocalChannel, ReadBufferFromChannel) {
     TestReadBufferFromChannel(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, PingPong) {
+TEST_F(TestLocalChannel, PingPong)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -192,7 +205,8 @@ TEST_F(TestLocalChannel, PingPong) {
     TestPingPong(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
+TEST_F(TestLocalChannel, SendTwoFramesAtOnce)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -204,7 +218,8 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce) {
     TestSendTwoFramesAtOnce(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, Stream) {
+TEST_F(TestLocalChannel, Stream)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 
@@ -216,7 +231,8 @@ TEST_F(TestLocalChannel, Stream) {
     TestStream(connectChannel, acceptChannel);
 }
 
-TEST_F(TestLocalChannel, SendAndReceiveBigElement) {
+TEST_F(TestLocalChannel, SendAndReceiveBigElement)
+{
     // Arrange
     std::string name = GenerateLocalChannelName();
 

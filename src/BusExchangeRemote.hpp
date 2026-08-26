@@ -16,7 +16,7 @@ namespace DsVeosCoSim::BusExchangeDetail {
 
 template <typename TBus>
 class RemoteBusExchangePart final : public IBusExchangePart<TBus> {
-public:
+  public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
@@ -25,10 +25,11 @@ public:
                           ControllerRegistry<TBus> controllerRegistry,
                           std::vector<uint32_t> queuedMessageCountByController,
                           RingBuffer<TMessageContainer> queuedMessageContainers)
-        : _protocol(protocol),
-          _controllerRegistry(std::move(controllerRegistry)),
-          _queuedMessageCountByController(std::move(queuedMessageCountByController)),
-          _queuedMessageContainers(std::move(queuedMessageContainers)) {
+        : _protocol(protocol)
+        , _controllerRegistry(std::move(controllerRegistry))
+        , _queuedMessageCountByController(std::move(queuedMessageCountByController))
+        , _queuedMessageContainers(std::move(queuedMessageContainers))
+    {
     }
 
     ~RemoteBusExchangePart() noexcept override = default;
@@ -41,7 +42,8 @@ public:
 
     [[nodiscard]] static Result Create(IProtocol& protocol,
                                        const std::vector<TController>& controllers,
-                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart) {
+                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart)
+    {
         ControllerRegistry<TBus> controllerRegistry;
         CheckResult(ControllerRegistry<TBus>::Create(controllers, controllerRegistry));
 
@@ -56,7 +58,8 @@ public:
         return CreateOk();
     }
 
-    void ClearData() override {
+    void ClearData() override
+    {
         _controllerRegistry.ClearWarnings();
 
         for (auto& queuedMessageCount : _queuedMessageCountByController) {
@@ -66,7 +69,8 @@ public:
         _queuedMessageContainers.Clear();
     }
 
-    [[nodiscard]] Result Transmit(const TMessage& message) override {
+    [[nodiscard]] Result Transmit(const TMessage& message) override
+    {
         ControllerStatePtr<TBus> controllerState{};
         CheckResult(_controllerRegistry.FindController(message.controllerId, controllerState));
         CheckResult(CheckTransmitCapacity(*controllerState));
@@ -82,7 +86,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override
+    {
         ControllerStatePtr<TBus> controllerState{};
         CheckResult(_controllerRegistry.FindController(messageContainer.controllerId, controllerState));
         CheckResult(CheckTransmitCapacity(*controllerState));
@@ -96,7 +101,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Receive(TMessage& message) override {
+    [[nodiscard]] Result Receive(TMessage& message) override
+    {
         TMessageContainer* messageContainer = _queuedMessageContainers.TryPeekFront();
         if (messageContainer == nullptr) {
             return CreateEmpty();
@@ -111,7 +117,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override
+    {
         if (!_queuedMessageContainers.TryPopFront(messageContainer)) {
             return CreateEmpty();
         }
@@ -122,7 +129,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override
+    {
         size_t queuedMessageCount = _queuedMessageContainers.Size();
         CheckResultWithMessage(_protocol.WriteSize(writer, queuedMessageCount), "Could not write count of messages.");
 
@@ -145,7 +153,8 @@ public:
     [[nodiscard]] Result Deserialize(ChannelReader& reader,
                                      SimulationTime simulationTime,
                                      const BusMessageCallback<TBus>& messageCallback,
-                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override {
+                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override
+    {
         size_t totalCount{};
         CheckResultWithMessage(_protocol.ReadSize(reader, totalCount), "Could not read count of messages.");
 
@@ -191,8 +200,9 @@ public:
         return CreateOk();
     }
 
-private:
-    [[nodiscard]] Result CheckTransmitCapacity(ControllerState<TBus>& controllerState) {
+  private:
+    [[nodiscard]] Result CheckTransmitCapacity(ControllerState<TBus>& controllerState)
+    {
         if (_queuedMessageCountByController[controllerState.controllerSlot] == controllerState.controller.queueSize) {
             if (!controllerState.transmitWarningSent) {
                 LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", controllerState.controller.name);

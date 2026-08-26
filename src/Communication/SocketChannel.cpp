@@ -16,8 +16,10 @@ namespace DsVeosCoSim {
 constexpr int32_t DefaultReadPacketSize = 1024;
 
 class SocketChannelWriter final : public ChannelWriter {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit SocketChannelWriter(SocketClient& client) : _client(client) {
+  public:
+    explicit SocketChannelWriter(SocketClient& client)
+        : _client(client)
+    {
     }
 
     ~SocketChannelWriter() noexcept override = default;
@@ -28,7 +30,8 @@ public:
     SocketChannelWriter(SocketChannelWriter&&) = delete;
     SocketChannelWriter& operator=(SocketChannelWriter&&) = delete;
 
-    [[nodiscard]] Result EndWrite() override {
+    [[nodiscard]] Result EndWrite() override
+    {
         uint8_t* buffer = _writeBuffer.data();
 
         // Write header
@@ -40,18 +43,21 @@ public:
         return CreateOk();
     }
 
-protected:
-    [[nodiscard]] Result Send(const uint8_t* buffer, size_t size) override {
+  protected:
+    [[nodiscard]] Result Send(const uint8_t* buffer, size_t size) override
+    {
         return _client.Send(buffer, size);
     }
 
-private:
+  private:
     SocketClient& _client;
 };
 
 class SocketChannelReader final : public ChannelReader {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit SocketChannelReader(SocketClient& client) : _client(client) {
+  public:
+    explicit SocketChannelReader(SocketClient& client)
+        : _client(client)
+    {
         _defaultSizeToRead = DefaultReadPacketSize;
     }
 
@@ -63,29 +69,36 @@ public:
     SocketChannelReader(SocketChannelReader&&) = delete;
     SocketChannelReader& operator=(SocketChannelReader&&) = delete;
 
-    void EndRead() const override {
+    void EndRead() const override
+    {
         if (_readIndex != _endFrameIndex) {
             // Runtime safety check that remains active in release builds
             throw std::runtime_error("Not all data has been read.");
         }
     }
 
-protected:
-    [[nodiscard]] Result WaitForDataInternal(uint32_t timeoutInMilliseconds) override {
+  protected:
+    [[nodiscard]] Result WaitForDataInternal(uint32_t timeoutInMilliseconds) override
+    {
         return _client.WaitForData(timeoutInMilliseconds);
     }
 
-    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override {
+    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override
+    {
         return _client.Receive(destination, size, receivedSize);
     }
 
-private:
+  private:
     SocketClient& _client;
 };
 
 class SocketChannel final : public Channel {  // NOLINT(misc-use-internal-linkage)
-public:
-    explicit SocketChannel(SocketClient client) : _client(std::move(client)), _writer(_client), _reader(_client) {
+  public:
+    explicit SocketChannel(SocketClient client)
+        : _client(std::move(client))
+        , _writer(_client)
+        , _reader(_client)
+    {
     }
 
     ~SocketChannel() noexcept override = default;
@@ -96,23 +109,27 @@ public:
     SocketChannel(SocketChannel&&) = delete;
     SocketChannel& operator=(SocketChannel&&) = delete;
 
-    [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override {
+    [[nodiscard]] Result GetRemoteAddress(std::string& remoteAddress) const override
+    {
         return _client.GetRemoteAddress(remoteAddress);
     }
 
-    void Disconnect() override {
+    void Disconnect() override
+    {
         _client.Disconnect();
     }
 
-    [[nodiscard]] ChannelWriter& GetWriter() override {
+    [[nodiscard]] ChannelWriter& GetWriter() override
+    {
         return _writer;
     }
 
-    [[nodiscard]] ChannelReader& GetReader() override {
+    [[nodiscard]] ChannelReader& GetReader() override
+    {
         return _reader;
     }
 
-private:
+  private:
     SocketClient _client;
 
     SocketChannelWriter _writer;
@@ -120,9 +137,12 @@ private:
 };
 
 class TcpChannelServer final : public ChannelServer {  // NOLINT(misc-use-internal-linkage)
-public:
+  public:
     TcpChannelServer(SocketListener listenerIpv4, SocketListener listenerIpv6, uint16_t port)
-        : _listenerIpv4(std::move(listenerIpv4)), _listenerIpv6(std::move(listenerIpv6)), _port(port) {
+        : _listenerIpv4(std::move(listenerIpv4))
+        , _listenerIpv6(std::move(listenerIpv6))
+        , _port(port)
+    {
     }
 
     ~TcpChannelServer() noexcept override = default;
@@ -133,11 +153,13 @@ public:
     TcpChannelServer(TcpChannelServer&&) = delete;
     TcpChannelServer& operator=(TcpChannelServer&&) = delete;
 
-    [[nodiscard]] uint16_t GetLocalPort() const override {
+    [[nodiscard]] uint16_t GetLocalPort() const override
+    {
         return _port;
     }
 
-    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override {
+    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override
+    {
         if (_listenerIpv4.IsRunning()) {
             SocketClient client{};
             Result result = _listenerIpv4.TryAccept(client);
@@ -161,7 +183,7 @@ public:
         return CreateNotConnected();
     }
 
-private:
+  private:
     SocketListener _listenerIpv4;
     SocketListener _listenerIpv6;
     uint16_t _port{};
@@ -170,8 +192,10 @@ private:
 #ifndef _WIN32
 
 class LocalChannelServer final : public ChannelServer {
-public:
-    explicit LocalChannelServer(SocketListener listener) : _listener(std::move(listener)) {
+  public:
+    explicit LocalChannelServer(SocketListener listener)
+        : _listener(std::move(listener))
+    {
     }
 
     ~LocalChannelServer() noexcept override = default;
@@ -182,18 +206,20 @@ public:
     LocalChannelServer(LocalChannelServer&&) = delete;
     LocalChannelServer& operator=(LocalChannelServer&&) = delete;
 
-    [[nodiscard]] uint16_t GetLocalPort() const override {
+    [[nodiscard]] uint16_t GetLocalPort() const override
+    {
         return {};
     }
 
-    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override {
+    [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override
+    {
         SocketClient client;
         CheckResult(_listener.TryAccept(client));
         channel = std::make_unique<SocketChannel>(std::move(client));
         return CreateOk();
     }
 
-private:
+  private:
     SocketListener _listener;
 };
 
@@ -203,7 +229,8 @@ private:
                                             uint16_t remotePort,
                                             uint16_t localPort,
                                             uint32_t timeoutInMilliseconds,
-                                            std::unique_ptr<Channel>& channel) {
+                                            std::unique_ptr<Channel>& channel)
+{
     CheckResult(StartupNetwork());
 
     SocketClient client{};
@@ -212,7 +239,8 @@ private:
     return CreateOk();
 }
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& server) {
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& server)
+{
     CheckResult(StartupNetwork());
 
     SocketListener listenerIpv4;
@@ -233,7 +261,8 @@ private:
 
 #ifndef _WIN32
 
-[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel) {
+[[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel)
+{
     CheckResult(StartupNetwork());
 
     if (!IsLocalSocketSupported()) {
@@ -246,7 +275,8 @@ private:
     return CreateOk();
 }
 
-[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server) {
+[[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server)
+{
     CheckResult(StartupNetwork());
 
     if (!IsLocalSocketSupported()) {

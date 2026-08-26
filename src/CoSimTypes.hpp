@@ -12,28 +12,34 @@ namespace DsVeosCoSim {
 
 // NOLINTBEGIN
 #define ENUM_BITMASK_OPS(TEnum)                                                             \
-    constexpr TEnum operator&(TEnum lhs, TEnum rhs) {                                       \
+    constexpr TEnum operator&(TEnum lhs, TEnum rhs)                                         \
+    {                                                                                       \
         return static_cast<TEnum>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs)); \
     }                                                                                       \
                                                                                             \
-    constexpr TEnum operator|(TEnum lhs, TEnum rhs) {                                       \
+    constexpr TEnum operator|(TEnum lhs, TEnum rhs)                                         \
+    {                                                                                       \
         return static_cast<TEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs)); \
     }                                                                                       \
                                                                                             \
-    constexpr bool HasFlag(TEnum flags, TEnum testFlag) {                                   \
+    constexpr bool HasFlag(TEnum flags, TEnum testFlag)                                     \
+    {                                                                                       \
         return (flags & testFlag) == testFlag;                                              \
     }                                                                                       \
                                                                                             \
-    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs) {                                    \
+    constexpr TEnum& operator|=(TEnum& lhs, TEnum rhs)                                      \
+    {                                                                                       \
         lhs = lhs | rhs;                                                                    \
         return lhs;                                                                         \
     }                                                                                       \
                                                                                             \
-    constexpr TEnum operator~(TEnum lhs) {                                                  \
+    constexpr TEnum operator~(TEnum lhs)                                                    \
+    {                                                                                       \
         return static_cast<TEnum>(~static_cast<uint32_t>(lhs));                             \
     }                                                                                       \
                                                                                             \
-    constexpr TEnum ClearFlag(const TEnum flags, const TEnum clearFlag) noexcept {          \
+    constexpr TEnum ClearFlag(const TEnum flags, const TEnum clearFlag) noexcept            \
+    {                                                                                       \
         return flags & ~clearFlag;                                                          \
     }
 // NOLINTEND
@@ -83,12 +89,13 @@ enum class CoSimType : uint32_t {
     Server
 };
 
-[[nodiscard]] constexpr std::string_view format_as(CoSimType coSimType) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(CoSimType coSimType) noexcept
+{
     switch (coSimType) {
-        case CoSimType::Client:
-            return "Client";
-        case CoSimType::Server:
-            return "Server";
+    case CoSimType::Client:
+        return "Client";
+    case CoSimType::Server:
+        return "Server";
     }
 
     return "<Invalid CoSimType>";
@@ -99,12 +106,13 @@ enum class ConnectionKind : uint32_t {
     Local
 };
 
-[[nodiscard]] constexpr std::string_view format_as(ConnectionKind connectionKind) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(ConnectionKind connectionKind) noexcept
+{
     switch (connectionKind) {
-        case ConnectionKind::Remote:
-            return "Remote";
-        case ConnectionKind::Local:
-            return "Local";
+    case ConnectionKind::Remote:
+        return "Remote";
+    case ConnectionKind::Local:
+        return "Local";
     }
 
     return "<Invalid ConnectionKind>";
@@ -122,26 +130,27 @@ enum class Command : uint32_t {
     Ping
 };
 
-[[nodiscard]] constexpr std::string_view format_as(Command command) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(Command command) noexcept
+{
     switch (command) {
-        case Command::None:
-            return "None";
-        case Command::Step:
-            return "Step";
-        case Command::Start:
-            return "Start";
-        case Command::Stop:
-            return "Stop";
-        case Command::Terminate:
-            return "Terminate";
-        case Command::Pause:
-            return "Pause";
-        case Command::Continue:
-            return "Continue";
-        case Command::TerminateFinished:
-            return "TerminateFinished";
-        case Command::Ping:
-            return "Ping";
+    case Command::None:
+        return "None";
+    case Command::Step:
+        return "Step";
+    case Command::Start:
+        return "Start";
+    case Command::Stop:
+        return "Stop";
+    case Command::Terminate:
+        return "Terminate";
+    case Command::Pause:
+        return "Pause";
+    case Command::Continue:
+        return "Continue";
+    case Command::TerminateFinished:
+        return "TerminateFinished";
+    case Command::Ping:
+        return "Ping";
     }
 
     return "<Invalid Command>";
@@ -152,12 +161,13 @@ enum class TerminateReason : uint32_t {
     Error
 };
 
-[[nodiscard]] constexpr std::string_view format_as(TerminateReason terminateReason) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(TerminateReason terminateReason) noexcept
+{
     switch (terminateReason) {
-        case TerminateReason::Finished:
-            return "Finished";
-        case TerminateReason::Error:
-            return "Error";
+    case TerminateReason::Finished:
+        return "Finished";
+    case TerminateReason::Error:
+        return "Error";
     }
 
     return "<Invalid TerminateReason>";
@@ -168,12 +178,13 @@ enum class ConnectionState : uint32_t {
     Connected
 };
 
-[[nodiscard]] constexpr std::string_view format_as(ConnectionState connectionState) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(ConnectionState connectionState) noexcept
+{
     switch (connectionState) {
-        case ConnectionState::Disconnected:
-            return "Disconnected";
-        case ConnectionState::Connected:
-            return "Connected";
+    case ConnectionState::Disconnected:
+        return "Disconnected";
+    case ConnectionState::Connected:
+        return "Connected";
     }
 
     return "<Invalid ConnectionState>";
@@ -187,18 +198,19 @@ enum class SimulationState : uint32_t {
     Terminated
 };
 
-[[nodiscard]] constexpr std::string_view format_as(SimulationState simulationState) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(SimulationState simulationState) noexcept
+{
     switch (simulationState) {
-        case SimulationState::Unloaded:
-            return "Unloaded";
-        case SimulationState::Stopped:
-            return "Stopped";
-        case SimulationState::Running:
-            return "Running";
-        case SimulationState::Paused:
-            return "Paused";
-        case SimulationState::Terminated:
-            return "Terminated";
+    case SimulationState::Unloaded:
+        return "Unloaded";
+    case SimulationState::Stopped:
+        return "Stopped";
+    case SimulationState::Running:
+        return "Running";
+    case SimulationState::Paused:
+        return "Paused";
+    case SimulationState::Terminated:
+        return "Terminated";
     }
 
     return "<Unknown SimulationState>";
@@ -207,7 +219,8 @@ enum class SimulationState : uint32_t {
 enum class Mode : uint32_t {
 };
 
-[[nodiscard]] constexpr std::string_view format_as([[maybe_unused]] Mode mode) noexcept {
+[[nodiscard]] constexpr std::string_view format_as([[maybe_unused]] Mode mode) noexcept
+{
     return "<Unused>";
 }
 
@@ -228,30 +241,31 @@ enum class DataType : uint32_t {
     Float64
 };
 
-[[nodiscard]] constexpr std::string_view format_as(DataType dataType) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(DataType dataType) noexcept
+{
     switch (dataType) {
-        case DataType::Bool:
-            return "Bool";
-        case DataType::Int8:
-            return "Int8";
-        case DataType::Int16:
-            return "Int16";
-        case DataType::Int32:
-            return "Int32";
-        case DataType::Int64:
-            return "Int64";
-        case DataType::UInt8:
-            return "UInt8";
-        case DataType::UInt16:
-            return "UInt16";
-        case DataType::UInt32:
-            return "UInt32";
-        case DataType::UInt64:
-            return "UInt64";
-        case DataType::Float32:
-            return "Float32";
-        case DataType::Float64:
-            return "Float64";
+    case DataType::Bool:
+        return "Bool";
+    case DataType::Int8:
+        return "Int8";
+    case DataType::Int16:
+        return "Int16";
+    case DataType::Int32:
+        return "Int32";
+    case DataType::Int64:
+        return "Int64";
+    case DataType::UInt8:
+        return "UInt8";
+    case DataType::UInt16:
+        return "UInt16";
+    case DataType::UInt32:
+        return "UInt32";
+    case DataType::UInt64:
+        return "UInt64";
+    case DataType::Float32:
+        return "Float32";
+    case DataType::Float64:
+        return "Float64";
     }
 
     return "<Invalid DataType>";
@@ -262,12 +276,13 @@ enum class SizeKind : uint32_t {
     Variable
 };
 
-[[nodiscard]] constexpr std::string_view format_as(SizeKind sizeKind) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(SizeKind sizeKind) noexcept
+{
     switch (sizeKind) {
-        case SizeKind::Fixed:
-            return "Fixed";
-        case SizeKind::Variable:
-            return "Variable";
+    case SizeKind::Fixed:
+        return "Fixed";
+    case SizeKind::Variable:
+        return "Variable";
     }
 
     return "<Invalid SizeKind>";
@@ -284,12 +299,13 @@ enum class LinControllerType : uint32_t {
     Commander
 };
 
-[[nodiscard]] constexpr std::string_view format_as(LinControllerType linControllerType) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(LinControllerType linControllerType) noexcept
+{
     switch (linControllerType) {
-        case LinControllerType::Responder:
-            return "Responder";
-        case LinControllerType::Commander:
-            return "Commander";
+    case LinControllerType::Responder:
+        return "Responder";
+    case LinControllerType::Commander:
+        return "Commander";
     }
 
     return "<Invalid LinControllerType>";
@@ -373,42 +389,43 @@ enum class FrameKind : uint32_t {
     UnsetPort
 };
 
-[[nodiscard]] constexpr std::string_view format_as(FrameKind frameKind) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(FrameKind frameKind) noexcept
+{
     switch (frameKind) {
-        case FrameKind::Ping:
-            return "Ping";
-        case FrameKind::PingOk:
-            return "PingOk";
-        case FrameKind::Ok:
-            return "Ok";
-        case FrameKind::Error:
-            return "Error";
-        case FrameKind::Start:
-            return "Start";
-        case FrameKind::Stop:
-            return "Stop";
-        case FrameKind::Terminate:
-            return "Terminate";
-        case FrameKind::Pause:
-            return "Pause";
-        case FrameKind::Continue:
-            return "Continue";
-        case FrameKind::Step:
-            return "Step";
-        case FrameKind::StepOk:
-            return "StepOk";
-        case FrameKind::Connect:
-            return "Connect";
-        case FrameKind::ConnectOk:
-            return "ConnectOk";
-        case FrameKind::GetPort:
-            return "GetPort";
-        case FrameKind::GetPortOk:
-            return "GetPortOk";
-        case FrameKind::SetPort:
-            return "SetPort";
-        case FrameKind::UnsetPort:
-            return "UnsetPort";
+    case FrameKind::Ping:
+        return "Ping";
+    case FrameKind::PingOk:
+        return "PingOk";
+    case FrameKind::Ok:
+        return "Ok";
+    case FrameKind::Error:
+        return "Error";
+    case FrameKind::Start:
+        return "Start";
+    case FrameKind::Stop:
+        return "Stop";
+    case FrameKind::Terminate:
+        return "Terminate";
+    case FrameKind::Pause:
+        return "Pause";
+    case FrameKind::Continue:
+        return "Continue";
+    case FrameKind::Step:
+        return "Step";
+    case FrameKind::StepOk:
+        return "StepOk";
+    case FrameKind::Connect:
+        return "Connect";
+    case FrameKind::ConnectOk:
+        return "ConnectOk";
+    case FrameKind::GetPort:
+        return "GetPort";
+    case FrameKind::GetPortOk:
+        return "GetPortOk";
+    case FrameKind::SetPort:
+        return "SetPort";
+    case FrameKind::UnsetPort:
+        return "UnsetPort";
     }
 
     return "<Invalid FrameKind>";

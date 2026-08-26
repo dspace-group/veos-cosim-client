@@ -1,17 +1,22 @@
+Language: Cpp
 BasedOnStyle: Chromium
-AccessModifierOffset: -4
+AccessModifierOffset: -2
+AlignEscapedNewlines: LeftWithLastLine
 AllowAllArgumentsOnNextLine: false
-AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: Never
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
-AllowShortLambdasOnASingleLine: None
 BinPackArguments: false
 BinPackParameters: false
+BraceWrapping:
+  AfterFunction:   true
+BreakBeforeBraces: Custom
+BreakConstructorInitializers: BeforeComma
 ColumnLimit: 160
+IncludeBlocks: Regroup
+IndentCaseLabels: false
 IndentWidth: 4
-InsertBraces: true
-InsertNewlineAtEOF: true
-LineEnding: LF
-UseTab: false
-WrapNamespaceBodyWithEmptyLines: Always
+KeepEmptyLines:
+  AtStartOfFile: false
+PackConstructorInitializers: Never
+ReflowComments: Never
+SeparateDefinitionBlocks: Always

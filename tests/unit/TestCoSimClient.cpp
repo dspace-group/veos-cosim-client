@@ -1,15 +1,14 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <fmt/format.h>
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <cstring>
 #include <future>
 #include <memory>
 #include <string>
 #include <thread>
-
-#include <fmt/format.h>
-
-#include <gtest/gtest.h>
 
 #include "Channel.hpp"
 #include "CoSimClient.hpp"
@@ -25,8 +24,9 @@ using namespace DsVeosCoSim;
 namespace {
 
 class TestCoSimClient : public testing::TestWithParam<ConnectionKind> {
-protected:
-    void CustomSetUp(ConnectionKind connectionKind) {
+  protected:
+    void CustomSetUp(ConnectionKind connectionKind)
+    {
         _serverName = GenerateString("CoSimServer名前");
 
         if (connectionKind == ConnectionKind::Remote) {
@@ -40,7 +40,8 @@ protected:
         _client = std::make_unique<CoSimClient>();
     }
 
-    [[nodiscard]] ConnectConfig MakeConfig(ConnectionKind connectionKind) const {
+    [[nodiscard]] ConnectConfig MakeConfig(ConnectionKind connectionKind) const
+    {
         ConnectConfig config;
         config.serverName = _serverName;
         config.clientName = "TestClient";
@@ -52,7 +53,8 @@ protected:
         return config;
     }
 
-    void ConnectAndStartPolling(ConnectionKind connectionKind, CoSimServerConfig serverConfig = {}) {
+    void ConnectAndStartPolling(ConnectionKind connectionKind, CoSimServerConfig serverConfig = {})
+    {
         _serverName = GenerateString("CoSimServer名前");
         serverConfig.serverName = _serverName;
         serverConfig.enableRemoteAccess = (connectionKind == ConnectionKind::Remote);
@@ -68,9 +70,7 @@ protected:
 
         _client = std::make_unique<CoSimClient>();
 
-        auto serverStartTask = std::async(std::launch::async, [this] {
-            return _coSimServer->Start(SimulationTime{});
-        });
+        auto serverStartTask = std::async(std::launch::async, [this] { return _coSimServer->Start(SimulationTime{}); });
 
         AssertOk(_client->Connect(MakeConfig(connectionKind)));
         AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -83,7 +83,8 @@ protected:
     }
 
     template <typename ServerFunction>
-    [[nodiscard]] std::future<Result> RunServer(const ServerFunction& serverFunction) {
+    [[nodiscard]] std::future<Result> RunServer(const ServerFunction& serverFunction)
+    {
         return std::async(std::launch::async, [this, serverFunction]() {
             std::unique_ptr<Channel> channel;
             CheckResult(WaitForAccept(channel));
@@ -91,7 +92,8 @@ protected:
         });
     }
 
-    void ConnectClientAndServer(ConnectionKind connectionKind) {
+    void ConnectClientAndServer(ConnectionKind connectionKind)
+    {
         CustomSetUp(connectionKind);
         auto serverTask = std::async(std::launch::async, [this]() {
             CheckResult(WaitForAccept(_serverChannel));
@@ -101,11 +103,13 @@ protected:
         AssertOk(serverTask.get());
     }
 
-    [[nodiscard]] static Result AcceptAndSendConnectOk(Channel& channel, IProtocol& protocol) {
+    [[nodiscard]] static Result AcceptAndSendConnectOk(Channel& channel, IProtocol& protocol)
+    {
         return AcceptAndSendConnectOk(channel, protocol, ProtocolVersion1, SimulationTime{}, SimulationState::Stopped);
     }
 
-    [[nodiscard]] static Result AcceptAndSendConnectOk(Channel& channel, IProtocol& protocol, SimulationTime stepSize, SimulationState simulationState) {
+    [[nodiscard]] static Result AcceptAndSendConnectOk(Channel& channel, IProtocol& protocol, SimulationTime stepSize, SimulationState simulationState)
+    {
         return AcceptAndSendConnectOk(channel, protocol, ProtocolVersion1, stepSize, simulationState, {}, {}, {}, {}, {}, {});
     }
 
@@ -119,7 +123,8 @@ protected:
                                                        const std::vector<CanControllerContainer>& canControllers = {},
                                                        const std::vector<EthControllerContainer>& ethControllers = {},
                                                        const std::vector<LinControllerContainer>& linControllers = {},
-                                                       const std::vector<FrControllerContainer>& frControllers = {}) {
+                                                       const std::vector<FrControllerContainer>& frControllers = {})
+    {
         FrameKind frameKind{};
         CheckResult(protocol.ReceiveHeader(channel.GetReader(), frameKind));
         if (frameKind != FrameKind::Connect) {
@@ -146,7 +151,8 @@ protected:
         return CreateOk();
     }
 
-    [[nodiscard]] static Result AcceptAndSendError(Channel& channel, IProtocol& protocol, std::string_view errorMessage) {
+    [[nodiscard]] static Result AcceptAndSendError(Channel& channel, IProtocol& protocol, std::string_view errorMessage)
+    {
         FrameKind frameKind{};
         CheckResult(protocol.ReceiveHeader(channel.GetReader(), frameKind));
         if (frameKind != FrameKind::Connect) {
@@ -171,7 +177,8 @@ protected:
     std::string _serverName;
     uint16_t _serverPort{};
 
-    [[nodiscard]] Result WaitForAccept(std::unique_ptr<Channel>& channel) const {
+    [[nodiscard]] Result WaitForAccept(std::unique_ptr<Channel>& channel) const
+    {
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(DefaultTimeoutInMilliseconds);
 
         while (std::chrono::steady_clock::now() < deadline) {
@@ -194,13 +201,12 @@ protected:
 INSTANTIATE_TEST_SUITE_P(,
                          TestCoSimClient,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
-                         [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return fmt::format("{}", info.param);
-                         });
+                         [](const testing::TestParamInfo<ConnectionKind>& info) { return fmt::format("{}", info.param); });
 
 // --- Connect ---
 
-TEST_P(TestCoSimClient, ConnectWithEmptyConfigShouldReturnInvalidArgument) {
+TEST_P(TestCoSimClient, ConnectWithEmptyConfigShouldReturnInvalidArgument)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
     ConnectConfig config;
@@ -212,12 +218,11 @@ TEST_P(TestCoSimClient, ConnectWithEmptyConfigShouldReturnInvalidArgument) {
     AssertInvalidArgument(result);
 }
 
-TEST_P(TestCoSimClient, Connect) {
+TEST_P(TestCoSimClient, Connect)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
 
     // Act
     Result result = _client->Connect(MakeConfig(GetParam()));
@@ -228,12 +233,11 @@ TEST_P(TestCoSimClient, Connect) {
     ASSERT_EQ(ConnectionState::Connected, _client->GetConnectionState());
 }
 
-TEST_P(TestCoSimClient, ConnectAlreadyConnectedShouldReturnOk) {
+TEST_P(TestCoSimClient, ConnectAlreadyConnectedShouldReturnOk)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask.get());
 
@@ -244,12 +248,11 @@ TEST_P(TestCoSimClient, ConnectAlreadyConnectedShouldReturnOk) {
     AssertOk(result);
 }
 
-TEST_P(TestCoSimClient, ConnectServerSendsErrorShouldFail) {
+TEST_P(TestCoSimClient, ConnectServerSendsErrorShouldFail)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendError(channel, protocol, "Connection rejected.");
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendError(channel, protocol, "Connection rejected."); });
 
     // Act
     Result result = _client->Connect(MakeConfig(GetParam()));
@@ -260,14 +263,13 @@ TEST_P(TestCoSimClient, ConnectServerSendsErrorShouldFail) {
     ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
-TEST_F(TestCoSimClient, ConnectToNonExistentServerShouldFail) {
+TEST_F(TestCoSimClient, ConnectToNonExistentServerShouldFail)
+{
     // Arrange
     // Server accepts TCP connection but drops it without protocol response.
     // This avoids the 1s TCP connect timeout of a truly dead port.
     CustomSetUp(ConnectionKind::Remote);
-    auto serverTask = RunServer([]([[maybe_unused]] Channel& channel, [[maybe_unused]] IProtocol& protocol) {
-        return CreateOk();
-    });
+    auto serverTask = RunServer([]([[maybe_unused]] Channel& channel, [[maybe_unused]] IProtocol& protocol) { return CreateOk(); });
 
     // Act
     Result result = _client->Connect(MakeConfig(ConnectionKind::Remote));
@@ -279,12 +281,11 @@ TEST_F(TestCoSimClient, ConnectToNonExistentServerShouldFail) {
 
 // --- Disconnect ---
 
-TEST_P(TestCoSimClient, DisconnectAfterConnect) {
+TEST_P(TestCoSimClient, DisconnectAfterConnect)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask.get());
 
@@ -295,7 +296,8 @@ TEST_P(TestCoSimClient, DisconnectAfterConnect) {
     ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
-TEST_F(TestCoSimClient, DisconnectWithoutConnectShouldNotCrash) {
+TEST_F(TestCoSimClient, DisconnectWithoutConnectShouldNotCrash)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -306,12 +308,11 @@ TEST_F(TestCoSimClient, DisconnectWithoutConnectShouldNotCrash) {
     ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
-TEST_P(TestCoSimClient, DoubleDisconnectShouldNotCrash) {
+TEST_P(TestCoSimClient, DoubleDisconnectShouldNotCrash)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask.get());
     _client->Disconnect();
@@ -325,7 +326,8 @@ TEST_P(TestCoSimClient, DoubleDisconnectShouldNotCrash) {
 
 // --- GetConnectionState ---
 
-TEST_F(TestCoSimClient, GetConnectionStateInitialShouldBeDisconnected) {
+TEST_F(TestCoSimClient, GetConnectionStateInitialShouldBeDisconnected)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -336,13 +338,12 @@ TEST_F(TestCoSimClient, GetConnectionStateInitialShouldBeDisconnected) {
     ASSERT_EQ(ConnectionState::Disconnected, state);
 }
 
-TEST_F(TestCoSimClient, GetConnectionStateAfterFailedConnectShouldBeDisconnected) {
+TEST_F(TestCoSimClient, GetConnectionStateAfterFailedConnectShouldBeDisconnected)
+{
     // Arrange
     // Server accepts TCP connection but drops it without protocol response.
     CustomSetUp(ConnectionKind::Remote);
-    auto serverTask = RunServer([]([[maybe_unused]] Channel& channel, [[maybe_unused]] IProtocol& protocol) {
-        return CreateOk();
-    });
+    auto serverTask = RunServer([]([[maybe_unused]] Channel& channel, [[maybe_unused]] IProtocol& protocol) { return CreateOk(); });
     AssertNotConnected(_client->Connect(MakeConfig(ConnectionKind::Remote)));
     serverTask.wait();
 
@@ -355,14 +356,13 @@ TEST_F(TestCoSimClient, GetConnectionStateAfterFailedConnectShouldBeDisconnected
 
 // --- Reconnect ---
 
-TEST_P(TestCoSimClient, ReconnectAfterDisconnect) {
+TEST_P(TestCoSimClient, ReconnectAfterDisconnect)
+{
     // Arrange
     CustomSetUp(GetParam());
 
     // First connection
-    auto serverTask1 = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask1 = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask1.get());
     _client->Disconnect();
@@ -376,9 +376,7 @@ TEST_P(TestCoSimClient, ReconnectAfterDisconnect) {
         _serverPort = _server->GetLocalPort();
     }
 
-    auto serverTask2 = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask2 = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
 
     // Act
     Result result = _client->Connect(MakeConfig(GetParam()));
@@ -391,7 +389,8 @@ TEST_P(TestCoSimClient, ReconnectAfterDisconnect) {
 
 // --- GetStepSize ---
 
-TEST_F(TestCoSimClient, GetStepSizeWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetStepSizeWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -403,7 +402,8 @@ TEST_F(TestCoSimClient, GetStepSizeWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetStepSize) {
+TEST_P(TestCoSimClient, GetStepSize)
+{
     // Arrange
     CustomSetUp(GetParam());
     SimulationTime expectedStepSize = GenerateSimulationTime();
@@ -424,7 +424,8 @@ TEST_P(TestCoSimClient, GetStepSize) {
 
 // --- GetCurrentSimulationTime ---
 
-TEST_F(TestCoSimClient, GetCurrentSimulationTimeWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetCurrentSimulationTimeWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -436,12 +437,11 @@ TEST_F(TestCoSimClient, GetCurrentSimulationTimeWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetCurrentSimulationTimeAfterConnect) {
+TEST_P(TestCoSimClient, GetCurrentSimulationTimeAfterConnect)
+{
     // Arrange
     CustomSetUp(GetParam());
-    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol);
-    });
+    auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask.get());
 
@@ -456,7 +456,8 @@ TEST_P(TestCoSimClient, GetCurrentSimulationTimeAfterConnect) {
 
 // --- GetSimulationState ---
 
-TEST_F(TestCoSimClient, GetSimulationStateWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetSimulationStateWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -468,13 +469,13 @@ TEST_F(TestCoSimClient, GetSimulationStateWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetSimulationState) {
+TEST_P(TestCoSimClient, GetSimulationState)
+{
     // Arrange
     CustomSetUp(GetParam());
     SimulationState expectedState = SimulationState::Running;
-    auto serverTask = RunServer([expectedState](Channel& channel, IProtocol& protocol) {
-        return AcceptAndSendConnectOk(channel, protocol, SimulationTime{}, expectedState);
-    });
+    auto serverTask = RunServer(
+        [expectedState](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol, SimulationTime{}, expectedState); });
     AssertOk(_client->Connect(MakeConfig(GetParam())));
     AssertOk(serverTask.get());
 
@@ -489,7 +490,8 @@ TEST_P(TestCoSimClient, GetSimulationState) {
 
 // --- RunCallbackBasedCoSimulation ---
 
-TEST_F(TestCoSimClient, RunCallbackBasedCoSimulationWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, RunCallbackBasedCoSimulationWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -500,7 +502,8 @@ TEST_F(TestCoSimClient, RunCallbackBasedCoSimulationWhenNotConnectedShouldFail) 
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationReceivesStartAndTerminate) {
+TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationReceivesStartAndTerminate)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
 
@@ -510,9 +513,7 @@ TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationReceivesStartAndTerminate) {
     bool terminateCalled = false;
 
     Callbacks callbacks{};
-    callbacks.simulationStartedCallback = [&](SimulationTime) {
-        startCalled = true;
-    };
+    callbacks.simulationStartedCallback = [&](SimulationTime) { startCalled = true; };
     callbacks.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) {
         terminateCalled = true;
         _client->Disconnect();
@@ -540,7 +541,8 @@ TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationReceivesStartAndTerminate) {
     ASSERT_TRUE(terminateCalled);
 }
 
-TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationAfterPollingModeShouldFail) {
+TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationAfterPollingModeShouldFail)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -554,7 +556,8 @@ TEST_P(TestCoSimClient, RunCallbackBasedCoSimulationAfterPollingModeShouldFail) 
 
 // --- StartPollingBasedCoSimulation ---
 
-TEST_F(TestCoSimClient, StartPollingBasedCoSimulationWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, StartPollingBasedCoSimulationWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -565,7 +568,8 @@ TEST_F(TestCoSimClient, StartPollingBasedCoSimulationWhenNotConnectedShouldFail)
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, StartPollingBasedCoSimulation) {
+TEST_P(TestCoSimClient, StartPollingBasedCoSimulation)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
 
@@ -576,15 +580,14 @@ TEST_P(TestCoSimClient, StartPollingBasedCoSimulation) {
     AssertOk(result);
 }
 
-TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucceed) {
+TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucceed)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
 
     // Force blocking mode by running callback-based co-sim that immediately disconnects.
     Callbacks callbacks{};
-    callbacks.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) {
-        _client->Disconnect();
-    };
+    callbacks.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) { _client->Disconnect(); };
 
     auto serverTask = std::async(std::launch::async, [&]() -> Result {
         // Client will disconnect in the callback, so no Ok response expected.
@@ -619,7 +622,8 @@ TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucc
 
 // --- PollCommand ---
 
-TEST_F(TestCoSimClient, PollCommandWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, PollCommandWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -632,7 +636,8 @@ TEST_F(TestCoSimClient, PollCommandWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesStart) {
+TEST_P(TestCoSimClient, PollCommandReceivesStart)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -655,7 +660,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStart) {
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesStop) {
+TEST_P(TestCoSimClient, PollCommandReceivesStop)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -678,7 +684,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStop) {
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesTerminate) {
+TEST_P(TestCoSimClient, PollCommandReceivesTerminate)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -701,7 +708,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesTerminate) {
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesPause) {
+TEST_P(TestCoSimClient, PollCommandReceivesPause)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -724,7 +732,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesPause) {
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesContinue) {
+TEST_P(TestCoSimClient, PollCommandReceivesContinue)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -747,7 +756,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesContinue) {
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandReceivesStep) {
+TEST_P(TestCoSimClient, PollCommandReceivesStep)
+{
     // Arrange
     ConnectAndStartPolling(GetParam());
 
@@ -771,7 +781,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStep) {
     AssertOk(serverTask.get());
 }
 
-TEST_P(TestCoSimClient, PollCommandSkipsPingAndReturnsNextCommand) {
+TEST_P(TestCoSimClient, PollCommandSkipsPingAndReturnsNextCommand)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -808,7 +819,8 @@ TEST_P(TestCoSimClient, PollCommandSkipsPingAndReturnsNextCommand) {
     ASSERT_EQ(startTime, simulationTime);
 }
 
-TEST_P(TestCoSimClient, PollCommandWithoutFinishCommandShouldFail) {
+TEST_P(TestCoSimClient, PollCommandWithoutFinishCommandShouldFail)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -830,7 +842,8 @@ TEST_P(TestCoSimClient, PollCommandWithoutFinishCommandShouldFail) {
     AssertError(result);
 }
 
-TEST_P(TestCoSimClient, PollCommandTimesOutWhenNoCommandArrives) {
+TEST_P(TestCoSimClient, PollCommandTimesOutWhenNoCommandArrives)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -845,7 +858,8 @@ TEST_P(TestCoSimClient, PollCommandTimesOutWhenNoCommandArrives) {
     AssertTimeout(result);
 }
 
-TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings) {
+TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -895,7 +909,8 @@ TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings) {
 
 // --- FinishCommand ---
 
-TEST_F(TestCoSimClient, FinishCommandWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, FinishCommandWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -906,7 +921,8 @@ TEST_F(TestCoSimClient, FinishCommandWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, FinishCommandWithoutPollCommandShouldFail) {
+TEST_P(TestCoSimClient, FinishCommandWithoutPollCommandShouldFail)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -918,7 +934,8 @@ TEST_P(TestCoSimClient, FinishCommandWithoutPollCommandShouldFail) {
     AssertError(result);
 }
 
-TEST_P(TestCoSimClient, FinishCommandAfterStart) {
+TEST_P(TestCoSimClient, FinishCommandAfterStart)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
     AssertOk(_client->StartPollingBasedCoSimulation({}));
@@ -948,7 +965,8 @@ TEST_P(TestCoSimClient, FinishCommandAfterStart) {
     AssertOk(serverTask.get());
 }
 
-TEST_P(TestCoSimClient, FinishCommandAfterStep) {
+TEST_P(TestCoSimClient, FinishCommandAfterStep)
+{
     // Arrange
     ConnectAndStartPolling(GetParam());
 
@@ -971,7 +989,8 @@ TEST_P(TestCoSimClient, FinishCommandAfterStep) {
 
 // --- SetNextSimulationTime ---
 
-TEST_F(TestCoSimClient, SetNextSimulationTimeWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, SetNextSimulationTimeWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -982,7 +1001,8 @@ TEST_F(TestCoSimClient, SetNextSimulationTimeWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, SetNextSimulationTime) {
+TEST_P(TestCoSimClient, SetNextSimulationTime)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
 
@@ -993,16 +1013,15 @@ TEST_P(TestCoSimClient, SetNextSimulationTime) {
     AssertOk(result);
 }
 
-TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk) {
+TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk)
+{
     // Arrange
     ConnectAndStartPolling(GetParam());
     SimulationTime expectedNextTime(std::chrono::nanoseconds(42000));
     AssertOk(_client->SetNextSimulationTime(expectedNextTime));
 
     SimulationTime receivedNextTime{};
-    auto serverTask = std::async(std::launch::async, [this, &receivedNextTime] {
-        return _coSimServer->Step(SimulationTime{}, receivedNextTime);
-    });
+    auto serverTask = std::async(std::launch::async, [this, &receivedNextTime] { return _coSimServer->Step(SimulationTime{}, receivedNextTime); });
 
     SimulationTime simulationTime{};
     Command command{};
@@ -1016,7 +1035,8 @@ TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk) {
 
 // --- GetRoundTripTime ---
 
-TEST_F(TestCoSimClient, GetRoundTripTimeWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetRoundTripTimeWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1028,7 +1048,8 @@ TEST_F(TestCoSimClient, GetRoundTripTimeWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetRoundTripTime) {
+TEST_P(TestCoSimClient, GetRoundTripTime)
+{
     // Arrange
     ConnectClientAndServer(GetParam());
 
@@ -1042,7 +1063,8 @@ TEST_P(TestCoSimClient, GetRoundTripTime) {
 
 // --- Start ---
 
-TEST_F(TestCoSimClient, StartWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, StartWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1053,13 +1075,12 @@ TEST_F(TestCoSimClient, StartWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, StartSetsNextCommand) {
+TEST_P(TestCoSimClient, StartSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationStartedCallback = [&](SimulationTime) {
-        received = true;
-    };
+    config.simulationStartedCallback = [&](SimulationTime) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Start());
 
@@ -1080,7 +1101,8 @@ TEST_P(TestCoSimClient, StartSetsNextCommand) {
 
 // --- Stop ---
 
-TEST_F(TestCoSimClient, StopWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, StopWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1091,13 +1113,12 @@ TEST_F(TestCoSimClient, StopWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, StopSetsNextCommand) {
+TEST_P(TestCoSimClient, StopSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationStoppedCallback = [&](SimulationTime) {
-        received = true;
-    };
+    config.simulationStoppedCallback = [&](SimulationTime) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Stop());
 
@@ -1118,7 +1139,8 @@ TEST_P(TestCoSimClient, StopSetsNextCommand) {
 
 // --- Pause ---
 
-TEST_F(TestCoSimClient, PauseWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, PauseWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1129,13 +1151,12 @@ TEST_F(TestCoSimClient, PauseWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, PauseSetsNextCommand) {
+TEST_P(TestCoSimClient, PauseSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationPausedCallback = [&](SimulationTime) {
-        received = true;
-    };
+    config.simulationPausedCallback = [&](SimulationTime) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Pause());
 
@@ -1156,7 +1177,8 @@ TEST_P(TestCoSimClient, PauseSetsNextCommand) {
 
 // --- Continue ---
 
-TEST_F(TestCoSimClient, ContinueWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, ContinueWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1167,13 +1189,12 @@ TEST_F(TestCoSimClient, ContinueWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, ContinueSetsNextCommand) {
+TEST_P(TestCoSimClient, ContinueSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationContinuedCallback = [&](SimulationTime) {
-        received = true;
-    };
+    config.simulationContinuedCallback = [&](SimulationTime) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Continue());
 
@@ -1194,7 +1215,8 @@ TEST_P(TestCoSimClient, ContinueSetsNextCommand) {
 
 // --- Terminate ---
 
-TEST_F(TestCoSimClient, TerminateWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, TerminateWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1205,13 +1227,12 @@ TEST_F(TestCoSimClient, TerminateWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, TerminateFinishedSetsNextCommand) {
+TEST_P(TestCoSimClient, TerminateFinishedSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) {
-        received = true;
-    };
+    config.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Terminate(TerminateReason::Finished));
 
@@ -1230,13 +1251,12 @@ TEST_P(TestCoSimClient, TerminateFinishedSetsNextCommand) {
     EXPECT_TRUE(received);
 }
 
-TEST_P(TestCoSimClient, TerminateErrorSetsNextCommand) {
+TEST_P(TestCoSimClient, TerminateErrorSetsNextCommand)
+{
     // Arrange
     bool received = false;
     CoSimServerConfig config{};
-    config.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) {
-        received = true;
-    };
+    config.simulationTerminatedCallback = [&](SimulationTime, TerminateReason) { received = true; };
     ConnectAndStartPolling(GetParam(), config);
     AssertOk(_client->Terminate(TerminateReason::Error));
 
@@ -1257,7 +1277,8 @@ TEST_P(TestCoSimClient, TerminateErrorSetsNextCommand) {
 
 // --- GetIncomingSignals ---
 
-TEST_F(TestCoSimClient, GetIncomingSignalsWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetIncomingSignalsWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1270,7 +1291,8 @@ TEST_F(TestCoSimClient, GetIncomingSignalsWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetIncomingSignalsReturnsSignalsFromConnectOk) {
+TEST_P(TestCoSimClient, GetIncomingSignalsReturnsSignalsFromConnectOk)
+{
     // Arrange
     auto signal1 = CreateSignal(DataType::Float64, SizeKind::Fixed);
     auto signal2 = CreateSignal(DataType::Int32, SizeKind::Fixed);
@@ -1290,7 +1312,8 @@ TEST_P(TestCoSimClient, GetIncomingSignalsReturnsSignalsFromConnectOk) {
     ASSERT_EQ(signal2.id, signals[1].id);
 }
 
-TEST_P(TestCoSimClient, GetIncomingSignalsVectorReturnsSignalsFromConnectOk) {
+TEST_P(TestCoSimClient, GetIncomingSignalsVectorReturnsSignalsFromConnectOk)
+{
     // Arrange
     auto signal1 = CreateSignal(DataType::Float64, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1309,7 +1332,8 @@ TEST_P(TestCoSimClient, GetIncomingSignalsVectorReturnsSignalsFromConnectOk) {
 
 // --- GetOutgoingSignals ---
 
-TEST_F(TestCoSimClient, GetOutgoingSignalsWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetOutgoingSignalsWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1322,7 +1346,8 @@ TEST_F(TestCoSimClient, GetOutgoingSignalsWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetOutgoingSignalsReturnsSignalsFromConnectOk) {
+TEST_P(TestCoSimClient, GetOutgoingSignalsReturnsSignalsFromConnectOk)
+{
     // Arrange
     auto signal1 = CreateSignal(DataType::UInt16, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1340,7 +1365,8 @@ TEST_P(TestCoSimClient, GetOutgoingSignalsReturnsSignalsFromConnectOk) {
     ASSERT_EQ(signal1.id, signals[0].id);
 }
 
-TEST_P(TestCoSimClient, GetOutgoingSignalsVectorReturnsSignalsFromConnectOk) {
+TEST_P(TestCoSimClient, GetOutgoingSignalsVectorReturnsSignalsFromConnectOk)
+{
     // Arrange
     auto signal1 = CreateSignal(DataType::Float32, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1359,7 +1385,8 @@ TEST_P(TestCoSimClient, GetOutgoingSignalsVectorReturnsSignalsFromConnectOk) {
 
 // --- Write ---
 
-TEST_F(TestCoSimClient, WriteWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, WriteWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
     uint8_t value = 42;
@@ -1371,7 +1398,8 @@ TEST_F(TestCoSimClient, WriteWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestCoSimClient, WriteSignal) {
+TEST_F(TestCoSimClient, WriteSignal)
+{
     // Arrange — Remote only: Local uses shared memory signal exchange not supported by mock server.
     auto outSignal = CreateSignal(DataType::Float64, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1403,7 +1431,8 @@ TEST_F(TestCoSimClient, WriteSignal) {
 
 // --- Read ---
 
-TEST_F(TestCoSimClient, ReadWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, ReadWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
     uint8_t value{};
@@ -1416,7 +1445,8 @@ TEST_F(TestCoSimClient, ReadWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestCoSimClient, ReadSignal) {
+TEST_F(TestCoSimClient, ReadSignal)
+{
     // Arrange — Remote only: Local uses shared memory signal exchange not supported by mock server.
     auto inSignal = CreateSignal(DataType::Float64, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1449,7 +1479,8 @@ TEST_F(TestCoSimClient, ReadSignal) {
     AssertOk(serverTask.get());
 }
 
-TEST_F(TestCoSimClient, ReadSignalRef) {
+TEST_F(TestCoSimClient, ReadSignalRef)
+{
     // Arrange — Remote only: Local uses shared memory signal exchange not supported by mock server.
     auto inSignal = CreateSignal(DataType::Float64, SizeKind::Fixed);
     CoSimServerConfig config{};
@@ -1485,7 +1516,8 @@ TEST_F(TestCoSimClient, ReadSignalRef) {
 
 // --- GetCanControllers ---
 
-TEST_F(TestCoSimClient, GetCanControllersWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetCanControllersWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1498,7 +1530,8 @@ TEST_F(TestCoSimClient, GetCanControllersWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetCanControllersReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetCanControllersReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateCanControllers(2);
     CoSimServerConfig config{};
@@ -1517,7 +1550,8 @@ TEST_P(TestCoSimClient, GetCanControllersReturnsControllersFromConnectOk) {
     ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
-TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1536,7 +1570,8 @@ TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk) 
 
 // --- GetEthControllers ---
 
-TEST_F(TestCoSimClient, GetEthControllersWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetEthControllersWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1549,7 +1584,8 @@ TEST_F(TestCoSimClient, GetEthControllersWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetEthControllersReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetEthControllersReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateEthControllers(2);
     CoSimServerConfig config{};
@@ -1568,7 +1604,8 @@ TEST_P(TestCoSimClient, GetEthControllersReturnsControllersFromConnectOk) {
     ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
-TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateEthControllers(1);
     CoSimServerConfig config{};
@@ -1587,7 +1624,8 @@ TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk) 
 
 // --- GetLinControllers ---
 
-TEST_F(TestCoSimClient, GetLinControllersWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetLinControllersWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1600,7 +1638,8 @@ TEST_F(TestCoSimClient, GetLinControllersWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestCoSimClient, GetLinControllersReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetLinControllersReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateLinControllers(2);
     CoSimServerConfig config{};
@@ -1619,7 +1658,8 @@ TEST_P(TestCoSimClient, GetLinControllersReturnsControllersFromConnectOk) {
     ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
-TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk) {
+TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk)
+{
     // Arrange
     auto controllers = CreateLinControllers(1);
     CoSimServerConfig config{};
@@ -1638,7 +1678,8 @@ TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk) 
 
 // --- GetFrControllers ---
 
-TEST_F(TestCoSimClient, GetFrControllersWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, GetFrControllersWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
 
@@ -1651,7 +1692,8 @@ TEST_F(TestCoSimClient, GetFrControllersWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestCoSimClient, GetFrControllersReturnsControllersFromConnectOk) {
+TEST_F(TestCoSimClient, GetFrControllersReturnsControllersFromConnectOk)
+{
     // Arrange - Remote only, Protocol v2 required for FR
     auto controllers = CreateFrControllers(2);
     CoSimServerConfig config{};
@@ -1670,7 +1712,8 @@ TEST_F(TestCoSimClient, GetFrControllersReturnsControllersFromConnectOk) {
     ASSERT_EQ(controllers[1].id, result_controllers[1].id);
 }
 
-TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk) {
+TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk)
+{
     // Arrange - Remote only, Protocol v2 required for FR
     auto controllers = CreateFrControllers(1);
     CoSimServerConfig config{};
@@ -1689,7 +1732,8 @@ TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk) {
 
 // --- CAN Message Validation ---
 
-TEST_F(TestCoSimClient, TransmitCanMessageWhenNotConnectedShouldFail) {
+TEST_F(TestCoSimClient, TransmitCanMessageWhenNotConnectedShouldFail)
+{
     // Arrange
     _client = std::make_unique<CoSimClient>();
     CanMessageContainer msg{};
@@ -1701,7 +1745,8 @@ TEST_F(TestCoSimClient, TransmitCanMessageWhenNotConnectedShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestCoSimClient, TransmitCanMessageExceedingMaxLengthShouldFail) {
+TEST_F(TestCoSimClient, TransmitCanMessageExceedingMaxLengthShouldFail)
+{
     // Arrange
     auto canControllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1719,7 +1764,8 @@ TEST_F(TestCoSimClient, TransmitCanMessageExceedingMaxLengthShouldFail) {
     AssertInvalidArgument(result);
 }
 
-TEST_F(TestCoSimClient, TransmitCanMessageDlcAbove8WithoutFdFlagShouldFail) {
+TEST_F(TestCoSimClient, TransmitCanMessageDlcAbove8WithoutFdFlagShouldFail)
+{
     // Arrange
     auto canControllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1738,7 +1784,8 @@ TEST_F(TestCoSimClient, TransmitCanMessageDlcAbove8WithoutFdFlagShouldFail) {
     AssertInvalidArgument(result);
 }
 
-TEST_F(TestCoSimClient, TransmitCanMessageBitRateSwitchWithoutFdFlagShouldFail) {
+TEST_F(TestCoSimClient, TransmitCanMessageBitRateSwitchWithoutFdFlagShouldFail)
+{
     // Arrange
     auto canControllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1757,7 +1804,8 @@ TEST_F(TestCoSimClient, TransmitCanMessageBitRateSwitchWithoutFdFlagShouldFail) 
     AssertInvalidArgument(result);
 }
 
-TEST_F(TestCoSimClient, TransmitCanMessageWithFdFlagAndLargeDlcShouldSucceed) {
+TEST_F(TestCoSimClient, TransmitCanMessageWithFdFlagAndLargeDlcShouldSucceed)
+{
     // Arrange
     auto canControllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1779,15 +1827,14 @@ TEST_F(TestCoSimClient, TransmitCanMessageWithFdFlagAndLargeDlcShouldSucceed) {
 
 // --- CAN Transmit + Receive ---
 
-TEST_F(TestCoSimClient, TransmitCanMessage) {
+TEST_F(TestCoSimClient, TransmitCanMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateCanControllers(1);
     CanMessageContainer receivedMsg{};
     CoSimServerConfig config{};
     config.canControllers = controllers;
-    config.canMessageContainerReceivedCallback = [&](SimulationTime, const CanController&, const CanMessageContainer& msg) {
-        receivedMsg = msg;
-    };
+    config.canMessageContainerReceivedCallback = [&](SimulationTime, const CanController&, const CanMessageContainer& msg) { receivedMsg = msg; };
     ConnectAndStartPolling(ConnectionKind::Remote, config);
 
     CanMessageContainer sentMsg{};
@@ -1811,7 +1858,8 @@ TEST_F(TestCoSimClient, TransmitCanMessage) {
     ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
-TEST_F(TestCoSimClient, ReceiveCanMessage) {
+TEST_F(TestCoSimClient, ReceiveCanMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateCanControllers(1);
     CoSimServerConfig config{};
@@ -1847,15 +1895,14 @@ TEST_F(TestCoSimClient, ReceiveCanMessage) {
 
 // --- ETH Transmit + Receive ---
 
-TEST_F(TestCoSimClient, TransmitEthMessage) {
+TEST_F(TestCoSimClient, TransmitEthMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateEthControllers(1);
     EthMessageContainer receivedMsg{};
     CoSimServerConfig config{};
     config.ethControllers = controllers;
-    config.ethMessageContainerReceivedCallback = [&](SimulationTime, const EthController&, const EthMessageContainer& msg) {
-        receivedMsg = msg;
-    };
+    config.ethMessageContainerReceivedCallback = [&](SimulationTime, const EthController&, const EthMessageContainer& msg) { receivedMsg = msg; };
     ConnectAndStartPolling(ConnectionKind::Remote, config);
 
     EthMessageContainer sentMsg{};
@@ -1879,7 +1926,8 @@ TEST_F(TestCoSimClient, TransmitEthMessage) {
     ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
-TEST_F(TestCoSimClient, ReceiveEthMessage) {
+TEST_F(TestCoSimClient, ReceiveEthMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateEthControllers(1);
     CoSimServerConfig config{};
@@ -1915,15 +1963,14 @@ TEST_F(TestCoSimClient, ReceiveEthMessage) {
 
 // --- LIN Transmit + Receive ---
 
-TEST_F(TestCoSimClient, TransmitLinMessage) {
+TEST_F(TestCoSimClient, TransmitLinMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateLinControllers(1);
     LinMessageContainer receivedMsg{};
     CoSimServerConfig config{};
     config.linControllers = controllers;
-    config.linMessageContainerReceivedCallback = [&](SimulationTime, const LinController&, const LinMessageContainer& msg) {
-        receivedMsg = msg;
-    };
+    config.linMessageContainerReceivedCallback = [&](SimulationTime, const LinController&, const LinMessageContainer& msg) { receivedMsg = msg; };
     ConnectAndStartPolling(ConnectionKind::Remote, config);
 
     LinMessageContainer sentMsg{};
@@ -1947,7 +1994,8 @@ TEST_F(TestCoSimClient, TransmitLinMessage) {
     ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
-TEST_F(TestCoSimClient, ReceiveLinMessage) {
+TEST_F(TestCoSimClient, ReceiveLinMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateLinControllers(1);
     CoSimServerConfig config{};
@@ -1983,15 +2031,14 @@ TEST_F(TestCoSimClient, ReceiveLinMessage) {
 
 // --- FR Transmit + Receive (Protocol v2, Remote only) ---
 
-TEST_F(TestCoSimClient, TransmitFrMessage) {
+TEST_F(TestCoSimClient, TransmitFrMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateFrControllers(1);
     FrMessageContainer receivedMsg{};
     CoSimServerConfig config{};
     config.frControllers = controllers;
-    config.frMessageContainerReceivedCallback = [&](SimulationTime, const FrController&, const FrMessageContainer& msg) {
-        receivedMsg = msg;
-    };
+    config.frMessageContainerReceivedCallback = [&](SimulationTime, const FrController&, const FrMessageContainer& msg) { receivedMsg = msg; };
     ConnectAndStartPolling(ConnectionKind::Remote, config);
 
     FrMessageContainer sentMsg{};
@@ -2015,7 +2062,8 @@ TEST_F(TestCoSimClient, TransmitFrMessage) {
     ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
-TEST_F(TestCoSimClient, ReceiveFrMessage) {
+TEST_F(TestCoSimClient, ReceiveFrMessage)
+{
     // Arrange — Remote only
     auto controllers = CreateFrControllers(1);
     CoSimServerConfig config{};

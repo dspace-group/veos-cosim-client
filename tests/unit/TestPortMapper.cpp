@@ -1,9 +1,9 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <gtest/gtest.h>
+
 #include <memory>
 #include <string>
-
-#include <gtest/gtest.h>
 
 #include "Helper.hpp"
 #include "PortMapper.hpp"
@@ -15,15 +15,17 @@ using namespace testing;
 namespace {
 
 class TestPortMapper : public Test {
-protected:
-    void SetUp() override {
+  protected:
+    void SetUp() override
+    {
         AssertOk(CreatePortMapperServer(true, _portMapperServer));
     }
 
     std::unique_ptr<PortMapperServer> _portMapperServer;
 };
 
-TEST_F(TestPortMapper, SetPort) {
+TEST_F(TestPortMapper, SetPort)
+{
     // Arrange
     std::string serverName = GenerateString("Server名前");
     uint16_t port = GenerateU16();
@@ -38,7 +40,8 @@ TEST_F(TestPortMapper, SetPort) {
     EXPECT_EQ(port, retrievedPort);
 }
 
-TEST_F(TestPortMapper, UnsetPortOfExistingPort) {
+TEST_F(TestPortMapper, UnsetPortOfExistingPort)
+{
     // Arrange
     std::string serverName = GenerateString("Server名前");
     uint16_t port = GenerateU16();
@@ -53,7 +56,8 @@ TEST_F(TestPortMapper, UnsetPortOfExistingPort) {
     AssertError(PortMapperGetPort("127.0.0.1", serverName, retrievedPort));
 }
 
-TEST_F(TestPortMapper, UnsetPortOfNonExistingPort) {
+TEST_F(TestPortMapper, UnsetPortOfNonExistingPort)
+{
     // Arrange
     std::string serverName = GenerateString("Server名前");
     std::string otherServerName = GenerateString("OtherServer名前");
@@ -70,7 +74,8 @@ TEST_F(TestPortMapper, UnsetPortOfNonExistingPort) {
     EXPECT_EQ(otherPort, retrievedPort);
 }
 
-TEST_F(TestPortMapper, GetPort) {
+TEST_F(TestPortMapper, GetPort)
+{
     // Arrange
     std::string serverName = GenerateString("Server名前");
     uint16_t expectedPort = GenerateU16();
@@ -85,7 +90,8 @@ TEST_F(TestPortMapper, GetPort) {
     EXPECT_EQ(expectedPort, port);
 }
 
-TEST_F(TestPortMapper, GetPortOfNonExistingServer) {
+TEST_F(TestPortMapper, GetPortOfNonExistingServer)
+{
     // Arrange
     std::string serverName = GenerateString("Server名前");
     std::string otherServerName = GenerateString("OtherServer名前");

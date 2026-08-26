@@ -1,12 +1,11 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <memory>
-#include <string>
-
 #include <fmt/format.h>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <memory>
+#include <string>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -20,17 +19,19 @@ using namespace testing;
 namespace {
 
 class TestProtocol : public testing::TestWithParam<ConnectionKind> {
-protected:
+  protected:
     std::unique_ptr<Channel> _senderChannel;
     std::unique_ptr<Channel> _receiverChannel;
 
     std::unique_ptr<IProtocol> _protocol;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         CustomSetUp(GetParam());
     }
 
-    void CustomSetUp(ConnectionKind connectionKind) {
+    void CustomSetUp(ConnectionKind connectionKind)
+    {
         if (connectionKind == ConnectionKind::Remote) {
             std::unique_ptr<ChannelServer> server;
             AssertOk(CreateTcpChannelServer(0, true, server));
@@ -50,12 +51,14 @@ protected:
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         _senderChannel->Disconnect();
         _receiverChannel->Disconnect();
     }
 
-    void AssertFrame(FrameKind expected) const {
+    void AssertFrame(FrameKind expected) const
+    {
         FrameKind frameKind{};
         AssertOk(_protocol->ReceiveHeader(_receiverChannel->GetReader(), frameKind));
         ASSERT_EQ(expected, frameKind);
@@ -65,11 +68,10 @@ protected:
 INSTANTIATE_TEST_SUITE_P(,
                          TestProtocol,
                          testing::Values(ConnectionKind::Local, ConnectionKind::Remote),
-                         [](const testing::TestParamInfo<ConnectionKind>& info) {
-                             return fmt::format("{}", info.param);
-                         });
+                         [](const testing::TestParamInfo<ConnectionKind>& info) { return fmt::format("{}", info.param); });
 
-TEST_P(TestProtocol, SendAndReceiveSize) {
+TEST_P(TestProtocol, SendAndReceiveSize)
+{
     // Arrange
     size_t sendSize = GenerateU32();
 
@@ -84,7 +86,8 @@ TEST_P(TestProtocol, SendAndReceiveSize) {
     ASSERT_EQ(sendSize, receiveSize);
 }
 
-TEST_P(TestProtocol, SendAndReceiveLength) {
+TEST_P(TestProtocol, SendAndReceiveLength)
+{
     // Arrange
     uint32_t sendLength = GenerateU32();
 
@@ -99,7 +102,8 @@ TEST_P(TestProtocol, SendAndReceiveLength) {
     ASSERT_EQ(sendLength, receiveLength);
 }
 
-TEST_P(TestProtocol, SendAndReceiveSignalId) {
+TEST_P(TestProtocol, SendAndReceiveSignalId)
+{
     // Arrange
     IoSignalId sendSignalId = GenerateIoSignalId();
 
@@ -114,7 +118,8 @@ TEST_P(TestProtocol, SendAndReceiveSignalId) {
     ASSERT_EQ(sendSignalId, receiveSignalId);
 }
 
-TEST_P(TestProtocol, SendAndReceiveCanMessageContainer) {
+TEST_P(TestProtocol, SendAndReceiveCanMessageContainer)
+{
     // Arrange
     CanMessageContainer sendCanMessageContainer;
     FillWithRandom(sendCanMessageContainer, GenerateBusControllerId());
@@ -130,7 +135,8 @@ TEST_P(TestProtocol, SendAndReceiveCanMessageContainer) {
     ASSERT_EQ(sendCanMessageContainer, receiveCanMessageContainer);
 }
 
-TEST_P(TestProtocol, SendAndReceiveEthMessageContainer) {
+TEST_P(TestProtocol, SendAndReceiveEthMessageContainer)
+{
     // Arrange
     EthMessageContainer sendEthMessageContainer;
     FillWithRandom(sendEthMessageContainer, GenerateBusControllerId());
@@ -146,7 +152,8 @@ TEST_P(TestProtocol, SendAndReceiveEthMessageContainer) {
     ASSERT_EQ(sendEthMessageContainer, receiveEthMessageContainer);
 }
 
-TEST_P(TestProtocol, SendAndReceiveLinMessageContainer) {
+TEST_P(TestProtocol, SendAndReceiveLinMessageContainer)
+{
     // Arrange
     LinMessageContainer sendLinMessageContainer;
     FillWithRandom(sendLinMessageContainer, GenerateBusControllerId());
@@ -162,7 +169,8 @@ TEST_P(TestProtocol, SendAndReceiveLinMessageContainer) {
     ASSERT_EQ(sendLinMessageContainer, receiveLinMessageContainer);
 }
 
-TEST_P(TestProtocol, SendAndReceiveFrMessageContainer) {
+TEST_P(TestProtocol, SendAndReceiveFrMessageContainer)
+{
     // Arrange
     FrMessageContainer sendFrMessageContainer;
     FillWithRandom(sendFrMessageContainer, GenerateBusControllerId());
@@ -178,7 +186,8 @@ TEST_P(TestProtocol, SendAndReceiveFrMessageContainer) {
     ASSERT_EQ(sendFrMessageContainer, receiveFrMessageContainer);
 }
 
-TEST_P(TestProtocol, SendAndReceiveOk) {
+TEST_P(TestProtocol, SendAndReceiveOk)
+{
     // Act
     AssertOk(_protocol->SendOk(_senderChannel->GetWriter()));
 
@@ -187,7 +196,8 @@ TEST_P(TestProtocol, SendAndReceiveOk) {
     AssertOk(_protocol->ReadOk(_receiverChannel->GetReader()));
 }
 
-TEST_P(TestProtocol, SendAndReceiveError) {
+TEST_P(TestProtocol, SendAndReceiveError)
+{
     // Arrange
     std::string sendErrorMessage = GenerateString("Errorメッセージ");
 
@@ -202,7 +212,8 @@ TEST_P(TestProtocol, SendAndReceiveError) {
     ASSERT_EQ(sendErrorMessage, receiveErrorMessage);
 }
 
-TEST_P(TestProtocol, SendAndReceivePing) {
+TEST_P(TestProtocol, SendAndReceivePing)
+{
     // Arrange
     auto sendRoundTripTime = SimulationTime{GenerateI64()};
 
@@ -216,7 +227,8 @@ TEST_P(TestProtocol, SendAndReceivePing) {
     ASSERT_EQ(sendRoundTripTime, receiveRoundTripTime);
 }
 
-TEST_P(TestProtocol, SendAndReceivePingOk) {
+TEST_P(TestProtocol, SendAndReceivePingOk)
+{
     // Arrange
     auto sendCommand = static_cast<Command>(GenerateU32());
 
@@ -231,7 +243,8 @@ TEST_P(TestProtocol, SendAndReceivePingOk) {
     ASSERT_EQ(sendCommand, receiveCommand);
 }
 
-TEST_P(TestProtocol, SendAndReceiveConnect) {
+TEST_P(TestProtocol, SendAndReceiveConnect)
+{
     // Arrange
     uint32_t sendVersion = GenerateU32();
     Mode sendMode{};
@@ -255,7 +268,8 @@ TEST_P(TestProtocol, SendAndReceiveConnect) {
     EXPECT_EQ(sendClientName, receiveClientName);
 }
 
-TEST_P(TestProtocol, SendAndReceiveConnectOk) {
+TEST_P(TestProtocol, SendAndReceiveConnectOk)
+{
     // Arrange
     uint32_t sendProtocolVersion = GenerateU32();
     Mode sendMode{};
@@ -316,7 +330,8 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk) {
     EXPECT_THAT(receiveFrControllers, ContainerEq(sendFrControllers));
 }
 
-TEST_P(TestProtocol, SendAndReceiveStart) {
+TEST_P(TestProtocol, SendAndReceiveStart)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
@@ -331,7 +346,8 @@ TEST_P(TestProtocol, SendAndReceiveStart) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveStop) {
+TEST_P(TestProtocol, SendAndReceiveStop)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
@@ -346,7 +362,8 @@ TEST_P(TestProtocol, SendAndReceiveStop) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveTerminate) {
+TEST_P(TestProtocol, SendAndReceiveTerminate)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
     TerminateReason sendTerminateReason = GenerateRandom(TerminateReason::Finished, TerminateReason::Error);
@@ -364,7 +381,8 @@ TEST_P(TestProtocol, SendAndReceiveTerminate) {
     EXPECT_EQ(sendTerminateReason, receiveTerminateReason);
 }
 
-TEST_P(TestProtocol, SendAndReceivePause) {
+TEST_P(TestProtocol, SendAndReceivePause)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
@@ -379,7 +397,8 @@ TEST_P(TestProtocol, SendAndReceivePause) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveContinue) {
+TEST_P(TestProtocol, SendAndReceiveContinue)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
@@ -394,18 +413,16 @@ TEST_P(TestProtocol, SendAndReceiveContinue) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveStep) {
+TEST_P(TestProtocol, SendAndReceiveStep)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
-    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) {
-        return CreateOk();
-    };
+    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) { return CreateOk(); };
 
-    DeserializeFunction deserializeFunction =
-        [=]([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] const Callbacks& callbacks) {
-            return CreateOk();
-        };
+    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
+                                                  [[maybe_unused]] SimulationTime simulationTime,
+                                                  [[maybe_unused]] const Callbacks& callbacks) { return CreateOk(); };
 
     // Act
     AssertOk(_protocol->SendStep(_senderChannel->GetWriter(), sendSimulationTime, serializeFunction, serializeFunction));
@@ -418,20 +435,18 @@ TEST_P(TestProtocol, SendAndReceiveStep) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveStepOk) {
+TEST_P(TestProtocol, SendAndReceiveStepOk)
+{
     // Arrange
     SimulationTime sendSimulationTime = GenerateSimulationTime();
 
     auto sendCommand = static_cast<Command>(GenerateU32());
 
-    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) {
-        return CreateOk();
-    };
+    SerializeFunction serializeFunction = [=]([[maybe_unused]] ChannelWriter& writer) { return CreateOk(); };
 
-    DeserializeFunction deserializeFunction =
-        [=]([[maybe_unused]] ChannelReader& reader, [[maybe_unused]] SimulationTime simulationTime, [[maybe_unused]] const Callbacks& callbacks) {
-            return CreateOk();
-        };
+    DeserializeFunction deserializeFunction = [=]([[maybe_unused]] ChannelReader& reader,
+                                                  [[maybe_unused]] SimulationTime simulationTime,
+                                                  [[maybe_unused]] const Callbacks& callbacks) { return CreateOk(); };
 
     // Act
     AssertOk(_protocol->SendStepOk(_senderChannel->GetWriter(), sendSimulationTime, sendCommand, serializeFunction, serializeFunction));
@@ -445,7 +460,8 @@ TEST_P(TestProtocol, SendAndReceiveStepOk) {
     ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
-TEST_P(TestProtocol, SendAndReceiveGetPort) {
+TEST_P(TestProtocol, SendAndReceiveGetPort)
+{
     // Arrange
     std::string sendServerName = GenerateString("Server名前");
 
@@ -460,7 +476,8 @@ TEST_P(TestProtocol, SendAndReceiveGetPort) {
     ASSERT_EQ(sendServerName, receiveServerName);
 }
 
-TEST_P(TestProtocol, SendAndReceiveGetPortOk) {
+TEST_P(TestProtocol, SendAndReceiveGetPortOk)
+{
     // Arrange
     uint16_t sendPort = GenerateU16();
 
@@ -475,7 +492,8 @@ TEST_P(TestProtocol, SendAndReceiveGetPortOk) {
     ASSERT_EQ(sendPort, receivePort);
 }
 
-TEST_P(TestProtocol, SendAndReceiveSetPort) {
+TEST_P(TestProtocol, SendAndReceiveSetPort)
+{
     // Arrange
     std::string sendServerName = GenerateString("Server名前");
     uint16_t sendPort = GenerateU16();
@@ -493,7 +511,8 @@ TEST_P(TestProtocol, SendAndReceiveSetPort) {
     EXPECT_EQ(sendPort, receivePort);
 }
 
-TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
+TEST_P(TestProtocol, SendAndReceiveUnsetPort)
+{
     // Arrange
     std::string sendServerName = GenerateString("Server名前");
 
@@ -508,7 +527,8 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort) {
     ASSERT_EQ(sendServerName, receiveServerName);
 }
 
-TEST_P(TestProtocol, SendAndReceiveConnectWithEmptyNames) {
+TEST_P(TestProtocol, SendAndReceiveConnectWithEmptyNames)
+{
     // Arrange
     uint32_t sendVersion = GenerateU32();
     Mode sendMode{};
@@ -532,7 +552,8 @@ TEST_P(TestProtocol, SendAndReceiveConnectWithEmptyNames) {
     EXPECT_EQ(sendClientName, receiveClientName);
 }
 
-TEST_P(TestProtocol, SendAndReceiveErrorWithEmptyMessage) {
+TEST_P(TestProtocol, SendAndReceiveErrorWithEmptyMessage)
+{
     // Arrange
     std::string sendErrorMessage;
 
@@ -547,7 +568,8 @@ TEST_P(TestProtocol, SendAndReceiveErrorWithEmptyMessage) {
     ASSERT_EQ(sendErrorMessage, receiveErrorMessage);
 }
 
-TEST_P(TestProtocol, SendAndReceiveConnectOkWithEmptyLists) {
+TEST_P(TestProtocol, SendAndReceiveConnectOkWithEmptyLists)
+{
     // Arrange
     uint32_t sendProtocolVersion = GenerateU32();
     Mode sendMode{};
@@ -592,7 +614,8 @@ TEST_P(TestProtocol, SendAndReceiveConnectOkWithEmptyLists) {
     EXPECT_TRUE(receiveFrControllers.empty());
 }
 
-TEST_P(TestProtocol, SendAndReceiveConnectOkWithManyControllers) {
+TEST_P(TestProtocol, SendAndReceiveConnectOkWithManyControllers)
+{
     // Arrange
     uint32_t sendProtocolVersion = GenerateU32();
     Mode sendMode{};
@@ -653,7 +676,8 @@ TEST_P(TestProtocol, SendAndReceiveConnectOkWithManyControllers) {
     EXPECT_THAT(receiveFrControllers, ContainerEq(sendFrControllers));
 }
 
-TEST_P(TestProtocol, ReceiveHeaderOnEmptyChannelShouldFail) {
+TEST_P(TestProtocol, ReceiveHeaderOnEmptyChannelShouldFail)
+{
     // Arrange
     // Act - disconnect both sides so the channel is fully torn down
     _senderChannel->Disconnect();
@@ -666,7 +690,8 @@ TEST_P(TestProtocol, ReceiveHeaderOnEmptyChannelShouldFail) {
     AssertNotConnected(result);
 }
 
-TEST_P(TestProtocol, SendAndReceiveData) {
+TEST_P(TestProtocol, SendAndReceiveData)
+{
     // Arrange
     std::vector<uint8_t> sendData(64);
     for (size_t i = 0; i < sendData.size(); i++) {

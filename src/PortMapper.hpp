@@ -17,7 +17,7 @@
 namespace DsVeosCoSim {
 
 class PortMapperServer final {
-public:
+  public:
     PortMapperServer(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol);
     ~PortMapperServer() noexcept;
 
@@ -27,7 +27,7 @@ public:
     PortMapperServer(PortMapperServer&&) = delete;
     PortMapperServer& operator=(PortMapperServer&&) = delete;
 
-private:
+  private:
     void RunPortMapperServer();
     [[nodiscard]] Result CheckForClient();
     [[nodiscard]] Result HandleClient(Channel& channel);

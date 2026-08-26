@@ -6,7 +6,8 @@
 
 using namespace DsVeosCoSim;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     if (!IsOk(StartUp())) {
         return 1;
     }

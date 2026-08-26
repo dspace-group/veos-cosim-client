@@ -18,7 +18,7 @@
 namespace DsVeosCoSim {
 
 class CoSimClient final {
-public:
+  public:
     CoSimClient();
     ~CoSimClient() noexcept = default;
 
@@ -90,7 +90,7 @@ public:
     [[nodiscard]] Result Receive(LinMessageContainer& messageContainer) const;
     [[nodiscard]] Result Receive(FrMessageContainer& messageContainer) const;
 
-private:
+  private:
     enum class ResponderMode : uint32_t {
         Unknown,
         Blocking,
