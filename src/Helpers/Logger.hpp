@@ -51,7 +51,7 @@ class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
 
     void SetLogCallback(LogCallback logCallback)
     {
-        std::lock_guard lock(_mutex);
+        std::scoped_lock lock(_mutex);
         _logCallback = std::move(logCallback);
     }
 
@@ -59,7 +59,7 @@ class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
     {
         LogCallback logCallback;
         {
-            std::lock_guard lock(_mutex);
+            std::scoped_lock lock(_mutex);
             logCallback = _logCallback;
         }
 

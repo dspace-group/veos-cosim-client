@@ -5,15 +5,22 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <ostream>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <vector>
 
 #include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32

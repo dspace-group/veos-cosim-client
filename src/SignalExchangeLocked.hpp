@@ -2,9 +2,14 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
+#include <utility>
 
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Result.hpp"
 #include "SignalExchangeCommon.hpp"
 
 namespace DsVeosCoSim::SignalExchangeDetail {

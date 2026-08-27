@@ -4,13 +4,17 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

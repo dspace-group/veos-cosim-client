@@ -5,10 +5,12 @@
 
 #include <cstdint>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
 #include "Channel.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
 

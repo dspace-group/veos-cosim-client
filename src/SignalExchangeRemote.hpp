@@ -5,11 +5,17 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Environment.hpp"
 #include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "RingBuffer.hpp"
 #include "SignalExchangeCommon.hpp"
 

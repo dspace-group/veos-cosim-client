@@ -4,9 +4,14 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "CoSimTypes.hpp"
+#include "Logger.hpp"
 #include "Result.hpp"
 
 using namespace std::chrono;

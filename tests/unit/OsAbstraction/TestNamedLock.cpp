@@ -4,11 +4,15 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <functional>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

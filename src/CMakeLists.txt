@@ -73,11 +73,18 @@ if(WIN32)
     PRIVATE
     _CRT_SECURE_NO_WARNINGS
     WIN32_LEAN_AND_MEAN
+    NOMINMAX
   )
 
   target_link_libraries(
     DsVeosCoSim
     PRIVATE
     WS2_32
+  )
+else()
+  target_compile_definitions(
+    DsVeosCoSim
+    PRIVATE
+    _GNU_SOURCE
   )
 endif()

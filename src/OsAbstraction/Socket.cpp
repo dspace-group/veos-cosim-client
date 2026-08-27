@@ -25,7 +25,6 @@
 #include <winsock2.h>
 
 #include <filesystem>
-#undef min
 
 #else
 

@@ -2,9 +2,13 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"

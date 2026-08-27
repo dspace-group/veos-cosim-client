@@ -18,6 +18,7 @@ if(MSVC)
   set(
     DSVEOSCOSIM_WARNINGS
     /permissive-
+    /EHsc
     /Wall
     /wd4061
     /wd4324
@@ -92,6 +93,10 @@ elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/CMakeLists.txt")
     )
   endif()
 
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20 AND CMAKE_EXPORT_COMPILE_COMMANDS AND TARGET fmt)
+    set_property(TARGET fmt PROPERTY EXPORT_COMPILE_COMMANDS OFF)
+  endif()
+
   if(TARGET fmt::fmt)
     set(DSVEOSCOSIM_FMT_TARGET fmt::fmt)
   elseif(TARGET fmt::fmt-header-only)
@@ -110,6 +115,14 @@ if(DSVEOSCOSIM_BUILD_TESTS)
   set(BUILD_GMOCK ON)
   set(gtest_force_shared_crt ON)
   add_subdirectory(third_party/googletest EXCLUDE_FROM_ALL)
+
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20 AND CMAKE_EXPORT_COMPILE_COMMANDS)
+    foreach(target gmock gmock_main gtest gtest_main)
+      if(TARGET ${target})
+        set_property(TARGET ${target} PROPERTY EXPORT_COMPILE_COMMANDS OFF)
+      endif()
+    endforeach()
+  endif()
 
   add_subdirectory(tests/shared)
   add_subdirectory(tests/TestClient)

@@ -9,7 +9,6 @@
 #include <cctype>
 #include <cstdint>
 #include <string>
-#undef min
 
 #endif
 

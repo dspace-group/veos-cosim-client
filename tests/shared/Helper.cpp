@@ -5,10 +5,13 @@
 #include <fmt/color.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <random>
 #include <string>
 #include <string_view>
+#include <vector>
 
+#include "CoSimTypes.hpp"
 #include "Logger.hpp"
 #include "Result.hpp"
 #include "Socket.hpp"
@@ -78,7 +81,7 @@ void InitializeOutput()
 {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
-    setvbuf(stdout, nullptr, _IONBF, 0);
+    (void)setvbuf(stdout, nullptr, _IONBF, 0);
 
     HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -180,7 +183,7 @@ void FillWithRandomData(uint8_t* data, size_t length)
 
 [[nodiscard]] uint32_t GenerateU32()
 {
-    thread_local std::mt19937 rng{42U};
+    thread_local std::mt19937 rng{42U};  // NOLINT(bugprone-random-generator-seed, cert-msc32-c, cert-msc51-cpp)
     return rng();
 }
 

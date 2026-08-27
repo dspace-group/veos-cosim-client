@@ -7,6 +7,7 @@
 
 #include "Channel.hpp"
 #include "Helper.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

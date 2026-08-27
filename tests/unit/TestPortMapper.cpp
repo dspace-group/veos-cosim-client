@@ -2,11 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "Helper.hpp"
 #include "PortMapper.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

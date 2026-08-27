@@ -4,11 +4,14 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <future>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimClient.hpp"
@@ -17,6 +20,7 @@
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

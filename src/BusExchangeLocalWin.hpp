@@ -7,13 +7,18 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "BusExchangeCommon.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Environment.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "RingBufferView.hpp"
 
 namespace DsVeosCoSim::BusExchangeDetail {

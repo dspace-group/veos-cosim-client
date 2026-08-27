@@ -4,14 +4,20 @@
 
 #include <fmt/format.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "BusExchangeCommon.hpp"
 #include "BusExchangeLocked.hpp"
 #include "BusExchangeRemote.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
 
 #ifdef _WIN32
 #include "BusExchangeLocalWin.hpp"

@@ -3,13 +3,19 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include "BusExchange.hpp"
+#include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using testing::Types;

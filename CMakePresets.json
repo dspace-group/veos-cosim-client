@@ -9,8 +9,10 @@
       "name": "base",
       "hidden": true,
       "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja",
       "cacheVariables": {
-        "DSVEOSCOSIM_BUILD_TESTS": "ON"
+        "DSVEOSCOSIM_BUILD_TESTS": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -30,80 +32,36 @@
       }
     },
     {
-      "name": "base-windows",
-      "hidden": true,
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },
-    {
-      "name": "base-linux",
-      "hidden": true,
-      "generator": "Ninja",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      },
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-      }
-    },
-    {
       "name": "win-debug",
       "displayName": "Windows Debug",
-      "inherits": [
-        "base-windows",
-        "base-debug"
-      ]
+      "inherits": "base-debug"
     },
     {
       "name": "win-release",
       "displayName": "Windows Release",
-      "inherits": [
-        "base-windows",
-        "base-release"
-      ]
+      "inherits": "base-release"
     },
     {
       "name": "linux-debug",
       "displayName": "Linux Debug",
-      "inherits": [
-        "base-linux",
-        "base-debug"
-      ]
+      "inherits": "base-debug"
     },
     {
       "name": "linux-release",
       "displayName": "Linux Release",
-      "inherits": [
-        "base-linux",
-        "base-release"
-      ]
+      "inherits": "base-release"
     }
   ],
   "buildPresets": [
     {
       "name": "win-debug",
       "configurePreset": "win-debug",
-      "configuration": "Debug",
-      "nativeToolOptions": [
-        "/m"
-      ]
+      "configuration": "Debug"
     },
     {
       "name": "win-release",
       "configurePreset": "win-release",
-      "configuration": "Release",
-      "nativeToolOptions": [
-        "/m"
-      ]
+      "configuration": "Release"
     },
     {
       "name": "linux-debug",

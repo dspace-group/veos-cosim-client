@@ -5,6 +5,7 @@
 #include <cstring>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -539,7 +540,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
             return DsVeosCoSim_Result_Error;
         }
 
-        switch (command) {
+        switch (command) {  // NOLINT(clang-diagnostic-switch-enum)
         case DsVeosCoSim_Command_Start:
             LogInfo("Simulation started at {} s.", ToStr(DsVeosCoSim_SimulationTimeToString, simulationTime));
             SimState.Set(DsVeosCoSim_SimulationState_Running);
@@ -585,7 +586,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
 [[nodiscard]] DsVeosCoSim_Result ToggleSimulation()
 {
     return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
-        switch (state) {
+        switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
         case DsVeosCoSim_SimulationState_Running:
             LogInfo("Pausing simulation ...");
             return DsVeosCoSim_PauseSimulation(Client);
@@ -605,7 +606,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
 [[nodiscard]] DsVeosCoSim_Result Stop()
 {
     return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
-        switch (state) {
+        switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
         case DsVeosCoSim_SimulationState_Stopped:
             return DsVeosCoSim_Result_Ok;
         case DsVeosCoSim_SimulationState_Running:
@@ -622,7 +623,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] DsVeosCoSim_SimulationTime si
 [[nodiscard]] DsVeosCoSim_Result Terminate()
 {
     return SimState.WithLock([](DsVeosCoSim_SimulationState state) -> DsVeosCoSim_Result {
-        switch (state) {
+        switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
         case DsVeosCoSim_SimulationState_Terminated:
             return DsVeosCoSim_Result_Ok;
         case DsVeosCoSim_SimulationState_Running:

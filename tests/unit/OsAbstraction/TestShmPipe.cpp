@@ -4,12 +4,17 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
 #include <string>
+#include <thread>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace std::chrono_literals;

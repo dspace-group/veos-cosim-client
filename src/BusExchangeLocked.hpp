@@ -6,6 +6,9 @@
 #include <mutex>
 
 #include "BusExchangeCommon.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim::BusExchangeDetail {
 

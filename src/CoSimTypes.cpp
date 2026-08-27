@@ -8,7 +8,9 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <iterator>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -28,7 +30,7 @@ template <typename T, size_t TSize>
 }
 
 template <typename TContainer>
-[[nodiscard]] auto ConvertContainers(const std::vector<TContainer>& containers)
+[[nodiscard]] auto ConvertContainers(const std::vector<TContainer>& containers) -> std::vector<decltype(std::declval<const TContainer&>().Convert())>
 {
     using TOut = decltype(std::declval<const TContainer&>().Convert());
     std::vector<TOut> result;

@@ -4,14 +4,21 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstring>
 #include <deque>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "SignalExchange.hpp"
 #include "TestHelper.hpp"
 
@@ -20,21 +27,21 @@ using namespace testing;
 
 namespace {
 
-auto CoSimTypes = Values(CoSimType::Client, CoSimType::Server);
+constexpr std::array CoSimTypes{CoSimType::Client, CoSimType::Server};
 
-auto SignalExchangeConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
+constexpr std::array SignalExchangeConnectionKinds{ConnectionKind::Local, ConnectionKind::Remote};
 
-auto DataTypes = Values(DataType::Bool,
-                        DataType::Int8,
-                        DataType::Int16,
-                        DataType::Int32,
-                        DataType::Int64,
-                        DataType::UInt8,
-                        DataType::UInt16,
-                        DataType::UInt32,
-                        DataType::UInt64,
-                        DataType::Float32,
-                        DataType::Float64);
+constexpr std::array DataTypes{DataType::Bool,
+                               DataType::Int8,
+                               DataType::Int16,
+                               DataType::Int32,
+                               DataType::Int64,
+                               DataType::UInt8,
+                               DataType::UInt16,
+                               DataType::UInt32,
+                               DataType::UInt64,
+                               DataType::Float32,
+                               DataType::Float64};
 
 struct EventData {
     IoSignalContainer signal{};
@@ -60,7 +67,7 @@ class TestSignalExchangeWithCoSimType : public TestWithParam<std::tuple<CoSimTyp
 
 INSTANTIATE_TEST_SUITE_P(Test,
                          TestSignalExchangeWithCoSimType,
-                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds),
+                         testing::Combine(testing::ValuesIn(CoSimTypes), testing::ValuesIn(SignalExchangeConnectionKinds)),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
                              return fmt::format("{}_{}", std::get<0>(info.param), std::get<1>(info.param));
                          });
@@ -157,7 +164,7 @@ std::unique_ptr<Channel> TestSignalExchange::_receiverChannel;
 
 INSTANTIATE_TEST_SUITE_P(,
                          TestSignalExchange,
-                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds, DataTypes),
+                         testing::Combine(testing::ValuesIn(CoSimTypes), testing::ValuesIn(SignalExchangeConnectionKinds), testing::ValuesIn(DataTypes)),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DataType>>& info) {
                              return fmt::format("{}_{}_{}", std::get<0>(info.param), std::get<1>(info.param), std::get<2>(info.param));
                          });

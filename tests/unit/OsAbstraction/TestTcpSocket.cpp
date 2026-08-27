@@ -1,13 +1,19 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
+#include <ostream>
 #include <string>
 #include <thread>
 #include <vector>
 
+#include "Result.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
 

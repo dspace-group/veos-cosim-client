@@ -2,13 +2,17 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
 #include <string>
 #include <string_view>
 #include <thread>
 
 #include "Helper.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
 

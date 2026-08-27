@@ -18,7 +18,6 @@
 #include <cstring>
 #include <string_view>
 #include <utility>
-#undef min
 
 #include <sysinfoapi.h>
 
@@ -26,10 +25,6 @@
 #include "Result.hpp"
 
 #else
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 
 #include <pthread.h>
 #include <sched.h>

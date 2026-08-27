@@ -10,6 +10,7 @@
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;

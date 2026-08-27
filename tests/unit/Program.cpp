@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "Helper.hpp"
+#include "Result.hpp"
 
 using namespace DsVeosCoSim;
 

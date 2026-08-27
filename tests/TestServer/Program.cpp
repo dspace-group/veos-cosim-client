@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -487,7 +488,7 @@ void OnSimulationStarted()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Stopped:
         CurrentTime = 0s;
         if (!IsOk(Server->Start(CurrentTime))) {
@@ -518,7 +519,7 @@ void OnSimulationStarted()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Stopped:
         break;
     case SimulationState::Running:
@@ -551,7 +552,7 @@ void OnSimulationStopped()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Running:
         StopSimulationThread();
         if (!IsOk(Server->Stop(CurrentTime))) {
@@ -578,7 +579,7 @@ void OnSimulationPaused()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Running:
         if (!IsOk(Server->Pause(CurrentTime))) {
             LogError("Could not pause.");
@@ -598,7 +599,7 @@ void OnSimulationPaused()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Terminated:
         break;
     case SimulationState::Paused:
@@ -625,7 +626,7 @@ void OnSimulationTerminated()
     std::scoped_lock lock(LockState);
 
     SimulationState state = State;
-    switch (state) {
+    switch (state) {  // NOLINT(clang-diagnostic-switch-enum)
     case SimulationState::Paused:
     case SimulationState::Stopped:
     case SimulationState::Running:
@@ -808,8 +809,6 @@ void UnloadSimulation()
             break;
         }
     }
-
-    return CreateOk();
 }
 
 }  // namespace
