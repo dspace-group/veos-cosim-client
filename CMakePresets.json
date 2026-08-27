@@ -16,60 +16,30 @@
       }
     },
     {
-      "name": "base-debug",
-      "hidden": true,
+      "name": "debug",
+      "displayName": "Debug",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "base-release",
-      "hidden": true,
+      "name": "release",
+      "displayName": "Release",
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
-    },
-    {
-      "name": "win-debug",
-      "displayName": "Windows Debug",
-      "inherits": "base-debug"
-    },
-    {
-      "name": "win-release",
-      "displayName": "Windows Release",
-      "inherits": "base-release"
-    },
-    {
-      "name": "linux-debug",
-      "displayName": "Linux Debug",
-      "inherits": "base-debug"
-    },
-    {
-      "name": "linux-release",
-      "displayName": "Linux Release",
-      "inherits": "base-release"
     }
   ],
   "buildPresets": [
     {
-      "name": "win-debug",
-      "configurePreset": "win-debug",
-      "configuration": "Debug"
+      "name": "debug",
+      "configurePreset": "debug"
     },
     {
-      "name": "win-release",
-      "configurePreset": "win-release",
-      "configuration": "Release"
-    },
-    {
-      "name": "linux-debug",
-      "configurePreset": "linux-debug"
-    },
-    {
-      "name": "linux-release",
-      "configurePreset": "linux-release"
+      "name": "release",
+      "configurePreset": "release"
     }
   ],
   "testPresets": [
@@ -81,26 +51,14 @@
       }
     },
     {
-      "name": "win-debug",
+      "name": "debug",
       "inherits": "base-test",
-      "configurePreset": "win-debug",
-      "configuration": "Debug"
+      "configurePreset": "debug"
     },
     {
-      "name": "win-release",
+      "name": "release",
       "inherits": "base-test",
-      "configurePreset": "win-release",
-      "configuration": "Release"
-    },
-    {
-      "name": "linux-debug",
-      "inherits": "base-test",
-      "configurePreset": "linux-debug"
-    },
-    {
-      "name": "linux-release",
-      "inherits": "base-test",
-      "configurePreset": "linux-release"
+      "configurePreset": "release"
     }
   ]
 }

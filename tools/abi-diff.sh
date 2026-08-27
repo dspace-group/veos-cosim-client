@@ -14,7 +14,7 @@
 set -euo pipefail
 
 # --- Configuration ------------------------------------------------------------
-PRESET="linux-debug"
+PRESET="debug"
 BASELINE="api/DsVeosCoSim.baseline.abi"
 SUPPRESSIONS="api/abi-suppressions.txt"
 HEADERS_DIR="include"

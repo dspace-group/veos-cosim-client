@@ -32,8 +32,7 @@
   - Linux/WSL: `./scripts/build.sh`, `./scripts/test.sh`
   - Optional wrappers: `just build`, `just test`, `just clean`
 - Preferred direct presets:
-  - Windows: `cmake --preset win-debug`, `cmake --build --preset win-debug`, `ctest --preset win-debug`
-  - Linux/WSL: `cmake --preset linux-debug`, `cmake --build --preset linux-debug`, `ctest --preset linux-debug`
+  - All platforms: `cmake --preset debug`, `cmake --build --preset debug`, `ctest --preset debug`
 - Tests are only built when `DSVEOSCOSIM_BUILD_TESTS=ON`.
 - Always run tests through CTest, not by invoking test binaries directly.
 - On Windows, PowerShell build scripts expect a Visual Studio Developer PowerShell or Developer Command Prompt.

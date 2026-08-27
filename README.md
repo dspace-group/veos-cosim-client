@@ -26,7 +26,7 @@ Defaults:
 
 - Configuration: `Debug`
 - Tests: `ON`
-- Output directories follow the active preset, for example `build/win-debug` or `build/linux-debug`
+- Output directories follow the active preset: `build/debug` or `build/release`
 
 #### Build with scripts (recommended)
 
@@ -99,27 +99,13 @@ cmake --list-presets
 Configure, build, and test with a preset:
 
 ```console
-cmake --preset win-debug
-cmake --build --preset win-debug
-ctest --preset win-debug
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
 ```
 
-Preset families:
-
-- Windows native: `win-debug`, `win-release`
-- Linux and WSL: `linux-debug`, `linux-release`
-
-Linux example:
-
-```console
-cmake --preset linux-debug
-cmake --build --preset linux-debug
-ctest --preset linux-debug
-```
-
-WSL note:
-
-- Use the `linux-*` presets in WSL.
+The cross-platform presets are `debug` and `release`. CMake uses the compiler
+provided by the current Windows, Linux, or WSL environment.
 
 #### Build without presets
 

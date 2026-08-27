@@ -8,7 +8,7 @@ if [[ "$CONFIG" != "debug" && "$CONFIG" != "release" ]]; then
   exit 1
 fi
 
-PRESET="linux-$CONFIG"
+PRESET="$CONFIG"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "==> Running build before test"
