@@ -6,7 +6,7 @@ param(
   [string]$Config = "debug"
 )
 
-$Preset = "win-$($Config.ToLowerInvariant())"
+$Preset = $Config.ToLowerInvariant()
 $Root = Split-Path $PSScriptRoot -Parent
 $BuildDir = Join-Path $Root "build" $Preset
 

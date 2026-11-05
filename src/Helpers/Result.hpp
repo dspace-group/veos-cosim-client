@@ -18,72 +18,85 @@ enum class Result {
     Timeout
 };
 
-[[nodiscard]] constexpr std::string_view format_as(Result result) {
+[[nodiscard]] constexpr std::string_view format_as(Result result)
+{
     switch (result) {
-        case Result::Ok:
-            return "Ok";
-        case Result::Error:
-            return "Error";
-        case Result::Empty:
-            return "Empty";
-        case Result::Full:
-            return "Full";
-        case Result::InvalidArgument:
-            return "InvalidArgument";
-        case Result::NotConnected:
-            return "NotConnected";
-        case Result::Timeout:
-            return "Timeout";
+    case Result::Ok:
+        return "Ok";
+    case Result::Error:
+        return "Error";
+    case Result::Empty:
+        return "Empty";
+    case Result::Full:
+        return "Full";
+    case Result::InvalidArgument:
+        return "InvalidArgument";
+    case Result::NotConnected:
+        return "NotConnected";
+    case Result::Timeout:
+        return "Timeout";
     }
 
     return "<Invalid Result>";
 }
 
-[[nodiscard]] constexpr bool IsOk(Result result) noexcept {
+[[nodiscard]] constexpr bool IsOk(Result result) noexcept
+{
     return result == Result::Ok;
 }
 
-[[nodiscard]] constexpr bool IsError(Result result) noexcept {
+[[nodiscard]] constexpr bool IsError(Result result) noexcept
+{
     return result == Result::Error;
 }
 
-[[nodiscard]] constexpr bool IsTimeout(Result result) noexcept {
+[[nodiscard]] constexpr bool IsTimeout(Result result) noexcept
+{
     return result == Result::Timeout;
 }
 
-[[nodiscard]] constexpr bool IsNotConnected(Result result) noexcept {
+[[nodiscard]] constexpr bool IsNotConnected(Result result) noexcept
+{
     return result == Result::NotConnected;
 }
 
-[[nodiscard]] constexpr bool IsFull(Result result) noexcept {
+[[nodiscard]] constexpr bool IsFull(Result result) noexcept
+{
     return result == Result::Full;
 }
 
-constexpr Result CreateOk() noexcept {
+constexpr Result CreateOk() noexcept
+{
     return Result::Ok;
 }
 
-constexpr Result CreateError() noexcept {
+constexpr Result CreateError() noexcept
+{
     return Result::Error;
 }
 
-constexpr Result CreateTimeout() noexcept {
+constexpr Result CreateTimeout() noexcept
+{
     return Result::Timeout;
 }
 
-constexpr Result CreateNotConnected() noexcept {
+constexpr Result CreateNotConnected() noexcept
+{
     return Result::NotConnected;
 }
 
-constexpr Result CreateInvalidArgument() noexcept {
+constexpr Result CreateInvalidArgument() noexcept
+{
     return Result::InvalidArgument;
 }
 
-constexpr Result CreateEmpty() noexcept {
+constexpr Result CreateEmpty() noexcept
+{
     return Result::Empty;
 }
 
-constexpr Result CreateFull() noexcept {
+constexpr Result CreateFull() noexcept
+{
     return Result::Full;
 }
 

@@ -6,7 +6,7 @@ param(
   [string]$Config = "debug"
 )
 
-$Preset = "win-$($Config.ToLowerInvariant())"
+$Preset = $Config.ToLowerInvariant()
 
 Write-Host "==> Running build before test" -ForegroundColor Cyan
 & "$PSScriptRoot\build.ps1" $Config

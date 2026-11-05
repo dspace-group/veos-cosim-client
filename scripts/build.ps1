@@ -6,9 +6,7 @@ param(
   [string]$Config = "debug"
 )
 
-if (-not $Preset) {
-  $Preset = "win-$($Config.ToLowerInvariant())"
-}
+$Preset = $Config.ToLowerInvariant()
 
 $Root = Split-Path $PSScriptRoot -Parent
 

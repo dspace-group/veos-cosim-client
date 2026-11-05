@@ -1,16 +1,21 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <fmt/format.h>
+#include <gtest/gtest.h>
+
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <string>
-
-#include <fmt/format.h>
-
-#include <gtest/gtest.h>
+#include <tuple>
+#include <vector>
 
 #include "BusExchange.hpp"
+#include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using testing::Types;
@@ -27,14 +32,15 @@ class TestBusExchange : public Test {
     using TMessageContainer = typename Types::MessageContainer;
     using TMessage = typename Types::Message;
 
-protected:
+  protected:
     static std::unique_ptr<Channel> _remoteSenderChannel;
     static std::unique_ptr<Channel> _remoteReceiverChannel;
 
     static std::unique_ptr<Channel> _localSenderChannel;
     static std::unique_ptr<Channel> _localReceiverChannel;
 
-    static void SetUpTestSuite() {
+    static void SetUpTestSuite()
+    {
         std::unique_ptr<ChannelServer> remoteServer;
         AssertOk(CreateTcpChannelServer(0, true, remoteServer));
         uint16_t port = remoteServer->GetLocalPort();
@@ -50,7 +56,8 @@ protected:
         AssertOk(localServer->TryAccept(_localReceiverChannel));
     }
 
-    static void TearDownTestSuite() {
+    static void TearDownTestSuite()
+    {
         _remoteSenderChannel->Disconnect();
         _remoteReceiverChannel->Disconnect();
         _localSenderChannel->Disconnect();
@@ -62,7 +69,8 @@ protected:
         _localReceiverChannel.reset();
     }
 
-    void Transfer(ConnectionKind connectionKind, const BusExchange& senderBusExchange, const BusExchange& receiverBusExchange) {
+    void Transfer(ConnectionKind connectionKind, const BusExchange& senderBusExchange, const BusExchange& receiverBusExchange)
+    {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
@@ -75,7 +83,8 @@ protected:
     void Transfer(ConnectionKind connectionKind,
                   BusExchange& senderBusExchange,
                   BusExchange& receiverBusExchange,
-                  std::deque<std::tuple<TController, TMessageContainer>>& expectedCallbacks) {
+                  std::deque<std::tuple<TController, TMessageContainer>>& expectedCallbacks)
+    {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
@@ -141,7 +150,8 @@ protected:
     void Transfer(ConnectionKind connectionKind,
                   BusExchange& senderBusExchange,
                   BusExchange& receiverBusExchange,
-                  std::deque<std::tuple<TController, TMessage>>& expectedCallbacks) {
+                  std::deque<std::tuple<TController, TMessage>>& expectedCallbacks)
+    {
         ChannelReader& reader = connectionKind == ConnectionKind::Remote ? _remoteReceiverChannel->GetReader() : _localReceiverChannel->GetReader();
         ChannelWriter& writer = connectionKind == ConnectionKind::Remote ? _remoteSenderChannel->GetWriter() : _localSenderChannel->GetWriter();
 
@@ -225,11 +235,13 @@ struct Param {
     using MessageContainer = TMessageContainer;
     using Message = TMessage;
 
-    static CoSimType GetCoSimType() {
+    static CoSimType GetCoSimType()
+    {
         return TheCoSimType;
     }
 
-    static ConnectionKind GetConnectionKind() {
+    static ConnectionKind GetConnectionKind()
+    {
         return TheConnectionKind;
     }
 };
@@ -244,9 +256,10 @@ using Parameters = Types<Param<CanControllerContainer, CanController, CanMessage
                          Param<FrControllerContainer, FrController, FrMessageContainer, FrMessage, CoSimType::Server, ConnectionKind::Local>>;
 
 class NameGenerator {
-public:
+  public:
     template <typename T>
-    static std::string GetName([[maybe_unused]] int32_t index) {
+    static std::string GetName([[maybe_unused]] int32_t index)
+    {
         using TControllerContainer = typename T::ControllerContainer;
         CoSimType coSimType = T::GetCoSimType();
         ConnectionKind connectionKind = T::GetConnectionKind();
@@ -271,7 +284,8 @@ public:
 
 TYPED_TEST_SUITE(TestBusExchange, Parameters, NameGenerator);
 
-TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFull) {
+TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFull)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -311,7 +325,8 @@ TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFull) {
     AssertFull(result);
 }
 
-TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsOnlyFullForSpecificController) {
+TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsOnlyFullForSpecificController)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -356,7 +371,8 @@ TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsOnlyFullForSpeci
     AssertFull(result);
 }
 
-TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFullForOtherController) {
+TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFullForOtherController)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -398,7 +414,8 @@ TYPED_TEST(TestBusExchange, TransmitMessageContainerWhenBufferIsFullForOtherCont
     AssertOk(busExchange->Transmit(acceptedMessageContainer));
 }
 
-TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBuffer) {
+TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBuffer)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -431,7 +448,8 @@ TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBuffer) {
     AssertEmpty(receiverBusExchange->Receive(receivedMessageContainer));
 }
 
-TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBufferByEvent) {
+TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBufferByEvent)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -462,7 +480,8 @@ TYPED_TEST(TestBusExchange, ReceiveMessageContainerOnEmptyBufferByEvent) {
     TestBusExchange<TypeParam>::Transfer(connectionKind, *senderBusExchange, *receiverBusExchange, expectedEvents);
 }
 
-TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainer) {
+TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainer)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -503,7 +522,8 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainer) {
     ASSERT_EQ(sendMessageContainer, receivedMessageContainer);
 }
 
-TYPED_TEST(TestBusExchange, TransmitAndReceiveMessageContainerSimultaneously) {
+TYPED_TEST(TestBusExchange, TransmitAndReceiveMessageContainerSimultaneously)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -553,7 +573,8 @@ TYPED_TEST(TestBusExchange, TransmitAndReceiveMessageContainerSimultaneously) {
     ASSERT_EQ(sendMessageContainer2, receivedMessageContainer2);
 }
 
-TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByEvent) {
+TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByEvent)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -590,7 +611,8 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByEvent) {
     TestBusExchange<TypeParam>::Transfer(connectionKind, *senderBusExchange, *receiverBusExchange, expectedEvents);
 }
 
-TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByRawMessageEvent) {
+TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByRawMessageEvent)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -632,7 +654,8 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByRawMessageEvent)
     TestBusExchange<TypeParam>::Transfer(connectionKind, *senderBusExchange, *receiverBusExchange, expectedEvents);
 }
 
-TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessageContainers) {
+TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessageContainers)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -692,7 +715,8 @@ TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessageContainers) {
     AssertEmpty(receiverBusExchange->Receive(receivedMessageContainer));
 }
 
-TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainersByEventWithTransfer) {
+TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainersByEventWithTransfer)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -743,7 +767,8 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainersByEventWithTransf
     TestBusExchange<TypeParam>::Transfer(connectionKind, *senderBusExchange, *receiverBusExchange, expectedEvents);
 }
 
-TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainer) {
+TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainer)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -786,7 +811,8 @@ TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainer) {
     AssertEmpty(receiverBusExchange->Receive(receivedMessageContainer));
 }
 
-TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainerByEvent) {
+TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainerByEvent)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;
@@ -827,7 +853,8 @@ TYPED_TEST(TestBusExchange, DoNotReceiveNotFullyTransmittedMessageContainerByEve
                                          expectedEvents);  // Should not transfer anything
 }
 
-TYPED_TEST(TestBusExchange, InitializeWithZeroControllers) {
+TYPED_TEST(TestBusExchange, InitializeWithZeroControllers)
+{
     using TController = typename TypeParam::Controller;
 
     CoSimType coSimType = TypeParam::GetCoSimType();
@@ -848,7 +875,8 @@ TYPED_TEST(TestBusExchange, InitializeWithZeroControllers) {
     AssertOk(result);
 }
 
-TYPED_TEST(TestBusExchange, TransmitWithInvalidControllerIdShouldFail) {
+TYPED_TEST(TestBusExchange, TransmitWithInvalidControllerIdShouldFail)
+{
     using TControllerContainer = typename TypeParam::ControllerContainer;
     using TController = typename TypeParam::Controller;
     using TMessageContainer = typename TypeParam::MessageContainer;

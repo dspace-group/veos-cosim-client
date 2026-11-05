@@ -22,7 +22,7 @@ class ISignalExchangePart;
 namespace DsVeosCoSim {
 
 class SignalExchange final {
-public:
+  public:
     SignalExchange(std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> writePart, std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> readPart);
     ~SignalExchange() noexcept;
 
@@ -41,7 +41,7 @@ public:
     [[nodiscard]] Result Serialize(ChannelWriter& writer) const;
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const;
 
-private:
+  private:
     std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> _writePart;
     std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> _readPart;
 };

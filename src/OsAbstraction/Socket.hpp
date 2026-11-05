@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -23,21 +24,22 @@ enum class AddressFamily {
     Ipv6
 };
 
-[[nodiscard]] constexpr std::string_view format_as(AddressFamily addressFamily) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(AddressFamily addressFamily) noexcept
+{
     switch (addressFamily) {
-        case AddressFamily::Local:
-            return "Local";
-        case AddressFamily::Ipv4:
-            return "Ipv4";
-        case AddressFamily::Ipv6:
-            return "Ipv6";
+    case AddressFamily::Local:
+        return "Local";
+    case AddressFamily::Ipv4:
+        return "Ipv4";
+    case AddressFamily::Ipv6:
+        return "Ipv6";
     }
 
     return "<Invalid AddressFamily>";
 }
 
 class SocketHandle final {
-public:
+  public:
 #ifdef _WIN32
     using socket_t = uintptr_t;
     static constexpr socket_t InvalidSocket = UINTPTR_MAX;
@@ -47,20 +49,27 @@ public:
 #endif
 
     SocketHandle() = default;
-    explicit SocketHandle(socket_t sock) : _socket(sock) {
+
+    explicit SocketHandle(socket_t sock)
+        : _socket(sock)
+    {
     }
 
-    ~SocketHandle() noexcept {
+    ~SocketHandle() noexcept
+    {
         Reset();
     }
 
     SocketHandle(const SocketHandle&) = delete;
     SocketHandle& operator=(const SocketHandle&) = delete;
 
-    SocketHandle(SocketHandle&& other) noexcept : _socket(other.Release()) {
+    SocketHandle(SocketHandle&& other) noexcept
+        : _socket(other.Release())
+    {
     }
 
-    SocketHandle& operator=(SocketHandle&& other) noexcept {
+    SocketHandle& operator=(SocketHandle&& other) noexcept
+    {
         if (this != &other) {
             Reset(other.Release());
         }
@@ -68,25 +77,29 @@ public:
         return *this;
     }
 
-    [[nodiscard]] socket_t Get() const noexcept {
+    [[nodiscard]] socket_t Get() const noexcept
+    {
         return _socket;
     }
 
-    [[nodiscard]] socket_t Release() noexcept {
+    [[nodiscard]] socket_t Release() noexcept
+    {
         return std::exchange(_socket, InvalidSocket);
     }
 
     void Reset(socket_t newSocket = InvalidSocket);
 
-    [[nodiscard]] bool IsValid() const noexcept {
+    [[nodiscard]] bool IsValid() const noexcept
+    {
         return _socket != InvalidSocket;
     }
 
-    explicit operator bool() const noexcept {
+    explicit operator bool() const noexcept
+    {
         return IsValid();
     }
 
-private:
+  private:
     socket_t _socket = InvalidSocket;
 };
 
@@ -97,7 +110,7 @@ class SocketClient final {
 
     friend class SocketListener;
 
-public:
+  public:
     SocketClient() = default;
     ~SocketClient() noexcept;
 
@@ -124,7 +137,7 @@ public:
 
     [[nodiscard]] bool IsConnected() const;
 
-private:
+  private:
     SocketHandle _socketHandle;
     AddressFamily _addressFamily{};
     std::string _path;
@@ -134,7 +147,7 @@ private:
 class SocketListener final {
     SocketListener(SocketHandle socketHandle, AddressFamily addressFamily, std::string path);
 
-public:
+  public:
     SocketListener() = default;
     ~SocketListener() noexcept;
 
@@ -154,7 +167,7 @@ public:
 
     [[nodiscard]] bool IsRunning() const;
 
-private:
+  private:
     SocketHandle _socketHandle;
     AddressFamily _addressFamily{};
     std::string _path;

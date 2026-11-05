@@ -286,7 +286,7 @@ int main() {
 Update `CMakeLists.txt` in the directory `DsVeosCoSimDemo`:
 
 ```cmake
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
 project(DsVeosCoSimDemo VERSION 1.0)
 

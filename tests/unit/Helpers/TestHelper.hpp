@@ -2,18 +2,25 @@
 
 #pragma once
 
-#include <array>
-#include <memory>
-#include <string>
-#include <thread>
-
 #include <gtest/gtest.h>
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <vector>
 
 #include "BusExchange.hpp"
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "Socket.hpp"
 
 #ifdef _WIN32
@@ -32,7 +39,8 @@
 #define AssertFull(result) ASSERT_EQ(result, DsVeosCoSim::CreateFull())
 #define AssertEmpty(result) ASSERT_EQ(result, DsVeosCoSim::CreateEmpty())
 
-[[nodiscard]] constexpr const char* GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily) noexcept {
+[[nodiscard]] constexpr const char* GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily) noexcept
+{
     if (addressFamily == DsVeosCoSim::AddressFamily::Ipv4) {
         return "127.0.0.1";
     }
@@ -43,7 +51,8 @@
 // ReceiveComplete and socket-like test helpers are templates so they work
 // with both SocketClient and ShmPipeClient without duplication.
 template <typename TClient>
-[[nodiscard]] DsVeosCoSim::Result ReceiveComplete(TClient& client, void* buffer, size_t length) {
+[[nodiscard]] DsVeosCoSim::Result ReceiveComplete(TClient& client, void* buffer, size_t length)
+{
     auto* bufferPointer = static_cast<uint8_t*>(buffer);
     while (length > 0) {
         size_t receivedSize{};
@@ -55,7 +64,8 @@ template <typename TClient>
 }
 
 template <typename TClient>
-void TestSendAfterDisconnect(TClient& client) {
+void TestSendAfterDisconnect(TClient& client)
+{
     client.Disconnect();
     size_t sendValue = GenerateSizeT();
     DsVeosCoSim::Result result = client.Send(&sendValue, sizeof(sendValue));
@@ -63,7 +73,8 @@ void TestSendAfterDisconnect(TClient& client) {
 }
 
 template <typename TClient>
-void TestReceiveAfterDisconnect(TClient& client) {
+void TestReceiveAfterDisconnect(TClient& client)
+{
     client.Disconnect();
     size_t receiveValue{};
     size_t receivedSize{};
@@ -72,7 +83,8 @@ void TestReceiveAfterDisconnect(TClient& client) {
 }
 
 template <typename TClient>
-void TestReceiveAfterDisconnectOnRemoteClient(TClient& client1, TClient& client2) {
+void TestReceiveAfterDisconnectOnRemoteClient(TClient& client1, TClient& client2)
+{
     client1.Disconnect();
     size_t receiveValue{};
     size_t receivedSize{};
@@ -81,7 +93,8 @@ void TestReceiveAfterDisconnectOnRemoteClient(TClient& client1, TClient& client2
 }
 
 template <typename TClient>
-void TestSendAndReceive(TClient& client1, TClient& client2) {
+void TestSendAndReceive(TClient& client1, TClient& client2)
+{
     size_t sendValue = GenerateSizeT();
     size_t receiveValue = 0;
     DsVeosCoSim::Result sendResult = client1.Send(&sendValue, sizeof(sendValue));
@@ -92,7 +105,8 @@ void TestSendAndReceive(TClient& client1, TClient& client2) {
 }
 
 template <typename TClient>
-void TestManyElements(TClient& client1, TClient& client2) {
+void TestManyElements(TClient& client1, TClient& client2)
+{
     constexpr size_t Count = 0x100;
     std::thread thread([&] {
         for (size_t i = 0; i < Count; i++) {
@@ -108,7 +122,8 @@ void TestManyElements(TClient& client1, TClient& client2) {
 }
 
 template <typename TClient>
-void TestBigElement(TClient& client1, TClient& client2) {
+void TestBigElement(TClient& client1, TClient& client2)
+{
     constexpr size_t Count = 0x1000;
     std::thread thread([&] {
         auto receiveArray = std::make_unique<std::array<size_t, Count>>();
@@ -126,7 +141,8 @@ void TestBigElement(TClient& client1, TClient& client2) {
 }
 
 template <typename TClient>
-void TestPingPong(TClient& client1, TClient& client2) {
+void TestPingPong(TClient& client1, TClient& client2)
+{
     constexpr size_t Count = 100;
     for (size_t i = 0; i < Count; i++) {
         TClient* sendClient = &client1;

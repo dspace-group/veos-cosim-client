@@ -2,25 +2,29 @@
 
 #ifdef _WIN32
 
-#include <string>
-
 #include <gtest/gtest.h>
+
+#include <cstdint>
+#include <string>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateSharedMemoryName() {
+[[nodiscard]] std::string GenerateSharedMemoryName()
+{
     return GenerateString("SharedMemory名前\xF0\x9F\x98\x80");
 }
 
 class TestSharedMemory : public testing::Test {};
 
-TEST_F(TestSharedMemory, CreateShouldWork) {
+TEST_F(TestSharedMemory, CreateShouldWork)
+{
     // Arrange
     std::string name = GenerateSharedMemoryName();
 
@@ -33,7 +37,8 @@ TEST_F(TestSharedMemory, CreateShouldWork) {
     AssertOk(result);
 }
 
-TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
+TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory)
+{
     // Arrange
     std::string name = GenerateSharedMemoryName();
 
@@ -51,7 +56,8 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory) {
     ASSERT_EQ(writeValue, readValue);
 }
 
-TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
+TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories)
+{
     // Arrange
     std::string name = GenerateSharedMemoryName();
 
@@ -73,7 +79,8 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories) {
     ASSERT_EQ(writeValue, readValue);
 }
 
-TEST_F(TestSharedMemory, CouldOpenExisting) {
+TEST_F(TestSharedMemory, CouldOpenExisting)
+{
     // Arrange
     std::string name = GenerateSharedMemoryName();
 
@@ -89,7 +96,8 @@ TEST_F(TestSharedMemory, CouldOpenExisting) {
     AssertOk(result);
 }
 
-TEST_F(TestSharedMemory, CouldNotOpenNonExisting) {
+TEST_F(TestSharedMemory, CouldNotOpenNonExisting)
+{
     // Arrange
     std::string name = GenerateSharedMemoryName();
 

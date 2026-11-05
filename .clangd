@@ -1,0 +1,10 @@
+Diagnostics:
+  ClangTidy:
+    FastCheckFilter: None
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
+  Includes:
+    IgnoreHeader:
+      - 'fmt/.*'
+      - '(gtest|gmock)/.*'
+      - 'Windows Kits/10/Include/.*/(ucrt|shared|um|winrt|cppwinrt)/.*'

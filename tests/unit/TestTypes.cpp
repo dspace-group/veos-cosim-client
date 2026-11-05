@@ -1,12 +1,17 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
-#include <array>
-#include <string>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "CoSimTypes.hpp"
+#include "Logger.hpp"
 #include "Result.hpp"
 
 using namespace std::chrono;
@@ -17,7 +22,8 @@ namespace {
 
 class TestTypes : public testing::Test {};
 
-TEST_F(TestTypes, DataToString) {
+TEST_F(TestTypes, DataToString)
+{
     // Arrange
     std::array<uint8_t, 2> data{0xde, 0xaf};
     char separator = '/';
@@ -29,7 +35,8 @@ TEST_F(TestTypes, DataToString) {
     ASSERT_EQ("de/af", string);
 }
 
-TEST_F(TestTypes, SimulationTimeToString) {
+TEST_F(TestTypes, SimulationTimeToString)
+{
     // Arrange
     SimulationTime simulationTime{42};
 
@@ -40,7 +47,8 @@ TEST_F(TestTypes, SimulationTimeToString) {
     ASSERT_EQ("0.000000042", string);
 }
 
-TEST_F(TestTypes, ResultToString) {
+TEST_F(TestTypes, ResultToString)
+{
     // Arrange
     Result result = CreateError();
 
@@ -51,7 +59,8 @@ TEST_F(TestTypes, ResultToString) {
     ASSERT_EQ("Error", string);
 }
 
-TEST_F(TestTypes, CoSimTypeToString) {
+TEST_F(TestTypes, CoSimTypeToString)
+{
     // Arrange
     CoSimType coSimType = CoSimType::Server;
 
@@ -62,7 +71,8 @@ TEST_F(TestTypes, CoSimTypeToString) {
     ASSERT_EQ("Server", string);
 }
 
-TEST_F(TestTypes, ConnectionKindToString) {
+TEST_F(TestTypes, ConnectionKindToString)
+{
     // Arrange
     ConnectionKind connectionKind = ConnectionKind::Remote;
 
@@ -73,7 +83,8 @@ TEST_F(TestTypes, ConnectionKindToString) {
     ASSERT_EQ("Remote", string);
 }
 
-TEST_F(TestTypes, CommandToString) {
+TEST_F(TestTypes, CommandToString)
+{
     // Arrange
     Command command = Command::Start;
 
@@ -84,7 +95,8 @@ TEST_F(TestTypes, CommandToString) {
     ASSERT_EQ("Start", string);
 }
 
-TEST_F(TestTypes, SeverityToString) {
+TEST_F(TestTypes, SeverityToString)
+{
     // Arrange
     Severity severity = Severity::Warning;
 
@@ -95,7 +107,8 @@ TEST_F(TestTypes, SeverityToString) {
     ASSERT_EQ("Warning", string);
 }
 
-TEST_F(TestTypes, TerminateReasonToString) {
+TEST_F(TestTypes, TerminateReasonToString)
+{
     // Arrange
     TerminateReason terminateReason = TerminateReason::Finished;
 
@@ -106,7 +119,8 @@ TEST_F(TestTypes, TerminateReasonToString) {
     ASSERT_EQ("Finished", string);
 }
 
-TEST_F(TestTypes, ConnectionStateToString) {
+TEST_F(TestTypes, ConnectionStateToString)
+{
     // Arrange
     ConnectionState connectionState = ConnectionState::Disconnected;
 
@@ -117,7 +131,8 @@ TEST_F(TestTypes, ConnectionStateToString) {
     ASSERT_EQ("Disconnected", string);
 }
 
-TEST_F(TestTypes, GetDataTypeSize) {
+TEST_F(TestTypes, GetDataTypeSize)
+{
     // Arrange
     DataType dataType = DataType::UInt64;
 
@@ -128,7 +143,8 @@ TEST_F(TestTypes, GetDataTypeSize) {
     ASSERT_EQ(8, size);
 }
 
-TEST_F(TestTypes, DataTypeToString) {
+TEST_F(TestTypes, DataTypeToString)
+{
     // Arrange
     DataType dataType = DataType::Float64;
 
@@ -139,7 +155,8 @@ TEST_F(TestTypes, DataTypeToString) {
     ASSERT_EQ("Float64", string);
 }
 
-TEST_F(TestTypes, SizeKindToString) {
+TEST_F(TestTypes, SizeKindToString)
+{
     // Arrange
     SizeKind sizeKind = SizeKind::Variable;
 
@@ -150,7 +167,8 @@ TEST_F(TestTypes, SizeKindToString) {
     ASSERT_EQ("Variable", string);
 }
 
-TEST_F(TestTypes, ValueToString) {
+TEST_F(TestTypes, ValueToString)
+{
     // Arrange
     DataType dataType = DataType::Float64;
     uint32_t length = 3;
@@ -163,7 +181,8 @@ TEST_F(TestTypes, ValueToString) {
     ASSERT_EQ("4.2 0.000789 200", string);
 }
 
-TEST_F(TestTypes, SimulationStateToString) {
+TEST_F(TestTypes, SimulationStateToString)
+{
     // Arrange
     SimulationState simulationState = SimulationState::Stopped;
 
@@ -174,7 +193,8 @@ TEST_F(TestTypes, SimulationStateToString) {
     ASSERT_EQ("Stopped", string);
 }
 
-TEST_F(TestTypes, ModeToString) {
+TEST_F(TestTypes, ModeToString)
+{
     // Arrange
     Mode mode{};
 
@@ -185,7 +205,8 @@ TEST_F(TestTypes, ModeToString) {
     ASSERT_EQ("<Unused>", string);
 }
 
-TEST_F(TestTypes, IoSignalIdToString) {
+TEST_F(TestTypes, IoSignalIdToString)
+{
     // Arrange
     auto signalId = static_cast<IoSignalId>(86);
 
@@ -196,7 +217,8 @@ TEST_F(TestTypes, IoSignalIdToString) {
     ASSERT_EQ("86", string);
 }
 
-TEST_F(TestTypes, IoSignalToString) {
+TEST_F(TestTypes, IoSignalToString)
+{
     // Arrange
     std::string name = "MySignal";
 
@@ -214,7 +236,8 @@ TEST_F(TestTypes, IoSignalToString) {
     ASSERT_EQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
-TEST_F(TestTypes, IoSignalContainerToString) {
+TEST_F(TestTypes, IoSignalContainerToString)
+{
     // Arrange
     IoSignalContainer signalContainer{};
     signalContainer.id = static_cast<IoSignalId>(42);
@@ -230,7 +253,8 @@ TEST_F(TestTypes, IoSignalContainerToString) {
     ASSERT_EQ("IO Signal { Id: 42, Length: 43, DataType: UInt16, SizeKind: Variable, Name: \"MySignal\" }", string);
 }
 
-TEST_F(TestTypes, IoSignalContainerConvert) {
+TEST_F(TestTypes, IoSignalContainerConvert)
+{
     // Arrange
     IoSignalContainer signalContainer{};
     signalContainer.id = static_cast<IoSignalId>(42);
@@ -253,7 +277,8 @@ TEST_F(TestTypes, IoSignalContainerConvert) {
     ASSERT_EQ(expectedSignal, actualSignal);
 }
 
-TEST_F(TestTypes, IoDataToString) {
+TEST_F(TestTypes, IoDataToString)
+{
     // Arrange
     std::string name = "MySignal";
 
@@ -274,7 +299,8 @@ TEST_F(TestTypes, IoDataToString) {
     ASSERT_EQ("IO Data { Id: 42, Length: 1, Data: 65432 }", string);
 }
 
-TEST_F(TestTypes, SignalContainersToString) {
+TEST_F(TestTypes, SignalContainersToString)
+{
     // Arrange
     IoSignalContainer signalContainer1{};
     signalContainer1.id = static_cast<IoSignalId>(42);
@@ -302,7 +328,8 @@ TEST_F(TestTypes, SignalContainersToString) {
         string);
 }
 
-TEST_F(TestTypes, SignalContainersConvert) {
+TEST_F(TestTypes, SignalContainersConvert)
+{
     // Arrange
     IoSignalContainer signalContainer1{};
     signalContainer1.id = static_cast<IoSignalId>(42);
@@ -343,7 +370,8 @@ TEST_F(TestTypes, SignalContainersConvert) {
     ASSERT_THAT(actualContainers, ContainerEq(expectedSignals));
 }
 
-TEST_F(TestTypes, BusControllerIdToString) {
+TEST_F(TestTypes, BusControllerIdToString)
+{
     // Arrange
     auto controllerId = static_cast<BusControllerId>(123);
 
@@ -354,7 +382,8 @@ TEST_F(TestTypes, BusControllerIdToString) {
     ASSERT_EQ("123", string);
 }
 
-TEST_F(TestTypes, BusMessageIdToString) {
+TEST_F(TestTypes, BusMessageIdToString)
+{
     // Arrange
     auto messageId = static_cast<BusMessageId>(234);
 
@@ -365,7 +394,8 @@ TEST_F(TestTypes, BusMessageIdToString) {
     ASSERT_EQ("234", string);
 }
 
-TEST_F(TestTypes, CanMessageFlagsToString) {
+TEST_F(TestTypes, CanMessageFlagsToString)
+{
     // Arrange
     CanMessageFlags flags = CanMessageFlags::Error | CanMessageFlags::Loopback;
 
@@ -376,7 +406,8 @@ TEST_F(TestTypes, CanMessageFlagsToString) {
     ASSERT_EQ("Loopback,Error", string);
 }
 
-TEST_F(TestTypes, CanControllerToString) {
+TEST_F(TestTypes, CanControllerToString)
+{
     // Arrange
     std::string name = "name";
     std::string channelName = "channelName";
@@ -401,7 +432,8 @@ TEST_F(TestTypes, CanControllerToString) {
         string);
 }
 
-TEST_F(TestTypes, CanControllerContainerToString) {
+TEST_F(TestTypes, CanControllerContainerToString)
+{
     // Arrange
     CanControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(12);
@@ -422,7 +454,8 @@ TEST_F(TestTypes, CanControllerContainerToString) {
         string);
 }
 
-TEST_F(TestTypes, CanControllerContainerConvert) {
+TEST_F(TestTypes, CanControllerContainerConvert)
+{
     // Arrange
     CanControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(22);
@@ -449,7 +482,8 @@ TEST_F(TestTypes, CanControllerContainerConvert) {
     ASSERT_EQ(expectedController, actualController);
 }
 
-TEST_F(TestTypes, EthControllerToString) {
+TEST_F(TestTypes, EthControllerToString)
+{
     // Arrange
     std::string name = "name";
     std::string channelName = "channelName";
@@ -473,7 +507,8 @@ TEST_F(TestTypes, EthControllerToString) {
         string);
 }
 
-TEST_F(TestTypes, EthControllerContainerToString) {
+TEST_F(TestTypes, EthControllerContainerToString)
+{
     // Arrange
     EthControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(12);
@@ -493,7 +528,8 @@ TEST_F(TestTypes, EthControllerContainerToString) {
         string);
 }
 
-TEST_F(TestTypes, EthControllerContainerConvert) {
+TEST_F(TestTypes, EthControllerContainerConvert)
+{
     // Arrange
     EthControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(22);
@@ -518,7 +554,8 @@ TEST_F(TestTypes, EthControllerContainerConvert) {
     ASSERT_EQ(expectedController, actualController);
 }
 
-TEST_F(TestTypes, LinControllerToString) {
+TEST_F(TestTypes, LinControllerToString)
+{
     // Arrange
     std::string name = "name";
     std::string channelName = "channelName";
@@ -542,7 +579,8 @@ TEST_F(TestTypes, LinControllerToString) {
         string);
 }
 
-TEST_F(TestTypes, LinControllerContainerToString) {
+TEST_F(TestTypes, LinControllerContainerToString)
+{
     // Arrange
     LinControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(12);
@@ -562,7 +600,8 @@ TEST_F(TestTypes, LinControllerContainerToString) {
         string);
 }
 
-TEST_F(TestTypes, LinControllerContainerConvert) {
+TEST_F(TestTypes, LinControllerContainerConvert)
+{
     // Arrange
     LinControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(22);
@@ -587,7 +626,8 @@ TEST_F(TestTypes, LinControllerContainerConvert) {
     ASSERT_EQ(expectedController, actualController);
 }
 
-TEST_F(TestTypes, FrControllerToString) {
+TEST_F(TestTypes, FrControllerToString)
+{
     // Arrange
     std::string name = "name";
     std::string channelName = "channelName";
@@ -611,7 +651,8 @@ TEST_F(TestTypes, FrControllerToString) {
         string);
 }
 
-TEST_F(TestTypes, FrControllerContainerToString) {
+TEST_F(TestTypes, FrControllerContainerToString)
+{
     // Arrange
     FrControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(12);
@@ -631,7 +672,8 @@ TEST_F(TestTypes, FrControllerContainerToString) {
         string);
 }
 
-TEST_F(TestTypes, FrControllerContainerConvert) {
+TEST_F(TestTypes, FrControllerContainerConvert)
+{
     // Arrange
     FrControllerContainer controllerContainer{};
     controllerContainer.id = static_cast<BusControllerId>(22);
@@ -656,7 +698,8 @@ TEST_F(TestTypes, FrControllerContainerConvert) {
     ASSERT_EQ(expectedController, actualController);
 }
 
-TEST_F(TestTypes, CanMessageFlagsNoFlagsToString) {
+TEST_F(TestTypes, CanMessageFlagsNoFlagsToString)
+{
     // Arrange
     CanMessageFlags flags{};
 
@@ -667,7 +710,8 @@ TEST_F(TestTypes, CanMessageFlagsNoFlagsToString) {
     ASSERT_EQ("", string);
 }
 
-TEST_F(TestTypes, EthMessageFlagsToString) {
+TEST_F(TestTypes, EthMessageFlagsToString)
+{
     // Arrange
     EthMessageFlags flags = EthMessageFlags::Loopback | EthMessageFlags::Error;
 
@@ -678,7 +722,8 @@ TEST_F(TestTypes, EthMessageFlagsToString) {
     ASSERT_EQ("Loopback,Error", string);
 }
 
-TEST_F(TestTypes, LinMessageFlagsToString) {
+TEST_F(TestTypes, LinMessageFlagsToString)
+{
     // Arrange
     LinMessageFlags flags = LinMessageFlags::Response;
 
@@ -689,7 +734,8 @@ TEST_F(TestTypes, LinMessageFlagsToString) {
     ASSERT_EQ("Response", string);
 }
 
-TEST_F(TestTypes, FrMessageFlagsToString) {
+TEST_F(TestTypes, FrMessageFlagsToString)
+{
     // Arrange
     FrMessageFlags flags = FrMessageFlags::SyncFrame;
 
@@ -700,7 +746,8 @@ TEST_F(TestTypes, FrMessageFlagsToString) {
     ASSERT_EQ("SyncFrame", string);
 }
 
-TEST_F(TestTypes, CanMessageToString) {
+TEST_F(TestTypes, CanMessageToString)
+{
     // Arrange
     std::array<uint8_t, 2> data{0xAB, 0xCD};
 
@@ -718,7 +765,8 @@ TEST_F(TestTypes, CanMessageToString) {
     ASSERT_EQ("CAN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, CanMessageContainerToString) {
+TEST_F(TestTypes, CanMessageContainerToString)
+{
     // Arrange
     CanMessageContainer message{};
     message.timestamp = SimulationTime{42};
@@ -735,7 +783,8 @@ TEST_F(TestTypes, CanMessageContainerToString) {
     ASSERT_EQ("CAN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, EthMessageToString) {
+TEST_F(TestTypes, EthMessageToString)
+{
     // Arrange
     std::array<uint8_t, 2> data{0xAB, 0xCD};
 
@@ -752,7 +801,8 @@ TEST_F(TestTypes, EthMessageToString) {
     ASSERT_EQ("Ethernet Message { Timestamp: 0.000000042, ControllerId: 5, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, EthMessageContainerToString) {
+TEST_F(TestTypes, EthMessageContainerToString)
+{
     // Arrange
     EthMessageContainer message{};
     message.timestamp = SimulationTime{42};
@@ -768,7 +818,8 @@ TEST_F(TestTypes, EthMessageContainerToString) {
     ASSERT_EQ("Ethernet Message { Timestamp: 0.000000042, ControllerId: 5, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, LinMessageToString) {
+TEST_F(TestTypes, LinMessageToString)
+{
     // Arrange
     std::array<uint8_t, 2> data{0xAB, 0xCD};
 
@@ -786,7 +837,8 @@ TEST_F(TestTypes, LinMessageToString) {
     ASSERT_EQ("LIN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, LinMessageContainerToString) {
+TEST_F(TestTypes, LinMessageContainerToString)
+{
     // Arrange
     LinMessageContainer message{};
     message.timestamp = SimulationTime{42};
@@ -803,7 +855,8 @@ TEST_F(TestTypes, LinMessageContainerToString) {
     ASSERT_EQ("LIN Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, FrMessageToString) {
+TEST_F(TestTypes, FrMessageToString)
+{
     // Arrange
     std::array<uint8_t, 2> data{0xAB, 0xCD};
 
@@ -821,7 +874,8 @@ TEST_F(TestTypes, FrMessageToString) {
     ASSERT_EQ("FlexRay Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, FrMessageContainerToString) {
+TEST_F(TestTypes, FrMessageContainerToString)
+{
     // Arrange
     FrMessageContainer message{};
     message.timestamp = SimulationTime{42};
@@ -838,7 +892,8 @@ TEST_F(TestTypes, FrMessageContainerToString) {
     ASSERT_EQ("FlexRay Message { Timestamp: 0.000000042, ControllerId: 5, Id: 10, Length: 2, Data: ab-cd, Flags:  }", string);
 }
 
-TEST_F(TestTypes, ResultOkToString) {
+TEST_F(TestTypes, ResultOkToString)
+{
     // Arrange
     Result result = CreateOk();
 
@@ -849,7 +904,8 @@ TEST_F(TestTypes, ResultOkToString) {
     ASSERT_EQ("Ok", string);
 }
 
-TEST_F(TestTypes, SimulationStateRunningToString) {
+TEST_F(TestTypes, SimulationStateRunningToString)
+{
     // Arrange
     SimulationState simulationState = SimulationState::Running;
 
@@ -860,7 +916,8 @@ TEST_F(TestTypes, SimulationStateRunningToString) {
     ASSERT_EQ("Running", string);
 }
 
-TEST_F(TestTypes, ConnectionStateConnectedToString) {
+TEST_F(TestTypes, ConnectionStateConnectedToString)
+{
     // Arrange
     ConnectionState connectionState = ConnectionState::Connected;
 
@@ -871,7 +928,8 @@ TEST_F(TestTypes, ConnectionStateConnectedToString) {
     ASSERT_EQ("Connected", string);
 }
 
-TEST_F(TestTypes, DataToStringWithZeroLength) {
+TEST_F(TestTypes, DataToStringWithZeroLength)
+{
     // Arrange
     uint8_t data = 0;
 
@@ -882,7 +940,8 @@ TEST_F(TestTypes, DataToStringWithZeroLength) {
     ASSERT_EQ("", string);
 }
 
-TEST_F(TestTypes, SimulationTimeToStringWithZero) {
+TEST_F(TestTypes, SimulationTimeToStringWithZero)
+{
     // Arrange
     SimulationTime simulationTime{0};
 
@@ -893,7 +952,8 @@ TEST_F(TestTypes, SimulationTimeToStringWithZero) {
     ASSERT_EQ("0", string);
 }
 
-TEST_F(TestTypes, ValueToStringWithZeroLength) {
+TEST_F(TestTypes, ValueToStringWithZeroLength)
+{
     // Arrange
     DataType dataType = DataType::Float64;
     double data = 0.0;
@@ -905,7 +965,8 @@ TEST_F(TestTypes, ValueToStringWithZeroLength) {
     ASSERT_EQ("", string);
 }
 
-TEST_F(TestTypes, GetDataTypeSizeForAllTypes) {
+TEST_F(TestTypes, GetDataTypeSizeForAllTypes)
+{
     ASSERT_EQ(1U, GetDataTypeSize(DataType::Bool));
     ASSERT_EQ(1U, GetDataTypeSize(DataType::Int8));
     ASSERT_EQ(1U, GetDataTypeSize(DataType::UInt8));
@@ -919,7 +980,8 @@ TEST_F(TestTypes, GetDataTypeSizeForAllTypes) {
     ASSERT_EQ(8U, GetDataTypeSize(DataType::Float64));
 }
 
-TEST_F(TestTypes, GetDataTypeSizeForInvalidType) {
+TEST_F(TestTypes, GetDataTypeSizeForInvalidType)
+{
     // Arrange
     auto invalidType = static_cast<DataType>(255);
 

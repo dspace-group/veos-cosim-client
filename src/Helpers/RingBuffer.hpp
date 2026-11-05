@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -11,13 +12,15 @@ namespace DsVeosCoSim {
 // Not thread safe
 template <typename T>
 class RingBuffer final {
-public:
+  public:
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable.");
 
     RingBuffer() = default;
 
     // No guard for zero capacity, but that's ok
-    explicit RingBuffer(size_t capacity) : _capacity(capacity) {
+    explicit RingBuffer(size_t capacity)
+        : _capacity(capacity)
+    {
         _items.resize(capacity);
     }
 
@@ -29,25 +32,30 @@ public:
     RingBuffer(RingBuffer&& other) noexcept = default;
     RingBuffer& operator=(RingBuffer&& other) noexcept = default;
 
-    void Clear() {
+    void Clear()
+    {
         _readIndex = 0;
         _writeIndex = 0;
         _size = 0;
     }
 
-    [[nodiscard]] size_t Size() const noexcept {
+    [[nodiscard]] size_t Size() const noexcept
+    {
         return _size;
     }
 
-    [[nodiscard]] bool IsEmpty() const noexcept {
+    [[nodiscard]] bool IsEmpty() const noexcept
+    {
         return _size == 0;
     }
 
-    [[nodiscard]] bool IsFull() const noexcept {
+    [[nodiscard]] bool IsFull() const noexcept
+    {
         return _size == _capacity;
     }
 
-    [[nodiscard]] bool TryPushBack(const T& item) noexcept {
+    [[nodiscard]] bool TryPushBack(const T& item) noexcept
+    {
         if (IsFull()) {
             return false;
         }
@@ -59,7 +67,8 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool TryPushBack(T&& item) noexcept {
+    [[nodiscard]] bool TryPushBack(T&& item) noexcept
+    {
         if (IsFull()) {
             return false;
         }
@@ -71,7 +80,8 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool TryPopFront(T& item) noexcept {
+    [[nodiscard]] bool TryPopFront(T& item) noexcept
+    {
         if (IsEmpty()) {
             return false;
         }
@@ -83,7 +93,8 @@ public:
         return true;
     }
 
-    [[nodiscard]] T* TryPeekFront() noexcept {
+    [[nodiscard]] T* TryPeekFront() noexcept
+    {
         if (IsEmpty()) {
             return nullptr;
         }
@@ -91,7 +102,8 @@ public:
         return &_items[_readIndex];
     }
 
-    [[nodiscard]] const T* TryPeekFront() const noexcept {
+    [[nodiscard]] const T* TryPeekFront() const noexcept
+    {
         if (IsEmpty()) {
             return nullptr;
         }
@@ -99,7 +111,8 @@ public:
         return &_items[_readIndex];
     }
 
-    void RemoveFront() noexcept {
+    void RemoveFront() noexcept
+    {
         if (IsEmpty()) {
             return;
         }
@@ -108,8 +121,9 @@ public:
         --_size;
     }
 
-private:
-    void AdvanceIndex(size_t& index) const noexcept {
+  private:
+    void AdvanceIndex(size_t& index) const noexcept
+    {
         index++;
         if (index == _capacity) {
             index = 0;

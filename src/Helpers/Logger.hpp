@@ -2,14 +2,14 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
 #include <cstdint>
 #include <functional>
 #include <mutex>
 #include <string>
 #include <string_view>
 #include <utility>
-
-#include <fmt/format.h>
 
 namespace DsVeosCoSim {
 
@@ -20,16 +20,17 @@ enum class Severity : uint32_t {
     Trace
 };
 
-[[nodiscard]] constexpr std::string_view format_as(Severity severity) noexcept {
+[[nodiscard]] constexpr std::string_view format_as(Severity severity) noexcept
+{
     switch (severity) {
-        case Severity::Error:
-            return "Error";
-        case Severity::Warning:
-            return "Warning";
-        case Severity::Info:
-            return "Info";
-        case Severity::Trace:
-            return "Trace";
+    case Severity::Error:
+        return "Error";
+    case Severity::Warning:
+        return "Warning";
+    case Severity::Info:
+        return "Info";
+    case Severity::Trace:
+        return "Trace";
     }
 
     return "<Invalid Severity>";
@@ -41,21 +42,24 @@ class Logger {  // NOLINT(cppcoreguidelines-special-member-functions)
     Logger() = default;
     ~Logger() noexcept = default;
 
-public:
-    static Logger& Instance() {
+  public:
+    static Logger& Instance()
+    {
         static Logger instance;
         return instance;
     }
 
-    void SetLogCallback(LogCallback logCallback) {
-        std::lock_guard lock(_mutex);
+    void SetLogCallback(LogCallback logCallback)
+    {
+        std::scoped_lock lock(_mutex);
         _logCallback = std::move(logCallback);
     }
 
-    void Log(Severity severity, const std::string& message) const {
+    void Log(Severity severity, const std::string& message) const
+    {
         LogCallback logCallback;
         {
-            std::lock_guard lock(_mutex);
+            std::scoped_lock lock(_mutex);
             logCallback = _logCallback;
         }
 
@@ -64,78 +68,93 @@ public:
         }
     }
 
-private:
+  private:
     mutable std::mutex _mutex;
     LogCallback _logCallback;
 };
 
 void LogError(int32_t errorCode, const std::string& message);
 
-inline void LogError(const std::string& message) {
+inline void LogError(const std::string& message)
+{
     Logger::Instance().Log(Severity::Error, message);
 }
 
-inline void LogWarning(const std::string& message) {
+inline void LogWarning(const std::string& message)
+{
     Logger::Instance().Log(Severity::Warning, message);
 }
 
-inline void LogInfo(const std::string& message) {
+inline void LogInfo(const std::string& message)
+{
     Logger::Instance().Log(Severity::Info, message);
 }
 
-inline void LogTrace(const std::string& message) {
+inline void LogTrace(const std::string& message)
+{
     Logger::Instance().Log(Severity::Trace, message);
 }
 
 template <typename... TArgs>
-void LogError(int32_t errorCode, fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogError(int32_t errorCode, fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogError(errorCode, fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogError(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogError(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogError(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogWarning(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogWarning(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogWarning(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogInfo(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogInfo(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogInfo(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogTrace(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogTrace(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogTrace(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
-inline void LogProtBegin(const std::string& message) {
+inline void LogProtBegin(const std::string& message)
+{
     LogTrace("PROT BEGIN {}", message);
 }
 
-inline void LogProtEnd(const std::string& message) {
+inline void LogProtEnd(const std::string& message)
+{
     LogTrace("PROT END   {}", message);
 }
 
-inline void LogProtData(const std::string& message) {
+inline void LogProtData(const std::string& message)
+{
     LogTrace("PROT DATA  {}", message);
 }
 
 template <typename... TArgs>
-void LogProtBegin(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogProtBegin(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogProtBegin(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogProtEnd(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogProtEnd(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogProtEnd(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 
 template <typename... TArgs>
-void LogProtData(fmt::format_string<TArgs...> formatString, TArgs&&... args) {
+void LogProtData(fmt::format_string<TArgs...> formatString, TArgs&&... args)
+{
     LogProtData(fmt::format(formatString, std::forward<TArgs>(args)...));
 }
 

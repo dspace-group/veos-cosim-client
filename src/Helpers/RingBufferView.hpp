@@ -13,7 +13,7 @@ namespace DsVeosCoSim {
 // It does not provide real thread safety because that is enforced by the bus buffer.
 template <typename T>
 class RingBufferView final {
-public:
+  public:
     static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable.");
 
     RingBufferView() = default;
@@ -25,31 +25,36 @@ public:
     RingBufferView(RingBufferView&&) = delete;
     RingBufferView& operator=(RingBufferView&&) = delete;
 
-    void Initialize(uint32_t capacity) noexcept {
+    void Initialize(uint32_t capacity) noexcept
+    {
         _capacity = capacity;
     }
 
-    void Clear() noexcept {
+    void Clear() noexcept
+    {
         _readIndex = 0;
         _writeIndex = 0;
         _size = 0;
     }
 
-    void PushBack(const T& item) noexcept {
+    void PushBack(const T& item) noexcept
+    {
         _items[_writeIndex] = item;
         AdvanceIndex(_writeIndex);
 
         ++_size;
     }
 
-    void PushBack(T&& item) noexcept {
+    void PushBack(T&& item) noexcept
+    {
         _items[_writeIndex] = std::move(item);
         AdvanceIndex(_writeIndex);
 
         ++_size;
     }
 
-    [[nodiscard]] T& PopFront() noexcept {
+    [[nodiscard]] T& PopFront() noexcept
+    {
         T& item = _items[_readIndex];
         AdvanceIndex(_readIndex);
 
@@ -57,8 +62,9 @@ public:
         return item;
     }
 
-private:
-    void AdvanceIndex(uint32_t& index) const noexcept {
+  private:
+    void AdvanceIndex(uint32_t& index) const noexcept
+    {
         index++;
         if (index == _capacity) {
             index = 0;

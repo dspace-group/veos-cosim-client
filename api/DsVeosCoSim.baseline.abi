@@ -1,4 +1,4 @@
-<abi-corpus version='2.2' path='build/linux-debug/src/libDsVeosCoSim.so' architecture='elf-amd-x86_64' soname='libDsVeosCoSim.so.1'>
+<abi-corpus version='2.2' path='build/debug/src/libDsVeosCoSim.so' architecture='elf-amd-x86_64' soname='libDsVeosCoSim.so.1'>
   <elf-needed>
     <dependency name='libstdc++.so.6'/>
     <dependency name='libm.so.6'/>
@@ -101,7 +101,7 @@
   <elf-variable-symbols>
     <elf-symbol name='_ZSt19piecewise_construct' size='1' type='object-type' binding='weak-binding' visibility='default-visibility' is-defined='yes'/>
   </elf-variable-symbols>
-  <abi-instr address-size='64' path='/mnt/c/repos/github/veos-cosim-client/src/BusExchange.cpp' comp-dir-path='/mnt/c/repos/github/veos-cosim-client/build/linux-debug' language='LANG_C_plus_plus_14'>
+  <abi-instr address-size='64' path='/mnt/c/repos/github/veos-cosim-client/src/BusExchange.cpp' comp-dir-path='/mnt/c/repos/github/veos-cosim-client/build/debug' language='LANG_C_plus_plus_14'>
     <array-type-def dimensions='1' type-id='type-id-1' size-in-bits='2048' id='type-id-2'>
       <subrange length='256' lower-bound='0' upper-bound='255' type-id='type-id-3' id='type-id-4'/>
     </array-type-def>

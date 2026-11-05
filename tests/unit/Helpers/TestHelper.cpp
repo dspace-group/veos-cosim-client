@@ -2,26 +2,40 @@
 
 #include "TestHelper.hpp"
 
-#include <memory>
-#include <string>
-#include <thread>
-
 #include <fmt/format.h>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <vector>
+
+#include "BusExchange.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Helper.hpp"
+#include "Logger.hpp"
+#include "OsUtilities.hpp"
+#include "Protocol.hpp"
+#include "Result.hpp"
 
 using namespace testing;
 
 using namespace DsVeosCoSim;
 
-[[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType) {
+[[nodiscard]] CoSimType GetCounterPart(CoSimType coSimType)
+{
     return coSimType == CoSimType::Client ? CoSimType::Server : CoSimType::Client;
 }
 
-[[nodiscard]] std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind) {
+[[nodiscard]] std::string GetCounterPart(const std::string& name, ConnectionKind connectionKind)
+{
     return connectionKind == ConnectionKind::Local ? name : fmt::format("Other{}", name);
 }
 
@@ -30,7 +44,8 @@ using namespace DsVeosCoSim;
                                        std::string_view name,
                                        const std::vector<CanController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
+                                       std::unique_ptr<BusExchange>& busExchange)
+{
     return CreateBusExchange(coSimType, connectionKind, name, controllers, {}, {}, {}, protocol, busExchange);
 }
 
@@ -39,7 +54,8 @@ using namespace DsVeosCoSim;
                                        std::string_view name,
                                        const std::vector<EthController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
+                                       std::unique_ptr<BusExchange>& busExchange)
+{
     return CreateBusExchange(coSimType, connectionKind, name, {}, controllers, {}, {}, protocol, busExchange);
 }
 
@@ -48,7 +64,8 @@ using namespace DsVeosCoSim;
                                        std::string_view name,
                                        const std::vector<LinController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
+                                       std::unique_ptr<BusExchange>& busExchange)
+{
     return CreateBusExchange(coSimType, connectionKind, name, {}, {}, controllers, {}, protocol, busExchange);
 }
 
@@ -57,13 +74,15 @@ using namespace DsVeosCoSim;
                                        std::string_view name,
                                        const std::vector<FrController>& controllers,
                                        IProtocol& protocol,
-                                       std::unique_ptr<BusExchange>& busExchange) {
+                                       std::unique_ptr<BusExchange>& busExchange)
+{
     return CreateBusExchange(coSimType, connectionKind, name, {}, {}, {}, controllers, protocol, busExchange);
 }
 
 #ifdef _WIN32
 
-void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2) {
+void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient& client2)
+{
     // Arrange
     client1.Disconnect();
 
@@ -78,7 +97,8 @@ void TestSendAfterDisconnectOnRemoteClient(ShmPipeClient& client1, ShmPipeClient
 
 #endif
 
-void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel)
+{
     uint16_t sendValue = GenerateU16();
 
     // Act
@@ -90,7 +110,8 @@ void TestWriteUInt16ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel)
+{
     uint32_t sendValue = GenerateU32();
 
     // Act
@@ -102,7 +123,8 @@ void TestWriteUInt32ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteUInt64ToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteUInt64ToChannel(std::unique_ptr<Channel>& writeChannel)
+{
     uint64_t sendValue = GenerateU64();
 
     // Act
@@ -114,7 +136,8 @@ void TestWriteUInt64ToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel) {
+void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel)
+{
     std::vector<uint8_t> buffer = GenerateBytes(10);
 
     // Act
@@ -126,7 +149,8 @@ void TestWriteBufferToChannel(std::unique_ptr<Channel>& writeChannel) {
     AssertOk(endWriteResult);
 }
 
-void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     uint16_t sendValue = GenerateU16();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -142,7 +166,8 @@ void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     uint32_t sendValue = GenerateU32();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -158,7 +183,8 @@ void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     uint64_t sendValue = GenerateU64();
 
     AssertOk(writeChannel->GetWriter().Write(sendValue));
@@ -174,7 +200,8 @@ void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_EQ(sendValue, receiveValue);
 }
 
-void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     std::vector<uint8_t> sendBuffer = GenerateBytes(10);
 
     AssertOk(writeChannel->GetWriter().Write(sendBuffer.data(), sendBuffer.size()));
@@ -191,7 +218,8 @@ void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
     ASSERT_THAT(receiveBuffer, ContainerEq(sendBuffer));
 }
 
-void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channel>& secondChannel) {
+void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channel>& secondChannel)
+{
     constexpr size_t Count = 100;
 
     // Act and assert
@@ -214,7 +242,8 @@ void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channe
     }
 }
 
-void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     uint32_t sendValue1 = GenerateU32();
     uint64_t sendValue2 = GenerateU64();
     uint32_t receiveValue1{};
@@ -235,7 +264,8 @@ void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique
     ASSERT_EQ(sendValue2, receiveValue2);
 }
 
-void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     constexpr size_t Count = 0x1000;
 
     std::thread thread([&] {
@@ -262,7 +292,8 @@ void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>
     thread.join();
 }
 
-void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel) {
+void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
+{
     constexpr size_t Count = 0x1000;
 
     std::thread thread([&] {
@@ -288,179 +319,223 @@ void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Chan
 
 namespace DsVeosCoSim {
 
-std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime) {
+std::ostream& operator<<(std::ostream& stream, SimulationTime simulationTime)
+{
     return stream << SimulationTimeToString(simulationTime);
 }
 
-std::ostream& operator<<(std::ostream& stream, Result result) {
+std::ostream& operator<<(std::ostream& stream, Result result)
+{
     return stream << format_as(result);
 }
 
-std::ostream& operator<<(std::ostream& stream, CoSimType coSimType) {
+std::ostream& operator<<(std::ostream& stream, CoSimType coSimType)
+{
     return stream << format_as(coSimType);
 }
 
-std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind) {
+std::ostream& operator<<(std::ostream& stream, ConnectionKind connectionKind)
+{
     return stream << format_as(connectionKind);
 }
 
-std::ostream& operator<<(std::ostream& stream, Command command) {
+std::ostream& operator<<(std::ostream& stream, Command command)
+{
     return stream << format_as(command);
 }
 
-std::ostream& operator<<(std::ostream& stream, Severity severity) {
+std::ostream& operator<<(std::ostream& stream, Severity severity)
+{
     return stream << format_as(severity);
 }
 
-std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason) {
+std::ostream& operator<<(std::ostream& stream, TerminateReason terminateReason)
+{
     return stream << format_as(terminateReason);
 }
 
-std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState) {
+std::ostream& operator<<(std::ostream& stream, ConnectionState connectionState)
+{
     return stream << format_as(connectionState);
 }
 
-std::ostream& operator<<(std::ostream& stream, SimulationState simulationState) {
+std::ostream& operator<<(std::ostream& stream, SimulationState simulationState)
+{
     return stream << format_as(simulationState);
 }
 
-std::ostream& operator<<(std::ostream& stream, Mode mode) {
+std::ostream& operator<<(std::ostream& stream, Mode mode)
+{
     return stream << format_as(mode);
 }
 
-std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId) {
+std::ostream& operator<<(std::ostream& stream, IoSignalId ioSignalId)
+{
     return stream << format_as(ioSignalId);
 }
 
-std::ostream& operator<<(std::ostream& stream, DataType dataType) {
+std::ostream& operator<<(std::ostream& stream, DataType dataType)
+{
     return stream << format_as(dataType);
 }
 
-std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind) {
+std::ostream& operator<<(std::ostream& stream, SizeKind sizeKind)
+{
     return stream << format_as(sizeKind);
 }
 
-std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId) {
+std::ostream& operator<<(std::ostream& stream, BusControllerId busControllerId)
+{
     return stream << format_as(busControllerId);
 }
 
-std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId) {
+std::ostream& operator<<(std::ostream& stream, BusMessageId busMessageId)
+{
     return stream << format_as(busMessageId);
 }
 
-std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType) {
+std::ostream& operator<<(std::ostream& stream, LinControllerType linControllerType)
+{
     return stream << format_as(linControllerType);
 }
 
-std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, CanMessageFlags canMessageFlags)
+{
     return stream << format_as(canMessageFlags);
 }
 
-std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, EthMessageFlags ethMessageFlags)
+{
     return stream << format_as(ethMessageFlags);
 }
 
-std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, LinMessageFlags linMessageFlags)
+{
     return stream << format_as(linMessageFlags);
 }
 
-std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags) {
+std::ostream& operator<<(std::ostream& stream, FrMessageFlags frMessageFlags)
+{
     return stream << format_as(frMessageFlags);
 }
 
-std::ostream& operator<<(std::ostream& stream, FrameKind frameKind) {
+std::ostream& operator<<(std::ostream& stream, FrameKind frameKind)
+{
     return stream << format_as(frameKind);
 }
 
-std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal) {
+std::ostream& operator<<(std::ostream& stream, const IoSignal& ioSignal)
+{
     return stream << format_as(ioSignal);
 }
 
-std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer) {
+std::ostream& operator<<(std::ostream& stream, const IoSignalContainer& ioSignalContainer)
+{
     return stream << format_as(ioSignalContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const CanController& canController) {
+std::ostream& operator<<(std::ostream& stream, const CanController& canController)
+{
     return stream << format_as(canController);
 }
 
-std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const CanControllerContainer& canControllerContainer)
+{
     return stream << format_as(canControllerContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage) {
+std::ostream& operator<<(std::ostream& stream, const CanMessage& canMessage)
+{
     return stream << format_as(canMessage);
 }
 
-std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const CanMessageContainer& canMessageContainer)
+{
     return stream << format_as(canMessageContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const EthController& ethController) {
+std::ostream& operator<<(std::ostream& stream, const EthController& ethController)
+{
     return stream << format_as(ethController);
 }
 
-std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const EthControllerContainer& ethControllerContainer)
+{
     return stream << format_as(ethControllerContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage) {
+std::ostream& operator<<(std::ostream& stream, const EthMessage& ethMessage)
+{
     return stream << format_as(ethMessage);
 }
 
-std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const EthMessageContainer& ethMessageContainer)
+{
     return stream << format_as(ethMessageContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const LinController& linController) {
+std::ostream& operator<<(std::ostream& stream, const LinController& linController)
+{
     return stream << format_as(linController);
 }
 
-std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const LinControllerContainer& frControllerContainer)
+{
     return stream << format_as(frControllerContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage) {
+std::ostream& operator<<(std::ostream& stream, const LinMessage& linMessage)
+{
     return stream << format_as(linMessage);
 }
 
-std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const LinMessageContainer& linMessageContainer)
+{
     return stream << format_as(linMessageContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const FrController& frController) {
+std::ostream& operator<<(std::ostream& stream, const FrController& frController)
+{
     return stream << format_as(frController);
 }
 
-std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer) {
+std::ostream& operator<<(std::ostream& stream, const FrControllerContainer& frControllerContainer)
+{
     return stream << format_as(frControllerContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage) {
+std::ostream& operator<<(std::ostream& stream, const FrMessage& frMessage)
+{
     return stream << format_as(frMessage);
 }
 
-std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer) {
+std::ostream& operator<<(std::ostream& stream, const FrMessageContainer& frMessageContainer)
+{
     return stream << format_as(frMessageContainer);
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<IoSignalContainer>& ioSignalContainers)
+{
     return stream << format_as(ioSignalContainers);
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<CanControllerContainer>& canControllerContainers)
+{
     return stream << format_as(canControllerContainers);
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<EthControllerContainer>& ethControllerContainers)
+{
     return stream << format_as(ethControllerContainers);
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<LinControllerContainer>& linControllerContainers)
+{
     return stream << format_as(linControllerContainers);
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers) {
+std::ostream& operator<<(std::ostream& stream, const std::vector<FrControllerContainer>& frControllerContainers)
+{
     return stream << format_as(frControllerContainers);
 }
 

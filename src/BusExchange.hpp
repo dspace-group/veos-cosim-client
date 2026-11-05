@@ -31,7 +31,7 @@ class BusExchange final {
     using LinBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::LinBus>;
     using FrBusExchange = BusExchangeDetail::BusExchangeSpecific<BusExchangeDetail::FrBus>;
 
-public:
+  public:
     BusExchange(std::unique_ptr<CanBusExchange> canBusExchange,
                 std::unique_ptr<EthBusExchange> ethBusExchange,
                 std::unique_ptr<LinBusExchange> linBusExchange,
@@ -70,7 +70,7 @@ public:
     [[nodiscard]] Result Serialize(ChannelWriter& writer) const;
     [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const;
 
-private:
+  private:
     std::unique_ptr<CanBusExchange> _canBusExchange;
     std::unique_ptr<EthBusExchange> _ethBusExchange;
     std::unique_ptr<LinBusExchange> _linBusExchange;

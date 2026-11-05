@@ -32,18 +32,20 @@ target_include_directories(
   Helpers
 )
 
-target_compile_options(
-  DsVeosCoSimTest
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
+dsveoscosim_enable_warnings(DsVeosCoSimTest)
 
 target_link_libraries(
   DsVeosCoSimTest
+  PRIVATE
   DsVeosCoSim
-  shared
+  DsVeosCoSimTestSupport
   GTest::gmock
   GTest::gtest
 )
 
-add_test(NAME DsVeosCoSimTest COMMAND DsVeosCoSimTest)
+add_test(
+  NAME
+  DsVeosCoSimTest
+  COMMAND
+  DsVeosCoSimTest
+)

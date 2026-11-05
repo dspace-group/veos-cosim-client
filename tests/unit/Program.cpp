@@ -3,10 +3,12 @@
 #include <gtest/gtest.h>
 
 #include "Helper.hpp"
+#include "Result.hpp"
 
 using namespace DsVeosCoSim;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     if (!IsOk(StartUp())) {
         return 1;
     }

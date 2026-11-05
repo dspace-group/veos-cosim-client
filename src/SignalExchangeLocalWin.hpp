@@ -7,14 +7,19 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Environment.hpp"
 #include "Logger.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "RingBuffer.hpp"
 #include "SignalExchangeCommon.hpp"
 
@@ -34,19 +39,20 @@ class LocalSignalExchangePart final : public ISignalExchangePart {
         bool isChanged{};
     };
 
-public:
+  public:
     LocalSignalExchangePart(IProtocol& protocol,
                             std::string name,
                             SignalRegistry signalRegistry,
                             std::vector<SignalState> signalStates,
                             SharedMemory sharedMemory,
                             RingBuffer<SignalMetaDataPtr> changedSignalsQueue)
-        : _protocol(protocol),
-          _name(std::move(name)),
-          _signalRegistry(std::move(signalRegistry)),
-          _signalStates(std::move(signalStates)),
-          _sharedMemory(std::move(sharedMemory)),
-          _changedSignalsQueue(std::move(changedSignalsQueue)) {
+        : _protocol(protocol)
+        , _name(std::move(name))
+        , _signalRegistry(std::move(signalRegistry))
+        , _signalStates(std::move(signalStates))
+        , _sharedMemory(std::move(sharedMemory))
+        , _changedSignalsQueue(std::move(changedSignalsQueue))
+    {
     }
 
     ~LocalSignalExchangePart() noexcept override = default;
@@ -60,7 +66,8 @@ public:
     [[nodiscard]] static Result Create(IProtocol& protocol,
                                        const std::vector<IoSignal>& ioSignals,
                                        std::string name,
-                                       std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+                                       std::unique_ptr<ISignalExchangePart>& signalExchangePart)
+    {
         SignalRegistry signalRegistry;
         CheckResult(SignalRegistry::Create(ioSignals, signalRegistry));
 
@@ -108,7 +115,8 @@ public:
 
     // Each signal owns two parts inside shared memory. One is the active value
     // visible to readers, the other is a staging part for the next published update.
-    void ClearData() override {
+    void ClearData() override
+    {
         _changedSignalsQueue.Clear();
 
         for (auto& [signalId, metaData] : _signalRegistry.GetMetaDataLookup()) {
@@ -132,7 +140,8 @@ public:
         }
     }
 
-    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override {
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         SignalState& signalState = _signalStates[metaData->signalIndex];
@@ -181,7 +190,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         SignalState& signalState = _signalStates[metaData->signalIndex];
@@ -194,7 +204,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         SignalState& signalState = _signalStates[metaData->signalIndex];
@@ -208,7 +219,8 @@ public:
 
     // For local transport the payload bytes are already in shared memory. The
     // channel only publishes which signal ids changed since the last transfer.
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override
+    {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
 
         SignalMetaDataPtr metaData{};
@@ -228,7 +240,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override
+    {
         size_t ioSignalChangedCount = 0;
         CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -256,12 +269,14 @@ public:
         return CreateOk();
     }
 
-private:
-    [[nodiscard]] SharedDataPtr GetSharedData(size_t offset) const {
+  private:
+    [[nodiscard]] SharedDataPtr GetSharedData(size_t offset) const
+    {
         return reinterpret_cast<SharedDataPtr>(_sharedMemory.GetData() + offset);
     }
 
-    static void SwapActiveAndStagingParts(SignalState& signalState) {
+    static void SwapActiveAndStagingParts(SignalState& signalState)
+    {
         std::swap(signalState.offsetOfActivePartInShm, signalState.offsetOfStagingPartInShm);
     }
 

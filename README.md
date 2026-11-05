@@ -13,7 +13,9 @@ Implementation of a C++ library used to create co-simulation clients for dSPACE 
 
 ### As a standalone project
 
-DsVeosCoSim requires `fmt` for internal string formatting. A standalone build picks up the bundled copy from `third_party/fmt` automatically, so no extra CMake arguments are required as long as that directory is present.
+CMake 3.20 or newer is required, including for the provided configure, build, and test presets.
+
+DsVeosCoSim requires `fmt` for internal string formatting. It reuses an existing `fmt::fmt` or `fmt::fmt-header-only` target first, then tries an installed CMake package. Otherwise it uses the initialized `third_party/fmt` submodule when available. If none is available, configuration fails; dependencies are not downloaded automatically. Set `DSVEOSCOSIM_USE_BUNDLED_FMT=OFF` to require an existing target or installed package.
 
 The repository provides cross-platform CMake presets, wrapper scripts, and `just` recipes.
 
@@ -26,7 +28,7 @@ Defaults:
 
 - Configuration: `Debug`
 - Tests: `ON`
-- Output directories follow the active preset, for example `build/win-debug` or `build/linux-debug`
+- Output directories follow the active preset: `build/debug` or `build/release`
 
 #### Build with scripts (recommended)
 
@@ -99,27 +101,13 @@ cmake --list-presets
 Configure, build, and test with a preset:
 
 ```console
-cmake --preset win-debug
-cmake --build --preset win-debug
-ctest --preset win-debug
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
 ```
 
-Preset families:
-
-- Windows native: `win-debug`, `win-release`
-- Linux and WSL: `linux-debug`, `linux-release`
-
-Linux example:
-
-```console
-cmake --preset linux-debug
-cmake --build --preset linux-debug
-ctest --preset linux-debug
-```
-
-WSL note:
-
-- Use the `linux-*` presets in WSL.
+The cross-platform presets are `debug` and `release`. CMake uses the compiler
+provided by the current Windows, Linux, or WSL environment.
 
 #### Build without presets
 
@@ -133,15 +121,37 @@ ctest --test-dir build --output-on-failure
 
 ### As a subdirectory in another CMake project
 
-When you embed DsVeosCoSim into a parent project, CMake uses an existing `fmt::fmt` or `fmt::fmt-header-only` target if your project already defines one. Otherwise it falls back to the bundled copy in `third_party/fmt`.
+When you embed DsVeosCoSim into a parent project, CMake uses an existing `fmt::fmt` or `fmt::fmt-header-only` target if your project already defines one. It does not configure or compile a second fmt copy in that case.
 
 ```cmake
 find_package(fmt CONFIG REQUIRED) # Optional if you want to use your own fmt package.
 add_subdirectory(veos-cosim-client)
-target_link_libraries(your_target PRIVATE DsVeosCoSim)
+target_link_libraries(your_target PRIVATE DsVeosCoSim::DsVeosCoSim)
 ```
 
-If you do not provide `fmt` from the parent project, keep `third_party/fmt` in the `veos-cosim-client` source tree so `add_subdirectory(veos-cosim-client)` can add the bundled copy.
+The original target name `DsVeosCoSim` remains supported. The namespaced alias `DsVeosCoSim::DsVeosCoSim` is recommended for consumers. C++17 is a target requirement; the parent project's `CMAKE_CXX_STANDARD` is not overwritten.
+
+`DSVEOSCOSIM_BUILD_TESTS` controls both test compilation and CTest registration, independently of `BUILD_TESTING`. When embedding the project, enable testing in the top-level project as well so CTest can discover the nested tests. Existing `GTest::gmock` and `GTest::gtest` targets are reused without modification; otherwise initialize `third_party/googletest`. Both targets must be provided together. The test targets are `DsVeosCoSimTest`, `DsVeosCoSimTestSupport`, `DsVeosCoSimTestClient`, and `DsVeosCoSimTestServer`.
+
+### With FetchContent
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(veos_cosim_client
+	GIT_REPOSITORY https://github.com/dspace-group/veos-cosim-client.git
+	GIT_TAG <full-commit-id>
+	GIT_SUBMODULES "")
+FetchContent_MakeAvailable(veos_cosim_client)
+target_link_libraries(your_target PRIVATE DsVeosCoSim::DsVeosCoSim)
+```
+
+Replace `<full-commit-id>` with the revision you want to use. With `GIT_SUBMODULES ""`, provide fmt as an existing target or installed package. To use the bundled fmt instead, replace that setting with `GIT_SUBMODULES "third_party/fmt"`. Tests additionally require existing `GTest::gmock` and `GTest::gtest` targets or the GoogleTest submodule.
+
+To share one fmt build with your application, create its target before including VEOS, for example through `find_package` or `FetchContent_MakeAvailable`. The application is responsible for selecting a fmt version compatible with all consumers.
+
+The library is static by default. Keep `BUILD_SHARED_LIBS=OFF` and `DSVEOSCOSIM_BUILD_SHARED=OFF` for static linkage. Scope these settings to the dependency integration rather than forcing unrelated parent-project libraries to change linkage.
+
+For bundle mode (`DSVEOSCOSIM_BUILD_SHARED=ON` and `BUILD_SHARED_LIBS=OFF`), the bundled fmt is configured with position-independent code and hidden symbols. External fmt targets and packages are not modified: when using a compiled external fmt, the provider must ensure static linkage, position-independent code where required, and suitable symbol visibility to preserve the single-library bundle.
 
 The public header is `include/DsVeosCoSim/DsVeosCoSim.h`.
 

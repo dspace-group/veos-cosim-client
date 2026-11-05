@@ -2,9 +2,13 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -20,7 +24,7 @@ using SerializeFunction = std::function<Result(ChannelWriter& writer)>;
 using DeserializeFunction = std::function<Result(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks)>;
 
 class IProtocol {
-public:
+  public:
     IProtocol() = default;
     virtual ~IProtocol() noexcept = default;
 

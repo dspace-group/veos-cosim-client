@@ -2,19 +2,20 @@
 
 #include "Environment.hpp"
 
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <string>
 #include <string_view>
 
-#include <fmt/format.h>
-
 namespace DsVeosCoSim {
 
 namespace {
 
-[[nodiscard]] bool TryGetEnvValue(const std::string& name, size_t& value, int base) {
+[[nodiscard]] bool TryGetEnvValue(const std::string& name, size_t& value, int base)
+{
     if (const char* stringValue = std::getenv(name.c_str()); stringValue) {  // NOLINT(concurrency-mt-unsafe)
         char* end{};
         if constexpr (sizeof(void*) == 8) {
@@ -29,15 +30,18 @@ namespace {
     return false;
 }
 
-[[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue) {
+[[nodiscard]] bool TryGetDecimalValue(const std::string& name, size_t& intValue)
+{
     return TryGetEnvValue(name, intValue, 10);
 }
 
-[[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue) {
+[[nodiscard]] bool TryGetHexValue(const std::string& name, size_t& hexValue)
+{
     return TryGetEnvValue(name, hexValue, 16);
 }
 
-[[nodiscard]] bool GetBoolValue(const std::string& name) {
+[[nodiscard]] bool GetBoolValue(const std::string& name)
+{
     size_t intValue{};
     if (TryGetDecimalValue(name, intValue)) {
         return intValue != 0;
@@ -46,7 +50,8 @@ namespace {
     return false;
 }
 
-[[nodiscard]] uint16_t GetPortMapperPortInitial() {
+[[nodiscard]] uint16_t GetPortMapperPortInitial()
+{
     constexpr uint16_t defaultPort = 27027;
     constexpr int32_t maxPort = 65535;
 
@@ -60,7 +65,8 @@ namespace {
     return defaultPort;
 }
 
-[[nodiscard]] uint32_t GetSpinCountInitial() {
+[[nodiscard]] uint32_t GetSpinCountInitial()
+{
     constexpr uint32_t defaultSpinCount = 512;
 
     size_t intValue{};
@@ -73,42 +79,50 @@ namespace {
 
 }  // namespace
 
-[[nodiscard]] bool IsProtocolTracingEnabled() {
+[[nodiscard]] bool IsProtocolTracingEnabled()
+{
     static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_TRACING");
     return verbose;
 }
 
-[[nodiscard]] bool IsProtocolHeaderTracingEnabled() {
+[[nodiscard]] bool IsProtocolHeaderTracingEnabled()
+{
     static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_HEADER_TRACING");
     return verbose;
 }
 
-[[nodiscard]] bool IsProtocolPingTracingEnabled() {
+[[nodiscard]] bool IsProtocolPingTracingEnabled()
+{
     static bool verbose = GetBoolValue("VEOS_COSIM_PROTOCOL_PING_TRACING");
     return verbose;
 }
 
-[[nodiscard]] bool IsPortMapperServerVerbose() {
+[[nodiscard]] bool IsPortMapperServerVerbose()
+{
     static bool verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_SERVER_VERBOSE");
     return verbose;
 }
 
-[[nodiscard]] bool IsPortMapperClientVerbose() {
+[[nodiscard]] bool IsPortMapperClientVerbose()
+{
     static bool verbose = GetBoolValue("VEOS_COSIM_PORTMAPPER_CLIENT_VERBOSE");
     return verbose;
 }
 
-[[nodiscard]] uint16_t GetPortMapperPort() {
+[[nodiscard]] uint16_t GetPortMapperPort()
+{
     static uint16_t port = GetPortMapperPortInitial();
     return port;
 }
 
-[[nodiscard]] uint32_t GetSpinCount() {
+[[nodiscard]] uint32_t GetSpinCount()
+{
     static uint32_t spinCount = GetSpinCountInitial();
     return spinCount;
 }
 
-[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask) {
+[[nodiscard]] bool TryGetAffinityMask(std::string_view name, size_t& mask)
+{
     constexpr char environmentVariableName[] = "VEOS_COSIM_AFFINITY_MASK";
 
     std::string fullName = fmt::format("{}_{}", environmentVariableName, name);

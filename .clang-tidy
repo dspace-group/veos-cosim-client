@@ -1,8 +1,9 @@
 ---
 Checks: >
-  bugprone-*
+  bugprone-*,
   cert-*,
   clang-*,
+  clang-analyzer-*,
   concurrency-*,
   cppcoreguidelines-*,
   misc-*,
@@ -10,6 +11,7 @@ Checks: >
   performance-*,
   readability-*,
   -bugprone-easily-swappable-parameters,
+  -bugprone-invalid-enum-default-initialization,
   -cert-err58-cpp,
   -concurrency-mt-unsafe,
   -cppcoreguidelines-avoid-c-arrays,
@@ -20,9 +22,11 @@ Checks: >
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-reinterpret-cast,
+  -misc-const-correctness,
   -misc-non-private-member-variables-in-classes,
   -modernize-avoid-c-arrays,
   -modernize-return-braced-init-list,
@@ -34,6 +38,10 @@ Checks: >
   -readability-qualified-auto,
   -readability-redundant-member-init,
   -readability-suspicious-call-argument
+
+HeaderFilterRegex: '.*[/\\]veos-cosim-client[/\\](include|src|tests)[/\\].*'
+ExcludeHeaderFilterRegex: '.*[/\\]third_party[/\\].*'
+SystemHeaders: false
 
 CheckOptions:
   readability-identifier-naming.ClassCase: CamelCase

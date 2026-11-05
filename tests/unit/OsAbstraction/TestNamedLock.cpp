@@ -2,26 +2,32 @@
 
 #ifdef _WIN32
 
+#include <gtest/gtest.h>
+
+#include <cstdint>
+#include <functional>
 #include <string>
 #include <string_view>
-
-#include <gtest/gtest.h>
+#include <thread>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateNamedLockName() {
+[[nodiscard]] std::string GenerateNamedLockName()
+{
     return GenerateString("Mutex名前\xF0\x9F\x98\x80");
 }
 
 class TestNamedLock : public testing::Test {};
 
-TEST_F(TestNamedLock, CreateShouldWork) {
+TEST_F(TestNamedLock, CreateShouldWork)
+{
     // Arrange
     std::string name = GenerateNamedLockName();
 
@@ -34,7 +40,8 @@ TEST_F(TestNamedLock, CreateShouldWork) {
     AssertOk(result);
 }
 
-void DifferentThread(std::string_view name, int32_t& counter) {
+void DifferentThread(std::string_view name, int32_t& counter)
+{
     for (int32_t i = 0; i < 1000; i++) {
         NamedLock mutex;
         AssertOk(NamedLock::Create(name, mutex));
@@ -42,7 +49,8 @@ void DifferentThread(std::string_view name, int32_t& counter) {
     }
 }
 
-TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes) {
+TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes)
+{
     // Arrange
     std::string name = GenerateNamedLockName();
 

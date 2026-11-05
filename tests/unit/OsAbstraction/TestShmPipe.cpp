@@ -2,14 +2,19 @@
 
 #ifdef _WIN32
 
+#include <gtest/gtest.h>
+
+#include <array>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <future>
 #include <string>
-
-#include <gtest/gtest.h>
+#include <thread>
 
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
+#include "Result.hpp"
 #include "TestHelper.hpp"
 
 using namespace std::chrono_literals;
@@ -17,11 +22,13 @@ using namespace DsVeosCoSim;
 
 namespace {
 
-[[nodiscard]] std::string GenerateShmPipeName() {
+[[nodiscard]] std::string GenerateShmPipeName()
+{
     return GenerateString("ShmPipe");
 }
 
-void EstablishConnection(ShmPipeClient& connectClient, ShmPipeClient& acceptClient) {
+void EstablishConnection(ShmPipeClient& connectClient, ShmPipeClient& acceptClient)
+{
     std::string name = GenerateShmPipeName();
 
     ShmPipeListener listener;
@@ -34,7 +41,8 @@ void EstablishConnection(ShmPipeClient& connectClient, ShmPipeClient& acceptClie
 
 class TestShmPipe : public testing::Test {};
 
-TEST_F(TestShmPipe, IsRunningAfterCreateShouldBeTrue) {
+TEST_F(TestShmPipe, IsRunningAfterCreateShouldBeTrue)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -48,7 +56,8 @@ TEST_F(TestShmPipe, IsRunningAfterCreateShouldBeTrue) {
     ASSERT_TRUE(isRunning);
 }
 
-TEST_F(TestShmPipe, IsNotRunningAfterStopShouldBeFalse) {
+TEST_F(TestShmPipe, IsNotRunningAfterStopShouldBeFalse)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -64,7 +73,8 @@ TEST_F(TestShmPipe, IsNotRunningAfterStopShouldBeFalse) {
     ASSERT_FALSE(isRunning);
 }
 
-TEST_F(TestShmPipe, CreateListenerShouldWork) {
+TEST_F(TestShmPipe, CreateListenerShouldWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -77,7 +87,8 @@ TEST_F(TestShmPipe, CreateListenerShouldWork) {
     AssertOk(result);
 }
 
-TEST_F(TestShmPipe, ConnectToListeningSocketShouldWork) {
+TEST_F(TestShmPipe, ConnectToListeningSocketShouldWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -93,7 +104,8 @@ TEST_F(TestShmPipe, ConnectToListeningSocketShouldWork) {
     AssertOk(result);
 }
 
-TEST_F(TestShmPipe, ConnectWithoutListeningShouldNotWork) {
+TEST_F(TestShmPipe, ConnectWithoutListeningShouldNotWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -111,7 +123,8 @@ TEST_F(TestShmPipe, ConnectWithoutListeningShouldNotWork) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestShmPipe, AcceptWithoutConnectShouldNotWork) {
+TEST_F(TestShmPipe, AcceptWithoutConnectShouldNotWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -127,7 +140,8 @@ TEST_F(TestShmPipe, AcceptWithoutConnectShouldNotWork) {
     AssertNotConnected(result);
 }
 
-TEST_F(TestShmPipe, AcceptAfterStopShouldNotWork) {
+TEST_F(TestShmPipe, AcceptAfterStopShouldNotWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -145,7 +159,8 @@ TEST_F(TestShmPipe, AcceptAfterStopShouldNotWork) {
     AssertError(result);
 }
 
-TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
+TEST_F(TestShmPipe, AcceptWithConnectShouldWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -165,7 +180,8 @@ TEST_F(TestShmPipe, AcceptWithConnectShouldWork) {
 }
 
 // After disconnect, the listener should still be able to accept
-TEST_F(TestShmPipe, AcceptAfterDisconnectShouldWork) {
+TEST_F(TestShmPipe, AcceptAfterDisconnectShouldWork)
+{
     // Arrange
     std::string name = GenerateShmPipeName();
 
@@ -186,7 +202,8 @@ TEST_F(TestShmPipe, AcceptAfterDisconnectShouldWork) {
     AssertOk(result);
 }
 
-TEST_F(TestShmPipe, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
+TEST_F(TestShmPipe, IsConnectedAfterConnectAndAcceptShouldBeTrue)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -197,7 +214,8 @@ TEST_F(TestShmPipe, IsConnectedAfterConnectAndAcceptShouldBeTrue) {
     ASSERT_TRUE(acceptClient.IsConnected());
 }
 
-TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalse) {
+TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalse)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -212,7 +230,8 @@ TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalse) {
     ASSERT_FALSE(isConnected);
 }
 
-TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalseForAcceptClient) {
+TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalseForAcceptClient)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -227,7 +246,8 @@ TEST_F(TestShmPipe, IsNotConnectedAfterDisconnectShouldBeFalseForAcceptClient) {
     ASSERT_FALSE(isConnected);
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -253,7 +273,8 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -279,7 +300,8 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -305,7 +327,8 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient) {
+TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -331,7 +354,8 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient) {
     t.join();
 }
 
-TEST_F(TestShmPipe, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
+TEST_F(TestShmPipe, SendOnConnectClientAndReceiveOnAcceptClientShouldWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -341,7 +365,8 @@ TEST_F(TestShmPipe, SendOnConnectClientAndReceiveOnAcceptClientShouldWork) {
     TestSendAndReceive(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
+TEST_F(TestShmPipe, SendOnAcceptClientAndReceiveOnConnectClientShouldWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -351,7 +376,8 @@ TEST_F(TestShmPipe, SendOnAcceptClientAndReceiveOnConnectClientShouldWork) {
     TestSendAndReceive(acceptClient, connectClient);
 }
 
-TEST_F(TestShmPipe, PingPongBeginningWithConnectClientShouldWork) {
+TEST_F(TestShmPipe, PingPongBeginningWithConnectClientShouldWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -361,7 +387,8 @@ TEST_F(TestShmPipe, PingPongBeginningWithConnectClientShouldWork) {
     TestPingPong(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
+TEST_F(TestShmPipe, SendManyElementsFromConnectClientToAcceptClientShouldWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -371,7 +398,8 @@ TEST_F(TestShmPipe, SendManyElementsFromConnectClientToAcceptClientShouldWork) {
     TestManyElements(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendBigElementFromConnectClientToAcceptClientShouldWork) {
+TEST_F(TestShmPipe, SendBigElementFromConnectClientToAcceptClientShouldWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -381,7 +409,8 @@ TEST_F(TestShmPipe, SendBigElementFromConnectClientToAcceptClientShouldWork) {
     TestBigElement(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendOnDisconnectedConnectClientShouldNotWork) {
+TEST_F(TestShmPipe, SendOnDisconnectedConnectClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -391,7 +420,8 @@ TEST_F(TestShmPipe, SendOnDisconnectedConnectClientShouldNotWork) {
     TestSendAfterDisconnect(connectClient);
 }
 
-TEST_F(TestShmPipe, SendOnDisconnectedAcceptClientShouldNotWork) {
+TEST_F(TestShmPipe, SendOnDisconnectedAcceptClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -401,7 +431,8 @@ TEST_F(TestShmPipe, SendOnDisconnectedAcceptClientShouldNotWork) {
     TestSendAfterDisconnect(acceptClient);
 }
 
-TEST_F(TestShmPipe, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
+TEST_F(TestShmPipe, SendOnDisconnectedRemoteConnectClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -415,7 +446,8 @@ TEST_F(TestShmPipe, SendOnDisconnectedRemoteConnectClientShouldNotWork) {
     TestSendAfterDisconnectOnRemoteClient(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
+TEST_F(TestShmPipe, SendOnDisconnectedRemoteAcceptClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -429,7 +461,8 @@ TEST_F(TestShmPipe, SendOnDisconnectedRemoteAcceptClientShouldNotWork) {
     TestSendAfterDisconnectOnRemoteClient(acceptClient, connectClient);
 }
 
-TEST_F(TestShmPipe, ReceiveOnDisconnectedConnectClientShouldNotWork) {
+TEST_F(TestShmPipe, ReceiveOnDisconnectedConnectClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -439,7 +472,8 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedConnectClientShouldNotWork) {
     TestReceiveAfterDisconnect(connectClient);
 }
 
-TEST_F(TestShmPipe, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
+TEST_F(TestShmPipe, ReceiveOnDisconnectedAcceptClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -449,7 +483,8 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedAcceptClientShouldNotWork) {
     TestReceiveAfterDisconnect(acceptClient);
 }
 
-TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
+TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -463,7 +498,8 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork) {
     TestReceiveAfterDisconnectOnRemoteClient(connectClient, acceptClient);
 }
 
-TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
+TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;
@@ -477,7 +513,8 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork) {
     TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
 }
 
-TEST_F(TestShmPipe, WaitForDataTimesOutWhenNoDataArrives) {
+TEST_F(TestShmPipe, WaitForDataTimesOutWhenNoDataArrives)
+{
     // Arrange
     ShmPipeClient connectClient;
     ShmPipeClient acceptClient;

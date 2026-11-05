@@ -8,7 +8,7 @@ if [[ "$CONFIG" != "debug" && "$CONFIG" != "release" ]]; then
   exit 1
 fi
 
-PRESET="linux-$CONFIG"
+PRESET="$CONFIG"
 BUILD_DIR="$(cd "$(dirname "$0")/.." && pwd)/build/$PRESET"
 
 if [ -d "$BUILD_DIR" ]; then

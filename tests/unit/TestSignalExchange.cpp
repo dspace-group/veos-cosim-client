@@ -1,18 +1,24 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#include <fmt/format.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstring>
 #include <deque>
 #include <memory>
 #include <string>
-
-#include <fmt/format.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <tuple>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "SignalExchange.hpp"
 #include "TestHelper.hpp"
 
@@ -21,50 +27,53 @@ using namespace testing;
 
 namespace {
 
-auto CoSimTypes = Values(CoSimType::Client, CoSimType::Server);
+constexpr std::array CoSimTypes{CoSimType::Client, CoSimType::Server};
 
-auto SignalExchangeConnectionKinds = Values(ConnectionKind::Local, ConnectionKind::Remote);
+constexpr std::array SignalExchangeConnectionKinds{ConnectionKind::Local, ConnectionKind::Remote};
 
-auto DataTypes = Values(DataType::Bool,
-                        DataType::Int8,
-                        DataType::Int16,
-                        DataType::Int32,
-                        DataType::Int64,
-                        DataType::UInt8,
-                        DataType::UInt16,
-                        DataType::UInt32,
-                        DataType::UInt64,
-                        DataType::Float32,
-                        DataType::Float64);
+constexpr std::array DataTypes{DataType::Bool,
+                               DataType::Int8,
+                               DataType::Int16,
+                               DataType::Int32,
+                               DataType::Int64,
+                               DataType::UInt8,
+                               DataType::UInt16,
+                               DataType::UInt32,
+                               DataType::UInt64,
+                               DataType::Float32,
+                               DataType::Float64};
 
 struct EventData {
     IoSignalContainer signal{};
     std::vector<uint8_t> data;
 };
 
-void SwitchSignals(std::vector<IoSignal>& incomingSignals, std::vector<IoSignal>& outgoingSignals, CoSimType coSimType) {
+void SwitchSignals(std::vector<IoSignal>& incomingSignals, std::vector<IoSignal>& outgoingSignals, CoSimType coSimType)
+{
     if (coSimType == CoSimType::Server) {
         std::swap(incomingSignals, outgoingSignals);
     }
 }
 
 class TestSignalExchangeWithCoSimType : public TestWithParam<std::tuple<CoSimType, ConnectionKind>> {
-protected:
+  protected:
     std::unique_ptr<IProtocol> _protocol;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 };
 
 INSTANTIATE_TEST_SUITE_P(Test,
                          TestSignalExchangeWithCoSimType,
-                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds),
+                         testing::Combine(testing::ValuesIn(CoSimTypes), testing::ValuesIn(SignalExchangeConnectionKinds)),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind>>& info) {
                              return fmt::format("{}_{}", std::get<0>(info.param), std::get<1>(info.param));
                          });
 
-TEST_P(TestSignalExchangeWithCoSimType, CreateWithZeroIoSignalInfos) {
+TEST_P(TestSignalExchangeWithCoSimType, CreateWithZeroIoSignalInfos)
+{
     // Arrange
     auto [coSimType, connectionKind] = GetParam();
 
@@ -80,12 +89,13 @@ TEST_P(TestSignalExchangeWithCoSimType, CreateWithZeroIoSignalInfos) {
 }
 
 class TestSignalExchange : public TestWithParam<std::tuple<CoSimType, ConnectionKind, DataType>> {
-protected:
+  protected:
     static std::unique_ptr<Channel> _senderChannel;
     static std::unique_ptr<Channel> _receiverChannel;
     std::unique_ptr<IProtocol> _protocol;
 
-    static void SetUpTestSuite() {
+    static void SetUpTestSuite()
+    {
         std::unique_ptr<ChannelServer> remoteServer;
         AssertOk(CreateTcpChannelServer(0, true, remoteServer));
         uint16_t port = remoteServer->GetLocalPort();
@@ -94,7 +104,8 @@ protected:
         AssertOk(remoteServer->TryAccept(_receiverChannel));
     }
 
-    static void TearDownTestSuite() {
+    static void TearDownTestSuite()
+    {
         _senderChannel->Disconnect();
         _receiverChannel->Disconnect();
 
@@ -102,11 +113,13 @@ protected:
         _receiverChannel.reset();
     }
 
-    void SetUp() override {
+    void SetUp() override
+    {
         AssertOk(CreateProtocol(ProtocolVersionLatest, _protocol));
     }
 
-    static void Transfer(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange) {
+    static void Transfer(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange)
+    {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
@@ -116,7 +129,8 @@ protected:
         AssertOk(readerSignalExchange.Deserialize(reader, GenerateSimulationTime(), {}));
     }
 
-    static void TransferWithEvents(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange, std::deque<EventData> expectedCallbacks) {
+    static void TransferWithEvents(SignalExchange& writerSignalExchange, SignalExchange& readerSignalExchange, std::deque<EventData> expectedCallbacks)
+    {
         ChannelReader& reader = _receiverChannel->GetReader();
         ChannelWriter& writer = _senderChannel->GetWriter();
 
@@ -150,12 +164,13 @@ std::unique_ptr<Channel> TestSignalExchange::_receiverChannel;
 
 INSTANTIATE_TEST_SUITE_P(,
                          TestSignalExchange,
-                         testing::Combine(CoSimTypes, SignalExchangeConnectionKinds, DataTypes),
+                         testing::Combine(testing::ValuesIn(CoSimTypes), testing::ValuesIn(SignalExchangeConnectionKinds), testing::ValuesIn(DataTypes)),
                          [](const testing::TestParamInfo<std::tuple<CoSimType, ConnectionKind, DataType>>& info) {
                              return fmt::format("{}_{}_{}", std::get<0>(info.param), std::get<1>(info.param), std::get<2>(info.param));
                          });
 
-TEST_P(TestSignalExchange, InitialDataOfFixedSizedSignal) {
+TEST_P(TestSignalExchange, InitialDataOfFixedSizedSignal)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -184,7 +199,8 @@ TEST_P(TestSignalExchange, InitialDataOfFixedSizedSignal) {
     ASSERT_THAT(readValue, ContainerEq(initialValue));
 }
 
-TEST_P(TestSignalExchange, InitialDataOfVariableSizedSignal) {
+TEST_P(TestSignalExchange, InitialDataOfVariableSizedSignal)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -210,7 +226,8 @@ TEST_P(TestSignalExchange, InitialDataOfVariableSizedSignal) {
     ASSERT_EQ(0U, readLength);
 }
 
-TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -250,7 +267,8 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead) {
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -294,7 +312,8 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue) {
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -325,7 +344,8 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent) {
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
+TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -362,7 +382,8 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent) {
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory) {
+TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemory)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -399,7 +420,8 @@ TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemo
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {});
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataAndRead) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataAndRead)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -439,7 +461,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataAndRead) {
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReadLatestValue) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReadLatestValue)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -483,7 +506,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReadLatestValue) {
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataAndReceiveEvent)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -515,7 +539,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataAndReceiveEvent) {
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReceiveOneEvent) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReceiveOneEvent)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -552,7 +577,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReceiveOneEvent) {
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveEvent) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataWhereOnlyOneElementChangedAndReceiveEvent)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -590,7 +616,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataWhereOnlyOneElementChangedAndRe
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
 }
 
-TEST_P(TestSignalExchange, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventWithSharedMemory) {
+TEST_P(TestSignalExchange, WriteVariableSizedDataWithOnlyChangedLengthAndReceiveEventWithSharedMemory)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -625,7 +652,8 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataWithOnlyChangedLengthAndReceive
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signalCopy, writeValue}});
 }
 
-TEST_P(TestSignalExchange, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory) {
+TEST_P(TestSignalExchange, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedMemory)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -662,7 +690,8 @@ TEST_P(TestSignalExchange, NoNewEventIfVariableSizedDataDoesNotChangeWithSharedM
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {});
 }
 
-TEST_P(TestSignalExchange, WriteMultipleSignalsAndReceiveMultipleEvents) {
+TEST_P(TestSignalExchange, WriteMultipleSignalsAndReceiveMultipleEvents)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -700,7 +729,8 @@ TEST_P(TestSignalExchange, WriteMultipleSignalsAndReceiveMultipleEvents) {
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal1, value1}, {signal2, value2}, {signal3, value3}});
 }
 
-TEST_P(TestSignalExchange, WriteToInvalidSignalIdShouldFail) {
+TEST_P(TestSignalExchange, WriteToInvalidSignalIdShouldFail)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -725,7 +755,8 @@ TEST_P(TestSignalExchange, WriteToInvalidSignalIdShouldFail) {
     AssertError(result);
 }
 
-TEST_P(TestSignalExchange, ReadFromInvalidSignalIdShouldFail) {
+TEST_P(TestSignalExchange, ReadFromInvalidSignalIdShouldFail)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -751,7 +782,8 @@ TEST_P(TestSignalExchange, ReadFromInvalidSignalIdShouldFail) {
     AssertError(result);
 }
 
-TEST_P(TestSignalExchange, WriteToIncomingSignalShouldFail) {
+TEST_P(TestSignalExchange, WriteToIncomingSignalShouldFail)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 
@@ -775,7 +807,8 @@ TEST_P(TestSignalExchange, WriteToIncomingSignalShouldFail) {
     AssertError(result);
 }
 
-TEST_P(TestSignalExchange, ReadFromOutgoingSignalShouldFail) {
+TEST_P(TestSignalExchange, ReadFromOutgoingSignalShouldFail)
+{
     // Arrange
     auto [coSimType, connectionKind, dataType] = GetParam();
 

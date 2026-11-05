@@ -6,17 +6,22 @@
 #include <mutex>
 
 #include "BusExchangeCommon.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
+#include "Result.hpp"
 
 namespace DsVeosCoSim::BusExchangeDetail {
 
 template <typename TBus>
 class LockedBusExchangePart final : public IBusExchangePart<TBus> {
-public:
+  public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
 
-    explicit LockedBusExchangePart(std::unique_ptr<IBusExchangePart<TBus>> proxiedPart) : _proxiedPart(std::move(proxiedPart)) {
+    explicit LockedBusExchangePart(std::unique_ptr<IBusExchangePart<TBus>> proxiedPart)
+        : _proxiedPart(std::move(proxiedPart))
+    {
     }
 
     ~LockedBusExchangePart() noexcept override = default;
@@ -27,32 +32,38 @@ public:
     LockedBusExchangePart(LockedBusExchangePart&&) = delete;
     LockedBusExchangePart& operator=(LockedBusExchangePart&&) = delete;
 
-    void ClearData() override {
+    void ClearData() override
+    {
         std::scoped_lock lock(_mutex);
         _proxiedPart->ClearData();
     }
 
-    [[nodiscard]] Result Transmit(const TMessage& message) override {
+    [[nodiscard]] Result Transmit(const TMessage& message) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Transmit(message);
     }
 
-    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Transmit(messageContainer);
     }
 
-    [[nodiscard]] Result Receive(TMessage& message) override {
+    [[nodiscard]] Result Receive(TMessage& message) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Receive(message);
     }
 
-    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Receive(messageContainer);
     }
 
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Serialize(writer);
     }
@@ -60,12 +71,13 @@ public:
     [[nodiscard]] Result Deserialize(ChannelReader& reader,
                                      SimulationTime simulationTime,
                                      const BusMessageCallback<TBus>& messageCallback,
-                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override {
+                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override
+    {
         std::scoped_lock lock(_mutex);
         return _proxiedPart->Deserialize(reader, simulationTime, messageCallback, messageContainerCallback);
     }
 
-private:
+  private:
     std::unique_ptr<IBusExchangePart<TBus>> _proxiedPart;
     std::mutex _mutex;
 };

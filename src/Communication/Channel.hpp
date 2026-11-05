@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <stdexcept>
@@ -19,21 +20,27 @@ constexpr int32_t HeaderSize = 4;
 constexpr int32_t BufferSize = 65536;
 
 template <typename TValue>
-void WriteScalarToBuffer(uint8_t* destination, TValue value) {
+void WriteScalarToBuffer(uint8_t* destination, TValue value)
+{
     static_assert(std::is_trivially_copyable_v<TValue>, "TValue must be trivially copyable.");
     memcpy(destination, &value, sizeof(value));
 }
 
 template <typename TValue>
-void ReadScalarFromBuffer(const uint8_t* source, TValue& value) {
+void ReadScalarFromBuffer(const uint8_t* source, TValue& value)
+{
     static_assert(std::is_trivially_copyable_v<TValue>, "TValue must be trivially copyable.");
     memcpy(&value, source, sizeof(value));
 }
 
 class BlockWriter final {
-public:
+  public:
     BlockWriter() = default;
-    BlockWriter(uint8_t* data, size_t size) : _data(data), _size(size) {
+
+    BlockWriter(uint8_t* data, size_t size)
+        : _data(data)
+        , _size(size)
+    {
     }
 
     ~BlockWriter() noexcept = default;
@@ -45,7 +52,8 @@ public:
     BlockWriter& operator=(BlockWriter&&) noexcept = default;
 
     template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
-    void Write(T value) {
+    void Write(T value)
+    {
         size_t size = sizeof(value);
         if (size > _size) {
             // Runtime safety check that remains active in release builds
@@ -57,7 +65,8 @@ public:
         _size -= size;
     }
 
-    void Write(const void* source, size_t size) {
+    void Write(const void* source, size_t size)
+    {
         if (size > _size) {
             // Runtime safety check that remains active in release builds
             throw std::runtime_error("No more space available.");
@@ -69,28 +78,30 @@ public:
     }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
-    void Write(TEnum value) {
+    void Write(TEnum value)
+    {
         using TUnderlying = std::underlying_type_t<TEnum>;
         Write(static_cast<TUnderlying>(value));
     }
 
-    void EndWrite() const {
+    void EndWrite() const
+    {
         if (_size != 0) {
             // Runtime safety check that remains active in release builds
             throw std::runtime_error("Not all space has been used.");
         }
     }
 
-private:
+  private:
     uint8_t* _data{};
     size_t _size{};
 };
 
 class ChannelWriter {
-protected:
+  protected:
     ChannelWriter() = default;
 
-public:
+  public:
     virtual ~ChannelWriter() noexcept = default;
 
     ChannelWriter(const ChannelWriter&) = delete;
@@ -99,7 +110,8 @@ public:
     ChannelWriter(ChannelWriter&&) = delete;
     ChannelWriter& operator=(ChannelWriter&&) = delete;
 
-    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter) {
+    [[nodiscard]] Result Reserve(size_t size, BlockWriter& blockWriter)
+    {
         auto sizeToReserve = static_cast<int32_t>(size);
         if (BufferSize - _writeIndex < sizeToReserve) {
             CheckResult(EndWrite());
@@ -116,7 +128,8 @@ public:
     }
 
     template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
-    [[nodiscard]] Result Write(T value) {
+    [[nodiscard]] Result Write(T value)
+    {
         auto size = static_cast<int32_t>(sizeof(value));
         if (BufferSize - _writeIndex < size) {
             CheckResult(EndWrite());
@@ -132,7 +145,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Write(const void* source, size_t size) {
+    [[nodiscard]] Result Write(const void* source, size_t size)
+    {
         const auto* bufferPointer = static_cast<const uint8_t*>(source);
         auto sizeToCopy = static_cast<int32_t>(size);
 
@@ -153,14 +167,15 @@ public:
     }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
-    [[nodiscard]] Result Write(TEnum value) {
+    [[nodiscard]] Result Write(TEnum value)
+    {
         using TUnderlying = std::underlying_type_t<TEnum>;
         return Write(static_cast<TUnderlying>(value));
     }
 
     [[nodiscard]] virtual Result EndWrite() = 0;
 
-protected:
+  protected:
     [[nodiscard]] virtual Result Send(const uint8_t* buffer, size_t size) = 0;
 
     int32_t _writeIndex = HeaderSize;
@@ -168,9 +183,13 @@ protected:
 };
 
 class BlockReader final {
-public:
+  public:
     BlockReader() = default;
-    BlockReader(uint8_t* data, size_t size) : _data(data), _size(size) {
+
+    BlockReader(uint8_t* data, size_t size)
+        : _data(data)
+        , _size(size)
+    {
     }
 
     ~BlockReader() noexcept = default;
@@ -182,7 +201,8 @@ public:
     BlockReader& operator=(BlockReader&&) noexcept = default;
 
     template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
-    void Read(T& value) {
+    void Read(T& value)
+    {
         size_t size = sizeof(value);
         if (size > _size) {
             // Runtime safety check that remains active in release builds
@@ -194,7 +214,8 @@ public:
         _size -= size;
     }
 
-    void Read(void* destination, size_t size) {
+    void Read(void* destination, size_t size)
+    {
         if (size > _size) {
             // Runtime safety check that remains active in release builds
             throw std::runtime_error("No more data available.");
@@ -206,28 +227,30 @@ public:
     }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
-    void Read(TEnum& value) {
+    void Read(TEnum& value)
+    {
         using TUnderlying = std::underlying_type_t<TEnum>;
         Read(reinterpret_cast<TUnderlying&>(value));
     }
 
-    void EndRead() const {
+    void EndRead() const
+    {
         if (_size != 0) {
             // Runtime safety check that remains active in release builds
             throw std::runtime_error("Not all data has been read.");
         }
     }
 
-private:
+  private:
     uint8_t* _data{};
     size_t _size{};
 };
 
 class ChannelReader {
-protected:
+  protected:
     ChannelReader() = default;
 
-public:
+  public:
     virtual ~ChannelReader() noexcept = default;
 
     ChannelReader(const ChannelReader&) = delete;
@@ -236,7 +259,8 @@ public:
     ChannelReader(ChannelReader&&) = delete;
     ChannelReader& operator=(ChannelReader&&) = delete;
 
-    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader) {
+    [[nodiscard]] Result ReadBlock(size_t size, BlockReader& blockReader)
+    {
         auto blockSize = static_cast<int32_t>(size);
         while (_endFrameIndex - _readIndex < blockSize) {
             CheckResult(BeginRead());
@@ -248,7 +272,8 @@ public:
     }
 
     template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
-    [[nodiscard]] Result Read(T& value) {
+    [[nodiscard]] Result Read(T& value)
+    {
         auto size = static_cast<int32_t>(sizeof(value));
         while (_endFrameIndex - _readIndex < size) {
             CheckResult(BeginRead());
@@ -259,7 +284,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(void* destination, size_t size) {
+    [[nodiscard]] Result Read(void* destination, size_t size)
+    {
         auto* bufferPointer = static_cast<uint8_t*>(destination);
         auto sizeToCopy = static_cast<int32_t>(size);
 
@@ -280,14 +306,16 @@ public:
     }
 
     template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
-    [[nodiscard]] Result Read(TEnum& value) {
+    [[nodiscard]] Result Read(TEnum& value)
+    {
         using TUnderlying = std::underlying_type_t<TEnum>;
         return Read(reinterpret_cast<TUnderlying&>(value));
     }
 
     virtual void EndRead() const = 0;
 
-    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds) {
+    [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds)
+    {
         if (_writeIndex > _endFrameIndex) {
             return CreateOk();
         }
@@ -295,11 +323,12 @@ public:
         return WaitForDataInternal(timeoutInMilliseconds);
     }
 
-protected:
+  protected:
     [[nodiscard]] virtual Result WaitForDataInternal(uint32_t timeoutInMilliseconds) = 0;
     [[nodiscard]] virtual Result Receive(void* destination, size_t size, size_t& receivedSize) = 0;
 
-    [[nodiscard]] virtual Result BeginRead() {
+    [[nodiscard]] virtual Result BeginRead()
+    {
         uint8_t* buffer = _readBuffer.data();
 
         _readIndex = HeaderSize;
@@ -364,10 +393,10 @@ protected:
 };
 
 class Channel {
-protected:
+  protected:
     Channel() = default;
 
-public:
+  public:
     virtual ~Channel() noexcept = default;
 
     Channel(const Channel&) = delete;
@@ -385,10 +414,10 @@ public:
 };
 
 class ChannelServer {
-protected:
+  protected:
     ChannelServer() = default;
 
-public:
+  public:
     virtual ~ChannelServer() noexcept = default;
 
     ChannelServer(const ChannelServer&) = delete;

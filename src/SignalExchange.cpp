@@ -2,14 +2,14 @@
 
 #include "SignalExchange.hpp"
 
+#include <fmt/format.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -37,7 +37,8 @@ namespace {
                                               const std::vector<IoSignal>& signals,
                                               IProtocol& protocol,
                                               [[maybe_unused]] bool isWritePart,
-                                              std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+                                              std::unique_ptr<ISignalExchangePart>& signalExchangePart)
+{
 #ifdef _WIN32
     if (connectionKind == ConnectionKind::Local) {
         std::string partName = fmt::format("{}.{}", name, isWritePart ? "Outgoing" : "Incoming");
@@ -63,33 +64,41 @@ namespace {
 }  // namespace
 
 SignalExchange::SignalExchange(std::unique_ptr<ISignalExchangePart> writePart, std::unique_ptr<ISignalExchangePart> readPart)
-    : _writePart(std::move(writePart)), _readPart(std::move(readPart)) {
+    : _writePart(std::move(writePart))
+    , _readPart(std::move(readPart))
+{
 }
 
 SignalExchange::~SignalExchange() noexcept = default;
 
-void SignalExchange::ClearData() const {
+void SignalExchange::ClearData() const
+{
     _readPart->ClearData();
     _writePart->ClearData();
 }
 
-[[nodiscard]] Result SignalExchange::Write(IoSignalId signalId, uint32_t length, const void* value) const {
+[[nodiscard]] Result SignalExchange::Write(IoSignalId signalId, uint32_t length, const void* value) const
+{
     return _writePart->Write(signalId, length, value);
 }
 
-[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, void* value) const {
+[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, void* value) const
+{
     return _readPart->Read(signalId, length, value);
 }
 
-[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, const void** value) const {
+[[nodiscard]] Result SignalExchange::Read(IoSignalId signalId, uint32_t& length, const void** value) const
+{
     return _readPart->Read(signalId, length, value);
 }
 
-[[nodiscard]] Result SignalExchange::Serialize(ChannelWriter& writer) const {
+[[nodiscard]] Result SignalExchange::Serialize(ChannelWriter& writer) const
+{
     return _writePart->Serialize(writer);
 }
 
-[[nodiscard]] Result SignalExchange::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const {
+[[nodiscard]] Result SignalExchange::Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) const
+{
     return _readPart->Deserialize(reader, simulationTime, callbacks);
 }
 
@@ -99,7 +108,8 @@ void SignalExchange::ClearData() const {
                                           const std::vector<IoSignal>& incomingSignals,
                                           const std::vector<IoSignal>& outgoingSignals,
                                           IProtocol& protocol,
-                                          std::unique_ptr<SignalExchange>& signalExchange) {
+                                          std::unique_ptr<SignalExchange>& signalExchange)
+{
     const std::vector<IoSignal>* writeSignals = &outgoingSignals;
     const std::vector<IoSignal>* readSignals = &incomingSignals;
     if (coSimType == CoSimType::Server) {

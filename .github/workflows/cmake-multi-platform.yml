@@ -17,15 +17,12 @@ jobs:
         include:
           - name: Windows (MSVC, Release)
             os: windows-latest
-            preset: win-release
 
           - name: Linux (GCC, Release)
             os: ubuntu-latest
-            preset: linux-release
 
           - name: Linux (Clang, Release)
             os: ubuntu-latest
-            preset: linux-release
             c_compiler: clang
             cxx_compiler: clang++
 
@@ -39,10 +36,10 @@ jobs:
         env:
           CC: ${{ matrix.c_compiler }}
           CXX: ${{ matrix.cxx_compiler }}
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset release
 
       - name: Build
-        run: cmake --build --preset ${{ matrix.preset }}
+        run: cmake --build --preset release
 
       - name: Test
-        run: ctest --preset ${{ matrix.preset }}
+        run: ctest --preset release

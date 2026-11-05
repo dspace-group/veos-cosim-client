@@ -126,7 +126,7 @@ Download the latest `veos-cosim-client-<version>.zip` archive from [veos-cosim-c
 In the `DsVeosCoSimDemo` directory, create the `CMakeLists.txt` file with the following content:
 
 ```cmake
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
 project(DsVeosCoSimDemo VERSION 1.0)
 

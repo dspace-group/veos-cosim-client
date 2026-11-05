@@ -65,7 +65,8 @@ struct ControllerState {
     bool receiveWarningSent{};
     bool transmitWarningSent{};
 
-    void ClearWarnings() {
+    void ClearWarnings()
+    {
         receiveWarningSent = false;
         transmitWarningSent = false;
     }
@@ -78,7 +79,7 @@ using ControllerStatePtr = ControllerState<TBus>*;
 // supporting lookup by controller id.
 template <typename TBus>
 class ControllerRegistry final {
-public:
+  public:
     using TController = typename TBus::Controller;
 
     ControllerRegistry() = default;
@@ -90,7 +91,8 @@ public:
     ControllerRegistry(ControllerRegistry&&) noexcept = default;
     ControllerRegistry& operator=(ControllerRegistry&&) noexcept = default;
 
-    [[nodiscard]] static Result Create(const std::vector<TController>& controllers, ControllerRegistry& controllerRegistry) {
+    [[nodiscard]] static Result Create(const std::vector<TController>& controllers, ControllerRegistry& controllerRegistry)
+    {
         size_t combinedQueueCapacity = 0;
         std::unordered_map<BusControllerId, ControllerState<TBus>> controllerStatesById;
         controllerStatesById.reserve(controllers.size());
@@ -114,13 +116,15 @@ public:
         return CreateOk();
     }
 
-    void ClearWarnings() {
+    void ClearWarnings()
+    {
         for (auto& [controllerId, controllerState] : _controllerStatesById) {
             controllerState.ClearWarnings();
         }
     }
 
-    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerStatePtr<TBus>& controllerState) {
+    [[nodiscard]] Result FindController(BusControllerId controllerId, ControllerStatePtr<TBus>& controllerState)
+    {
         auto search = _controllerStatesById.find(controllerId);
         if (search != _controllerStatesById.end()) {
             controllerState = &search->second;
@@ -131,17 +135,21 @@ public:
         return CreateError();
     }
 
-    [[nodiscard]] std::unordered_map<BusControllerId, ControllerState<TBus>>& GetControllerStatesById() {
+    [[nodiscard]] std::unordered_map<BusControllerId, ControllerState<TBus>>& GetControllerStatesById()
+    {
         return _controllerStatesById;
     }
 
-    [[nodiscard]] size_t GetCombinedQueueCapacity() const {
+    [[nodiscard]] size_t GetCombinedQueueCapacity() const
+    {
         return _combinedQueueCapacity;
     }
 
-private:
+  private:
     ControllerRegistry(size_t combinedQueueCapacity, std::unordered_map<BusControllerId, ControllerState<TBus>> controllerStatesById)
-        : _combinedQueueCapacity(combinedQueueCapacity), _controllerStatesById(std::move(controllerStatesById)) {
+        : _combinedQueueCapacity(combinedQueueCapacity)
+        , _controllerStatesById(std::move(controllerStatesById))
+    {
     }
 
     size_t _combinedQueueCapacity{};
@@ -150,7 +158,7 @@ private:
 
 template <typename TBus>
 class IBusExchangePart {
-public:
+  public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;

@@ -94,10 +94,10 @@ info), dumps its ABI, and compares against the baseline:
 Equivalent manual steps:
 
 ```bash
-CC=clang CXX=clang++ cmake --preset linux-debug \
+CC=clang CXX=clang++ cmake --preset debug \
   -DDSVEOSCOSIM_BUILD_SHARED=ON -DDSVEOSCOSIM_BUILD_TESTS=OFF \
   -DCMAKE_CXX_FLAGS="-g -Og" -DCMAKE_C_FLAGS="-g -Og"
-cmake --build --preset linux-debug --target DsVeosCoSim
+cmake --build --preset debug --target DsVeosCoSim
 
 SO="$(find build -name 'libDsVeosCoSim*.so' -print -quit)"
 abidw --headers-dir include --out-file /tmp/current.abi "$SO"

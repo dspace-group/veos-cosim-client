@@ -7,20 +7,25 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "BusExchangeCommon.hpp"
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Environment.hpp"
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "RingBufferView.hpp"
 
 namespace DsVeosCoSim::BusExchangeDetail {
 
 template <typename TBus>
 class LocalBusExchangePart final : public IBusExchangePart<TBus> {
-public:
+  public:
     using TMessage = typename TBus::Message;
     using TMessageContainer = typename TBus::MessageContainer;
     using TController = typename TBus::Controller;
@@ -31,12 +36,13 @@ public:
                          std::atomic<uint32_t>* sharedMessageCountByController,
                          RingBufferView<TMessageContainer>* sharedMessageQueue,
                          SharedMemory sharedMemory)
-        : _protocol(protocol),
-          _name(std::move(name)),
-          _controllerRegistry(std::move(controllerRegistry)),
-          _sharedMessageCountByController(sharedMessageCountByController),
-          _sharedMessageQueue(sharedMessageQueue),
-          _sharedMemory(std::move(sharedMemory)) {
+        : _protocol(protocol)
+        , _name(std::move(name))
+        , _controllerRegistry(std::move(controllerRegistry))
+        , _sharedMessageCountByController(sharedMessageCountByController)
+        , _sharedMessageQueue(sharedMessageQueue)
+        , _sharedMemory(std::move(sharedMemory))
+    {
     }
 
     ~LocalBusExchangePart() noexcept override = default;
@@ -50,7 +56,8 @@ public:
     [[nodiscard]] static Result Create(IProtocol& protocol,
                                        std::string name,
                                        const std::vector<TController>& controllers,
-                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart) {
+                                       std::unique_ptr<IBusExchangePart<TBus>>& busExchangePart)
+    {
         // The shared memory region is split into per-controller counters followed
         // by one shared ring buffer containing the actual message payloads.
         ControllerRegistry<TBus> controllerRegistry;
@@ -85,7 +92,8 @@ public:
         return CreateOk();
     }
 
-    void ClearData() override {
+    void ClearData() override
+    {
         _controllerRegistry.ClearWarnings();
 
         _pendingReceiveCount = 0;
@@ -100,7 +108,8 @@ public:
         }
     }
 
-    [[nodiscard]] Result Transmit(const TMessage& message) override {
+    [[nodiscard]] Result Transmit(const TMessage& message) override
+    {
         ControllerStatePtr<TBus> controllerState{};
         CheckResult(_controllerRegistry.FindController(message.controllerId, controllerState));
         std::atomic<uint32_t>& sharedQueuedMessageCount = _sharedMessageCountByController[controllerState->controllerSlot];
@@ -115,7 +124,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Transmit(const TMessageContainer& messageContainer) override
+    {
         ControllerStatePtr<TBus> controllerState{};
         CheckResult(_controllerRegistry.FindController(messageContainer.controllerId, controllerState));
         std::atomic<uint32_t>& sharedQueuedMessageCount = _sharedMessageCountByController[controllerState->controllerSlot];
@@ -128,7 +138,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Receive(TMessage& message) override {
+    [[nodiscard]] Result Receive(TMessage& message) override
+    {
         if (_pendingReceiveCount == 0) {
             return CreateEmpty();
         }
@@ -144,7 +155,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override {
+    [[nodiscard]] Result Receive(TMessageContainer& messageContainer) override
+    {
         if (_pendingReceiveCount == 0) {
             return CreateEmpty();
         }
@@ -159,7 +171,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override
+    {
         CheckResultWithMessage(_protocol.WriteSize(writer, _pendingTransmitNotificationCount), "Could not write transmit count.");
         _pendingTransmitNotificationCount = 0;
         return CreateOk();
@@ -170,7 +183,8 @@ public:
     [[nodiscard]] Result Deserialize(ChannelReader& reader,
                                      SimulationTime simulationTime,
                                      const BusMessageCallback<TBus>& messageCallback,
-                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override {
+                                     const BusMessageContainerCallback<TBus>& messageContainerCallback) override
+    {
         size_t receivedNotificationCount{};
         CheckResultWithMessage(_protocol.ReadSize(reader, receivedNotificationCount), "Could not read receive count.");
         _pendingReceiveCount += receivedNotificationCount;
@@ -207,8 +221,9 @@ public:
         return CreateOk();
     }
 
-private:
-    [[nodiscard]] static Result CheckControllerQueueCapacity(const std::atomic<uint32_t>& sharedQueuedMessageCount, ControllerState<TBus>& controllerState) {
+  private:
+    [[nodiscard]] static Result CheckControllerQueueCapacity(const std::atomic<uint32_t>& sharedQueuedMessageCount, ControllerState<TBus>& controllerState)
+    {
         if (sharedQueuedMessageCount.load(std::memory_order_acquire) == controllerState.controller.queueSize) {
             if (!controllerState.transmitWarningSent) {
                 LogWarning("Transmit buffer for controller '{}' is full. Messages are dropped.", controllerState.controller.name);

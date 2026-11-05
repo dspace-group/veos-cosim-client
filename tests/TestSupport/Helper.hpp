@@ -2,12 +2,13 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "CoSimTypes.hpp"
 #include "Result.hpp"
@@ -40,7 +41,8 @@ void SetEnvVariable(const std::string& name, const std::string& value);
 void FillWithRandomData(uint8_t* data, size_t length);
 
 template <typename T>
-[[nodiscard]] T GenerateRandom(T min, T max) {
+[[nodiscard]] T GenerateRandom(T min, T max)
+{
     uint32_t diff = static_cast<uint32_t>(max) + 1 - static_cast<uint32_t>(min);
     return static_cast<T>(static_cast<uint32_t>(min) + (GenerateU32() % diff));
 }

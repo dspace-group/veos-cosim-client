@@ -5,11 +5,17 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include "Channel.hpp"
+#include "CoSimTypes.hpp"
 #include "Environment.hpp"
 #include "Logger.hpp"
 #include "Protocol.hpp"
+#include "Result.hpp"
 #include "RingBuffer.hpp"
 #include "SignalExchangeCommon.hpp"
 
@@ -22,15 +28,16 @@ class RemoteSignalExchangePart final : public ISignalExchangePart {
         std::vector<uint8_t> buffer;
     };
 
-public:
+  public:
     RemoteSignalExchangePart(IProtocol& protocol,
                              SignalRegistry signalRegistry,
                              std::vector<SignalValueState> signalStates,
                              RingBuffer<SignalMetaDataPtr> changedSignalsQueue)
-        : _protocol(protocol),
-          _signalRegistry(std::move(signalRegistry)),
-          _signalStates(std::move(signalStates)),
-          _changedSignalsQueue(std::move(changedSignalsQueue)) {
+        : _protocol(protocol)
+        , _signalRegistry(std::move(signalRegistry))
+        , _signalStates(std::move(signalStates))
+        , _changedSignalsQueue(std::move(changedSignalsQueue))
+    {
     }
 
     ~RemoteSignalExchangePart() noexcept override = default;
@@ -41,7 +48,8 @@ public:
     RemoteSignalExchangePart(RemoteSignalExchangePart&&) = delete;
     RemoteSignalExchangePart& operator=(RemoteSignalExchangePart&&) = delete;
 
-    [[nodiscard]] static Result Create(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::unique_ptr<ISignalExchangePart>& signalExchangePart) {
+    [[nodiscard]] static Result Create(IProtocol& protocol, const std::vector<IoSignal>& ioSignals, std::unique_ptr<ISignalExchangePart>& signalExchangePart)
+    {
         SignalRegistry signalRegistry;
         CheckResult(SignalRegistry::Create(ioSignals, signalRegistry));
 
@@ -63,7 +71,8 @@ public:
         return CreateOk();
     }
 
-    void ClearData() override {
+    void ClearData() override
+    {
         _changedSignalsQueue.Clear();
 
         for (auto& [signalId, metaData] : _signalRegistry.GetMetaDataLookup()) {
@@ -77,7 +86,8 @@ public:
         }
     }
 
-    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override {
+    [[nodiscard]] Result Write(IoSignalId signalId, uint32_t length, const void* value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         auto& [currentLength, isChanged, buffer] = _signalStates[metaData->signalIndex];
@@ -126,7 +136,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override {
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, void* value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         SignalValueState& signalState = _signalStates[metaData->signalIndex];
@@ -137,7 +148,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override {
+    [[nodiscard]] Result Read(IoSignalId signalId, uint32_t& length, const void** value) override
+    {
         SignalMetaDataPtr metaData{};
         CheckResult(_signalRegistry.FindMetaData(signalId, metaData));
         SignalValueState& signalState = _signalStates[metaData->signalIndex];
@@ -149,7 +161,8 @@ public:
 
     // Remote transport sends changed signal ids together with the current length
     // and payload bytes. No shared memory is involved on this path.
-    [[nodiscard]] Result Serialize(ChannelWriter& writer) override {
+    [[nodiscard]] Result Serialize(ChannelWriter& writer) override
+    {
         CheckResultWithMessage(_protocol.WriteSize(writer, _changedSignalsQueue.Size()), "Could not write count of changed signals.");
 
         SignalMetaDataPtr metaData{};
@@ -174,7 +187,8 @@ public:
         return CreateOk();
     }
 
-    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override {
+    [[nodiscard]] Result Deserialize(ChannelReader& reader, SimulationTime simulationTime, const Callbacks& callbacks) override
+    {
         size_t ioSignalChangedCount = 0;
         CheckResultWithMessage(_protocol.ReadSize(reader, ioSignalChangedCount), "Could not read count of changed signals.");
 
@@ -212,7 +226,7 @@ public:
         return CreateOk();
     }
 
-private:
+  private:
     IProtocol& _protocol;
     SignalRegistry _signalRegistry;
     std::vector<SignalValueState> _signalStates;
