@@ -7,6 +7,7 @@
   - [Callback Precedence](#callback-precedence)
   - [Receive API Availability](#receive-api-availability)
   - [Polling-Based Behavior](#polling-based-behavior)
+  - [Local Signal Buffer Layout](#local-signal-buffer-layout)
 
 ## Callback Order Within a Step
 
@@ -51,3 +52,9 @@ Polling-based co-simulation still uses the same callback registration rules.
 - State-change callbacks and data callbacks may still be delivered.
 - `PollCommand` controls when your application processes the next server command.
 - Each successful `PollCommand` must be followed by `FinishCommand`.
+
+## Local Signal Buffer Layout
+
+On Windows, local signal exchange stores two buffers per signal in shared memory: an initially active buffer followed by a staging buffer. Each buffer contains a `uint32_t` length followed by the signal's maximum payload.
+
+The buffers follow the order of the exchanged signal list, not signal IDs or hash-table iteration order. Both peers must use this layout convention; older builds that derive offsets from `std::unordered_map` iteration may be incompatible, particularly across different C++ standard libraries.

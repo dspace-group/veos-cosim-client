@@ -94,7 +94,7 @@ class CoSimClient final {
     enum class ResponderMode : uint32_t {
         Unknown,
         Blocking,
-        NonBlocking
+        NonBlocking,
     };
 
     void ResetDataFromPreviousConnect();

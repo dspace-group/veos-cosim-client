@@ -21,7 +21,7 @@ namespace DsVeosCoSim {
 enum class AddressFamily {
     Local,
     Ipv4,
-    Ipv6
+    Ipv6,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(AddressFamily addressFamily) noexcept

@@ -17,7 +17,7 @@ enum class Severity : uint32_t {
     Error,
     Warning,
     Info,
-    Trace
+    Trace,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(Severity severity) noexcept

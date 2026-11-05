@@ -89,7 +89,7 @@ using FrMessageContainerReceivedCallback =
 
 enum class CoSimType : uint32_t {
     Client,
-    Server
+    Server,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(CoSimType coSimType) noexcept
@@ -106,7 +106,7 @@ enum class CoSimType : uint32_t {
 
 enum class ConnectionKind : uint32_t {
     Remote,
-    Local
+    Local,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(ConnectionKind connectionKind) noexcept
@@ -130,7 +130,7 @@ enum class Command : uint32_t {
     Pause,
     Continue,
     TerminateFinished,
-    Ping
+    Ping,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(Command command) noexcept
@@ -161,7 +161,7 @@ enum class Command : uint32_t {
 
 enum class TerminateReason : uint32_t {
     Finished,
-    Error
+    Error,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(TerminateReason terminateReason) noexcept
@@ -178,7 +178,7 @@ enum class TerminateReason : uint32_t {
 
 enum class ConnectionState : uint32_t {
     Disconnected,
-    Connected
+    Connected,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(ConnectionState connectionState) noexcept
@@ -198,7 +198,7 @@ enum class SimulationState : uint32_t {
     Stopped,
     Running,
     Paused,
-    Terminated
+    Terminated,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(SimulationState simulationState) noexcept
@@ -241,7 +241,7 @@ enum class DataType : uint32_t {
     UInt32,
     UInt64,
     Float32,
-    Float64
+    Float64,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(DataType dataType) noexcept
@@ -276,7 +276,7 @@ enum class DataType : uint32_t {
 
 enum class SizeKind : uint32_t {
     Fixed = 1,
-    Variable
+    Variable,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(SizeKind sizeKind) noexcept
@@ -299,7 +299,7 @@ enum class BusMessageId : uint32_t {
 
 enum class LinControllerType : uint32_t {
     Responder = 1,
-    Commander
+    Commander,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(LinControllerType linControllerType) noexcept
@@ -321,7 +321,7 @@ enum class CanMessageFlags : uint32_t {
     ExtendedId = 8,
     BitRateSwitch = 16,
     FlexibleDataRateFormat = 32,
-    WakeEvent = 64
+    WakeEvent = 64,
 };
 
 ENUM_BITMASK_OPS(CanMessageFlags);
@@ -330,7 +330,7 @@ enum class EthMessageFlags : uint32_t {
     Loopback = 1,
     Error = 2,
     Drop = 4,
-    WakeEvent = 8
+    WakeEvent = 8,
 };
 
 ENUM_BITMASK_OPS(EthMessageFlags);
@@ -347,7 +347,7 @@ enum class LinMessageFlags : uint32_t {
     TransferOnce = 256,
     ParityFailure = 512,
     Collision = 1024,
-    NoResponse = 2048
+    NoResponse = 2048,
 };
 
 ENUM_BITMASK_OPS(LinMessageFlags);
@@ -389,7 +389,7 @@ enum class FrameKind : uint32_t {
     GetPort,
     GetPortOk,
     SetPort,
-    UnsetPort
+    UnsetPort,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(FrameKind frameKind) noexcept

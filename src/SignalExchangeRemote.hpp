@@ -98,13 +98,11 @@ class RemoteSignalExchangePart final : public ISignalExchangePart {
                 return CreateError();
             }
 
-            if (currentLength != length) {
-                if (!isChanged) {
-                    isChanged = true;
-                    if (!_changedSignalsQueue.TryPushBack(metaData)) {
-                        LogError("Changed signals queue is full.");
-                        return CreateError();
-                    }
+            if ((currentLength != length) && (!isChanged)) {
+                isChanged = true;
+                if (!_changedSignalsQueue.TryPushBack(metaData)) {
+                    LogError("Changed signals queue is full.");
+                    return CreateError();
                 }
             }
 

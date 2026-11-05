@@ -56,10 +56,8 @@ namespace {
     constexpr int32_t maxPort = 65535;
 
     size_t intValue{};
-    if (TryGetDecimalValue("VEOS_COSIM_PORTMAPPER_PORT", intValue)) {
-        if ((intValue > 0) && (intValue <= maxPort)) {
-            return static_cast<uint16_t>(intValue);
-        }
+    if (TryGetDecimalValue("VEOS_COSIM_PORTMAPPER_PORT", intValue) && ((intValue > 0) && (intValue <= maxPort))) {
+        return static_cast<uint16_t>(intValue);
     }
 
     return defaultPort;

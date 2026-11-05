@@ -20,6 +20,7 @@
 #include "Protocol.hpp"
 #include "Result.hpp"
 #include "SignalExchange.hpp"
+#include "SignalExchangeLocalWin.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -31,22 +32,64 @@ constexpr std::array CoSimTypes{CoSimType::Client, CoSimType::Server};
 
 constexpr std::array SignalExchangeConnectionKinds{ConnectionKind::Local, ConnectionKind::Remote};
 
-constexpr std::array DataTypes{DataType::Bool,
-                               DataType::Int8,
-                               DataType::Int16,
-                               DataType::Int32,
-                               DataType::Int64,
-                               DataType::UInt8,
-                               DataType::UInt16,
-                               DataType::UInt32,
-                               DataType::UInt64,
-                               DataType::Float32,
-                               DataType::Float64};
+constexpr std::array DataTypes{
+    DataType::Bool,
+    DataType::Int8,
+    DataType::Int16,
+    DataType::Int32,
+    DataType::Int64,
+    DataType::UInt8,
+    DataType::UInt16,
+    DataType::UInt32,
+    DataType::UInt64,
+    DataType::Float32,
+    DataType::Float64,
+};
 
 struct EventData {
     IoSignalContainer signal{};
     std::vector<uint8_t> data;
 };
+
+#ifdef _WIN32
+
+[[nodiscard]] IoSignalContainer CreateLayoutSignal(uint32_t id)
+{
+    IoSignalContainer signal = CreateSignal(DataType::UInt32, SizeKind::Fixed);
+    signal.id = static_cast<IoSignalId>(id);
+    signal.length = 1;
+    return signal;
+}
+
+TEST(TestLocalSignalExchange, SharedMemoryLayoutFollowsSignalListOrder)
+{
+    auto firstSignal = CreateLayoutSignal(1);
+    auto secondSignal = CreateLayoutSignal(2);
+    auto thirdSignal = CreateLayoutSignal(9);
+    std::string name = GenerateString("SignalExchangeLayout");
+    std::unique_ptr<IProtocol> protocol;
+    AssertOk(CreateProtocol(ProtocolVersionLatest, protocol));
+    std::unique_ptr<SignalExchangeDetail::ISignalExchangePart> signalExchange;
+    AssertOk(SignalExchangeDetail::LocalSignalExchangePart::Create(*protocol,
+                                                                   {firstSignal.Convert(), secondSignal.Convert(), thirdSignal.Convert()},
+                                                                   name,
+                                                                   signalExchange));
+
+    uint32_t length{};
+    const void* firstData{};
+    const void* secondData{};
+    const void* thirdData{};
+    AssertOk(signalExchange->Read(firstSignal.id, length, &firstData));
+    AssertOk(signalExchange->Read(secondSignal.id, length, &secondData));
+    AssertOk(signalExchange->Read(thirdSignal.id, length, &thirdData));
+
+    // Each signal occupies two buffers, each containing a length and its payload.
+    constexpr size_t SignalStorageSize = 2 * (sizeof(uint32_t) + sizeof(uint32_t));
+    EXPECT_EQ(static_cast<const uint8_t*>(secondData) - static_cast<const uint8_t*>(firstData), SignalStorageSize);
+    EXPECT_EQ(static_cast<const uint8_t*>(thirdData) - static_cast<const uint8_t*>(secondData), SignalStorageSize);
+}
+
+#endif
 
 void SwitchSignals(std::vector<IoSignal>& incomingSignals, std::vector<IoSignal>& outgoingSignals, CoSimType coSimType)
 {

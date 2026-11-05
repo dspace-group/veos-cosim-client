@@ -15,7 +15,7 @@ enum class Result {
     Full,
     InvalidArgument,
     NotConnected,
-    Timeout
+    Timeout,
 };
 
 [[nodiscard]] constexpr std::string_view format_as(Result result)

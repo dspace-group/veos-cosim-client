@@ -89,7 +89,7 @@ class TestCoSimClient : public testing::TestWithParam<ConnectionKind> {
     template <typename ServerFunction>
     [[nodiscard]] std::future<Result> RunServer(const ServerFunction& serverFunction)
     {
-        return std::async(std::launch::async, [this, serverFunction]() {
+        return std::async(std::launch::async, [this, serverFunction] {
             std::unique_ptr<Channel> channel;
             CheckResult(WaitForAccept(channel));
             return serverFunction(*channel, *_serverProtocol);
@@ -99,7 +99,7 @@ class TestCoSimClient : public testing::TestWithParam<ConnectionKind> {
     void ConnectClientAndServer(ConnectionKind connectionKind)
     {
         CustomSetUp(connectionKind);
-        auto serverTask = std::async(std::launch::async, [this]() {
+        auto serverTask = std::async(std::launch::async, [this] {
             CheckResult(WaitForAccept(_serverChannel));
             return AcceptAndSendConnectOk(*_serverChannel, *_serverProtocol);
         });
@@ -610,7 +610,7 @@ TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucc
         _serverPort = _server->GetLocalPort();
     }
 
-    auto connectServerTask = std::async(std::launch::async, [this]() {
+    auto connectServerTask = std::async(std::launch::async, [this] {
         CheckResult(WaitForAccept(_serverChannel));
         return AcceptAndSendConnectOk(*_serverChannel, *_serverProtocol);
     });

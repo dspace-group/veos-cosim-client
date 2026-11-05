@@ -76,15 +76,19 @@ class LocalSignalExchangePart final : public ISignalExchangePart {
         std::vector<SignalState> signalStates(metaDataLookup.size());
 
         size_t totalSize{};
-        for (auto& [signalId, metaData] : metaDataLookup) {
+        // Both peers must derive the shared layout from the signal list, never from hash-table iteration order.
+        for (const auto& ioSignal : ioSignals) {
+            SignalMetaDataPtr metaData{};
+            CheckResult(signalRegistry.FindMetaData(ioSignal.id, metaData));
+
             SignalState signalState{};
             signalState.offsetOfActivePartInShm = totalSize;
-            totalSize += sizeof(uint32_t) + metaData.totalDataSize;
+            totalSize += sizeof(uint32_t) + metaData->totalDataSize;
 
             signalState.offsetOfStagingPartInShm = totalSize;
-            totalSize += sizeof(uint32_t) + metaData.totalDataSize;
+            totalSize += sizeof(uint32_t) + metaData->totalDataSize;
 
-            signalStates[metaData.signalIndex] = signalState;
+            signalStates[metaData->signalIndex] = signalState;
         }
 
         SharedMemory sharedMemory;
