@@ -374,7 +374,7 @@ void FrMessageContainer::WriteTo(FrMessage& frMessage) const
         str.insert(str.begin(), countOfMissingZerosInFront, '0');
     }
 
-    str.insert(str.size() - 9, ".");
+    str.insert(str.size() - 9, 1, '.');
     while (str[str.size() - 1] == '0') {
         str.pop_back();
     }

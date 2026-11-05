@@ -1,18 +1,18 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
 add_library(
-  shared
+  DsVeosCoSimTestSupport
   STATIC
 )
 
 target_sources(
-  shared
+  DsVeosCoSimTestSupport
   PRIVATE
   Helper.cpp
 )
 
 target_include_directories(
-  shared
+  DsVeosCoSimTestSupport
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/.>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../src>
@@ -23,21 +23,17 @@ target_include_directories(
 
 if(WIN32)
   target_compile_definitions(
-    shared
+    DsVeosCoSimTestSupport
     PUBLIC
     _CRT_SECURE_NO_WARNINGS
     WIN32_LEAN_AND_MEAN
   )
 endif()
 
-target_compile_options(
-  shared
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
+dsveoscosim_enable_warnings(DsVeosCoSimTestSupport)
 
 target_link_libraries(
-  shared
+  DsVeosCoSimTestSupport
   PUBLIC
   DsVeosCoSim
   ${DSVEOSCOSIM_FMT_TARGET}

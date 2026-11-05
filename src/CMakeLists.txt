@@ -1,15 +1,14 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
-add_library(
-  DsVeosCoSim
-  ${DSVEOSCOSIM_TYPE}
-)
+add_library(DsVeosCoSim ${DSVEOSCOSIM_TYPE})
+add_library(DsVeosCoSim::DsVeosCoSim ALIAS DsVeosCoSim)
+target_compile_features(DsVeosCoSim PUBLIC cxx_std_17)
 
 set_target_properties(
   DsVeosCoSim
   PROPERTIES
   SOVERSION 1
-  VERSION 1.1.0
+  VERSION ${PROJECT_VERSION}
   C_VISIBILITY_PRESET hidden
   CXX_VISIBILITY_PRESET hidden
   VISIBILITY_INLINES_HIDDEN ON
@@ -55,11 +54,7 @@ target_compile_definitions(
   DSVEOSCOSIM_EXPORT
 )
 
-target_compile_options(
-  DsVeosCoSim
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
+dsveoscosim_enable_warnings(DsVeosCoSim)
 
 target_link_libraries(
   DsVeosCoSim

@@ -1,30 +1,26 @@
 # Copyright dSPACE SE & Co. KG. All rights reserved.
 
 add_executable(
-  TestServer
+  DsVeosCoSimTestServer
 )
 
 target_sources(
-  TestServer
+  DsVeosCoSimTestServer
   PRIVATE
   Program.cpp
 )
 
 target_include_directories(
-  TestServer
+  DsVeosCoSimTestServer
   PRIVATE
   ../../src
 )
 
-target_compile_options(
-  TestServer
-  PRIVATE
-  ${DSVEOSCOSIM_WARNINGS}
-)
+dsveoscosim_enable_warnings(DsVeosCoSimTestServer)
 
 target_link_libraries(
-  TestServer
+  DsVeosCoSimTestServer
   PRIVATE
   DsVeosCoSim
-  shared
+  DsVeosCoSimTestSupport
 )
