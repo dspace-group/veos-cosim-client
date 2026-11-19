@@ -20,7 +20,9 @@
 #include "Result.hpp"
 
 #ifdef _WIN32
+
 #include "BusExchangeLocalWin.hpp"
+
 #endif
 
 namespace DsVeosCoSim::BusExchangeDetail {

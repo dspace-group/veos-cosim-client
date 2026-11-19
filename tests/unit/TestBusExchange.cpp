@@ -42,7 +42,7 @@ class TestBusExchange : public Test {
     static void SetUpTestSuite()
     {
         std::unique_ptr<ChannelServer> remoteServer;
-        AssertOk(CreateTcpChannelServer(0, true, remoteServer));
+        AssertOk(CreateTcpChannelServer(0, {"127.0.0.1"}, remoteServer));
         uint16_t port = remoteServer->GetLocalPort();
 
         AssertOk(TryConnectToTcpChannel("127.0.0.1", port, 0, DefaultTimeoutInMilliseconds, _remoteSenderChannel));

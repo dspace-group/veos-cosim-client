@@ -1,5 +1,7 @@
 // Copyright dSPACE SE & Co. KG. All rights reserved.
 
+#ifndef _WIN32
+
 #include <gtest/gtest.h>
 
 #include <array>
@@ -360,3 +362,5 @@ TEST_F(TestLocalSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork)
 }
 
 }  // namespace
+
+#endif

@@ -20,7 +20,7 @@ class TestPortMapper : public Test {
   protected:
     void SetUp() override
     {
-        AssertOk(CreatePortMapperServer(true, _portMapperServer));
+        AssertOk(CreatePortMapperServer({"127.0.0.1"}, _portMapperServer));
     }
 
     std::unique_ptr<PortMapperServer> _portMapperServer;
@@ -106,6 +106,28 @@ TEST_F(TestPortMapper, GetPortOfNonExistingServer)
 
     // Assert
     AssertError(result);
+}
+
+TEST(TestPortMapperWithoutTcp, SetAndUnsetPortShouldWorkWithoutTcpListener)
+{
+    // Arrange
+    std::unique_ptr<PortMapperServer> portMapperServer;
+    AssertOk(CreatePortMapperServer({}, portMapperServer));
+
+    std::string serverName = GenerateString("Server名前");
+
+    // Act and assert
+    AssertOk(PortMapperSetPort(serverName, GenerateU16()));
+    AssertOk(PortMapperUnsetPort(serverName));
+}
+
+TEST(TestPortMapperWithoutServer, SetPortWithoutPortMapperShouldFail)
+{
+    // Act
+    Result result = PortMapperSetPort(GenerateString("Server名前"), GenerateU16());
+
+    // Assert
+    ASSERT_FALSE(IsOk(result));
 }
 
 }  // namespace

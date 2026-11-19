@@ -12,7 +12,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include "Logger.hpp"
@@ -21,10 +20,7 @@
 #ifdef _WIN32
 
 #include <WS2tcpip.h>
-#include <afunix.h>
 #include <winsock2.h>
-
-#include <filesystem>
 
 #else
 
@@ -44,6 +40,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <string_view>
 
 #endif
 
@@ -87,11 +84,6 @@ int32_t DoPoll(pollfd* fds, uint32_t countFds, int32_t timeoutInMilliseconds)
     return WSAPoll(fds, countFds, timeoutInMilliseconds);
 }
 
-int32_t DoUnlink(const std::string& path)
-{
-    return _unlink(path.c_str());
-}
-
 #else
 
 int32_t DoPoll(pollfd* fds, nfds_t countFds, int32_t timeoutInMilliseconds)
@@ -104,18 +96,12 @@ int32_t DoUnlink(const std::string& path)
     return unlink(path.c_str());
 }
 
-#endif
-
 [[nodiscard]] std::string GetLocalPath(std::string_view name)
 {
-    std::string fileName = fmt::format("dSPACE.VEOS.CoSim.{}", name);
-#ifdef _WIN32
-    std::filesystem::path fileDir = std::filesystem::temp_directory_path() / fileName;
-    return fileDir.string();
-#else
-    return fileName;
-#endif
+    return fmt::format("dSPACE.VEOS.CoSim.{}", name);
 }
+
+#endif
 
 [[nodiscard]] int32_t GetLastNetworkError()
 {
@@ -294,30 +280,14 @@ int32_t DoUnlink(const std::string& path)
     return CheckSocketError(socketHandle);
 }
 
-[[nodiscard]] Result ConvertAddressFamily(AddressFamily addressFamily, int32_t& convertedAddressFamily)
-{
-    switch (addressFamily) {
-    case AddressFamily::Local:
-        convertedAddressFamily = AF_UNIX;
-        return CreateOk();
-    case AddressFamily::Ipv4:
-        convertedAddressFamily = AF_INET;
-        return CreateOk();
-    case AddressFamily::Ipv6:
-        convertedAddressFamily = AF_INET6;
-        return CreateOk();
-    }
-
-    LogError("Invalid address family.");
-    return CreateError();
-}
-
 [[nodiscard]] Result ConvertAddressFamily(int32_t addressFamily, AddressFamily& convertedAddressFamily)
 {
     switch (addressFamily) {
+#ifndef _WIN32
     case AF_UNIX:
         convertedAddressFamily = AddressFamily::Local;
         return CreateOk();
+#endif
     case AF_INET:
         convertedAddressFamily = AddressFamily::Ipv4;
         return CreateOk();
@@ -330,18 +300,39 @@ int32_t DoUnlink(const std::string& path)
     }
 }
 
-[[nodiscard]] Result EnableIpv6Only([[maybe_unused]] const SocketHandle& socketHandle)
+[[nodiscard]] Result EnableIpv6Only(const SocketHandle& socketHandle)
 {
-    // On windows, IPv6 only is enabled by default
-#ifndef _WIN32
+    // Always set explicitly to disable dual mode, independent of the platform default
     int32_t flags = 1;
     int32_t result = setsockopt(socketHandle.Get(), IPPROTO_IPV6, IPV6_V6ONLY, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
     if (result != 0) {
         LogError(GetLastNetworkError(), "Could not enable IPv6 only.");
         return CreateError();
     }
-#endif
 
+    return CreateOk();
+}
+
+[[nodiscard]] Result ConvertToNumericAddress(const std::string& ipAddress, uint16_t port, UniqueAddressInfo& addressInfo)
+{
+    // 5 characters for up to 65536 ports + terminating null
+    char portString[6]{};
+    (void)std::snprintf(portString, sizeof(portString), "%u", static_cast<unsigned>(port));  // NOLINT(cppcoreguidelines-pro-type-vararg)
+
+    addrinfo hints{};
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE;
+
+    addrinfo* rawAddressInfo = nullptr;
+    int32_t errorCode = getaddrinfo(ipAddress.c_str(), portString, &hints, &rawAddressInfo);
+    if ((errorCode != 0) || !rawAddressInfo) {
+        LogError("'{}' is not a valid IP address.", ipAddress);
+        return CreateError();
+    }
+
+    addressInfo = UniqueAddressInfo(rawAddressInfo);
     return CreateOk();
 }
 
@@ -357,48 +348,40 @@ int32_t DoUnlink(const std::string& path)
     return CreateOk();
 }
 
-[[nodiscard]] Result BindForIpv4(const SocketHandle& socketHandle, uint16_t port, bool enableRemoteAccess)
+[[nodiscard]] Result EnableExclusiveListenAddress(const SocketHandle& socketHandle)
 {
-    sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_port = htons(port);
-
-    if (enableRemoteAccess) {
-        address.sin_addr.s_addr = INADDR_ANY;
-    } else {
-        address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    // Overlapping binds (same address twice or wildcard plus specific address on the same port) must fail on all platforms.
+    // On Linux, SO_REUSEADDR still rejects them for listening sockets and only allows rebinding while connections are in TIME_WAIT.
+    // On Windows, SO_REUSEADDR would allow them, so SO_EXCLUSIVEADDRUSE is used instead.
+#ifdef _WIN32
+    int32_t flags = 1;
+    int32_t result = setsockopt(socketHandle.Get(), SOL_SOCKET, SO_EXCLUSIVEADDRUSE, reinterpret_cast<char*>(&flags), static_cast<SocketLength>(sizeof(flags)));
+    if (result != 0) {
+        LogError(GetLastNetworkError(), "Could not enable socket option exclusive address use.");
+        return CreateError();
     }
 
-    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
+    return CreateOk();
+#else
+    return EnableReuseAddress(socketHandle);
+#endif
+}
+
+[[nodiscard]] Result Bind(const SocketHandle& socketHandle, const std::string& ipAddress, uint16_t port)
+{
+    UniqueAddressInfo addressInfo{};
+    CheckResult(ConvertToNumericAddress(ipAddress, port, addressInfo));
+
+    int32_t result = bind(socketHandle.Get(), addressInfo->ai_addr, static_cast<SocketLength>(addressInfo->ai_addrlen));
     if (result != 0) {
-        LogError(GetLastNetworkError(), "Could not bind socket.");
+        LogError(GetLastNetworkError(), "Could not bind socket to {}:{}.", ipAddress, port);
         return CreateError();
     }
 
     return CreateOk();
 }
 
-[[nodiscard]] Result BindForIpv6(const SocketHandle& socketHandle, uint16_t port, bool enableRemoteAccess)
-{
-    sockaddr_in6 address{};
-    address.sin6_family = AF_INET6;
-    address.sin6_port = htons(port);
-
-    if (enableRemoteAccess) {
-        // We don't use in6addr_any, because that won't work, if lwip is linked. Both, lwip and ws2_32, define the same symbol
-        address.sin6_addr = in6_addr{};
-    } else {
-        address.sin6_addr = in6addr_loopback;
-    }
-
-    int32_t result = bind(socketHandle.Get(), reinterpret_cast<sockaddr*>(&address), static_cast<SocketLength>(sizeof(address)));
-    if (result != 0) {
-        LogError(GetLastNetworkError(), "Could not bind socket.");
-        return CreateError();
-    }
-
-    return CreateOk();
-}
+#ifndef _WIN32
 
 [[nodiscard]] sockaddr_un CreateUnixAddress(std::string_view path)
 {
@@ -410,10 +393,8 @@ int32_t DoUnlink(const std::string& path)
     memcpy(address.sun_path, path.data(), length);
     address.sun_path[length] = '\0';
 
-#ifndef _WIN32
-    // Make it abstract for non-windows systems
+    // Make it abstract
     address.sun_path[0] = '\0';
-#endif
 
     return address;
 }
@@ -430,6 +411,8 @@ int32_t DoUnlink(const std::string& path)
 
     return CreateOk();
 }
+
+#endif
 
 [[nodiscard]] Result Listen(const SocketHandle& socketHandle)
 {
@@ -547,11 +530,9 @@ int32_t DoUnlink(const std::string& path)
     if (localPort != 0) {
         CheckResult(EnableReuseAddress(socketHandle));
 
-        if (addressFamily == AF_INET) {
-            CheckResult(BindForIpv4(socketHandle, localPort, false));
-        } else {
-            CheckResult(BindForIpv6(socketHandle, localPort, false));
-        }
+        // Bind to the wildcard address, so that the operating system can choose the interface for reaching the remote endpoint
+        const char* anyAddress = (addressFamily == AF_INET) ? "0.0.0.0" : "::";
+        CheckResult(Bind(socketHandle, anyAddress, localPort));
     }
 
     return ConnectWithTimeout(socketHandle, addressInfo.ai_addr, static_cast<SocketLength>(addressInfo.ai_addrlen), timeoutInMilliseconds);
@@ -619,6 +600,8 @@ void Shutdown(const SocketHandle& socketHandle)
     return isSupported;
 }
 
+#ifndef _WIN32
+
 [[nodiscard]] bool IsLocalSocketSupported()
 {
     static std::once_flag initFlag;
@@ -631,6 +614,8 @@ void Shutdown(const SocketHandle& socketHandle)
 
     return isSupported;
 }
+
+#endif
 
 void SocketHandle::Reset(socket_t newSocket)
 {
@@ -645,6 +630,17 @@ void SocketHandle::Reset(socket_t newSocket)
     _socket = newSocket;
 }
 
+#ifdef _WIN32
+
+SocketClient::SocketClient(SocketHandle socketHandle, AddressFamily addressFamily)
+    : _socketHandle(std::move(socketHandle))
+    , _addressFamily(addressFamily)
+    , _isConnected(true)
+{
+}
+
+#else
+
 SocketClient::SocketClient(SocketHandle socketHandle, AddressFamily addressFamily, std::string path)
     : _socketHandle(std::move(socketHandle))
     , _addressFamily(addressFamily)
@@ -652,6 +648,8 @@ SocketClient::SocketClient(SocketHandle socketHandle, AddressFamily addressFamil
     , _isConnected(true)
 {
 }
+
+#endif
 
 SocketClient::~SocketClient() noexcept
 {
@@ -693,13 +691,17 @@ SocketClient::~SocketClient() noexcept
 
         client._addressFamily = convertedAddressFamily;
         client._socketHandle = std::move(socketHandle);
+#ifndef _WIN32
         client._path = "";
+#endif
         client._isConnected = true;
         return CreateOk();
     }
 
     return CreateNotConnected();
 }
+
+#ifndef _WIN32
 
 [[nodiscard]] Result SocketClient::TryConnect(std::string_view name, SocketClient& client)
 {
@@ -734,6 +736,8 @@ SocketClient::~SocketClient() noexcept
     client._isConnected = true;
     return CreateOk();
 }
+
+#endif
 
 void SocketClient::Disconnect()
 {
@@ -897,6 +901,17 @@ void SocketClient::Disconnect()
     return _isConnected && _socketHandle.IsValid();
 }
 
+#ifdef _WIN32
+
+SocketListener::SocketListener(SocketHandle socketHandle, AddressFamily addressFamily)
+    : _socketHandle(std::move(socketHandle))
+    , _addressFamily(addressFamily)
+    , _isRunning(true)
+{
+}
+
+#else
+
 SocketListener::SocketListener(SocketHandle socketHandle, AddressFamily addressFamily, std::string path)
     : _socketHandle(std::move(socketHandle))
     , _addressFamily(addressFamily)
@@ -905,22 +920,22 @@ SocketListener::SocketListener(SocketHandle socketHandle, AddressFamily addressF
 {
 }
 
+#endif
+
 SocketListener::~SocketListener() noexcept
 {
     Stop();
 }
 
-[[nodiscard]] Result SocketListener::Create(AddressFamily addressFamily, uint16_t port, bool enableRemoteAccess, SocketListener& listener)
+[[nodiscard]] Result SocketListener::Create(const std::string& ipAddress, uint16_t port, SocketListener& listener)
 {
-    if (addressFamily == AddressFamily::Local) {
-        LogError("Not supported for local sockets.");
-        return CreateError();
-    }
+    UniqueAddressInfo addressInfo{};
+    CheckResult(ConvertToNumericAddress(ipAddress, port, addressInfo));
 
-    int32_t convertedAddressFamily{};
-    CheckResult(ConvertAddressFamily(addressFamily, convertedAddressFamily));
+    AddressFamily addressFamily{};
+    CheckResult(ConvertAddressFamily(addressInfo->ai_family, addressFamily));
 
-    SocketHandle socketHandle(socket(convertedAddressFamily, SOCK_STREAM, IPPROTO_TCP));
+    SocketHandle socketHandle(socket(addressInfo->ai_family, addressInfo->ai_socktype, addressInfo->ai_protocol));
     if (!socketHandle.IsValid()) {
         LogError(GetLastNetworkError(), "Could not create TCP socket.");
         return CreateError();
@@ -930,19 +945,19 @@ SocketListener::~SocketListener() noexcept
         CheckResult(EnableIpv6Only(socketHandle));
     }
 
-    CheckResult(EnableReuseAddress(socketHandle));
-
-    if (addressFamily == AddressFamily::Ipv4) {
-        CheckResult(BindForIpv4(socketHandle, port, enableRemoteAccess));
-    } else {
-        CheckResult(BindForIpv6(socketHandle, port, enableRemoteAccess));
-    }
-
+    CheckResult(EnableExclusiveListenAddress(socketHandle));
+    CheckResult(Bind(socketHandle, ipAddress, port));
     CheckResult(Listen(socketHandle));
 
+#ifdef _WIN32
+    listener = SocketListener(std::move(socketHandle), addressFamily);
+#else
     listener = SocketListener(std::move(socketHandle), addressFamily, "");
+#endif
     return CreateOk();
 }
+
+#ifndef _WIN32
 
 [[nodiscard]] Result SocketListener::Create(std::string_view name, SocketListener& listener)
 {
@@ -959,16 +974,14 @@ SocketListener::~SocketListener() noexcept
 
     std::string path = GetLocalPath(name);
 
-#ifdef _WIN32
-    DoUnlink(path);
-#endif
-
     CheckResult(BindForLocal(socketHandle, path));
     CheckResult(Listen(socketHandle));
 
     listener = SocketListener(std::move(socketHandle), AddressFamily::Local, std::move(path));
     return CreateOk();
 }
+
+#endif
 
 void SocketListener::Stop()
 {
@@ -980,10 +993,12 @@ void SocketListener::Stop()
         Shutdown(_socketHandle);
     }
 
+#ifndef _WIN32
     if (!_path.empty()) {
         DoUnlink(_path);
         _path.clear();
     }
+#endif
 
     _isRunning = false;
 }
@@ -1003,11 +1018,17 @@ void SocketListener::Stop()
         return CreateError();
     }
 
+#ifndef _WIN32
     if (_addressFamily != AddressFamily::Local) {
         CheckResult(EnableNoDelay(acceptedSocketHandle));
     }
+#endif
 
+#ifdef _WIN32
+    client = SocketClient(std::move(acceptedSocketHandle), _addressFamily);
+#else
     client = SocketClient(std::move(acceptedSocketHandle), _addressFamily, _path);
+#endif
     return CreateOk();
 }
 

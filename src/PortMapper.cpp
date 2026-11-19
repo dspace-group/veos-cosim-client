@@ -11,6 +11,7 @@
 #include <thread>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "Channel.hpp"
 #include "CoSimTypes.hpp"
@@ -24,8 +25,20 @@ namespace DsVeosCoSim {
 
 constexpr uint32_t ClientTimeoutInMilliseconds = 1000;
 
-PortMapperServer::PortMapperServer(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol)
-    : _server(std::move(channelServer))
+namespace {
+
+[[nodiscard]] std::string GetPortMapperLocalName()
+{
+    return fmt::format("PortMapper.{}", GetPortMapperPort());
+}
+
+}  // namespace
+
+PortMapperServer::PortMapperServer(std::unique_ptr<ChannelServer> tcpChannelServer,
+                                   std::unique_ptr<ChannelServer> localChannelServer,
+                                   std::unique_ptr<IProtocol> protocol)
+    : _tcpServer(std::move(tcpChannelServer))
+    , _localServer(std::move(localChannelServer))
     , _protocol(std::move(protocol))
 {
     _thread = std::thread([this] { RunPortMapperServer(); });
@@ -44,17 +57,23 @@ void PortMapperServer::RunPortMapperServer()
 {
     constexpr uint32_t timeoutInMilliseconds = 10U;
     while (!_stopEvent.Wait(timeoutInMilliseconds)) {
-        Result result = CheckForClient();
-        if (IsError(result)) {
-            return;
+        for (ChannelServer* server : {_localServer.get(), _tcpServer.get()}) {
+            if (!server) {
+                continue;
+            }
+
+            Result result = CheckForClient(*server);
+            if (IsError(result)) {
+                return;
+            }
         }
     }
 }
 
-Result PortMapperServer::CheckForClient()
+Result PortMapperServer::CheckForClient(ChannelServer& server)
 {
     std::unique_ptr<Channel> channel;
-    CheckResult(_server->TryAccept(channel));
+    CheckResult(server.TryAccept(channel));
     CheckResultWithMessage(HandleClient(*channel), "Port mapper client disconnected unexpectedly.");
     return CreateOk();
 }
@@ -152,14 +171,21 @@ void PortMapperServer::DumpEntries()
     }
 }
 
-[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer)
+[[nodiscard]] Result CreatePortMapperServer(const std::vector<std::string>& listenAddresses, std::unique_ptr<PortMapperServer>& portMapperServer)
 {
-    std::unique_ptr<ChannelServer> channelServer;
-    CheckResult(CreateTcpChannelServer(GetPortMapperPort(), enableRemoteAccess, channelServer));
+    std::unique_ptr<ChannelServer> tcpChannelServer;
+    CheckResult(CreateTcpChannelServer(GetPortMapperPort(), listenAddresses, tcpChannelServer));
+
+    std::unique_ptr<ChannelServer> localChannelServer;
+    CheckResult(CreateLocalChannelServer(GetPortMapperLocalName(), localChannelServer));
+    if (!localChannelServer) {
+        LogError("Could not create port mapper server, because local channels are not supported.");
+        return CreateError();
+    }
 
     std::unique_ptr<IProtocol> protocol;
     CheckResult(CreateProtocol(ProtocolVersion1, protocol));
-    portMapperServer = std::make_unique<PortMapperServer>(std::move(channelServer), std::move(protocol));
+    portMapperServer = std::make_unique<PortMapperServer>(std::move(tcpChannelServer), std::move(localChannelServer), std::move(protocol));
     return CreateOk();
 }
 
@@ -168,6 +194,18 @@ namespace {
 [[nodiscard]] Result ConnectToPortMapper(const std::string& ipAddress, std::unique_ptr<Channel>& channel, std::unique_ptr<IProtocol>& protocol)
 {
     CheckResult(TryConnectToTcpChannel(ipAddress, GetPortMapperPort(), 0, ClientTimeoutInMilliseconds, channel));
+    CheckResult(CreateProtocol(ProtocolVersion1, protocol));
+    return CreateOk();
+}
+
+[[nodiscard]] Result ConnectToLocalPortMapper(std::unique_ptr<Channel>& channel, std::unique_ptr<IProtocol>& protocol)
+{
+    CheckResult(TryConnectToLocalChannel(GetPortMapperLocalName(), channel));
+    if (!channel) {
+        LogError("Could not connect to port mapper, because local channels are not supported.");
+        return CreateError();
+    }
+
     CheckResult(CreateProtocol(ProtocolVersion1, protocol));
     return CreateOk();
 }
@@ -230,7 +268,7 @@ namespace {
 {
     std::unique_ptr<Channel> channel;
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(ConnectToPortMapper("127.0.0.1", channel, protocol));
+    CheckResult(ConnectToLocalPortMapper(channel, protocol));
 
     CheckResultWithMessage(protocol->SendSetPort(channel->GetWriter(), name, port), "Could not send set port frame.");
     return ReadOkOrError(*protocol, *channel, "PortMapperSetPort");
@@ -240,7 +278,7 @@ namespace {
 {
     std::unique_ptr<Channel> channel;
     std::unique_ptr<IProtocol> protocol;
-    CheckResult(ConnectToPortMapper("127.0.0.1", channel, protocol));
+    CheckResult(ConnectToLocalPortMapper(channel, protocol));
 
     CheckResultWithMessage(protocol->SendUnsetPort(channel->GetWriter(), name), "Could not send unset port frame.");
     return ReadOkOrError(*protocol, *channel, "PortMapperUnsetPort");

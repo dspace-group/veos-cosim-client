@@ -23,9 +23,13 @@
 namespace DsVeosCoSim {
 
 using SignalExchangeDetail::ISignalExchangePart;
+
 #ifdef _WIN32
+
 using SignalExchangeDetail::LocalSignalExchangePart;
+
 #endif
+
 using SignalExchangeDetail::LockedSignalExchangePart;
 using SignalExchangeDetail::RemoteSignalExchangePart;
 

@@ -1,3 +1,4 @@
+*.abi text eol=lf
 *.clang-format text eol=lf
 *.clang-tidy text eol=lf
 *.cmd text eol=lf

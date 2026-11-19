@@ -37,7 +37,7 @@ namespace {
 [[nodiscard]] Result GetNextFreeDynamicPort(uint16_t& localPort)
 {
     SocketListener listener;
-    CheckResult(SocketListener::Create(AddressFamily::Ipv4, 0, false, listener));
+    CheckResult(SocketListener::Create("127.0.0.1", 0, listener));
 
     return listener.GetLocalPort(localPort);
 }

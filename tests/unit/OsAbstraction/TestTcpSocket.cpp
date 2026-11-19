@@ -24,12 +24,13 @@ namespace {
 
 struct TcpSocketParam {
     AddressFamily addressFamily{};
-    bool enableRemoteAccess{};
+    std::string listenAddress;
+    std::string access;
 };
 
 [[maybe_unused]] void PrintTo(const TcpSocketParam& param, std::ostream* os)
 {
-    std::string name = fmt::format("{}_{}", param.addressFamily, param.enableRemoteAccess ? "Remote" : "Local");
+    std::string name = fmt::format("{}_{}", param.addressFamily, param.access);
     *os << name;
 }
 
@@ -38,13 +39,13 @@ struct TcpSocketParam {
     std::vector<TcpSocketParam> values;
 
     if (IsIpv4SocketSupported()) {
-        values.push_back(TcpSocketParam{AddressFamily::Ipv4, true});
-        values.push_back(TcpSocketParam{AddressFamily::Ipv4, false});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv4, "0.0.0.0", "Any"});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv4, "127.0.0.1", "Loopback"});
     }
 
     if (IsIpv6SocketSupported()) {
-        values.push_back(TcpSocketParam{AddressFamily::Ipv6, true});
-        values.push_back(TcpSocketParam{AddressFamily::Ipv6, false});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv6, "::", "Any"});
+        values.push_back(TcpSocketParam{AddressFamily::Ipv6, "::1", "Loopback"});
     }
 
     return values;
@@ -53,7 +54,7 @@ struct TcpSocketParam {
 void EstablishConnection(const TcpSocketParam& param, SocketClient& connectClient, SocketClient& acceptClient)
 {
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     uint16_t port{};
     AssertOk(listener.GetLocalPort(port));
@@ -67,19 +68,54 @@ class TestTcpSocket : public testing::TestWithParam<TcpSocketParam> {};
 
 INSTANTIATE_TEST_SUITE_P(, TestTcpSocket, testing::ValuesIn(GetTcpSocketTestParameters()), [](const testing::TestParamInfo<TestTcpSocket::ParamType>& info) {
     TcpSocketParam param = info.param;
-    std::string access = param.enableRemoteAccess ? "Remote" : "Local";
-    return fmt::format("{}_{}", param.addressFamily, access);
+    return fmt::format("{}_{}", param.addressFamily, param.access);
 });
+
+TEST(TestTcpSocketListener, CreateWithInvalidAddressShouldFail)
+{
+    for (const char* address : {"", "not-an-ip", "localhost", "256.0.0.1"}) {
+        // Arrange
+        SocketListener listener;
+
+        // Act
+        Result result = SocketListener::Create(address, 0, listener);
+
+        // Assert
+        AssertError(result);
+    }
+}
+
+TEST(TestTcpSocketListener, Ipv6AnyListenerShouldNotAcceptIpv4Connections)
+{
+    if (!IsIpv4SocketSupported() || !IsIpv6SocketSupported()) {
+        GTEST_SKIP() << "IPv4 and IPv6 are required.";
+    }
+
+    // Arrange
+    SocketListener listener;
+    AssertOk(SocketListener::Create("::", 0, listener));
+
+    uint16_t localPort{};
+    AssertOk(listener.GetLocalPort(localPort));
+
+    SocketClient client;
+
+    // Act
+    Result result = SocketClient::TryConnect("127.0.0.1", localPort, 0, 0, client);
+
+    // Assert
+    AssertNotConnected(result);
+}
 
 TEST_P(TestTcpSocket, CreateSocketShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
 
     // Act
-    Result result = SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener);
+    Result result = SocketListener::Create(param.listenAddress, 0, listener);
 
     // Assert
     AssertOk(result);
@@ -88,10 +124,10 @@ TEST_P(TestTcpSocket, CreateSocketShouldWork)
 TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     // Act
     bool isRunning = listener.IsRunning();
@@ -103,10 +139,10 @@ TEST_P(TestTcpSocket, IsRunningAfterCreateShouldBeTrue)
 TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     listener.Stop();
 
@@ -120,10 +156,10 @@ TEST_P(TestTcpSocket, IsNotRunningAfterStopShouldBeFalse)
 TEST_P(TestTcpSocket, LocalPortIsNotZero)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     uint16_t localPort{};
 
@@ -138,10 +174,10 @@ TEST_P(TestTcpSocket, LocalPortIsNotZero)
 TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     uint16_t localPort{};
     AssertOk(listener.GetLocalPort(localPort));
@@ -158,13 +194,13 @@ TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork)
 TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     uint16_t localPort{};
 
     {
         SocketListener listener;
-        AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+        AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
         AssertOk(listener.GetLocalPort(localPort));
     }
@@ -178,13 +214,47 @@ TEST_P(TestTcpSocket, ConnectWithoutListeningShouldNotWork)
     AssertNotConnected(result);
 }
 
+TEST_P(TestTcpSocket, ConnectWithLocalPortShouldUseLocalPort)
+{
+    // Arrange
+    const TcpSocketParam& param = GetParam();
+
+    uint16_t clientPort{};
+    {
+        SocketListener portFinder;
+        AssertOk(SocketListener::Create(GetLoopBackAddress(param.addressFamily), 0, portFinder));
+        AssertOk(portFinder.GetLocalPort(clientPort));
+    }
+
+    SocketListener listener;
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
+
+    uint16_t serverPort{};
+    AssertOk(listener.GetLocalPort(serverPort));
+
+    SocketClient connectClient;
+    AssertOk(SocketClient::TryConnect(GetLoopBackAddress(param.addressFamily), serverPort, clientPort, 0, connectClient));
+
+    SocketClient acceptClient;
+    AssertOk(listener.TryAccept(acceptClient));
+
+    std::string remoteAddress;
+
+    // Act
+    Result result = acceptClient.GetRemoteAddress(remoteAddress);
+
+    // Assert
+    AssertOk(result);
+    ASSERT_EQ(remoteAddress, fmt::format("{}:{}", GetLoopBackAddress(param.addressFamily), clientPort));
+}
+
 TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     SocketClient client;
 
@@ -198,10 +268,10 @@ TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork)
 TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     listener.Stop();
 
@@ -217,10 +287,10 @@ TEST_P(TestTcpSocket, AcceptAfterStopShouldNotWork)
 TEST_P(TestTcpSocket, AcceptWithConnectShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketListener listener;
-    AssertOk(SocketListener::Create(param.addressFamily, 0, param.enableRemoteAccess, listener));
+    AssertOk(SocketListener::Create(param.listenAddress, 0, listener));
 
     uint16_t localPort{};
     AssertOk(listener.GetLocalPort(localPort));
@@ -240,7 +310,7 @@ TEST_P(TestTcpSocket, AcceptWithConnectShouldWork)
 TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -269,7 +339,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient)
 TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -298,7 +368,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient)
 TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -327,7 +397,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient)
 TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -356,7 +426,7 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient)
 TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -372,7 +442,7 @@ TEST_P(TestTcpSocket, IsConnectedAfterConnectAndAcceptShouldBeTrue)
 TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -390,7 +460,7 @@ TEST_P(TestTcpSocket, IsNotConnectedAfterDisconnectShouldBeFalse)
 TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -409,7 +479,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
 TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -428,7 +498,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid)
 TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -441,7 +511,7 @@ TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork)
 TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -454,7 +524,7 @@ TEST_P(TestTcpSocket, PingPongBeginningWithConnectClientShouldWork)
 TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -467,7 +537,7 @@ TEST_P(TestTcpSocket, SendManyElementsFromConnectClientToAcceptClientShouldWork)
 TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -480,7 +550,7 @@ TEST_P(TestTcpSocket, SendBigElementFromConnectClientToAcceptClientShouldWork)
 TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -493,7 +563,7 @@ TEST_P(TestTcpSocket, SendOnDisconnectedConnectClientShouldNotWork)
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -506,7 +576,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedConnectClientShouldNotWork)
 TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;
@@ -519,7 +589,7 @@ TEST_P(TestTcpSocket, ReceiveOnDisconnectedRemoteConnectClientShouldNotWork)
 TEST_P(TestTcpSocket, WaitForDataTimesOutWhenNoDataArrives)
 {
     // Arrange
-    TcpSocketParam param = GetParam();
+    const TcpSocketParam& param = GetParam();
 
     SocketClient connectClient;
     SocketClient acceptClient;

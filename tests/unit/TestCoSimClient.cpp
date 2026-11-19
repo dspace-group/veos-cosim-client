@@ -34,7 +34,7 @@ class TestCoSimClient : public testing::TestWithParam<ConnectionKind> {
         _serverName = GenerateString("CoSimServer名前");
 
         if (connectionKind == ConnectionKind::Remote) {
-            AssertOk(CreateTcpChannelServer(0, true, _server));
+            AssertOk(CreateTcpChannelServer(0, {"127.0.0.1"}, _server));
             _serverPort = _server->GetLocalPort();
         } else {
             AssertOk(CreateLocalChannelServer(_serverName, _server));
@@ -61,7 +61,10 @@ class TestCoSimClient : public testing::TestWithParam<ConnectionKind> {
     {
         _serverName = GenerateString("CoSimServer名前");
         serverConfig.serverName = _serverName;
-        serverConfig.enableRemoteAccess = (connectionKind == ConnectionKind::Remote);
+        if (connectionKind == ConnectionKind::Remote) {
+            serverConfig.listenAddresses = {"127.0.0.1"};
+        }
+
         serverConfig.port = 0;
         serverConfig.isClientOptional = false;
         serverConfig.registerAtPortMapper = false;
@@ -376,7 +379,7 @@ TEST_P(TestCoSimClient, ReconnectAfterDisconnect)
     if (GetParam() == ConnectionKind::Local) {
         AssertOk(CreateLocalChannelServer(_serverName, _server));
     } else {
-        AssertOk(CreateTcpChannelServer(0, true, _server));
+        AssertOk(CreateTcpChannelServer(0, {"127.0.0.1"}, _server));
         _serverPort = _server->GetLocalPort();
     }
 
@@ -606,7 +609,7 @@ TEST_P(TestCoSimClient, StartPollingBasedCoSimulationAfterCallbackModeShouldSucc
     if (GetParam() == ConnectionKind::Local) {
         AssertOk(CreateLocalChannelServer(_serverName, _server));
     } else {
-        AssertOk(CreateTcpChannelServer(0, true, _server));
+        AssertOk(CreateTcpChannelServer(0, {"127.0.0.1"}, _server));
         _serverPort = _server->GetLocalPort();
     }
 

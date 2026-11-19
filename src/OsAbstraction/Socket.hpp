@@ -16,10 +16,17 @@ namespace DsVeosCoSim {
 
 [[nodiscard]] bool IsIpv4SocketSupported();
 [[nodiscard]] bool IsIpv6SocketSupported();
+
+#ifndef _WIN32
+
 [[nodiscard]] bool IsLocalSocketSupported();
 
+#endif
+
 enum class AddressFamily {
+#ifndef _WIN32
     Local,
+#endif
     Ipv4,
     Ipv6,
 };
@@ -27,8 +34,10 @@ enum class AddressFamily {
 [[nodiscard]] constexpr std::string_view format_as(AddressFamily addressFamily) noexcept
 {
     switch (addressFamily) {
+#ifndef _WIN32
     case AddressFamily::Local:
         return "Local";
+#endif
     case AddressFamily::Ipv4:
         return "Ipv4";
     case AddressFamily::Ipv6:
@@ -106,7 +115,11 @@ class SocketHandle final {
 class SocketListener;
 
 class SocketClient final {
+#ifdef _WIN32
+    SocketClient(SocketHandle socketHandle, AddressFamily addressFamily);
+#else
     SocketClient(SocketHandle socketHandle, AddressFamily addressFamily, std::string path);
+#endif
 
     friend class SocketListener;
 
@@ -125,7 +138,9 @@ class SocketClient final {
                                            uint16_t localPort,
                                            uint32_t timeoutInMilliseconds,
                                            SocketClient& client);
+#ifndef _WIN32
     [[nodiscard]] static Result TryConnect(std::string_view name, SocketClient& client);
+#endif
 
     void Disconnect();
 
@@ -140,12 +155,18 @@ class SocketClient final {
   private:
     SocketHandle _socketHandle;
     AddressFamily _addressFamily{};
+#ifndef _WIN32
     std::string _path;
+#endif
     bool _isConnected{};
 };
 
 class SocketListener final {
+#ifdef _WIN32
+    SocketListener(SocketHandle socketHandle, AddressFamily addressFamily);
+#else
     SocketListener(SocketHandle socketHandle, AddressFamily addressFamily, std::string path);
+#endif
 
   public:
     SocketListener() = default;
@@ -157,8 +178,11 @@ class SocketListener final {
     SocketListener(SocketListener&& other) noexcept = default;
     SocketListener& operator=(SocketListener&& other) noexcept = default;
 
-    [[nodiscard]] static Result Create(AddressFamily addressFamily, uint16_t port, bool enableRemoteAccess, SocketListener& listener);
+    [[nodiscard]] static Result Create(const std::string& ipAddress, uint16_t port, SocketListener& listener);
+
+#ifndef _WIN32
     [[nodiscard]] static Result Create(std::string_view name, SocketListener& listener);
+#endif
 
     void Stop();
 
@@ -170,7 +194,9 @@ class SocketListener final {
   private:
     SocketHandle _socketHandle;
     AddressFamily _addressFamily{};
+#ifndef _WIN32
     std::string _path;
+#endif
     bool _isRunning{};
 };
 

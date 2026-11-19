@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "Channel.hpp"
 #include "Result.hpp"
@@ -138,9 +139,8 @@ class SocketChannel final : public Channel {  // NOLINT(misc-use-internal-linkag
 
 class TcpChannelServer final : public ChannelServer {  // NOLINT(misc-use-internal-linkage)
   public:
-    TcpChannelServer(SocketListener listenerIpv4, SocketListener listenerIpv6, uint16_t port)
-        : _listenerIpv4(std::move(listenerIpv4))
-        , _listenerIpv6(std::move(listenerIpv6))
+    TcpChannelServer(std::vector<SocketListener> listeners, uint16_t port)
+        : _listeners(std::move(listeners))
         , _port(port)
     {
     }
@@ -160,9 +160,13 @@ class TcpChannelServer final : public ChannelServer {  // NOLINT(misc-use-intern
 
     [[nodiscard]] Result TryAccept(std::unique_ptr<Channel>& channel) override
     {
-        if (_listenerIpv4.IsRunning()) {
+        for (const SocketListener& listener : _listeners) {
+            if (!listener.IsRunning()) {
+                continue;
+            }
+
             SocketClient client{};
-            Result result = _listenerIpv4.TryAccept(client);
+            Result result = listener.TryAccept(client);
             if (IsOk(result)) {
                 channel = std::make_unique<SocketChannel>(std::move(client));
                 return CreateOk();
@@ -173,19 +177,11 @@ class TcpChannelServer final : public ChannelServer {  // NOLINT(misc-use-intern
             }
         }
 
-        if (_listenerIpv6.IsRunning()) {
-            SocketClient client{};
-            CheckResult(_listenerIpv6.TryAccept(client));
-            channel = std::make_unique<SocketChannel>(std::move(client));
-            return CreateOk();
-        }
-
         return CreateNotConnected();
     }
 
   private:
-    SocketListener _listenerIpv4;
-    SocketListener _listenerIpv6;
+    std::vector<SocketListener> _listeners;
     uint16_t _port{};
 };
 
@@ -239,23 +235,24 @@ class LocalChannelServer final : public ChannelServer {
     return CreateOk();
 }
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& server)
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, const std::vector<std::string>& listenAddresses, std::unique_ptr<ChannelServer>& server)
 {
     CheckResult(StartupNetwork());
 
-    SocketListener listenerIpv4;
-    if (IsIpv4SocketSupported()) {
-        CheckResult(SocketListener::Create(AddressFamily::Ipv4, port, enableRemoteAccess, listenerIpv4));
-        CheckResult(listenerIpv4.GetLocalPort(port));
+    std::vector<SocketListener> listeners;
+    for (const std::string& listenAddress : listenAddresses) {
+        SocketListener listener;
+        CheckResult(SocketListener::Create(listenAddress, port, listener));
+        CheckResult(listener.GetLocalPort(port));
+        listeners.push_back(std::move(listener));
     }
 
-    SocketListener listenerIpv6;
-    if (IsIpv6SocketSupported()) {
-        CheckResult(SocketListener::Create(AddressFamily::Ipv6, port, enableRemoteAccess, listenerIpv6));
-        CheckResult(listenerIpv6.GetLocalPort(port));
+    // Without any listener, there is no port
+    if (listeners.empty()) {
+        port = 0;
     }
 
-    server = std::make_unique<TcpChannelServer>(std::move(listenerIpv4), std::move(listenerIpv6), port);
+    server = std::make_unique<TcpChannelServer>(std::move(listeners), port);
     return CreateOk();
 }
 
