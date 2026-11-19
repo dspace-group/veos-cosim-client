@@ -2,11 +2,13 @@
 
 #include "CoSimServer.hpp"
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -46,7 +48,7 @@ CoSimServer::~CoSimServer() noexcept
 
 Result CoSimServer::Load(const CoSimServerConfig& config)
 {
-    _enableRemoteAccess = config.enableRemoteAccess;
+    _listenAddresses = config.listenAddresses;
     _localPort = config.port;
     _serverName = config.serverName;
     _isClientOptional = config.isClientOptional;
@@ -73,7 +75,7 @@ Result CoSimServer::Load(const CoSimServerConfig& config)
     CheckResult(CreateProtocol(ProtocolVersion1, _protocol));
 
     if (config.startPortMapper) {
-        CheckResult(CreatePortMapperServer(_enableRemoteAccess, _portMapperServer));
+        CheckResult(CreatePortMapperServer(_listenAddresses, _portMapperServer));
     }
 
     CheckResult(StartAccepting());
@@ -417,7 +419,7 @@ Result CoSimServer::StartAccepting()
 {
     uint16_t port{};
     if (!_tcpChannelServer) {
-        CheckResult(CreateTcpChannelServer(_localPort, _enableRemoteAccess, _tcpChannelServer));
+        CheckResult(CreateTcpChannelServer(_localPort, _listenAddresses, _tcpChannelServer));
         port = _tcpChannelServer->GetLocalPort();
     }
 
@@ -432,9 +434,7 @@ Result CoSimServer::StartAccepting()
             }
         }
 
-        std::string_view address = _enableRemoteAccess ? "0.0.0.0" : "127.0.0.1";
-
-        LogInfo("dSPACE VEOS CoSim server '{}' is listening on {}:{}.", _serverName, address, port);
+        LogInfo("dSPACE VEOS CoSim server '{}' is listening on port {} ({}).", _serverName, port, fmt::join(_listenAddresses, ", "));
     }
 
     return CreateOk();

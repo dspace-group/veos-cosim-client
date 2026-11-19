@@ -717,6 +717,7 @@ void OnFrMessageContainerReceived([[maybe_unused]] SimulationTime simulationTime
 
     CoSimServerConfig config{};
     config.serverName = name;
+    config.listenAddresses = {"127.0.0.1"};
     config.isClientOptional = isClientOptional;
     config.stepSize = 1ms;
     config.startPortMapper = true;

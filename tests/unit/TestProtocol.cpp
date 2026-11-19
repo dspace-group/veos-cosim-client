@@ -38,7 +38,7 @@ class TestProtocol : public testing::TestWithParam<ConnectionKind> {
     {
         if (connectionKind == ConnectionKind::Remote) {
             std::unique_ptr<ChannelServer> server;
-            AssertOk(CreateTcpChannelServer(0, true, server));
+            AssertOk(CreateTcpChannelServer(0, {"127.0.0.1"}, server));
             uint16_t port = server->GetLocalPort();
 
             AssertOk(TryConnectToTcpChannel("127.0.0.1", port, 0, DefaultTimeoutInMilliseconds, _senderChannel));

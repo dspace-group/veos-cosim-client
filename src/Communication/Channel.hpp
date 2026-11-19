@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "Logger.hpp"
 #include "Result.hpp"
@@ -437,7 +438,8 @@ class ChannelServer {
                                             uint32_t timeoutInMilliseconds,
                                             std::unique_ptr<Channel>& channel);
 
-[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, bool enableRemoteAccess, std::unique_ptr<ChannelServer>& server);
+// Listens only on the given numeric IPv4/IPv6 addresses (wildcards '0.0.0.0' and '::' allowed). An empty list creates no listener.
+[[nodiscard]] Result CreateTcpChannelServer(uint16_t port, const std::vector<std::string>& listenAddresses, std::unique_ptr<ChannelServer>& server);
 
 [[nodiscard]] Result TryConnectToLocalChannel(const std::string& name, std::unique_ptr<Channel>& channel);
 [[nodiscard]] Result CreateLocalChannelServer(const std::string& name, std::unique_ptr<ChannelServer>& server);

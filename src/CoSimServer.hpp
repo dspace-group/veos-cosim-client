@@ -19,7 +19,9 @@ namespace DsVeosCoSim {
 
 struct CoSimServerConfig {
     uint16_t port{};
-    bool enableRemoteAccess{};
+    // Numeric IPv4/IPv6 addresses to listen on via TCP (e.g. "127.0.0.1", "::1", "0.0.0.0", "::" or "192.168.0.10").
+    // An empty list disables TCP, so only local access is possible.
+    std::vector<std::string> listenAddresses;
     std::string serverName;
     bool isClientOptional{};
     bool startPortMapper{};
@@ -106,7 +108,7 @@ class CoSimServer final {
     std::unique_ptr<Channel> _channel;
     std::unique_ptr<IProtocol> _protocol;
     uint16_t _localPort{};
-    bool _enableRemoteAccess{};
+    std::vector<std::string> _listenAddresses;
     std::unique_ptr<PortMapperServer> _portMapperServer;
     std::unique_ptr<ChannelServer> _tcpChannelServer;
     std::unique_ptr<ChannelServer> _localChannelServer;

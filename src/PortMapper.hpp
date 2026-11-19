@@ -8,6 +8,7 @@
 #include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 #include "Channel.hpp"
 #include "Event.hpp"
@@ -18,7 +19,7 @@ namespace DsVeosCoSim {
 
 class PortMapperServer final {
   public:
-    PortMapperServer(std::unique_ptr<ChannelServer> channelServer, std::unique_ptr<IProtocol> protocol);
+    PortMapperServer(std::unique_ptr<ChannelServer> tcpChannelServer, std::unique_ptr<ChannelServer> localChannelServer, std::unique_ptr<IProtocol> protocol);
     ~PortMapperServer() noexcept;
 
     PortMapperServer(const PortMapperServer&) = delete;
@@ -29,7 +30,7 @@ class PortMapperServer final {
 
   private:
     void RunPortMapperServer();
-    [[nodiscard]] Result CheckForClient();
+    [[nodiscard]] Result CheckForClient(ChannelServer& server);
     [[nodiscard]] Result HandleClient(Channel& channel);
     [[nodiscard]] Result HandleGetPort(Channel& channel);
     [[nodiscard]] Result HandleSetPort(Channel& channel);
@@ -37,13 +38,15 @@ class PortMapperServer final {
     void DumpEntries();
 
     std::unordered_map<std::string, uint16_t> _ports;
-    std::unique_ptr<ChannelServer> _server;
+    std::unique_ptr<ChannelServer> _tcpServer;
+    std::unique_ptr<ChannelServer> _localServer;
     std::thread _thread;
     Event _stopEvent;
     std::unique_ptr<IProtocol> _protocol;
 };
 
-[[nodiscard]] Result CreatePortMapperServer(bool enableRemoteAccess, std::unique_ptr<PortMapperServer>& portMapperServer);
+// Port queries are served via TCP on the given listen addresses. Port registration is always done via the local channel.
+[[nodiscard]] Result CreatePortMapperServer(const std::vector<std::string>& listenAddresses, std::unique_ptr<PortMapperServer>& portMapperServer);
 
 [[nodiscard]] Result PortMapperGetPort(const std::string& ipAddress, std::string_view serverName, uint16_t& port);
 [[nodiscard]] Result PortMapperSetPort(std::string_view name, uint16_t port);
