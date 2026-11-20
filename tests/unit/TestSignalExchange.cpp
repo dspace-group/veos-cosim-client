@@ -51,6 +51,16 @@ struct EventData {
     std::vector<uint8_t> data;
 };
 
+[[nodiscard]] std::vector<uint8_t> GenerateNonzeroIoData(const IoSignalContainer& signal)
+{
+    auto data = GenerateIoData(signal);
+    if (std::all_of(data.begin(), data.end(), [](uint8_t value) { return value == 0; })) {
+        data.front() = 1;
+    }
+
+    return data;
+}
+
 #ifdef _WIN32
 
 [[nodiscard]] IoSignalContainer CreateLayoutSignal(uint32_t id)
@@ -380,7 +390,7 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndReceiveEvent)
                                   *_protocol,
                                   readerSignalExchange));
 
-    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    std::vector<uint8_t> writeValue = GenerateNonzeroIoData(signal);
 
     // Act and assert
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -413,6 +423,7 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReceiveOneEvent)
                                   readerSignalExchange));
 
     std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    writeValue[0] = 1;
 
     // Act and assert
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
@@ -451,7 +462,7 @@ TEST_P(TestSignalExchange, NoNewEventIfFixedSizedDataDoesNotChangeWithSharedMemo
                                   *_protocol,
                                   readerSignalExchange));
 
-    std::vector<uint8_t> writeValue = GenerateIoData(signal);
+    std::vector<uint8_t> writeValue = GenerateNonzeroIoData(signal);
     AssertOk(writerSignalExchange->Write(signal.id, signal.length, writeValue.data()));
 
     TransferWithEvents(*writerSignalExchange, *readerSignalExchange, {{signal, writeValue}});
@@ -760,9 +771,9 @@ TEST_P(TestSignalExchange, WriteMultipleSignalsAndReceiveMultipleEvents)
                                   *_protocol,
                                   readerSignalExchange));
 
-    std::vector<uint8_t> value1 = GenerateIoData(signal1);
-    std::vector<uint8_t> value2 = GenerateIoData(signal2);
-    std::vector<uint8_t> value3 = GenerateIoData(signal3);
+    std::vector<uint8_t> value1 = GenerateNonzeroIoData(signal1);
+    std::vector<uint8_t> value2 = GenerateNonzeroIoData(signal2);
+    std::vector<uint8_t> value3 = GenerateNonzeroIoData(signal3);
 
     // Act and assert
     AssertOk(writerSignalExchange->Write(signal1.id, signal1.length, value1.data()));

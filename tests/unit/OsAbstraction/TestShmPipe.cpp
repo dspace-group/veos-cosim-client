@@ -513,6 +513,36 @@ TEST_F(TestShmPipe, ReceiveOnDisconnectedRemoteAcceptClientShouldNotWork)
     TestReceiveAfterDisconnectOnRemoteClient(acceptClient, connectClient);
 }
 
+TEST_F(TestShmPipe, ReceiveBufferedDataAfterRemoteDisconnect)
+{
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    constexpr uint8_t sent = 42;
+    AssertOk(acceptClient.Send(&sent, sizeof(sent)));
+    acceptClient.Disconnect();
+
+    uint8_t received{};
+    size_t receivedSize{};
+    AssertOk(connectClient.WaitForData(1000));
+    AssertOk(connectClient.Receive(&received, sizeof(received), receivedSize));
+    EXPECT_EQ(receivedSize, sizeof(sent));
+    EXPECT_EQ(received, sent);
+    AssertNotConnected(connectClient.Receive(&received, sizeof(received), receivedSize));
+}
+
+TEST_F(TestShmPipe, WaitForDataReportsRemoteDisconnectBeforeFirstRead)
+{
+    ShmPipeClient connectClient;
+    ShmPipeClient acceptClient;
+    EstablishConnection(connectClient, acceptClient);
+
+    acceptClient.Disconnect();
+
+    AssertNotConnected(connectClient.WaitForData(1000));
+}
+
 TEST_F(TestShmPipe, WaitForDataTimesOutWhenNoDataArrives)
 {
     // Arrange
