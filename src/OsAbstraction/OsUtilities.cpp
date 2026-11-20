@@ -10,6 +10,7 @@
 
 #include <Windows.h>
 #include <fmt/format.h>
+#include <sysinfoapi.h>
 
 #include <algorithm>
 #include <atomic>
@@ -18,8 +19,6 @@
 #include <cstring>
 #include <string_view>
 #include <utility>
-
-#include <sysinfoapi.h>
 
 #include "Logger.hpp"
 #include "Result.hpp"
@@ -384,13 +383,14 @@ ShmPipePart::~ShmPipePart() noexcept
     NamedEvent newSpaceEvent;
     CheckResult(NamedEvent::CreateOrOpen(newSpaceName, newSpaceEvent));
 
-    auto& [serverPid, clientPid, writeIndex, readIndex] = *sharedMemory.As<Header>();
-
     if (initShm) {
-        serverPid.store(0, std::memory_order_release);
-        clientPid.store(0, std::memory_order_release);
-        writeIndex.store(0, std::memory_order_release);
-        readIndex.store(0, std::memory_order_release);
+        auto& header = *sharedMemory.As<Header>();
+        header.serverPid.store(0, std::memory_order_release);
+        header.clientPid.store(0, std::memory_order_release);
+        header.serverDisconnected.store(false, std::memory_order_relaxed);
+        header.clientDisconnected.store(false, std::memory_order_relaxed);
+        header.writeIndex.store(0, std::memory_order_release);
+        header.readIndex.store(0, std::memory_order_release);
     }
 
     pipe = ShmPipePart(std::move(newDataEvent), std::move(newSpaceEvent), std::move(sharedMemory), isWriter, isServer);
@@ -403,6 +403,10 @@ void ShmPipePart::Disconnect() const
         return;
     }
 
+    auto& header = *_sharedMemory.As<Header>();
+    auto& disconnected = _isServer ? header.serverDisconnected : header.clientDisconnected;
+    // Publish the flag before clearing the PID so a reader that sees zero also sees the disconnect.
+    disconnected.store(true, std::memory_order_relaxed);
     SetOwnPid(0);
 }
 
@@ -413,9 +417,12 @@ void ShmPipePart::Disconnect() const
         return CreateError();
     }
 
-    CheckResult(EnsureConnected());
+    if (!IsConnected()) {
+        return CreateNotConnected();
+    }
 
     if (size == 0) {
+        CheckResult(EnsureConnected());
         receivedSize = 0;
         return CreateOk();
     }
@@ -429,8 +436,14 @@ void ShmPipePart::Disconnect() const
 
     uint32_t availableData = GetAvailableData(header);
     if (availableData == 0) {
-        CheckResult(WaitForData());
+        Result connectionResult = EnsureConnected();
+        // A peer may publish its final bytes immediately before disconnecting.
         availableData = GetAvailableData(header);
+        if (availableData == 0) {
+            CheckResult(connectionResult);
+            CheckResult(WaitForData());
+            availableData = GetAvailableData(header);
+        }
     }
 
     uint32_t chunkSize = static_cast<uint32_t>(std::min<size_t>(size, UINT32_MAX));
@@ -529,30 +542,20 @@ void ShmPipePart::Disconnect() const
     }
 
     uint32_t counterPartPid = GetCounterPartPid();
-    bool counterPartPidSet = counterPartPid != 0;
-    bool counterPartProcessHandleSet = _counterPartProcess.IsValid();
+    if (counterPartPid == 0) {
+        if (HasCounterPartDisconnected()) {
+            return CreateNotConnected();
+        }
 
-    // Normal connected state
-    if (counterPartPidSet && counterPartProcessHandleSet) {
+        // The counterpart has not finished initialization yet.
         return CreateOk();
     }
 
-    // Not yet connected fully. The pipe is used before the counterpart finished the initialization.
-    // Handle as connected for now...
-    if (!counterPartPidSet && !counterPartProcessHandleSet) {
-        return CreateOk();
-    }
-
-    // !counterPartPidSet && counterPartProcessHandleSet
-    if (!counterPartPidSet) {
-        // Counterpart process is not connected anymore
-        return CreateNotConnected();
-    }
-
-    // counterPartPidSet && !counterPartProcessHandleSet
-    _counterPartProcess = Handle(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, counterPartPid));
     if (!_counterPartProcess.IsValid()) {
-        return CreateNotConnected();
+        _counterPartProcess = Handle(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, counterPartPid));
+        if (!_counterPartProcess.IsValid()) {
+            return CreateNotConnected();
+        }
     }
 
     return CreateOk();
@@ -589,6 +592,10 @@ void ShmPipePart::Disconnect() const
 
 [[nodiscard]] Result ShmPipePart::WaitForData(uint32_t timeoutInMilliseconds)
 {
+    if (!IsConnected()) {
+        return CreateNotConnected();
+    }
+
     auto& header = *_sharedMemory.As<Header>();
 
     // Fast path
@@ -621,7 +628,12 @@ void ShmPipePart::Disconnect() const
             continue;
         }
 
-        CheckResult(CheckIfConnectionIsAlive());
+        result = CheckIfConnectionIsAlive();
+        if (IsNotConnected(result) && IsConnected() && GetAvailableData(header) > 0) {
+            return CreateOk();
+        }
+
+        CheckResult(result);
     }
 
     return CreateOk();
@@ -643,7 +655,7 @@ void ShmPipePart::Disconnect() const
 
     uint32_t counterPartPid = GetCounterPartPid();
     if (counterPartPid == 0) {
-        if (!_counterPartProcess.IsValid()) {
+        if (!HasCounterPartDisconnected()) {
             // Not connected yet. Give it up to 5 seconds ...
             _detectionCounter++;
             if (_detectionCounter == ConnectionTimeoutInMilliseconds) {
@@ -690,6 +702,14 @@ void ShmPipePart::SetOwnPid(uint32_t pid) const
 {
     auto& header = *_sharedMemory.As<Header>();
     return _isServer ? header.clientPid.load(std::memory_order_acquire) : header.serverPid.load(std::memory_order_acquire);
+}
+
+[[nodiscard]] bool ShmPipePart::HasCounterPartDisconnected() const
+{
+    const auto& header = *_sharedMemory.As<Header>();
+    const auto& disconnected = _isServer ? header.clientDisconnected : header.serverDisconnected;
+    // The process handle also detects disconnects from older peers that do not set the flag.
+    return disconnected.load(std::memory_order_relaxed) || _counterPartProcess.IsValid();
 }
 
 ShmPipeClient::ShmPipeClient(ShmPipePart writer, ShmPipePart reader)

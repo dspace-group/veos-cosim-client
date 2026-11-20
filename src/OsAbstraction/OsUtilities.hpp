@@ -161,9 +161,16 @@ class ShmPipePart {
     struct Header {
         std::atomic<uint32_t> serverPid{};
         std::atomic<uint32_t> clientPid{};
+        // Use the existing padding so the shared-memory layout stays compatible.
+        std::atomic<bool> serverDisconnected{};
+        std::atomic<bool> clientDisconnected{};
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> writeIndex{};
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex{};
     };
+
+    static_assert(offsetof(Header, writeIndex) == LockFreeCacheLineBytes);
+    static_assert(offsetof(Header, readIndex) == 2 * LockFreeCacheLineBytes);
+    static_assert(sizeof(Header) == 3 * LockFreeCacheLineBytes);
 
     ShmPipePart(NamedEvent newDataEvent, NamedEvent newSpaceEvent, SharedMemory sharedMemory, bool isWriter, bool isServer);
 
@@ -200,6 +207,7 @@ class ShmPipePart {
     void SetOwnPid(uint32_t pid) const;
     [[nodiscard]] uint32_t GetOwnPid() const;
     [[nodiscard]] uint32_t GetCounterPartPid() const;
+    [[nodiscard]] bool HasCounterPartDisconnected() const;
 
     NamedEvent _newDataEvent;
     NamedEvent _newSpaceEvent;
