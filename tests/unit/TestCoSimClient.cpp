@@ -715,6 +715,26 @@ TEST_P(TestCoSimClient, PollCommandReceivesTerminate)
     ASSERT_EQ(expectedTime, simulationTime);
 }
 
+TEST_P(TestCoSimClient, PollCommandReceivesTerminateFinished)
+{
+    ConnectClientAndServer(GetParam());
+    AssertOk(_client->StartPollingBasedCoSimulation({}));
+
+    const SimulationTime expectedTime(std::chrono::nanoseconds(7000));
+    auto serverTask = std::async(std::launch::async, [&]() {
+        return _serverProtocol->SendTerminate(_serverChannel->GetWriter(), expectedTime, TerminateReason::Finished);
+    });
+
+    SimulationTime simulationTime{};
+    Command command{};
+    AssertOk(_client->PollCommand(simulationTime, command, 5000));
+
+    AssertOk(serverTask.get());
+    EXPECT_EQ(Command::TerminateFinished, command);
+    EXPECT_EQ(expectedTime, simulationTime);
+    AssertOk(_client->FinishCommand());
+}
+
 TEST_P(TestCoSimClient, PollCommandReceivesPause)
 {
     // Arrange
@@ -1020,7 +1040,7 @@ TEST_P(TestCoSimClient, SetNextSimulationTime)
     AssertOk(result);
 }
 
-TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk)
+TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentOnlyInNextStepOk)
 {
     // Arrange
     ConnectAndStartPolling(GetParam());
@@ -1038,6 +1058,14 @@ TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentInStepOk)
     // Assert
     AssertOk(serverTask.get());
     ASSERT_EQ(expectedNextTime, receivedNextTime);
+
+    auto nextServerTask = std::async(std::launch::async, [this, expectedNextTime, &receivedNextTime] {
+        return _coSimServer->Step(expectedNextTime, receivedNextTime);
+    });
+    AssertOk(_client->PollCommand(simulationTime, command, 5000));
+    AssertOk(_client->FinishCommand());
+    AssertOk(nextServerTask.get());
+    EXPECT_EQ(SimulationTime{}, receivedNextTime);
 }
 
 // --- GetRoundTripTime ---

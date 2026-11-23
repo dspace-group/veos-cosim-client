@@ -1411,6 +1411,8 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_StartPollingBasedCoSimulation(Ds
 
 /**
  * \brief Polls a command for the co-simulation for the given handle.
+ *        A successful termination is reported as DsVeosCoSim_Command_TerminateFinished;
+ *        a termination due to an error is reported as DsVeosCoSim_Command_Terminate.
  * \param handle            The handle.
  * \param simulationTime    The simulation time as an out value.
  * \param command           The command as an out value.
@@ -1422,6 +1424,7 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PollCommand(DsVeosCoSim_Handle h
 /**
  * \brief Polls a command for the co-simulation for the given handle, returning after the given timeout if no command
  *        has arrived.
+ *        Termination commands are reported as in DsVeosCoSim_PollCommand.
  * \param handle                The handle.
  * \param simulationTime        The simulation time as an out value.
  * \param command               The command as an out value.
@@ -1439,7 +1442,8 @@ DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_PollCommand2(DsVeosCoSim_Handle 
 DSVEOSCOSIM_DECL DsVeosCoSim_Result DsVeosCoSim_FinishCommand(DsVeosCoSim_Handle handle);
 
 /**
- * \brief Sets the next simulation time for the co-simulation running for the given handle.
+ * \brief Supplies the next simulation time in the next step response only.
+ *        To override the server's schedule on later steps, call this function again.
  * \param handle            The handle.
  * \param simulationTime    The next simulation time.
  */

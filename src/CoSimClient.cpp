@@ -658,9 +658,11 @@ void CoSimClient::ResetDataFromPreviousConnect()
         case FrameKind::Stop:
             CheckResultWithMessage(OnStop(), "Could not handle stop.");
             break;
-        case FrameKind::Terminate:
-            CheckResultWithMessage(OnTerminate(), "Could not handle terminate.");
+        case FrameKind::Terminate: {
+            TerminateReason reason{};
+            CheckResultWithMessage(OnTerminate(reason), "Could not handle terminate.");
             break;
+        }
         case FrameKind::Pause:
             CheckResultWithMessage(OnPause(), "Could not handle pause.");
             break;
@@ -722,10 +724,12 @@ void CoSimClient::ResetDataFromPreviousConnect()
             CheckResultWithMessage(OnStop(), "Could not handle stop.");
             _currentCommand = Command::Stop;
             break;
-        case FrameKind::Terminate:
-            CheckResultWithMessage(OnTerminate(), "Could not handle terminate.");
-            _currentCommand = Command::Terminate;
+        case FrameKind::Terminate: {
+            TerminateReason reason{};
+            CheckResultWithMessage(OnTerminate(reason), "Could not handle terminate.");
+            _currentCommand = reason == TerminateReason::Finished ? Command::TerminateFinished : Command::Terminate;
             break;
+        }
         case FrameKind::Pause:
             CheckResultWithMessage(OnPause(), "Could not handle pause.");
             _currentCommand = Command::Pause;
@@ -806,9 +810,8 @@ void CoSimClient::ResetDataFromPreviousConnect()
     return CreateOk();
 }
 
-[[nodiscard]] Result CoSimClient::OnTerminate()
+[[nodiscard]] Result CoSimClient::OnTerminate(TerminateReason& reason)
 {
-    TerminateReason reason{};
     CheckResultWithMessage(_protocol->ReadTerminate(_channel->GetReader(), _currentSimulationTime, reason), "Could not read terminate frame.");
 
     if (_callbacks.simulationTerminatedCallback) {
@@ -851,6 +854,7 @@ void CoSimClient::ResetDataFromPreviousConnect()
     Command nextCommand = _nextCommand.exchange({});
     CheckResultWithMessage(_protocol->SendStepOk(_channel->GetWriter(), _nextSimulationTime, nextCommand, _serializeIoData, _serializeBusMessages),
                            "Could not send step ok frame.");
+    _nextSimulationTime = {};
     return CreateOk();
 }
 

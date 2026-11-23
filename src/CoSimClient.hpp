@@ -111,7 +111,7 @@ class CoSimClient final {
     [[nodiscard]] Result OnStep();
     [[nodiscard]] Result OnStart();
     [[nodiscard]] Result OnStop();
-    [[nodiscard]] Result OnTerminate();
+    [[nodiscard]] Result OnTerminate(TerminateReason& reason);
     [[nodiscard]] Result OnPause();
     [[nodiscard]] Result OnContinue();
     [[nodiscard]] Result OnPing();
