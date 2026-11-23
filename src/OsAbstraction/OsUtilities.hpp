@@ -164,8 +164,11 @@ class ShmPipePart {
         // Use the existing padding so the shared-memory layout stays compatible.
         std::atomic<bool> serverDisconnected{};
         std::atomic<bool> clientDisconnected{};
+        std::byte connectionPadding[LockFreeCacheLineBytes - (2 * sizeof(std::atomic<uint32_t>)) - (2 * sizeof(std::atomic<bool>))];
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> writeIndex{};
+        std::byte writeIndexPadding[LockFreeCacheLineBytes - sizeof(std::atomic<uint32_t>)];
         alignas(LockFreeCacheLineBytes) std::atomic<uint32_t> readIndex{};
+        std::byte readIndexPadding[LockFreeCacheLineBytes - sizeof(std::atomic<uint32_t>)];
     };
 
     static_assert(offsetof(Header, writeIndex) == LockFreeCacheLineBytes);
