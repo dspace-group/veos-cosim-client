@@ -22,16 +22,15 @@ template <typename Lhs, typename Rhs>
 }  // namespace DsVeosCoSim::TestDetail
 
 // Keep the type check at the call site while letting GoogleTest evaluate and print the original operands.
-// The switch keeps an enclosing else from binding to the macro's if.
-#define DSVEOSCOSIM_CHECKED_COMPARISON(assertion, lhs, rhs)                                                                 \
-    switch (0)                                                                                                              \
-    case 0:                                                                                                                 \
-    default:                                                                                                                \
-        if constexpr ([&] {                                                                                                 \
-                          static_assert(::DsVeosCoSim::TestDetail::HasSafeIntegerSigns<decltype((lhs)), decltype((rhs))>(), \
-                                        "mixed signed/unsigned operands in test comparison");                               \
-                          return true;                                                                                      \
-                      }())                                                                                                  \
+// The switch makes the wrapper a single statement without adding an if around GoogleTest's macro.
+#define DSVEOSCOSIM_CHECKED_COMPARISON(assertion, lhs, rhs)                                               \
+    switch ([] {                                                                                          \
+        static_assert(::DsVeosCoSim::TestDetail::HasSafeIntegerSigns<decltype((lhs)), decltype((rhs))>(), \
+                      "mixed signed/unsigned operands in test comparison");                               \
+        return 0;                                                                                         \
+    }())                                                                                                  \
+    case 0:                                                                                               \
+    default:                                                                                              \
         assertion(lhs, rhs)
 
 #define ASSERT_CHECKED_EQ(lhs, rhs) DSVEOSCOSIM_CHECKED_COMPARISON(ASSERT_EQ, lhs, rhs)
