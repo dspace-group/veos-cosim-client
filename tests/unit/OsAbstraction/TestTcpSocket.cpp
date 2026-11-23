@@ -13,6 +13,7 @@
 #include <thread>
 #include <vector>
 
+#include "CheckedAssertions.hpp"
 #include "Result.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
@@ -168,7 +169,7 @@ TEST_P(TestTcpSocket, LocalPortIsNotZero)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(localPort, 0U);
+    ASSERT_CHECKED_NE(localPort, 0U);
 }
 
 TEST_P(TestTcpSocket, ConnectToListeningSocketShouldWork)
@@ -245,7 +246,7 @@ TEST_P(TestTcpSocket, ConnectWithLocalPortShouldUseLocalPort)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(remoteAddress, fmt::format("{}:{}", GetLoopBackAddress(param.addressFamily), clientPort));
+    ASSERT_CHECKED_EQ(remoteAddress, fmt::format("{}:{}", GetLoopBackAddress(param.addressFamily), clientPort));
 }
 
 TEST_P(TestTcpSocket, AcceptWithoutConnectShouldNotWork)
@@ -324,10 +325,10 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnRemoteClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -353,10 +354,10 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInConnectClientOnLocalClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -382,10 +383,10 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnRemoteClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -411,10 +412,10 @@ TEST_P(TestTcpSocket, WakeUpBlockingCallInAcceptClientOnLocalClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -473,7 +474,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnConnectClientAfterConnectAndAcceptAreValid)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(connectClientRemoteAddress, "");
+    ASSERT_CHECKED_NE(connectClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid)
@@ -492,7 +493,7 @@ TEST_P(TestTcpSocket, RemoteAddressOnAcceptClientAfterConnectAndAcceptAreValid)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(acceptClientRemoteAddress, "");
+    ASSERT_CHECKED_NE(acceptClientRemoteAddress, "");
 }
 
 TEST_P(TestTcpSocket, SendOnConnectClientAndReceiveOnAcceptClientShouldWork)

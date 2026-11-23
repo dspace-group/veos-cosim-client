@@ -8,6 +8,8 @@ function(dsveoscosim_enable_warnings target)
       /permissive-
       /EHsc
       /W4
+      /WX
+      $<$<CXX_COMPILER_ID:Clang>:/clang:-Werror=sign-compare>
     )
   else()
     target_compile_options(
@@ -16,6 +18,8 @@ function(dsveoscosim_enable_warnings target)
       -Wall
       -Wextra
       -Wpedantic
+      -Werror
+      -Werror=sign-compare
     )
   endif()
 endfunction()

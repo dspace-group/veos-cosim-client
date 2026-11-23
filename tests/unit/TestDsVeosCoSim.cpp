@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 
+#include "CheckedAssertions.hpp"
 #include "DsVeosCoSim/DsVeosCoSim.h"
 #include "Helper.hpp"
 
@@ -18,7 +19,7 @@ class TestDsVeosCoSim : public testing::Test {
     void SetUp() override
     {
         _handle = DsVeosCoSim_Create();
-        ASSERT_NE(nullptr, _handle);
+        ASSERT_CHECKED_NE(nullptr, _handle);
     }
 
     void TearDown() override
@@ -34,7 +35,7 @@ class TestDsVeosCoSim : public testing::Test {
 TEST(TestDsVeosCoSimLifecycle, CreateReturnsNonNull)
 {
     DsVeosCoSim_Handle handle = DsVeosCoSim_Create();
-    EXPECT_NE(nullptr, handle);
+    EXPECT_CHECKED_NE(nullptr, handle);
     DsVeosCoSim_Destroy(handle);
 }
 
@@ -72,91 +73,91 @@ TEST(TestDsVeosCoSimLifecycle, AllHandleFunctionsRejectNullHandle)
     uint32_t length{};
 
     // Connection
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_Connect(nullptr, config));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_Disconnect(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetConnectionState(nullptr, &connectionState));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_Connect(nullptr, config));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_Disconnect(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetConnectionState(nullptr, &connectionState));
 
     // Co-simulation control
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_RunCallbackBasedCoSimulation(nullptr, callbacks));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StartPollingBasedCoSimulation(nullptr, callbacks));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(nullptr, &simulationTime, &command));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(nullptr, &simulationTime, &command, 0));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FinishCommand(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_SetNextSimulationTime(nullptr, 0));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_RunCallbackBasedCoSimulation(nullptr, callbacks));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StartPollingBasedCoSimulation(nullptr, callbacks));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(nullptr, &simulationTime, &command));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(nullptr, &simulationTime, &command, 0));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FinishCommand(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_SetNextSimulationTime(nullptr, 0));
 
     // Simulation state/info
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetStepSize(nullptr, &simulationTime));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCurrentSimulationTime(nullptr, &simulationTime));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetSimulationState(nullptr, &simulationState));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetRoundTripTime(nullptr, &roundTripTime));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetStepSize(nullptr, &simulationTime));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCurrentSimulationTime(nullptr, &simulationTime));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetSimulationState(nullptr, &simulationState));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetRoundTripTime(nullptr, &roundTripTime));
 
     // Simulation commands
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StartSimulation(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StopSimulation(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PauseSimulation(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ContinueSimulation(nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TerminateSimulation(nullptr, DsVeosCoSim_TerminateReason_Finished));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StartSimulation(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_StopSimulation(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PauseSimulation(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ContinueSimulation(nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TerminateSimulation(nullptr, DsVeosCoSim_TerminateReason_Finished));
 
     // IO signals
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(nullptr, &count, &signals));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(nullptr, {}, &length, &value));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(nullptr, &count, &signals));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteOutgoingSignal(nullptr, {}, 0, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(nullptr, &count, &signals));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(nullptr, {}, &length, &value));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(nullptr, &count, &signals));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteOutgoingSignal(nullptr, {}, 0, nullptr));
 
     // CAN
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(nullptr, &count, &canControllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessage(nullptr, &canMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessageContainer(nullptr, &canMsgContainer));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessage(nullptr, &canMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessageContainer(nullptr, &canMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(nullptr, &count, &canControllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessage(nullptr, &canMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessageContainer(nullptr, &canMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessage(nullptr, &canMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessageContainer(nullptr, &canMsgContainer));
 
     // Ethernet
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(nullptr, &count, &ethControllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessage(nullptr, &ethMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessageContainer(nullptr, &ethMsgContainer));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessage(nullptr, &ethMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessageContainer(nullptr, &ethMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(nullptr, &count, &ethControllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessage(nullptr, &ethMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessageContainer(nullptr, &ethMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessage(nullptr, &ethMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessageContainer(nullptr, &ethMsgContainer));
 
     // LIN
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(nullptr, &count, &linControllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessage(nullptr, &linMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessageContainer(nullptr, &linMsgContainer));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessage(nullptr, &linMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessageContainer(nullptr, &linMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(nullptr, &count, &linControllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessage(nullptr, &linMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessageContainer(nullptr, &linMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessage(nullptr, &linMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessageContainer(nullptr, &linMsgContainer));
 
     // FlexRay
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(nullptr, &count, &frControllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessage(nullptr, &frMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessageContainer(nullptr, &frMsgContainer));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessage(nullptr, &frMsg));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessageContainer(nullptr, &frMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(nullptr, &count, &frControllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessage(nullptr, &frMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessageContainer(nullptr, &frMsgContainer));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessage(nullptr, &frMsg));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessageContainer(nullptr, &frMsgContainer));
 }
 
 // --- Null Output Pointer Validation (with valid handle) ---
 
 TEST_F(TestDsVeosCoSim, GetConnectionStateNullOutputPointer)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetConnectionState(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetConnectionState(_handle, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetStepSizeNullOutputPointer)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetStepSize(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetStepSize(_handle, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetCurrentSimulationTimeNullOutputPointer)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCurrentSimulationTime(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCurrentSimulationTime(_handle, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetSimulationStateNullOutputPointer)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetSimulationState(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetSimulationState(_handle, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetRoundTripTimeNullOutputPointer)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetRoundTripTime(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetRoundTripTime(_handle, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, PollCommandNullOutputPointers)
@@ -164,8 +165,8 @@ TEST_F(TestDsVeosCoSim, PollCommandNullOutputPointers)
     DsVeosCoSim_SimulationTime simulationTime{};
     DsVeosCoSim_Command command{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(_handle, nullptr, &command));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(_handle, &simulationTime, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(_handle, nullptr, &command));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand(_handle, &simulationTime, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, PollCommand2NullOutputPointers)
@@ -173,8 +174,8 @@ TEST_F(TestDsVeosCoSim, PollCommand2NullOutputPointers)
     DsVeosCoSim_SimulationTime simulationTime{};
     DsVeosCoSim_Command command{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(_handle, nullptr, &command, 0));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(_handle, &simulationTime, nullptr, 0));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(_handle, nullptr, &command, 0));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_PollCommand2(_handle, &simulationTime, nullptr, 0));
 }
 
 TEST_F(TestDsVeosCoSim, GetIncomingSignalsNullOutputPointers)
@@ -182,8 +183,8 @@ TEST_F(TestDsVeosCoSim, GetIncomingSignalsNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_IoSignal* signals{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(_handle, nullptr, &signals));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(_handle, nullptr, &signals));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetIncomingSignals(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetOutgoingSignalsNullOutputPointers)
@@ -191,8 +192,8 @@ TEST_F(TestDsVeosCoSim, GetOutgoingSignalsNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_IoSignal* signals{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(_handle, nullptr, &signals));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(_handle, nullptr, &signals));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetOutgoingSignals(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, ReadIncomingSignalNullOutputPointers)
@@ -200,8 +201,8 @@ TEST_F(TestDsVeosCoSim, ReadIncomingSignalNullOutputPointers)
     uint32_t length{};
     uint8_t value{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(_handle, {}, nullptr, &value));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(_handle, {}, &length, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(_handle, {}, nullptr, &value));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReadIncomingSignal(_handle, {}, &length, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetCanControllersNullOutputPointers)
@@ -209,8 +210,8 @@ TEST_F(TestDsVeosCoSim, GetCanControllersNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_CanController* controllers{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(_handle, nullptr, &controllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(_handle, nullptr, &controllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetCanControllers(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetEthControllersNullOutputPointers)
@@ -218,8 +219,8 @@ TEST_F(TestDsVeosCoSim, GetEthControllersNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_EthController* controllers{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(_handle, nullptr, &controllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(_handle, nullptr, &controllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetEthControllers(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetLinControllersNullOutputPointers)
@@ -227,8 +228,8 @@ TEST_F(TestDsVeosCoSim, GetLinControllersNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_LinController* controllers{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(_handle, nullptr, &controllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(_handle, nullptr, &controllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetLinControllers(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, GetFrControllersNullOutputPointers)
@@ -236,31 +237,31 @@ TEST_F(TestDsVeosCoSim, GetFrControllersNullOutputPointers)
     uint32_t count{};
     const DsVeosCoSim_FrController* controllers{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(_handle, nullptr, &controllers));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(_handle, &count, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(_handle, nullptr, &controllers));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_GetFrControllers(_handle, &count, nullptr));
 }
 
 TEST_F(TestDsVeosCoSim, ReceiveAndTransmitNullMessagePointers)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessageContainer(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveCanMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitCanMessageContainer(_handle, nullptr));
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessageContainer(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveEthMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitEthMessageContainer(_handle, nullptr));
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessageContainer(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveLinMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitLinMessageContainer(_handle, nullptr));
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessageContainer(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessage(_handle, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_ReceiveFrMessageContainer(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessage(_handle, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_TransmitFrMessageContainer(_handle, nullptr));
 }
 
 // --- Connect string handling ---
@@ -277,7 +278,7 @@ TEST_F(TestDsVeosCoSim, ConnectWithAllNullStringsInConfig)
     // All null/zero config is rejected as InvalidArgument (empty serverName).
     // The key test: no crash from nullptr→string conversion.
     DsVeosCoSim_Result result = DsVeosCoSim_Connect(_handle, config);
-    EXPECT_NE(DsVeosCoSim_Result_Ok, result);
+    EXPECT_CHECKED_NE(DsVeosCoSim_Result_Ok, result);
 }
 
 // --- WriteOutgoingSignal conditional null ---
@@ -287,12 +288,12 @@ TEST_F(TestDsVeosCoSim, WriteOutgoingSignalNullValueWithZeroLengthIsAllowed)
     // length=0 + value=nullptr should NOT return InvalidArgument.
     // It fails because not connected, but the null check is bypassed.
     DsVeosCoSim_Result result = DsVeosCoSim_WriteOutgoingSignal(_handle, {}, 0, nullptr);
-    EXPECT_NE(DsVeosCoSim_Result_InvalidArgument, result);
+    EXPECT_CHECKED_NE(DsVeosCoSim_Result_InvalidArgument, result);
 }
 
 TEST_F(TestDsVeosCoSim, WriteOutgoingSignalNullValueWithNonZeroLengthShouldReturnInvalidArgument)
 {
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteOutgoingSignal(_handle, {}, 1, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteOutgoingSignal(_handle, {}, 1, nullptr));
 }
 
 // --- SetLogCallback ---
@@ -416,17 +417,17 @@ TEST(TestDsVeosCoSimToString, LinControllerTypeToString)
 
 TEST(TestDsVeosCoSimToString, GetDataTypeSize)
 {
-    EXPECT_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Bool));
-    EXPECT_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int8));
-    EXPECT_EQ(2U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int16));
-    EXPECT_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int32));
-    EXPECT_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int64));
-    EXPECT_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt8));
-    EXPECT_EQ(2U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt16));
-    EXPECT_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt32));
-    EXPECT_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt64));
-    EXPECT_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Float32));
-    EXPECT_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Float64));
+    EXPECT_CHECKED_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Bool));
+    EXPECT_CHECKED_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int8));
+    EXPECT_CHECKED_EQ(2U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int16));
+    EXPECT_CHECKED_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int32));
+    EXPECT_CHECKED_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Int64));
+    EXPECT_CHECKED_EQ(1U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt8));
+    EXPECT_CHECKED_EQ(2U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt16));
+    EXPECT_CHECKED_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt32));
+    EXPECT_CHECKED_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_UInt64));
+    EXPECT_CHECKED_EQ(4U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Float32));
+    EXPECT_CHECKED_EQ(8U, DsVeosCoSim_GetDataTypeSize(DsVeosCoSim_DataType_Float64));
 }
 
 // --- Message Container Conversions ---
@@ -442,24 +443,24 @@ TEST(TestDsVeosCoSimConversion, CanMessageContainerToMessageRoundTrip)
     FillWithRandomData(container.data, container.length);
 
     DsVeosCoSim_CanMessage message{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteCanMessageContainerToMessage(&container, &message));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteCanMessageContainerToMessage(&container, &message));
 
-    EXPECT_EQ(container.timestamp, message.timestamp);
-    EXPECT_EQ(container.controllerId, message.controllerId);
-    EXPECT_EQ(container.id, message.id);
-    EXPECT_EQ(container.flags, message.flags);
-    EXPECT_EQ(container.length, message.length);
-    EXPECT_EQ(0, std::memcmp(container.data, message.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, message.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, message.controllerId);
+    EXPECT_CHECKED_EQ(container.id, message.id);
+    EXPECT_CHECKED_EQ(container.flags, message.flags);
+    EXPECT_CHECKED_EQ(container.length, message.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, message.data, container.length));
 
     DsVeosCoSim_CanMessageContainer roundTripped{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteCanMessageToMessageContainer(&message, &roundTripped));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteCanMessageToMessageContainer(&message, &roundTripped));
 
-    EXPECT_EQ(container.timestamp, roundTripped.timestamp);
-    EXPECT_EQ(container.controllerId, roundTripped.controllerId);
-    EXPECT_EQ(container.id, roundTripped.id);
-    EXPECT_EQ(container.flags, roundTripped.flags);
-    EXPECT_EQ(container.length, roundTripped.length);
-    EXPECT_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, roundTripped.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, roundTripped.controllerId);
+    EXPECT_CHECKED_EQ(container.id, roundTripped.id);
+    EXPECT_CHECKED_EQ(container.flags, roundTripped.flags);
+    EXPECT_CHECKED_EQ(container.length, roundTripped.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
 }
 
 TEST(TestDsVeosCoSimConversion, CanMessageConversionNullArgs)
@@ -467,10 +468,10 @@ TEST(TestDsVeosCoSimConversion, CanMessageConversionNullArgs)
     DsVeosCoSim_CanMessageContainer container{};
     DsVeosCoSim_CanMessage message{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageContainerToMessage(nullptr, &message));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageContainerToMessage(&container, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageToMessageContainer(nullptr, &container));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageToMessageContainer(&message, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageContainerToMessage(nullptr, &message));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageContainerToMessage(&container, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageToMessageContainer(nullptr, &container));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteCanMessageToMessageContainer(&message, nullptr));
 }
 
 TEST(TestDsVeosCoSimConversion, EthMessageContainerToMessageRoundTrip)
@@ -483,22 +484,22 @@ TEST(TestDsVeosCoSimConversion, EthMessageContainerToMessageRoundTrip)
     FillWithRandomData(container.data, container.length);
 
     DsVeosCoSim_EthMessage message{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteEthMessageContainerToMessage(&container, &message));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteEthMessageContainerToMessage(&container, &message));
 
-    EXPECT_EQ(container.timestamp, message.timestamp);
-    EXPECT_EQ(container.controllerId, message.controllerId);
-    EXPECT_EQ(container.flags, message.flags);
-    EXPECT_EQ(container.length, message.length);
-    EXPECT_EQ(0, std::memcmp(container.data, message.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, message.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, message.controllerId);
+    EXPECT_CHECKED_EQ(container.flags, message.flags);
+    EXPECT_CHECKED_EQ(container.length, message.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, message.data, container.length));
 
     DsVeosCoSim_EthMessageContainer roundTripped{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteEthMessageToMessageContainer(&message, &roundTripped));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteEthMessageToMessageContainer(&message, &roundTripped));
 
-    EXPECT_EQ(container.timestamp, roundTripped.timestamp);
-    EXPECT_EQ(container.controllerId, roundTripped.controllerId);
-    EXPECT_EQ(container.flags, roundTripped.flags);
-    EXPECT_EQ(container.length, roundTripped.length);
-    EXPECT_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, roundTripped.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, roundTripped.controllerId);
+    EXPECT_CHECKED_EQ(container.flags, roundTripped.flags);
+    EXPECT_CHECKED_EQ(container.length, roundTripped.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
 }
 
 TEST(TestDsVeosCoSimConversion, EthMessageConversionNullArgs)
@@ -506,10 +507,10 @@ TEST(TestDsVeosCoSimConversion, EthMessageConversionNullArgs)
     DsVeosCoSim_EthMessageContainer container{};
     DsVeosCoSim_EthMessage message{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageContainerToMessage(nullptr, &message));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageContainerToMessage(&container, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageToMessageContainer(nullptr, &container));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageToMessageContainer(&message, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageContainerToMessage(nullptr, &message));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageContainerToMessage(&container, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageToMessageContainer(nullptr, &container));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteEthMessageToMessageContainer(&message, nullptr));
 }
 
 TEST(TestDsVeosCoSimConversion, LinMessageContainerToMessageRoundTrip)
@@ -523,24 +524,24 @@ TEST(TestDsVeosCoSimConversion, LinMessageContainerToMessageRoundTrip)
     FillWithRandomData(container.data, container.length);
 
     DsVeosCoSim_LinMessage message{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteLinMessageContainerToMessage(&container, &message));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteLinMessageContainerToMessage(&container, &message));
 
-    EXPECT_EQ(container.timestamp, message.timestamp);
-    EXPECT_EQ(container.controllerId, message.controllerId);
-    EXPECT_EQ(container.id, message.id);
-    EXPECT_EQ(container.flags, message.flags);
-    EXPECT_EQ(container.length, message.length);
-    EXPECT_EQ(0, std::memcmp(container.data, message.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, message.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, message.controllerId);
+    EXPECT_CHECKED_EQ(container.id, message.id);
+    EXPECT_CHECKED_EQ(container.flags, message.flags);
+    EXPECT_CHECKED_EQ(container.length, message.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, message.data, container.length));
 
     DsVeosCoSim_LinMessageContainer roundTripped{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteLinMessageToMessageContainer(&message, &roundTripped));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteLinMessageToMessageContainer(&message, &roundTripped));
 
-    EXPECT_EQ(container.timestamp, roundTripped.timestamp);
-    EXPECT_EQ(container.controllerId, roundTripped.controllerId);
-    EXPECT_EQ(container.id, roundTripped.id);
-    EXPECT_EQ(container.flags, roundTripped.flags);
-    EXPECT_EQ(container.length, roundTripped.length);
-    EXPECT_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, roundTripped.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, roundTripped.controllerId);
+    EXPECT_CHECKED_EQ(container.id, roundTripped.id);
+    EXPECT_CHECKED_EQ(container.flags, roundTripped.flags);
+    EXPECT_CHECKED_EQ(container.length, roundTripped.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
 }
 
 TEST(TestDsVeosCoSimConversion, LinMessageConversionNullArgs)
@@ -548,10 +549,10 @@ TEST(TestDsVeosCoSimConversion, LinMessageConversionNullArgs)
     DsVeosCoSim_LinMessageContainer container{};
     DsVeosCoSim_LinMessage message{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageContainerToMessage(nullptr, &message));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageContainerToMessage(&container, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageToMessageContainer(nullptr, &container));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageToMessageContainer(&message, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageContainerToMessage(nullptr, &message));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageContainerToMessage(&container, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageToMessageContainer(nullptr, &container));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteLinMessageToMessageContainer(&message, nullptr));
 }
 
 TEST(TestDsVeosCoSimConversion, FrMessageContainerToMessageRoundTrip)
@@ -565,24 +566,24 @@ TEST(TestDsVeosCoSimConversion, FrMessageContainerToMessageRoundTrip)
     FillWithRandomData(container.data, container.length);
 
     DsVeosCoSim_FrMessage message{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteFrMessageContainerToMessage(&container, &message));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteFrMessageContainerToMessage(&container, &message));
 
-    EXPECT_EQ(container.timestamp, message.timestamp);
-    EXPECT_EQ(container.controllerId, message.controllerId);
-    EXPECT_EQ(container.id, message.id);
-    EXPECT_EQ(container.flags, message.flags);
-    EXPECT_EQ(container.length, message.length);
-    EXPECT_EQ(0, std::memcmp(container.data, message.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, message.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, message.controllerId);
+    EXPECT_CHECKED_EQ(container.id, message.id);
+    EXPECT_CHECKED_EQ(container.flags, message.flags);
+    EXPECT_CHECKED_EQ(container.length, message.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, message.data, container.length));
 
     DsVeosCoSim_FrMessageContainer roundTripped{};
-    ASSERT_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteFrMessageToMessageContainer(&message, &roundTripped));
+    ASSERT_CHECKED_EQ(DsVeosCoSim_Result_Ok, DsVeosCoSim_WriteFrMessageToMessageContainer(&message, &roundTripped));
 
-    EXPECT_EQ(container.timestamp, roundTripped.timestamp);
-    EXPECT_EQ(container.controllerId, roundTripped.controllerId);
-    EXPECT_EQ(container.id, roundTripped.id);
-    EXPECT_EQ(container.flags, roundTripped.flags);
-    EXPECT_EQ(container.length, roundTripped.length);
-    EXPECT_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
+    EXPECT_CHECKED_EQ(container.timestamp, roundTripped.timestamp);
+    EXPECT_CHECKED_EQ(container.controllerId, roundTripped.controllerId);
+    EXPECT_CHECKED_EQ(container.id, roundTripped.id);
+    EXPECT_CHECKED_EQ(container.flags, roundTripped.flags);
+    EXPECT_CHECKED_EQ(container.length, roundTripped.length);
+    EXPECT_CHECKED_EQ(0, std::memcmp(container.data, roundTripped.data, container.length));
 }
 
 TEST(TestDsVeosCoSimConversion, FrMessageConversionNullArgs)
@@ -590,10 +591,10 @@ TEST(TestDsVeosCoSimConversion, FrMessageConversionNullArgs)
     DsVeosCoSim_FrMessageContainer container{};
     DsVeosCoSim_FrMessage message{};
 
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageContainerToMessage(nullptr, &message));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageContainerToMessage(&container, nullptr));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageToMessageContainer(nullptr, &container));
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageToMessageContainer(&message, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageContainerToMessage(nullptr, &message));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageContainerToMessage(&container, nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageToMessageContainer(nullptr, &container));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_WriteFrMessageToMessageContainer(&message, nullptr));
 }
 
 // --- Buffer-based ToString Functions ---
@@ -605,27 +606,27 @@ void CheckToStringBuffer(const Fn& fn)
 {
     // Query mode: a null buffer returns the required size including the terminating null.
     uint32_t requiredSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_Full, fn(nullptr, &requiredSize));
-    EXPECT_GT(requiredSize, 0U);
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_Full, fn(nullptr, &requiredSize));
+    EXPECT_CHECKED_GT(requiredSize, 0U);
 
     // A too-small buffer returns Full and reports the required size.
     if (requiredSize > 1) {
         char tooSmall = '\1';
         uint32_t smallSize = 1;
-        EXPECT_EQ(DsVeosCoSim_Result_Full, fn(&tooSmall, &smallSize));
-        EXPECT_EQ(requiredSize, smallSize);
+        EXPECT_CHECKED_EQ(DsVeosCoSim_Result_Full, fn(&tooSmall, &smallSize));
+        EXPECT_CHECKED_EQ(requiredSize, smallSize);
     }
 
     // A sufficient buffer succeeds and produces a null-terminated string.
     std::string buffer(requiredSize, '\1');
     uint32_t bufferSize = requiredSize;
-    EXPECT_EQ(DsVeosCoSim_Result_Ok, fn(buffer.data(), &bufferSize));
-    EXPECT_EQ(requiredSize, bufferSize);
-    EXPECT_EQ('\0', buffer[requiredSize - 1]);
-    EXPECT_EQ(static_cast<size_t>(requiredSize - 1), std::strlen(buffer.c_str()));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_Ok, fn(buffer.data(), &bufferSize));
+    EXPECT_CHECKED_EQ(requiredSize, bufferSize);
+    EXPECT_CHECKED_EQ('\0', buffer[requiredSize - 1]);
+    EXPECT_CHECKED_EQ(static_cast<size_t>(requiredSize - 1), std::strlen(buffer.c_str()));
 
     // A null bufferSize is rejected.
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, fn(buffer.data(), nullptr));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, fn(buffer.data(), nullptr));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, SimulationTimeToString)
@@ -645,7 +646,7 @@ TEST(TestDsVeosCoSimToStringBuffer, IoSignalToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_IoSignalToString(&signal, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoSignalToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoSignalToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, CanControllerToString)
@@ -662,7 +663,7 @@ TEST(TestDsVeosCoSimToStringBuffer, CanControllerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_CanControllerToString(&controller, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanControllerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanControllerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, EthControllerToString)
@@ -678,7 +679,7 @@ TEST(TestDsVeosCoSimToStringBuffer, EthControllerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_EthControllerToString(&controller, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthControllerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthControllerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, LinControllerToString)
@@ -695,7 +696,7 @@ TEST(TestDsVeosCoSimToStringBuffer, LinControllerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_LinControllerToString(&controller, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinControllerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinControllerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, FrControllerToString)
@@ -711,7 +712,7 @@ TEST(TestDsVeosCoSimToStringBuffer, FrControllerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_FrControllerToString(&controller, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrControllerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrControllerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, ValueToString)
@@ -740,7 +741,7 @@ TEST(TestDsVeosCoSimToStringBuffer, IoDataToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_IoDataToString(&signal, 1, &value, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoDataToString(nullptr, 1, &value, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_IoDataToString(nullptr, 1, &value, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, CanMessageToString)
@@ -757,7 +758,7 @@ TEST(TestDsVeosCoSimToStringBuffer, CanMessageToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_CanMessageToString(&message, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, EthMessageToString)
@@ -773,7 +774,7 @@ TEST(TestDsVeosCoSimToStringBuffer, EthMessageToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_EthMessageToString(&message, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, LinMessageToString)
@@ -790,7 +791,7 @@ TEST(TestDsVeosCoSimToStringBuffer, LinMessageToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_LinMessageToString(&message, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, FrMessageToString)
@@ -807,7 +808,7 @@ TEST(TestDsVeosCoSimToStringBuffer, FrMessageToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_FrMessageToString(&message, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, CanMessageContainerToString)
@@ -823,7 +824,7 @@ TEST(TestDsVeosCoSimToStringBuffer, CanMessageContainerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_CanMessageContainerToString(&container, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageContainerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_CanMessageContainerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, EthMessageContainerToString)
@@ -838,7 +839,7 @@ TEST(TestDsVeosCoSimToStringBuffer, EthMessageContainerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_EthMessageContainerToString(&container, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageContainerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_EthMessageContainerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, LinMessageContainerToString)
@@ -854,7 +855,7 @@ TEST(TestDsVeosCoSimToStringBuffer, LinMessageContainerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_LinMessageContainerToString(&container, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageContainerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_LinMessageContainerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, FrMessageContainerToString)
@@ -870,7 +871,7 @@ TEST(TestDsVeosCoSimToStringBuffer, FrMessageContainerToString)
     CheckToStringBuffer([&](char* buffer, uint32_t* bufferSize) { return DsVeosCoSim_FrMessageContainerToString(&container, buffer, bufferSize); });
 
     uint32_t bufferSize = 0;
-    EXPECT_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageContainerToString(nullptr, nullptr, &bufferSize));
+    EXPECT_CHECKED_EQ(DsVeosCoSim_Result_InvalidArgument, DsVeosCoSim_FrMessageContainerToString(nullptr, nullptr, &bufferSize));
 }
 
 TEST(TestDsVeosCoSimToStringBuffer, CanMessageFlagsToString)

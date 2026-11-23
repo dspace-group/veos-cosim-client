@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <deque>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
@@ -94,9 +96,9 @@ TEST(TestLocalSignalExchange, SharedMemoryLayoutFollowsSignalListOrder)
     AssertOk(signalExchange->Read(thirdSignal.id, length, &thirdData));
 
     // Each signal occupies two buffers, each containing a length and its payload.
-    constexpr size_t SignalStorageSize = 2 * (sizeof(uint32_t) + sizeof(uint32_t));
-    EXPECT_EQ(static_cast<const uint8_t*>(secondData) - static_cast<const uint8_t*>(firstData), SignalStorageSize);
-    EXPECT_EQ(static_cast<const uint8_t*>(thirdData) - static_cast<const uint8_t*>(secondData), SignalStorageSize);
+    constexpr std::ptrdiff_t SignalStorageSize = 2 * (sizeof(uint32_t) + sizeof(uint32_t));
+    EXPECT_CHECKED_EQ(static_cast<const uint8_t*>(secondData) - static_cast<const uint8_t*>(firstData), SignalStorageSize);
+    EXPECT_CHECKED_EQ(static_cast<const uint8_t*>(thirdData) - static_cast<const uint8_t*>(secondData), SignalStorageSize);
 }
 
 #endif
@@ -191,11 +193,11 @@ class TestSignalExchange : public TestWithParam<std::tuple<CoSimType, Connection
 
         Callbacks callbacks{};
         callbacks.incomingSignalChangedCallback = [&](SimulationTime simTime, const IoSignal& changedIoSignal, uint32_t length, const void* value) {
-            ASSERT_EQ(simTime, simulationTime);
+            ASSERT_CHECKED_EQ(simTime, simulationTime);
             ASSERT_FALSE(expectedCallbacks.empty());
             auto [signal, data] = expectedCallbacks.front();
-            ASSERT_EQ(signal.id, changedIoSignal.id);
-            ASSERT_EQ(signal.length, length);
+            ASSERT_CHECKED_EQ(signal.id, changedIoSignal.id);
+            ASSERT_CHECKED_EQ(signal.length, length);
             std::vector<uint8_t> receivedData;
             receivedData.resize(length * GetDataTypeSize(changedIoSignal.dataType));
             memcpy(receivedData.data(), value, receivedData.size());
@@ -248,7 +250,7 @@ TEST_P(TestSignalExchange, InitialDataOfFixedSizedSignal)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(signal.length, readLength);
+    ASSERT_CHECKED_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(initialValue));
 }
 
@@ -276,7 +278,7 @@ TEST_P(TestSignalExchange, InitialDataOfVariableSizedSignal)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(0U, readLength);
+    ASSERT_CHECKED_EQ(uint32_t{0}, readLength);
 }
 
 TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead)
@@ -316,7 +318,7 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataAndRead)
     AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(signal.length, readLength);
+    ASSERT_CHECKED_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
@@ -361,7 +363,7 @@ TEST_P(TestSignalExchange, WriteFixedSizedDataTwiceAndReadLatestValue)
     AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(signal.length, readLength);
+    ASSERT_CHECKED_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
@@ -511,7 +513,7 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataAndRead)
     AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(signal.length, readLength);
+    ASSERT_CHECKED_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 
@@ -556,7 +558,7 @@ TEST_P(TestSignalExchange, WriteVariableSizedDataTwiceAndReadLatestValue)
     AssertOk(readerSignalExchange->Read(signal.id, readLength, readValue.data()));
 
     // Assert
-    ASSERT_EQ(signal.length, readLength);
+    ASSERT_CHECKED_EQ(signal.length, readLength);
     ASSERT_THAT(readValue, ContainerEq(writeValue));
 }
 

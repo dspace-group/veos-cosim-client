@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "Result.hpp"
 #include "Socket.hpp"
 #include "TestHelper.hpp"
@@ -79,7 +80,7 @@ TEST_F(TestTcpChannel, StartServerWithoutListenAddressesShouldNotListen)
     Result result = server->TryAccept(acceptChannel);
 
     // Assert
-    ASSERT_EQ(static_cast<uint16_t>(0), port);
+    ASSERT_CHECKED_EQ(static_cast<uint16_t>(0), port);
     AssertNotConnected(result);
 }
 
@@ -136,7 +137,7 @@ TEST_F(TestTcpChannel, ServerStartWithZeroPort)
     uint16_t port = server->GetLocalPort();
 
     // Assert
-    ASSERT_NE(static_cast<uint16_t>(0), port);
+    ASSERT_CHECKED_NE(static_cast<uint16_t>(0), port);
 }
 
 TEST_P(TestTcpChannel, ConnectWithoutStart)
@@ -238,7 +239,7 @@ TEST_P(TestTcpChannel, AcceptedClientHasCorrectAddresses)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(acceptChannelRemoteAddress, "");
+    ASSERT_CHECKED_NE(acceptChannelRemoteAddress, "");
 }
 
 TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses)
@@ -257,7 +258,7 @@ TEST_P(TestTcpChannel, ConnectedClientHasCorrectAddresses)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(connectChannelRemoteAddress, "");
+    ASSERT_CHECKED_NE(connectChannelRemoteAddress, "");
 }
 
 TEST_F(TestTcpChannel, ConnectClientUsingHostName)

@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimClient.hpp"
 #include "CoSimServer.hpp"
 #include "CoSimTypes.hpp"
@@ -237,7 +238,7 @@ TEST_P(TestCoSimClient, Connect)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(ConnectionState::Connected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Connected, _client->GetConnectionState());
 }
 
 TEST_P(TestCoSimClient, ConnectAlreadyConnectedShouldReturnOk)
@@ -267,7 +268,7 @@ TEST_P(TestCoSimClient, ConnectServerSendsErrorShouldFail)
     // Assert
     AssertError(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
 TEST_F(TestCoSimClient, ConnectToNonExistentServerShouldFail)
@@ -300,7 +301,7 @@ TEST_P(TestCoSimClient, DisconnectAfterConnect)
     _client->Disconnect();
 
     // Assert
-    ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
 TEST_F(TestCoSimClient, DisconnectWithoutConnectShouldNotCrash)
@@ -312,7 +313,7 @@ TEST_F(TestCoSimClient, DisconnectWithoutConnectShouldNotCrash)
     _client->Disconnect();
 
     // Assert
-    ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
 TEST_P(TestCoSimClient, DoubleDisconnectShouldNotCrash)
@@ -328,7 +329,7 @@ TEST_P(TestCoSimClient, DoubleDisconnectShouldNotCrash)
     _client->Disconnect();
 
     // Assert
-    ASSERT_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, _client->GetConnectionState());
 }
 
 // --- GetConnectionState ---
@@ -342,7 +343,7 @@ TEST_F(TestCoSimClient, GetConnectionStateInitialShouldBeDisconnected)
     ConnectionState state = _client->GetConnectionState();
 
     // Assert
-    ASSERT_EQ(ConnectionState::Disconnected, state);
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, state);
 }
 
 TEST_F(TestCoSimClient, GetConnectionStateAfterFailedConnectShouldBeDisconnected)
@@ -358,7 +359,7 @@ TEST_F(TestCoSimClient, GetConnectionStateAfterFailedConnectShouldBeDisconnected
     ConnectionState state = _client->GetConnectionState();
 
     // Assert
-    ASSERT_EQ(ConnectionState::Disconnected, state);
+    ASSERT_CHECKED_EQ(ConnectionState::Disconnected, state);
 }
 
 // --- Reconnect ---
@@ -391,7 +392,7 @@ TEST_P(TestCoSimClient, ReconnectAfterDisconnect)
     // Assert
     AssertOk(result);
     AssertOk(serverTask2.get());
-    ASSERT_EQ(ConnectionState::Connected, _client->GetConnectionState());
+    ASSERT_CHECKED_EQ(ConnectionState::Connected, _client->GetConnectionState());
 }
 
 // --- GetStepSize ---
@@ -426,7 +427,7 @@ TEST_P(TestCoSimClient, GetStepSize)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(expectedStepSize, stepSize);
+    ASSERT_CHECKED_EQ(expectedStepSize, stepSize);
 }
 
 // --- GetCurrentSimulationTime ---
@@ -458,7 +459,7 @@ TEST_P(TestCoSimClient, GetCurrentSimulationTimeAfterConnect)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(SimulationTime{}, simulationTime);
+    ASSERT_CHECKED_EQ(SimulationTime{}, simulationTime);
 }
 
 // --- GetSimulationState ---
@@ -492,7 +493,7 @@ TEST_P(TestCoSimClient, GetSimulationState)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(expectedState, simulationState);
+    ASSERT_CHECKED_EQ(expectedState, simulationState);
 }
 
 // --- RunCallbackBasedCoSimulation ---
@@ -663,8 +664,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStart)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Start, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Start, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandReceivesStop)
@@ -687,8 +688,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStop)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Stop, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Stop, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandReceivesTerminate)
@@ -711,8 +712,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesTerminate)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Terminate, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Terminate, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandReceivesTerminateFinished)
@@ -721,17 +722,16 @@ TEST_P(TestCoSimClient, PollCommandReceivesTerminateFinished)
     AssertOk(_client->StartPollingBasedCoSimulation({}));
 
     const SimulationTime expectedTime(std::chrono::nanoseconds(7000));
-    auto serverTask = std::async(std::launch::async, [&]() {
-        return _serverProtocol->SendTerminate(_serverChannel->GetWriter(), expectedTime, TerminateReason::Finished);
-    });
+    auto serverTask =
+        std::async(std::launch::async, [&] { return _serverProtocol->SendTerminate(_serverChannel->GetWriter(), expectedTime, TerminateReason::Finished); });
 
     SimulationTime simulationTime{};
     Command command{};
     AssertOk(_client->PollCommand(simulationTime, command, 5000));
 
     AssertOk(serverTask.get());
-    EXPECT_EQ(Command::TerminateFinished, command);
-    EXPECT_EQ(expectedTime, simulationTime);
+    EXPECT_CHECKED_EQ(Command::TerminateFinished, command);
+    EXPECT_CHECKED_EQ(expectedTime, simulationTime);
     AssertOk(_client->FinishCommand());
 }
 
@@ -755,8 +755,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesPause)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Pause, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Pause, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandReceivesContinue)
@@ -779,8 +779,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesContinue)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Continue, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Continue, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandReceivesStep)
@@ -802,8 +802,8 @@ TEST_P(TestCoSimClient, PollCommandReceivesStep)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(Command::Step, command);
-    ASSERT_EQ(expectedTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Step, command);
+    ASSERT_CHECKED_EQ(expectedTime, simulationTime);
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
 }
@@ -842,8 +842,8 @@ TEST_P(TestCoSimClient, PollCommandSkipsPingAndReturnsNextCommand)
     // Assert
     AssertOk(result);
     AssertOk(serverTask.get());
-    ASSERT_EQ(Command::Start, command);
-    ASSERT_EQ(startTime, simulationTime);
+    ASSERT_CHECKED_EQ(Command::Start, command);
+    ASSERT_CHECKED_EQ(startTime, simulationTime);
 }
 
 TEST_P(TestCoSimClient, PollCommandWithoutFinishCommandShouldFail)
@@ -930,7 +930,7 @@ TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings)
 
     // Assert
     AssertTimeout(result);
-    EXPECT_LT(elapsed.count(), static_cast<int64_t>(timeoutInMilliseconds + 80));
+    EXPECT_CHECKED_LT(elapsed.count(), static_cast<int64_t>(timeoutInMilliseconds + 80));
     AssertOk(serverTask.get());
 }
 
@@ -1057,15 +1057,14 @@ TEST_P(TestCoSimClient, SetNextSimulationTimeIsSentOnlyInNextStepOk)
 
     // Assert
     AssertOk(serverTask.get());
-    ASSERT_EQ(expectedNextTime, receivedNextTime);
+    ASSERT_CHECKED_EQ(expectedNextTime, receivedNextTime);
 
-    auto nextServerTask = std::async(std::launch::async, [this, expectedNextTime, &receivedNextTime] {
-        return _coSimServer->Step(expectedNextTime, receivedNextTime);
-    });
+    auto nextServerTask =
+        std::async(std::launch::async, [this, expectedNextTime, &receivedNextTime] { return _coSimServer->Step(expectedNextTime, receivedNextTime); });
     AssertOk(_client->PollCommand(simulationTime, command, 5000));
     AssertOk(_client->FinishCommand());
     AssertOk(nextServerTask.get());
-    EXPECT_EQ(SimulationTime{}, receivedNextTime);
+    EXPECT_CHECKED_EQ(SimulationTime{}, receivedNextTime);
 }
 
 // --- GetRoundTripTime ---
@@ -1342,9 +1341,9 @@ TEST_P(TestCoSimClient, GetIncomingSignalsReturnsSignalsFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(2U, count);
-    ASSERT_EQ(signal1.id, signals[0].id);
-    ASSERT_EQ(signal2.id, signals[1].id);
+    ASSERT_CHECKED_EQ(uint32_t{2}, count);
+    ASSERT_CHECKED_EQ(signal1.id, signals[0].id);
+    ASSERT_CHECKED_EQ(signal2.id, signals[1].id);
 }
 
 TEST_P(TestCoSimClient, GetIncomingSignalsVectorReturnsSignalsFromConnectOk)
@@ -1361,8 +1360,8 @@ TEST_P(TestCoSimClient, GetIncomingSignalsVectorReturnsSignalsFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, signals.size());
-    ASSERT_EQ(signal1.id, signals[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, signals.size());
+    ASSERT_CHECKED_EQ(signal1.id, signals[0].id);
 }
 
 // --- GetOutgoingSignals ---
@@ -1396,8 +1395,8 @@ TEST_P(TestCoSimClient, GetOutgoingSignalsReturnsSignalsFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, count);
-    ASSERT_EQ(signal1.id, signals[0].id);
+    ASSERT_CHECKED_EQ(uint32_t{1}, count);
+    ASSERT_CHECKED_EQ(signal1.id, signals[0].id);
 }
 
 TEST_P(TestCoSimClient, GetOutgoingSignalsVectorReturnsSignalsFromConnectOk)
@@ -1414,8 +1413,8 @@ TEST_P(TestCoSimClient, GetOutgoingSignalsVectorReturnsSignalsFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, signals.size());
-    ASSERT_EQ(signal1.id, signals[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, signals.size());
+    ASSERT_CHECKED_EQ(signal1.id, signals[0].id);
 }
 
 // --- Write ---
@@ -1461,7 +1460,7 @@ TEST_F(TestCoSimClient, WriteSignal)
     bool valueRead{};
     AssertOk(_coSimServer->Read(outSignal.id, length, &value, valueRead));
     ASSERT_TRUE(valueRead);
-    ASSERT_EQ(0, std::memcmp(ioData.data(), value, ioData.size()));
+    ASSERT_CHECKED_EQ(0, std::memcmp(ioData.data(), value, ioData.size()));
 }
 
 // --- Read ---
@@ -1508,7 +1507,7 @@ TEST_F(TestCoSimClient, ReadSignal)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(expectedData, readData);
+    ASSERT_CHECKED_EQ(expectedData, readData);
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
@@ -1542,8 +1541,8 @@ TEST_F(TestCoSimClient, ReadSignalRef)
 
     // Assert
     AssertOk(result);
-    ASSERT_NE(nullptr, dataPtr);
-    ASSERT_EQ(0, std::memcmp(expectedData.data(), dataPtr, dataTypeSize * inSignal.length));
+    ASSERT_CHECKED_NE(nullptr, dataPtr);
+    ASSERT_CHECKED_EQ(0, std::memcmp(expectedData.data(), dataPtr, dataTypeSize * inSignal.length));
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
@@ -1580,9 +1579,9 @@ TEST_P(TestCoSimClient, GetCanControllersReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
-    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
+    ASSERT_CHECKED_EQ(uint32_t{2}, count);
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk)
@@ -1599,8 +1598,8 @@ TEST_P(TestCoSimClient, GetCanControllersVectorReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, result_controllers.size());
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, result_controllers.size());
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetEthControllers ---
@@ -1634,9 +1633,9 @@ TEST_P(TestCoSimClient, GetEthControllersReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
-    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
+    ASSERT_CHECKED_EQ(uint32_t{2}, count);
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk)
@@ -1653,8 +1652,8 @@ TEST_P(TestCoSimClient, GetEthControllersVectorReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, result_controllers.size());
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, result_controllers.size());
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetLinControllers ---
@@ -1688,9 +1687,9 @@ TEST_P(TestCoSimClient, GetLinControllersReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
-    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
+    ASSERT_CHECKED_EQ(uint32_t{2}, count);
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk)
@@ -1707,8 +1706,8 @@ TEST_P(TestCoSimClient, GetLinControllersVectorReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, result_controllers.size());
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, result_controllers.size());
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- GetFrControllers ---
@@ -1742,9 +1741,9 @@ TEST_F(TestCoSimClient, GetFrControllersReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(2U, count);
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
-    ASSERT_EQ(controllers[1].id, result_controllers[1].id);
+    ASSERT_CHECKED_EQ(uint32_t{2}, count);
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(controllers[1].id, result_controllers[1].id);
 }
 
 TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk)
@@ -1761,8 +1760,8 @@ TEST_F(TestCoSimClient, GetFrControllersVectorReturnsControllersFromConnectOk)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(1U, result_controllers.size());
-    ASSERT_EQ(controllers[0].id, result_controllers[0].id);
+    ASSERT_CHECKED_EQ(size_t{1}, result_controllers.size());
+    ASSERT_CHECKED_EQ(controllers[0].id, result_controllers[0].id);
 }
 
 // --- CAN Message Validation ---
@@ -1888,9 +1887,9 @@ TEST_F(TestCoSimClient, TransmitCanMessage)
     AssertOk(serverTask.get());
 
     // Assert
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
 TEST_F(TestCoSimClient, ReceiveCanMessage)
@@ -1920,9 +1919,9 @@ TEST_F(TestCoSimClient, ReceiveCanMessage)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
@@ -1956,9 +1955,9 @@ TEST_F(TestCoSimClient, TransmitEthMessage)
     AssertOk(serverTask.get());
 
     // Assert
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
 TEST_F(TestCoSimClient, ReceiveEthMessage)
@@ -1988,9 +1987,9 @@ TEST_F(TestCoSimClient, ReceiveEthMessage)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
@@ -2024,9 +2023,9 @@ TEST_F(TestCoSimClient, TransmitLinMessage)
     AssertOk(serverTask.get());
 
     // Assert
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
 TEST_F(TestCoSimClient, ReceiveLinMessage)
@@ -2056,9 +2055,9 @@ TEST_F(TestCoSimClient, ReceiveLinMessage)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());
@@ -2092,9 +2091,9 @@ TEST_F(TestCoSimClient, TransmitFrMessage)
     AssertOk(serverTask.get());
 
     // Assert
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 }
 
 TEST_F(TestCoSimClient, ReceiveFrMessage)
@@ -2124,9 +2123,9 @@ TEST_F(TestCoSimClient, ReceiveFrMessage)
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sentMsg.controllerId, receivedMsg.controllerId);
-    ASSERT_EQ(sentMsg.length, receivedMsg.length);
-    ASSERT_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
+    ASSERT_CHECKED_EQ(sentMsg.controllerId, receivedMsg.controllerId);
+    ASSERT_CHECKED_EQ(sentMsg.length, receivedMsg.length);
+    ASSERT_CHECKED_EQ(0, std::memcmp(sentMsg.data.data(), receivedMsg.data.data(), sentMsg.length));
 
     AssertOk(_client->FinishCommand());
     AssertOk(serverTask.get());

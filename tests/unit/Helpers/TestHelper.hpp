@@ -16,6 +16,7 @@
 
 #include "BusExchange.hpp"
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Logger.hpp"
@@ -31,13 +32,13 @@
 
 [[maybe_unused]] constexpr uint32_t DefaultTimeoutInMilliseconds = 1000;
 
-#define AssertOk(result) ASSERT_EQ(result, DsVeosCoSim::CreateOk())
-#define AssertError(result) ASSERT_EQ(result, DsVeosCoSim::CreateError())
-#define AssertTimeout(result) ASSERT_EQ(result, DsVeosCoSim::CreateTimeout())
-#define AssertNotConnected(result) ASSERT_EQ(result, DsVeosCoSim::CreateNotConnected())
-#define AssertInvalidArgument(result) ASSERT_EQ(result, DsVeosCoSim::CreateInvalidArgument())
-#define AssertFull(result) ASSERT_EQ(result, DsVeosCoSim::CreateFull())
-#define AssertEmpty(result) ASSERT_EQ(result, DsVeosCoSim::CreateEmpty())
+#define AssertOk(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateOk())
+#define AssertError(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateError())
+#define AssertTimeout(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateTimeout())
+#define AssertNotConnected(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateNotConnected())
+#define AssertInvalidArgument(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateInvalidArgument())
+#define AssertFull(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateFull())
+#define AssertEmpty(result) ASSERT_CHECKED_EQ(result, DsVeosCoSim::CreateEmpty())
 
 [[nodiscard]] constexpr const char* GetLoopBackAddress(DsVeosCoSim::AddressFamily addressFamily) noexcept
 {
@@ -101,7 +102,7 @@ void TestSendAndReceive(TClient& client1, TClient& client2)
     DsVeosCoSim::Result receiveResult = ReceiveComplete(client2, &receiveValue, sizeof(receiveValue));
     AssertOk(sendResult);
     AssertOk(receiveResult);
-    ASSERT_EQ(sendValue, receiveValue);
+    ASSERT_CHECKED_EQ(sendValue, receiveValue);
 }
 
 template <typename TClient>
@@ -112,7 +113,7 @@ void TestManyElements(TClient& client1, TClient& client2)
         for (size_t i = 0; i < Count; i++) {
             size_t receiveValue{};
             AssertOk(ReceiveComplete(client2, &receiveValue, sizeof(receiveValue)));
-            ASSERT_EQ(i, receiveValue);
+            ASSERT_CHECKED_EQ(i, receiveValue);
         }
     });
     for (size_t i = 0; i < Count; i++) {
@@ -129,7 +130,7 @@ void TestBigElement(TClient& client1, TClient& client2)
         auto receiveArray = std::make_unique<std::array<size_t, Count>>();
         AssertOk(ReceiveComplete(client2, receiveArray->data(), receiveArray->size() * sizeof(size_t)));
         for (size_t i = 0; i < receiveArray->size(); i++) {
-            ASSERT_EQ(i, (*receiveArray)[i]);
+            ASSERT_CHECKED_EQ(i, (*receiveArray)[i]);
         }
     });
     auto sendArray = std::make_unique<std::array<size_t, Count>>();
@@ -154,7 +155,7 @@ void TestPingPong(TClient& client1, TClient& client2)
         AssertOk(sendClient->Send(&sendValue, sizeof(sendValue)));
         size_t receiveValue{};
         AssertOk(ReceiveComplete(*receiveClient, &receiveValue, sizeof(receiveValue)));
-        ASSERT_EQ(sendValue, receiveValue);
+        ASSERT_CHECKED_EQ(sendValue, receiveValue);
     }
 }
 

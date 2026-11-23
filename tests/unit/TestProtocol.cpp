@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
@@ -65,7 +66,7 @@ class TestProtocol : public testing::TestWithParam<ConnectionKind> {
     {
         FrameKind frameKind{};
         AssertOk(_protocol->ReceiveHeader(_receiverChannel->GetReader(), frameKind));
-        ASSERT_EQ(expected, frameKind);
+        ASSERT_CHECKED_EQ(expected, frameKind);
     }
 };
 
@@ -87,7 +88,7 @@ TEST_P(TestProtocol, SendAndReceiveSize)
     size_t receiveSize{};
     AssertOk(_protocol->ReadSize(_receiverChannel->GetReader(), receiveSize));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendSize, receiveSize);
+    ASSERT_CHECKED_EQ(sendSize, receiveSize);
 }
 
 TEST_P(TestProtocol, SendAndReceiveLength)
@@ -103,7 +104,7 @@ TEST_P(TestProtocol, SendAndReceiveLength)
     uint32_t receiveLength{};
     AssertOk(_protocol->ReadLength(_receiverChannel->GetReader(), receiveLength));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendLength, receiveLength);
+    ASSERT_CHECKED_EQ(sendLength, receiveLength);
 }
 
 TEST_P(TestProtocol, SendAndReceiveSignalId)
@@ -119,7 +120,7 @@ TEST_P(TestProtocol, SendAndReceiveSignalId)
     IoSignalId receiveSignalId{};
     AssertOk(_protocol->ReadSignalId(_receiverChannel->GetReader(), receiveSignalId));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendSignalId, receiveSignalId);
+    ASSERT_CHECKED_EQ(sendSignalId, receiveSignalId);
 }
 
 TEST_P(TestProtocol, SendAndReceiveCanMessageContainer)
@@ -136,7 +137,7 @@ TEST_P(TestProtocol, SendAndReceiveCanMessageContainer)
     CanMessageContainer receiveCanMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveCanMessageContainer));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendCanMessageContainer, receiveCanMessageContainer);
+    ASSERT_CHECKED_EQ(sendCanMessageContainer, receiveCanMessageContainer);
 }
 
 TEST_P(TestProtocol, SendAndReceiveEthMessageContainer)
@@ -153,7 +154,7 @@ TEST_P(TestProtocol, SendAndReceiveEthMessageContainer)
     EthMessageContainer receiveEthMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveEthMessageContainer));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendEthMessageContainer, receiveEthMessageContainer);
+    ASSERT_CHECKED_EQ(sendEthMessageContainer, receiveEthMessageContainer);
 }
 
 TEST_P(TestProtocol, SendAndReceiveLinMessageContainer)
@@ -170,7 +171,7 @@ TEST_P(TestProtocol, SendAndReceiveLinMessageContainer)
     LinMessageContainer receiveLinMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveLinMessageContainer));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendLinMessageContainer, receiveLinMessageContainer);
+    ASSERT_CHECKED_EQ(sendLinMessageContainer, receiveLinMessageContainer);
 }
 
 TEST_P(TestProtocol, SendAndReceiveFrMessageContainer)
@@ -187,7 +188,7 @@ TEST_P(TestProtocol, SendAndReceiveFrMessageContainer)
     FrMessageContainer receiveFrMessageContainer;
     AssertOk(_protocol->ReadMessage(_receiverChannel->GetReader(), receiveFrMessageContainer));
     _receiverChannel->GetReader().EndRead();
-    ASSERT_EQ(sendFrMessageContainer, receiveFrMessageContainer);
+    ASSERT_CHECKED_EQ(sendFrMessageContainer, receiveFrMessageContainer);
 }
 
 TEST_P(TestProtocol, SendAndReceiveOk)
@@ -213,7 +214,7 @@ TEST_P(TestProtocol, SendAndReceiveError)
 
     std::string receiveErrorMessage;
     AssertOk(_protocol->ReadError(_receiverChannel->GetReader(), receiveErrorMessage));
-    ASSERT_EQ(sendErrorMessage, receiveErrorMessage);
+    ASSERT_CHECKED_EQ(sendErrorMessage, receiveErrorMessage);
 }
 
 TEST_P(TestProtocol, SendAndReceivePing)
@@ -228,7 +229,7 @@ TEST_P(TestProtocol, SendAndReceivePing)
     AssertFrame(FrameKind::Ping);
     SimulationTime receiveRoundTripTime;
     AssertOk(_protocol->ReadPing(_receiverChannel->GetReader(), receiveRoundTripTime));
-    ASSERT_EQ(sendRoundTripTime, receiveRoundTripTime);
+    ASSERT_CHECKED_EQ(sendRoundTripTime, receiveRoundTripTime);
 }
 
 TEST_P(TestProtocol, SendAndReceivePingOk)
@@ -244,7 +245,7 @@ TEST_P(TestProtocol, SendAndReceivePingOk)
 
     Command receiveCommand{};
     AssertOk(_protocol->ReadPingOk(_receiverChannel->GetReader(), receiveCommand));
-    ASSERT_EQ(sendCommand, receiveCommand);
+    ASSERT_CHECKED_EQ(sendCommand, receiveCommand);
 }
 
 TEST_P(TestProtocol, SendAndReceiveConnect)
@@ -266,10 +267,10 @@ TEST_P(TestProtocol, SendAndReceiveConnect)
     std::string receiveServerName;
     std::string receiveClientName;
     AssertOk(_protocol->ReadConnect(_receiverChannel->GetReader(), receiveVersion, receiveMode, receiveServerName, receiveClientName));
-    EXPECT_EQ(sendVersion, receiveVersion);
-    EXPECT_EQ(sendMode, receiveMode);
-    EXPECT_EQ(sendServerName, receiveServerName);
-    EXPECT_EQ(sendClientName, receiveClientName);
+    EXPECT_CHECKED_EQ(sendVersion, receiveVersion);
+    EXPECT_CHECKED_EQ(sendMode, receiveMode);
+    EXPECT_CHECKED_EQ(sendServerName, receiveServerName);
+    EXPECT_CHECKED_EQ(sendClientName, receiveClientName);
 }
 
 TEST_P(TestProtocol, SendAndReceiveConnectOk)
@@ -323,9 +324,9 @@ TEST_P(TestProtocol, SendAndReceiveConnectOk)
                                       receiveEthControllers,
                                       receiveLinControllers,
                                       receiveFrControllers));
-    EXPECT_EQ(sendProtocolVersion, receiveProtocolVersion);
-    EXPECT_EQ(sendMode, receiveMode);
-    EXPECT_EQ(sendStepSize, receiveStepSize);
+    EXPECT_CHECKED_EQ(sendProtocolVersion, receiveProtocolVersion);
+    EXPECT_CHECKED_EQ(sendMode, receiveMode);
+    EXPECT_CHECKED_EQ(sendStepSize, receiveStepSize);
     EXPECT_THAT(receiveIncomingSignals, ContainerEq(sendIncomingSignals));
     EXPECT_THAT(receiveOutgoingSignals, ContainerEq(sendOutgoingSignals));
     EXPECT_THAT(receiveCanControllers, ContainerEq(sendCanControllers));
@@ -347,7 +348,7 @@ TEST_P(TestProtocol, SendAndReceiveStart)
 
     SimulationTime receiveSimulationTime{};
     AssertOk(_protocol->ReadStart(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStop)
@@ -363,7 +364,7 @@ TEST_P(TestProtocol, SendAndReceiveStop)
 
     SimulationTime receiveSimulationTime{};
     AssertOk(_protocol->ReadStop(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveTerminate)
@@ -381,8 +382,8 @@ TEST_P(TestProtocol, SendAndReceiveTerminate)
     SimulationTime receiveSimulationTime{};
     TerminateReason receiveTerminateReason{};
     AssertOk(_protocol->ReadTerminate(_receiverChannel->GetReader(), receiveSimulationTime, receiveTerminateReason));
-    EXPECT_EQ(sendSimulationTime, receiveSimulationTime);
-    EXPECT_EQ(sendTerminateReason, receiveTerminateReason);
+    EXPECT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
+    EXPECT_CHECKED_EQ(sendTerminateReason, receiveTerminateReason);
 }
 
 TEST_P(TestProtocol, SendAndReceivePause)
@@ -398,7 +399,7 @@ TEST_P(TestProtocol, SendAndReceivePause)
 
     SimulationTime receiveSimulationTime{};
     AssertOk(_protocol->ReadPause(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveContinue)
@@ -414,7 +415,7 @@ TEST_P(TestProtocol, SendAndReceiveContinue)
 
     SimulationTime receiveSimulationTime{};
     AssertOk(_protocol->ReadContinue(_receiverChannel->GetReader(), receiveSimulationTime));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStep)
@@ -436,7 +437,7 @@ TEST_P(TestProtocol, SendAndReceiveStep)
 
     SimulationTime receiveSimulationTime{};
     AssertOk(_protocol->ReadStep(_receiverChannel->GetReader(), receiveSimulationTime, deserializeFunction, deserializeFunction, {}));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveStepOk)
@@ -461,7 +462,7 @@ TEST_P(TestProtocol, SendAndReceiveStepOk)
     SimulationTime receiveSimulationTime{};
     Command receiveCommand{};
     AssertOk(_protocol->ReadStepOk(_receiverChannel->GetReader(), receiveSimulationTime, receiveCommand, deserializeFunction, deserializeFunction, {}));
-    ASSERT_EQ(sendSimulationTime, receiveSimulationTime);
+    ASSERT_CHECKED_EQ(sendSimulationTime, receiveSimulationTime);
 }
 
 TEST_P(TestProtocol, SendAndReceiveGetPort)
@@ -477,7 +478,7 @@ TEST_P(TestProtocol, SendAndReceiveGetPort)
 
     std::string receiveServerName;
     AssertOk(_protocol->ReadGetPort(_receiverChannel->GetReader(), receiveServerName));
-    ASSERT_EQ(sendServerName, receiveServerName);
+    ASSERT_CHECKED_EQ(sendServerName, receiveServerName);
 }
 
 TEST_P(TestProtocol, SendAndReceiveGetPortOk)
@@ -493,7 +494,7 @@ TEST_P(TestProtocol, SendAndReceiveGetPortOk)
 
     uint16_t receivePort{};
     AssertOk(_protocol->ReadGetPortOk(_receiverChannel->GetReader(), receivePort));
-    ASSERT_EQ(sendPort, receivePort);
+    ASSERT_CHECKED_EQ(sendPort, receivePort);
 }
 
 TEST_P(TestProtocol, SendAndReceiveSetPort)
@@ -511,8 +512,8 @@ TEST_P(TestProtocol, SendAndReceiveSetPort)
     std::string receiveServerName;
     uint16_t receivePort{};
     AssertOk(_protocol->ReadSetPort(_receiverChannel->GetReader(), receiveServerName, receivePort));
-    EXPECT_EQ(sendServerName, receiveServerName);
-    EXPECT_EQ(sendPort, receivePort);
+    EXPECT_CHECKED_EQ(sendServerName, receiveServerName);
+    EXPECT_CHECKED_EQ(sendPort, receivePort);
 }
 
 TEST_P(TestProtocol, SendAndReceiveUnsetPort)
@@ -528,7 +529,7 @@ TEST_P(TestProtocol, SendAndReceiveUnsetPort)
 
     std::string receiveServerName;
     AssertOk(_protocol->ReadUnsetPort(_receiverChannel->GetReader(), receiveServerName));
-    ASSERT_EQ(sendServerName, receiveServerName);
+    ASSERT_CHECKED_EQ(sendServerName, receiveServerName);
 }
 
 TEST_P(TestProtocol, SendAndReceiveConnectWithEmptyNames)
@@ -550,10 +551,10 @@ TEST_P(TestProtocol, SendAndReceiveConnectWithEmptyNames)
     std::string receiveServerName;
     std::string receiveClientName;
     AssertOk(_protocol->ReadConnect(_receiverChannel->GetReader(), receiveVersion, receiveMode, receiveServerName, receiveClientName));
-    EXPECT_EQ(sendVersion, receiveVersion);
-    EXPECT_EQ(sendMode, receiveMode);
-    EXPECT_EQ(sendServerName, receiveServerName);
-    EXPECT_EQ(sendClientName, receiveClientName);
+    EXPECT_CHECKED_EQ(sendVersion, receiveVersion);
+    EXPECT_CHECKED_EQ(sendMode, receiveMode);
+    EXPECT_CHECKED_EQ(sendServerName, receiveServerName);
+    EXPECT_CHECKED_EQ(sendClientName, receiveClientName);
 }
 
 TEST_P(TestProtocol, SendAndReceiveErrorWithEmptyMessage)
@@ -569,7 +570,7 @@ TEST_P(TestProtocol, SendAndReceiveErrorWithEmptyMessage)
 
     std::string receiveErrorMessage;
     AssertOk(_protocol->ReadError(_receiverChannel->GetReader(), receiveErrorMessage));
-    ASSERT_EQ(sendErrorMessage, receiveErrorMessage);
+    ASSERT_CHECKED_EQ(sendErrorMessage, receiveErrorMessage);
 }
 
 TEST_P(TestProtocol, SendAndReceiveConnectOkWithEmptyLists)
@@ -607,9 +608,9 @@ TEST_P(TestProtocol, SendAndReceiveConnectOkWithEmptyLists)
                                       receiveEthControllers,
                                       receiveLinControllers,
                                       receiveFrControllers));
-    EXPECT_EQ(sendProtocolVersion, receiveProtocolVersion);
-    EXPECT_EQ(sendMode, receiveMode);
-    EXPECT_EQ(sendStepSize, receiveStepSize);
+    EXPECT_CHECKED_EQ(sendProtocolVersion, receiveProtocolVersion);
+    EXPECT_CHECKED_EQ(sendMode, receiveMode);
+    EXPECT_CHECKED_EQ(sendStepSize, receiveStepSize);
     EXPECT_TRUE(receiveIncomingSignals.empty());
     EXPECT_TRUE(receiveOutgoingSignals.empty());
     EXPECT_TRUE(receiveCanControllers.empty());
@@ -669,9 +670,9 @@ TEST_P(TestProtocol, SendAndReceiveConnectOkWithManyControllers)
                                       receiveEthControllers,
                                       receiveLinControllers,
                                       receiveFrControllers));
-    EXPECT_EQ(sendProtocolVersion, receiveProtocolVersion);
-    EXPECT_EQ(sendMode, receiveMode);
-    EXPECT_EQ(sendStepSize, receiveStepSize);
+    EXPECT_CHECKED_EQ(sendProtocolVersion, receiveProtocolVersion);
+    EXPECT_CHECKED_EQ(sendMode, receiveMode);
+    EXPECT_CHECKED_EQ(sendStepSize, receiveStepSize);
     EXPECT_THAT(receiveIncomingSignals, ContainerEq(sendIncomingSignals));
     EXPECT_THAT(receiveOutgoingSignals, ContainerEq(sendOutgoingSignals));
     EXPECT_THAT(receiveCanControllers, ContainerEq(sendCanControllers));

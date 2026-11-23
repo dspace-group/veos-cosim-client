@@ -13,6 +13,7 @@
 #include <string_view>
 #include <thread>
 
+#include "CheckedAssertions.hpp"
 #include "Helper.hpp"
 #include "Result.hpp"
 #include "Socket.hpp"
@@ -229,10 +230,10 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnRemoteClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -258,10 +259,10 @@ TEST_F(TestLocalSocket, WakeUpBlockingCallInConnectClientOnLocalClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();

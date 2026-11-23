@@ -8,3 +8,13 @@ Diagnostics:
       - 'fmt/.*'
       - '(gtest|gmock)/.*'
       - 'Windows Kits/10/Include/.*/(ucrt|shared|um|winrt|cppwinrt)/.*'
+---
+If:
+  PathMatch: (include|src|tests)/.*
+CompileFlags:
+  Add: [-Werror, -Werror=sign-compare]
+---
+If:
+  PathMatch: third_party/.*
+Diagnostics:
+  Suppress: '*'

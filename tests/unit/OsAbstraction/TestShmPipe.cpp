@@ -12,6 +12,7 @@
 #include <string>
 #include <thread>
 
+#include "CheckedAssertions.hpp"
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
 #include "Result.hpp"
@@ -261,10 +262,10 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnRemoteClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -288,10 +289,10 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInConnectClientOnLocalClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(connectClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -315,10 +316,10 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnRemoteClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     connectClient.Disconnect();
@@ -342,10 +343,10 @@ TEST_F(TestShmPipe, WakeUpBlockingCallInAcceptClientOnLocalClient)
         size_t receivedSize{};
         aboutToReceive.set_value();
         AssertNotConnected(acceptClient.Receive(buffer.data(), buffer.size(), receivedSize));
-        ASSERT_EQ(0, receivedSize);
+        ASSERT_CHECKED_EQ(size_t{0}, receivedSize);
     });
 
-    ASSERT_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
+    ASSERT_CHECKED_EQ(aboutToReceiveFuture.wait_for(1s), std::future_status::ready);
 
     // Act and assert
     acceptClient.Disconnect();
@@ -527,8 +528,8 @@ TEST_F(TestShmPipe, ReceiveBufferedDataAfterRemoteDisconnect)
     size_t receivedSize{};
     AssertOk(connectClient.WaitForData(1000));
     AssertOk(connectClient.Receive(&received, sizeof(received), receivedSize));
-    EXPECT_EQ(receivedSize, sizeof(sent));
-    EXPECT_EQ(received, sent);
+    EXPECT_CHECKED_EQ(receivedSize, sizeof(sent));
+    EXPECT_CHECKED_EQ(received, sent);
     AssertNotConnected(connectClient.Receive(&received, sizeof(received), receivedSize));
 }
 

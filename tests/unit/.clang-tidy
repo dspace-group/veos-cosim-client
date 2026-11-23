@@ -1,0 +1,8 @@
+---
+InheritParentConfig: true
+# GoogleTest's TEST macros register tests through a static test_info_ initializer.
+Checks: '-bugprone-throwing-static-initialization'
+
+CheckOptions:
+  # TEST_P overrides this private GoogleTest method as public.
+  misc-override-with-different-visibility.IgnoredFunctions: '^testing::Test::TestBody$'

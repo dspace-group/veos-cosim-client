@@ -15,6 +15,12 @@ Implementation of a C++ library used to create co-simulation clients for dSPACE 
 
 CMake 3.20 or newer is required, including for the provided configure, build, and test presets.
 
+Compiler warnings are treated as errors for the library and its test targets (`/W4 /WX` with MSVC, including signed/unsigned comparison warnings, and `-Werror -Werror=sign-compare` with GCC and Clang). These settings do not propagate to consumers or third-party targets. In VS Code, the repository's clangd configuration also treats compiler warnings, including signed/unsigned comparisons, as errors in project sources and headers.
+
+GoogleTest and fmt are treated as system headers by default. In unit tests, use the [checked comparison assertions](tests/unit/Helpers/CheckedAssertions.hpp), such as `ASSERT_CHECKED_EQ` and `EXPECT_CHECKED_EQ`. When the usual integer conversions would compare a signed operand as unsigned, these macros report an error at the assertion in both clangd and the build, without enabling warnings in GoogleTest.
+
+The [unit test clang-tidy configuration](tests/unit/.clang-tidy) disables `bugprone-throwing-static-initialization` for GoogleTest's static test registration and exempts only `testing::Test::TestBody` from `misc-override-with-different-visibility` because `TEST_P` overrides it as public. Compiler warnings and the library's clang-tidy checks are unaffected.
+
 DsVeosCoSim requires `fmt` for internal string formatting. It reuses an existing `fmt::fmt` or `fmt::fmt-header-only` target first, then tries an installed CMake package. Otherwise it uses the initialized `third_party/fmt` submodule when available. If none is available, configuration fails; dependencies are not downloaded automatically. Set `DSVEOSCOSIM_USE_BUNDLED_FMT=OFF` to require an existing target or installed package.
 
 The repository provides cross-platform CMake presets, wrapper scripts, and `just` recipes.

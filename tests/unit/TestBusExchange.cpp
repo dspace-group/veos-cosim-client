@@ -12,6 +12,7 @@
 
 #include "BusExchange.hpp"
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Protocol.hpp"
@@ -94,11 +95,11 @@ class TestBusExchange : public Test {
         if constexpr (std::is_same_v<TController, CanController>) {
             callbacks.canMessageContainerReceivedCallback =
                 [&](SimulationTime simulationTime, const CanController& controller, const CanMessageContainer& messageContainer) {
-                    ASSERT_EQ(simulationTime, expectedSimulationTime);
+                    ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                     ASSERT_FALSE(expectedCallbacks.empty());
                     auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                    ASSERT_EQ(expectedController, controller);
-                    ASSERT_EQ(expectedMessageContainer, messageContainer);
+                    ASSERT_CHECKED_EQ(expectedController, controller);
+                    ASSERT_CHECKED_EQ(expectedMessageContainer, messageContainer);
                     expectedCallbacks.pop_front();
                 };
         }
@@ -106,11 +107,11 @@ class TestBusExchange : public Test {
         if constexpr (std::is_same_v<TController, EthController>) {
             callbacks.ethMessageContainerReceivedCallback =
                 [&](SimulationTime simulationTime, const EthController& controller, const EthMessageContainer& messageContainer) {
-                    ASSERT_EQ(simulationTime, expectedSimulationTime);
+                    ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                     ASSERT_FALSE(expectedCallbacks.empty());
                     auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                    ASSERT_EQ(expectedController, controller);
-                    ASSERT_EQ(expectedMessageContainer, messageContainer);
+                    ASSERT_CHECKED_EQ(expectedController, controller);
+                    ASSERT_CHECKED_EQ(expectedMessageContainer, messageContainer);
                     expectedCallbacks.pop_front();
                 };
         }
@@ -118,11 +119,11 @@ class TestBusExchange : public Test {
         if constexpr (std::is_same_v<TController, LinController>) {
             callbacks.linMessageContainerReceivedCallback =
                 [&](SimulationTime simulationTime, const LinController& controller, const LinMessageContainer& messageContainer) {
-                    ASSERT_EQ(simulationTime, expectedSimulationTime);
+                    ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                     ASSERT_FALSE(expectedCallbacks.empty());
                     auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                    ASSERT_EQ(expectedController, controller);
-                    ASSERT_EQ(expectedMessageContainer, messageContainer);
+                    ASSERT_CHECKED_EQ(expectedController, controller);
+                    ASSERT_CHECKED_EQ(expectedMessageContainer, messageContainer);
                     expectedCallbacks.pop_front();
                 };
         }
@@ -130,11 +131,11 @@ class TestBusExchange : public Test {
         if constexpr (std::is_same_v<TController, FrController>) {
             callbacks.frMessageContainerReceivedCallback =
                 [&](SimulationTime simulationTime, const FrController& controller, const FrMessageContainer& messageContainer) {
-                    ASSERT_EQ(simulationTime, expectedSimulationTime);
+                    ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                     ASSERT_FALSE(expectedCallbacks.empty());
                     auto& [expectedController, expectedMessageContainer] = expectedCallbacks.front();
-                    ASSERT_EQ(expectedController, controller);
-                    ASSERT_EQ(expectedMessageContainer, messageContainer);
+                    ASSERT_CHECKED_EQ(expectedController, controller);
+                    ASSERT_CHECKED_EQ(expectedMessageContainer, messageContainer);
                     expectedCallbacks.pop_front();
                 };
         }
@@ -160,44 +161,44 @@ class TestBusExchange : public Test {
         Callbacks callbacks{};
         if constexpr (std::is_same_v<TController, CanController>) {
             callbacks.canMessageReceivedCallback = [&](SimulationTime simulationTime, const CanController& controller, const CanMessage& message) {
-                ASSERT_EQ(simulationTime, expectedSimulationTime);
+                ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                 ASSERT_FALSE(expectedCallbacks.empty());
                 auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                ASSERT_EQ(expectedController, controller);
-                ASSERT_EQ(expectedMessage, message);
+                ASSERT_CHECKED_EQ(expectedController, controller);
+                ASSERT_CHECKED_EQ(expectedMessage, message);
                 expectedCallbacks.pop_front();
             };
         }
 
         if constexpr (std::is_same_v<TController, EthController>) {
             callbacks.ethMessageReceivedCallback = [&](SimulationTime simulationTime, const EthController& controller, const EthMessage& message) {
-                ASSERT_EQ(simulationTime, expectedSimulationTime);
+                ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                 ASSERT_FALSE(expectedCallbacks.empty());
                 auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                ASSERT_EQ(expectedController, controller);
-                ASSERT_EQ(expectedMessage, message);
+                ASSERT_CHECKED_EQ(expectedController, controller);
+                ASSERT_CHECKED_EQ(expectedMessage, message);
                 expectedCallbacks.pop_front();
             };
         }
 
         if constexpr (std::is_same_v<TController, LinController>) {
             callbacks.linMessageReceivedCallback = [&](SimulationTime simulationTime, const LinController& controller, const LinMessage& message) {
-                ASSERT_EQ(simulationTime, expectedSimulationTime);
+                ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                 ASSERT_FALSE(expectedCallbacks.empty());
                 auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                ASSERT_EQ(expectedController, controller);
-                ASSERT_EQ(expectedMessage, message);
+                ASSERT_CHECKED_EQ(expectedController, controller);
+                ASSERT_CHECKED_EQ(expectedMessage, message);
                 expectedCallbacks.pop_front();
             };
         }
 
         if constexpr (std::is_same_v<TController, FrController>) {
             callbacks.frMessageReceivedCallback = [&](SimulationTime simulationTime, const FrController& controller, const FrMessage& message) {
-                ASSERT_EQ(simulationTime, expectedSimulationTime);
+                ASSERT_CHECKED_EQ(simulationTime, expectedSimulationTime);
                 ASSERT_FALSE(expectedCallbacks.empty());
                 auto& [expectedController, expectedMessage] = expectedCallbacks.front();
-                ASSERT_EQ(expectedController, controller);
-                ASSERT_EQ(expectedMessage, message);
+                ASSERT_CHECKED_EQ(expectedController, controller);
+                ASSERT_CHECKED_EQ(expectedMessage, message);
                 expectedCallbacks.pop_front();
             };
         }
@@ -519,7 +520,7 @@ TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainer)
     AssertOk(receiverBusExchange->Receive(receivedMessageContainer));
 
     // Assert
-    ASSERT_EQ(sendMessageContainer, receivedMessageContainer);
+    ASSERT_CHECKED_EQ(sendMessageContainer, receivedMessageContainer);
 }
 
 TYPED_TEST(TestBusExchange, TransmitAndReceiveMessageContainerSimultaneously)
@@ -569,8 +570,8 @@ TYPED_TEST(TestBusExchange, TransmitAndReceiveMessageContainerSimultaneously)
     AssertOk(busExchange1->Receive(receivedMessageContainer2));
 
     // Assert
-    ASSERT_EQ(sendMessageContainer1, receivedMessageContainer1);
-    ASSERT_EQ(sendMessageContainer2, receivedMessageContainer2);
+    ASSERT_CHECKED_EQ(sendMessageContainer1, receivedMessageContainer1);
+    ASSERT_CHECKED_EQ(sendMessageContainer2, receivedMessageContainer2);
 }
 
 TYPED_TEST(TestBusExchange, ReceiveTransmittedMessageContainerByEvent)
@@ -709,7 +710,7 @@ TYPED_TEST(TestBusExchange, ReceiveMultipleTransmittedMessageContainers)
     // Act and Assert
     for (uint32_t i = 0; i < controller1.queueSize + controller2.queueSize; i++) {
         AssertOk(receiverBusExchange->Receive(receivedMessageContainer));
-        ASSERT_EQ(sendMessageContainers[i], receivedMessageContainer);
+        ASSERT_CHECKED_EQ(sendMessageContainers[i], receivedMessageContainer);
     }
 
     AssertEmpty(receiverBusExchange->Receive(receivedMessageContainer));

@@ -10,6 +10,7 @@
 #include <string_view>
 #include <thread>
 
+#include "CheckedAssertions.hpp"
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
 #include "Result.hpp"
@@ -68,7 +69,7 @@ TEST_F(TestNamedLock, LockAndUnlockOnDifferentMutexes)
     thread.join();
 
     // Assert
-    ASSERT_EQ(counter, 2000);
+    ASSERT_CHECKED_EQ(counter, 2000);
 }
 
 }  // namespace

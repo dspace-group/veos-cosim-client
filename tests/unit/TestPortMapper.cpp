@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include "CheckedAssertions.hpp"
 #include "Helper.hpp"
 #include "PortMapper.hpp"
 #include "Result.hpp"
@@ -39,7 +40,7 @@ TEST_F(TestPortMapper, SetPort)
     AssertOk(result);
     uint16_t retrievedPort{};
     AssertOk(PortMapperGetPort("127.0.0.1", serverName, retrievedPort));
-    EXPECT_EQ(port, retrievedPort);
+    EXPECT_CHECKED_EQ(port, retrievedPort);
 }
 
 TEST_F(TestPortMapper, UnsetPortOfExistingPort)
@@ -73,7 +74,7 @@ TEST_F(TestPortMapper, UnsetPortOfNonExistingPort)
     AssertOk(result);
     uint16_t retrievedPort{};
     AssertOk(PortMapperGetPort("127.0.0.1", otherServerName, retrievedPort));
-    EXPECT_EQ(otherPort, retrievedPort);
+    EXPECT_CHECKED_EQ(otherPort, retrievedPort);
 }
 
 TEST_F(TestPortMapper, GetPort)
@@ -89,7 +90,7 @@ TEST_F(TestPortMapper, GetPort)
 
     // Assert
     AssertOk(result);
-    EXPECT_EQ(expectedPort, port);
+    EXPECT_CHECKED_EQ(expectedPort, port);
 }
 
 TEST_F(TestPortMapper, GetPortOfNonExistingServer)

@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 
+#include "CheckedAssertions.hpp"
 #include "Helper.hpp"
 #include "OsUtilities.hpp"
 #include "Result.hpp"
@@ -53,7 +54,7 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSameSharedMemory)
     uint32_t readValue = *reinterpret_cast<uint32_t*>(buffer);
 
     // Assert
-    ASSERT_EQ(writeValue, readValue);
+    ASSERT_CHECKED_EQ(writeValue, readValue);
 }
 
 TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories)
@@ -76,7 +77,7 @@ TEST_F(TestSharedMemory, ReadAndWriteOnSharedMemories)
     uint32_t readValue = *reinterpret_cast<uint32_t*>(buffer2);
 
     // Assert
-    ASSERT_EQ(writeValue, readValue);
+    ASSERT_CHECKED_EQ(writeValue, readValue);
 }
 
 TEST_F(TestSharedMemory, CouldOpenExisting)

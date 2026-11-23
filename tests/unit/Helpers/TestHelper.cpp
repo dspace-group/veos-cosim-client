@@ -18,6 +18,7 @@
 
 #include "BusExchange.hpp"
 #include "Channel.hpp"
+#include "CheckedAssertions.hpp"
 #include "CoSimTypes.hpp"
 #include "Helper.hpp"
 #include "Logger.hpp"
@@ -163,7 +164,7 @@ void TestReadUInt16FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sendValue, receiveValue);
+    ASSERT_CHECKED_EQ(sendValue, receiveValue);
 }
 
 void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
@@ -180,7 +181,7 @@ void TestReadUInt32FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sendValue, receiveValue);
+    ASSERT_CHECKED_EQ(sendValue, receiveValue);
 }
 
 void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
@@ -197,7 +198,7 @@ void TestReadUInt64FromChannel(std::unique_ptr<Channel>& writeChannel, std::uniq
 
     // Assert
     AssertOk(result);
-    ASSERT_EQ(sendValue, receiveValue);
+    ASSERT_CHECKED_EQ(sendValue, receiveValue);
 }
 
 void TestReadBufferFromChannel(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
@@ -238,7 +239,7 @@ void TestPingPong(std::unique_ptr<Channel>& firstChannel, std::unique_ptr<Channe
         size_t receiveValue{};
         AssertOk(receiveChannel->GetReader().Read(receiveValue));
 
-        ASSERT_EQ(sendValue, receiveValue);
+        ASSERT_CHECKED_EQ(sendValue, receiveValue);
     }
 }
 
@@ -260,8 +261,8 @@ void TestSendTwoFramesAtOnce(std::unique_ptr<Channel>& writeChannel, std::unique
     AssertOk(readChannel->GetReader().Read(receiveValue2));
 
     // Assert
-    ASSERT_EQ(sendValue1, receiveValue1);
-    ASSERT_EQ(sendValue2, receiveValue2);
+    ASSERT_CHECKED_EQ(sendValue1, receiveValue1);
+    ASSERT_CHECKED_EQ(sendValue2, receiveValue2);
 }
 
 void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>& readChannel)
@@ -271,18 +272,18 @@ void TestStream(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Channel>
     std::thread thread([&] {
         uint16_t firstValue{};
         AssertOk(readChannel->GetReader().Read(firstValue));
-        ASSERT_EQ(static_cast<uint16_t>(42), firstValue);
+        ASSERT_CHECKED_EQ(uint16_t{42}, firstValue);
 
         for (size_t i = 0; i < Count; i++) {
             size_t receiveValue{};
             AssertOk(readChannel->GetReader().Read(receiveValue));
 
-            ASSERT_EQ(i, receiveValue);
+            ASSERT_CHECKED_EQ(i, receiveValue);
         }
     });
 
     // Act and assert
-    AssertOk(writeChannel->GetWriter().Write(static_cast<uint16_t>(42)));  // Forcing the following elements to be unaligned
+    AssertOk(writeChannel->GetWriter().Write(uint16_t{42}));  // Forcing the following elements to be unaligned
     for (size_t i = 0; i < Count; i++) {
         AssertOk(writeChannel->GetWriter().Write(i));
     }
@@ -301,7 +302,7 @@ void TestBigElement(std::unique_ptr<Channel>& writeChannel, std::unique_ptr<Chan
         AssertOk(readChannel->GetReader().Read(receiveArray.get(), receiveArray->size() * sizeof(size_t)));
 
         for (size_t i = 0; i < receiveArray->size(); i++) {
-            ASSERT_EQ(i, (*receiveArray)[i]);
+            ASSERT_CHECKED_EQ(i, (*receiveArray)[i]);
         }
     });
 
