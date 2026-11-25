@@ -558,6 +558,22 @@ TEST_F(TestShmPipe, WaitForDataTimesOutWhenNoDataArrives)
     AssertTimeout(result);
 }
 
+TEST_F(TestShmPipe, ShortWaitsDoNotReportConnectionFailureBeforeFiveSeconds)
+{
+    ShmPipeListener listener;
+    const std::string name = GenerateShmPipeName();
+    AssertOk(ShmPipeListener::Create(name, listener));
+
+    ShmPipeClient client;
+    AssertOk(ShmPipeClient::TryConnect(name, client));
+
+    // A per-call counter exceeded its limit after a few milliseconds of short waits
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(200);
+    while (std::chrono::steady_clock::now() < deadline) {
+        AssertTimeout(client.WaitForData(1));
+    }
+}
+
 }  // namespace
 
 #endif

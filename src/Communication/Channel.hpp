@@ -317,7 +317,7 @@ class ChannelReader {
 
     [[nodiscard]] Result WaitForData(uint32_t timeoutInMilliseconds)
     {
-        if (_writeIndex > _endFrameIndex) {
+        if ((_readIndex < _endFrameIndex) || (_writeIndex > _endFrameIndex)) {
             return CreateOk();
         }
 
@@ -347,6 +347,9 @@ class ChannelReader {
             if (bytesToMove >= HeaderSize) {
                 readHeader = false;
                 ReadScalarFromBuffer(buffer, _endFrameIndex);
+                if (!IsValidFrameSize()) {
+                    return CreateError();
+                }
 
                 // Did we read at least an entire second frame?
                 if (_writeIndex >= _endFrameIndex) {
@@ -362,6 +365,10 @@ class ChannelReader {
         while (sizeToRead > 0) {
             size_t receivedSize{};
             CheckResult(Receive(&buffer[static_cast<size_t>(_writeIndex)], static_cast<size_t>(sizeToRead), receivedSize));
+            if ((receivedSize == 0) || (receivedSize > static_cast<size_t>(sizeToRead))) {
+                LogError("Protocol error. The received data size is invalid.");
+                return CreateError();
+            }
 
             sizeToRead -= static_cast<int32_t>(receivedSize);
             _writeIndex += static_cast<int32_t>(receivedSize);
@@ -370,8 +377,7 @@ class ChannelReader {
                 readHeader = false;
                 ReadScalarFromBuffer(buffer, _endFrameIndex);
 
-                if (_endFrameIndex > BufferSize) {
-                    LogError("Protocol error. The buffer size is too small.");
+                if (!IsValidFrameSize()) {
                     return CreateError();
                 }
 
@@ -384,6 +390,16 @@ class ChannelReader {
         }
 
         return CreateOk();
+    }
+
+    [[nodiscard]] bool IsValidFrameSize() const
+    {
+        if ((_endFrameIndex < HeaderSize) || (_endFrameIndex > BufferSize)) {
+            LogError("Protocol error. The frame size is invalid.");
+            return false;
+        }
+
+        return true;
     }
 
     int32_t _defaultSizeToRead{};

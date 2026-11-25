@@ -3,7 +3,9 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -62,6 +64,69 @@ void EstablishConnection(const TcpChannelParam& param, std::unique_ptr<Channel>&
 }
 
 class TestTcpChannel : public testing::TestWithParam<TcpChannelParam> {};
+
+class ReaderWithInvalidSecondFrame final : public ChannelReader {
+  public:
+    explicit ReaderWithInvalidSecondFrame(int32_t secondFrameSize)
+        : _secondFrameSize(secondFrameSize)
+    {
+        _defaultSizeToRead = 1024;
+    }
+
+    void EndRead() const override
+    {
+    }
+
+    size_t receiveCalls{};
+
+  protected:
+    [[nodiscard]] Result WaitForDataInternal([[maybe_unused]] uint32_t timeoutInMilliseconds) override
+    {
+        return CreateOk();
+    }
+
+    [[nodiscard]] Result Receive(void* destination, size_t size, size_t& receivedSize) override
+    {
+        ++receiveCalls;
+        if (receiveCalls != 1) {
+            return CreateError();
+        }
+
+        const std::array<int32_t, 3> data{HeaderSize + static_cast<int32_t>(sizeof(uint32_t)), 42, _secondFrameSize};
+        if (size < sizeof(data)) {
+            return CreateError();
+        }
+
+        std::memcpy(destination, data.data(), sizeof(data));
+        receivedSize = sizeof(data);
+        return CreateOk();
+    }
+
+  private:
+    int32_t _secondFrameSize{};
+};
+
+void TestRejectsInvalidBufferedFrameSize(int32_t secondFrameSize)
+{
+    ReaderWithInvalidSecondFrame reader(secondFrameSize);
+    uint32_t value{};
+    AssertOk(reader.Read(value));
+    ASSERT_EQ(value, uint32_t{42});
+    reader.EndRead();
+
+    AssertError(reader.Read(value));
+    EXPECT_EQ(reader.receiveCalls, size_t{1});
+}
+
+TEST(TestTcpChannelFrameSize, RejectsTooLargeBufferedFrameBeforeReceivingItsPayload)
+{
+    TestRejectsInvalidBufferedFrameSize(BufferSize + 1);
+}
+
+TEST(TestTcpChannelFrameSize, RejectsBufferedFrameSmallerThanHeader)
+{
+    TestRejectsInvalidBufferedFrameSize(0);
+}
 
 INSTANTIATE_TEST_SUITE_P(, TestTcpChannel, testing::ValuesIn(GetTcpChannelTestParameters()), [](const testing::TestParamInfo<TestTcpChannel::ParamType>& info) {
     return fmt::format("{}_{}", info.param.addressFamily, info.param.access);

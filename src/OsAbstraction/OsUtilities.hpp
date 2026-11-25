@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -216,7 +217,7 @@ class ShmPipePart {
     NamedEvent _newSpaceEvent;
     SharedMemory _sharedMemory;
     Handle _counterPartProcess{};
-    uint32_t _detectionCounter{};
+    std::chrono::steady_clock::time_point _counterPartDetectionStart{};
     uint32_t _spinCount{};
     bool _isWriter{};
     bool _isServer{};

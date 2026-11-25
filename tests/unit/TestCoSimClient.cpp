@@ -13,6 +13,13 @@
 #include <thread>
 #include <vector>
 
+#ifdef __linux__
+#include <sys/resource.h>
+#include <unistd.h>
+
+#include <atomic>
+#endif
+
 #include "Channel.hpp"
 #include "CheckedAssertions.hpp"
 #include "CoSimClient.hpp"
@@ -240,6 +247,62 @@ TEST_P(TestCoSimClient, Connect)
     AssertOk(serverTask.get());
     ASSERT_CHECKED_EQ(ConnectionState::Connected, _client->GetConnectionState());
 }
+
+#ifdef __linux__
+TEST_P(TestCoSimClient, ConnectFallsBackToRemoteWhenLocalSocketsAreUnavailable)
+{
+    if (GetParam() != ConnectionKind::Remote) {
+        GTEST_SKIP() << "The fallback is always remote.";
+    }
+
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            rlimit limit{};
+            if (getrlimit(RLIMIT_NOFILE, &limit) != 0) {
+                _exit(2);
+            }
+
+            const rlimit originalLimit = limit;
+            limit.rlim_cur = 0;
+            if (setrlimit(RLIMIT_NOFILE, &limit) != 0) {
+                _exit(2);
+            }
+
+            // Without file descriptors, local sockets are detected as unsupported for the rest of the process
+            ConnectConfig localConfig;
+            localConfig.serverName = "LocalSocketUnavailable";
+            CoSimClient firstClient;
+            if (IsOk(firstClient.Connect(localConfig))) {
+                _exit(3);
+            }
+
+            if (setrlimit(RLIMIT_NOFILE, &originalLimit) != 0) {
+                _exit(2);
+            }
+
+            CustomSetUp(ConnectionKind::Remote);
+            auto serverTask = RunServer([](Channel& channel, IProtocol& protocol) { return AcceptAndSendConnectOk(channel, protocol); });
+            if (!IsOk(_client->Connect(MakeConfig(ConnectionKind::Remote))) || !IsOk(serverTask.get())) {
+                _exit(4);
+            }
+
+            _client->Disconnect();
+
+            // The channel of the previous remote connection must not be reused as local channel
+            std::atomic<bool> triedRemoteFallback{};
+            Logger::Instance().SetLogCallback([&triedRemoteFallback]([[maybe_unused]] Severity severity, const std::string& message) {
+                if (message.find("Obtaining TCP port") != std::string::npos) {
+                    triedRemoteFallback = true;
+                }
+            });
+            [[maybe_unused]] Result result = _client->Connect(localConfig);
+            _exit(triedRemoteFallback ? 0 : 5);
+        },
+        testing::ExitedWithCode(0),
+        "");
+}
+#endif
 
 TEST_P(TestCoSimClient, ConnectAlreadyConnectedShouldReturnOk)
 {
@@ -883,6 +946,44 @@ TEST_P(TestCoSimClient, PollCommandTimesOutWhenNoCommandArrives)
 
     // Assert
     AssertTimeout(result);
+}
+
+TEST_P(TestCoSimClient, PollCommandWithZeroTimeoutReceivesAvailableCommand)
+{
+    ConnectClientAndServer(GetParam());
+    AssertOk(_client->StartPollingBasedCoSimulation({}));
+    AssertOk(_serverProtocol->SendStart(_serverChannel->GetWriter(), SimulationTime{}));
+
+    SimulationTime simulationTime{};
+    Command command{};
+    AssertOk(_client->PollCommand(simulationTime, command, 0));
+    EXPECT_EQ(command, Command::Start);
+    AssertOk(_client->FinishCommand());
+}
+
+TEST_P(TestCoSimClient, PollCommandCompletesStartedCommandEvenIfRestArrivesAfterTimeout)
+{
+    ConnectClientAndServer(GetParam());
+    AssertOk(_client->StartPollingBasedCoSimulation({}));
+
+    auto& writer = _serverChannel->GetWriter();
+    AssertOk(writer.Write(FrameKind::Start));
+    AssertOk(writer.EndWrite());
+
+    auto serverTask = std::async(std::launch::async, [&writer] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        CheckResult(writer.Write(int64_t{42}));
+        return writer.EndWrite();
+    });
+
+    SimulationTime simulationTime{};
+    Command command{};
+    Result result = _client->PollCommand(simulationTime, command, 10);
+    AssertOk(serverTask.get());
+
+    AssertOk(result);
+    EXPECT_EQ(command, Command::Start);
+    EXPECT_EQ(simulationTime, SimulationTime(42));
 }
 
 TEST_P(TestCoSimClient, PollCommandTimesOutDespitePeriodicPings)

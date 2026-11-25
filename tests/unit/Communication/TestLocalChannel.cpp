@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -217,6 +218,31 @@ TEST_F(TestLocalChannel, SendTwoFramesAtOnce)
 
     // Act and assert
     TestSendTwoFramesAtOnce(connectChannel, acceptChannel);
+}
+
+TEST_F(TestLocalChannel, WaitForDataReturnsBufferedBytes)
+{
+    std::unique_ptr<Channel> connectChannel;
+    std::unique_ptr<Channel> acceptChannel;
+    EstablishConnection(GenerateLocalChannelName(), connectChannel, acceptChannel);
+
+    auto& writer = connectChannel->GetWriter();
+    auto& reader = acceptChannel->GetReader();
+    AssertOk(writer.Write(uint8_t{1}));
+    AssertOk(writer.EndWrite());
+    AssertOk(writer.Write(uint8_t{2}));
+    AssertOk(writer.EndWrite());
+
+    uint8_t value{};
+    AssertOk(reader.Read(value));
+    ASSERT_EQ(value, uint8_t{1});
+    reader.EndRead();
+
+    AssertOk(reader.WaitForData(DefaultTimeoutInMilliseconds));
+    AssertOk(reader.Read(value));
+    ASSERT_EQ(value, uint8_t{2});
+    reader.EndRead();
+    AssertTimeout(reader.WaitForData(20));
 }
 
 TEST_F(TestLocalChannel, Stream)

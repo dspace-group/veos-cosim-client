@@ -656,9 +656,14 @@ void ShmPipePart::Disconnect() const
     uint32_t counterPartPid = GetCounterPartPid();
     if (counterPartPid == 0) {
         if (!HasCounterPartDisconnected()) {
+            const auto now = std::chrono::steady_clock::now();
+
             // Not connected yet. Give it up to 5 seconds ...
-            _detectionCounter++;
-            if (_detectionCounter == ConnectionTimeoutInMilliseconds) {
+            if (_counterPartDetectionStart == std::chrono::steady_clock::time_point{}) {
+                _counterPartDetectionStart = now;
+            }
+
+            if ((now - _counterPartDetectionStart) >= std::chrono::milliseconds(ConnectionTimeoutInMilliseconds)) {
                 LogError("Counterpart still not connected after 5 seconds.");
                 return CreateError();
             }
@@ -669,6 +674,8 @@ void ShmPipePart::Disconnect() const
         // Not connected anymore
         return CreateNotConnected();
     }
+
+    _counterPartDetectionStart = {};
 
     if (!_counterPartProcess.IsValid()) {
         _counterPartProcess = Handle(OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, counterPartPid));

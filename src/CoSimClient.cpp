@@ -518,8 +518,15 @@ void CoSimClient::ResetDataFromPreviousConnect()
 
 [[nodiscard]] Result CoSimClient::LocalConnect()
 {
+    // Drop the channel of a previous connection, so that it cannot be mistaken for a new local channel
+    _channel.reset();
+
     CheckResultWithMessage(TryConnectToLocalChannel(_serverName, _channel),
                            fmt::format("Could not connect to local dSPACE VEOS CoSim server '{}'.", _serverName));
+    if (!_channel) {
+        // Local channels are not supported on this system
+        return CreateError();
+    }
 
     _connectionKind = ConnectionKind::Local;
     return CreateOk();
@@ -695,13 +702,12 @@ void CoSimClient::ResetDataFromPreviousConnect()
         uint32_t waitTimeoutInMilliseconds = timeoutInMilliseconds;
         if (hasTimeout) {
             const auto now = std::chrono::steady_clock::now();
-            if (now >= deadline) {
-                return CreateTimeout();
-            }
-
-            waitTimeoutInMilliseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count());
+            // Always wait at least once, so that a zero timeout still returns already available commands
+            waitTimeoutInMilliseconds =
+                now >= deadline ? 0 : static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count());
         }
 
+        // The timeout only applies to the start of the next command. Once a command has started, it is read completely
         CheckResult(_channel->GetReader().WaitForData(waitTimeoutInMilliseconds));
 
         FrameKind frameKind{};
@@ -715,6 +721,10 @@ void CoSimClient::ResetDataFromPreviousConnect()
             CheckResultWithMessage(OnPing(), "Could not handle ping.");
             _currentCommand = Command::Ping;
             CheckResult(FinishPing());
+            if (hasTimeout && (std::chrono::steady_clock::now() >= deadline)) {
+                return CreateTimeout();
+            }
+
             break;
         case FrameKind::Start:
             CheckResultWithMessage(OnStart(), "Could not handle start.");
