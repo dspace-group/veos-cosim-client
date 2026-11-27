@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "BusExchange.hpp"
@@ -52,6 +53,7 @@ Result CoSimServer::Load(const CoSimServerConfig& config)
     _localPort = config.port;
     _serverName = config.serverName;
     _isClientOptional = config.isClientOptional;
+    _isRemoteClientValid = config.isRemoteClientValid;
     _stepSize = config.stepSize;
     _registerAtPortMapper = config.registerAtPortMapper;
     _incomingSignals = config.incomingSignals;
@@ -475,7 +477,19 @@ Result CoSimServer::AcceptChannel()
     }
 
     if (_tcpChannelServer) {
-        CheckResult(_tcpChannelServer->TryAccept(_channel));
+        std::unique_ptr<Channel> channel;
+        CheckResult(_tcpChannelServer->TryAccept(channel));
+        if (_isRemoteClientValid) {
+            std::string remoteAddress;
+            CheckResult(channel->GetRemoteAddress(remoteAddress));
+            const std::string ipAddress = remoteAddress.substr(0, remoteAddress.rfind(':'));
+            if (ipAddress != "::1" && ipAddress.compare(0, 4, "127.") != 0 && !_isRemoteClientValid(ipAddress)) {
+                LogWarning("Rejected dSPACE VEOS CoSim client at {}.", remoteAddress);
+                return CreateNotConnected();
+            }
+        }
+
+        _channel = std::move(channel);
         _connectionKind = ConnectionKind::Remote;
         _firstStep = true;
         return CreateOk();
@@ -576,13 +590,12 @@ Result CoSimServer::WaitForPingOkFrame(Command& command) const
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-    case FrameKind::PingOk:
+    if (frameKind == FrameKind::PingOk) {
         CheckResultWithMessage(_protocol->ReadPingOk(_channel->GetReader(), command), "Could not read ping ok frame.");
         return CreateOk();
-    default:
-        return OnUnexpectedFrame(frameKind);
     }
+
+    return OnUnexpectedFrame(frameKind);
 }
 
 Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientName) const
@@ -590,16 +603,14 @@ Result CoSimServer::WaitForConnectFrame(uint32_t& version, std::string& clientNa
     FrameKind frameKind{};
     CheckResult(_protocol->ReceiveHeader(_channel->GetReader(), frameKind));
 
-    switch (frameKind) {  // NOLINT(clang-diagnostic-switch-enum)
-    case FrameKind::Connect: {
+    if (frameKind == FrameKind::Connect) {
         Mode mode{};
         std::string serverName;
         CheckResultWithMessage(_protocol->ReadConnect(_channel->GetReader(), version, mode, serverName, clientName), "Could not read connect frame.");
         return CreateOk();
     }
-    default:
-        return OnUnexpectedFrame(frameKind);
-    }
+
+    return OnUnexpectedFrame(frameKind);
 }
 
 Result CoSimServer::WaitForStepOkFrame(SimulationTime& simulationTime, Command& command) const

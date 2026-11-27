@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,6 +44,9 @@ struct CoSimServerConfig {
     std::vector<EthControllerContainer> ethControllers;
     std::vector<LinControllerContainer> linControllers;
     std::vector<FrControllerContainer> frControllers;
+    // Optional. Return false to reject a TCP connection before the CoSim handshake.
+    // The callback receives the numeric peer IP address without a port. Local channels and loopback bypass this check.
+    std::function<bool(const std::string& ipAddress)> isRemoteClientValid;
 };
 
 class CoSimServer final {
@@ -115,6 +119,7 @@ class CoSimServer final {
     ConnectionKind _connectionKind = ConnectionKind::Remote;
     std::string _serverName;
     Callbacks _callbacks{};
+    std::function<bool(const std::string&)> _isRemoteClientValid;
     bool _isClientOptional{};
     SimulationTime _stepSize{};
     SimulationState _simulationState{};

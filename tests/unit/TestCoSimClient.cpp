@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
@@ -13,9 +14,17 @@
 #include <thread>
 #include <vector>
 
+#ifdef _WIN32
+#include <WS2tcpip.h>
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#endif
+
 #ifdef __linux__
 #include <sys/resource.h>
-#include <unistd.h>
 
 #include <atomic>
 #endif
@@ -29,6 +38,7 @@
 #include "OsUtilities.hpp"
 #include "Protocol.hpp"
 #include "Result.hpp"
+#include "Socket.hpp"
 #include "TestHelper.hpp"
 
 using namespace DsVeosCoSim;
@@ -219,6 +229,109 @@ INSTANTIATE_TEST_SUITE_P(,
                          [](const testing::TestParamInfo<ConnectionKind>& info) { return fmt::format("{}", info.param); });
 
 // --- Connect ---
+
+TEST(TestCoSimServer, ConnectionFilterBypassesLocalAndLoopback)
+{
+    for (const std::string ipAddress : {"", "127.0.0.1", "::1"}) {
+        if (ipAddress == "::1" && !IsIpv6SocketSupported()) {
+            continue;
+        }
+
+        CoSimServerConfig config{};
+        config.serverName = GenerateString("CoSimServer");
+        config.registerAtPortMapper = false;
+        if (!ipAddress.empty()) {
+            config.listenAddresses = {ipAddress};
+        }
+        config.isRemoteClientValid = [](const std::string&) {
+            ADD_FAILURE() << "Local and loopback connections must bypass the callback.";
+            return false;
+        };
+
+        CoSimServer server;
+        AssertOk(server.Load(config));
+        std::unique_ptr<Channel> channel;
+        if (ipAddress.empty()) {
+            AssertOk(TryConnectToLocalChannel(config.serverName, channel));
+        } else {
+            uint16_t port{};
+            AssertOk(server.GetLocalPort(port));
+            AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeoutInMilliseconds, channel));
+        }
+
+        std::unique_ptr<IProtocol> protocol;
+        AssertOk(CreateProtocol(ProtocolVersion1, protocol));
+        AssertOk(protocol->SendConnect(channel->GetWriter(), ProtocolVersion1, {}, config.serverName, {}));
+        SimulationTime roundTripTime{};
+        AssertOk(server.BackgroundService(roundTripTime));
+        AssertOk(channel->GetReader().WaitForData(DefaultTimeoutInMilliseconds));
+        FrameKind frameKind{};
+        AssertOk(protocol->ReceiveHeader(channel->GetReader(), frameKind));
+        ASSERT_CHECKED_EQ(frameKind, FrameKind::ConnectOk);
+    }
+}
+
+TEST(TestCoSimServer, ConnectionFilterRejectsAndAcceptsRemotePeers)
+{
+    std::array<char, 256> hostName{};
+    ASSERT_EQ(gethostname(hostName.data(), static_cast<int>(hostName.size())), 0);
+    addrinfo hints{};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    addrinfo* addresses{};
+    if (getaddrinfo(hostName.data(), nullptr, &hints, &addresses) != 0) {
+        GTEST_SKIP() << "Cannot resolve the local host name to an IPv4 address.";
+    }
+    const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> addressList(addresses, freeaddrinfo);
+    std::string ipAddress;
+    for (const addrinfo* address = addressList.get(); address; address = address->ai_next) {
+        const auto* ipv4Address = reinterpret_cast<const sockaddr_in*>(address->ai_addr);
+        std::array<char, INET_ADDRSTRLEN> buffer{};
+        ASSERT_NE(inet_ntop(AF_INET, &ipv4Address->sin_addr, buffer.data(), buffer.size()), nullptr);
+        if (std::string_view(buffer.data()).substr(0, 4) != "127.") {
+            ipAddress = buffer.data();
+            break;
+        }
+    }
+    if (ipAddress.empty()) {
+        GTEST_SKIP() << "No non-loopback IPv4 address is available.";
+    }
+
+    std::vector<std::string> peerAddresses;
+    CoSimServerConfig config{};
+    config.serverName = GenerateString("CoSimServer");
+    config.listenAddresses = {ipAddress};
+    config.registerAtPortMapper = false;
+    config.isRemoteClientValid = [&peerAddresses](const std::string& peerAddress) {
+        peerAddresses.push_back(peerAddress);
+        return peerAddresses.size() > 1;
+    };
+
+    CoSimServer server;
+    AssertOk(server.Load(config));
+    uint16_t port{};
+    AssertOk(server.GetLocalPort(port));
+    std::unique_ptr<IProtocol> protocol;
+    AssertOk(CreateProtocol(ProtocolVersion1, protocol));
+    for (const bool accept : {false, true}) {
+        std::unique_ptr<Channel> channel;
+        AssertOk(TryConnectToTcpChannel(ipAddress, port, 0, DefaultTimeoutInMilliseconds, channel));
+        AssertOk(protocol->SendConnect(channel->GetWriter(), ProtocolVersion1, {}, config.serverName, {}));
+        SimulationTime roundTripTime{};
+        AssertOk(server.BackgroundService(roundTripTime));
+        AssertOk(channel->GetReader().WaitForData(DefaultTimeoutInMilliseconds));
+        FrameKind frameKind{};
+        const Result result = protocol->ReceiveHeader(channel->GetReader(), frameKind);
+        if (accept) {
+            AssertOk(result);
+            ASSERT_CHECKED_EQ(frameKind, FrameKind::ConnectOk);
+        } else {
+            AssertNotConnected(result);
+        }
+    }
+
+    EXPECT_EQ(peerAddresses, (std::vector<std::string>{ipAddress, ipAddress}));
+}
 
 TEST_P(TestCoSimClient, ConnectWithEmptyConfigShouldReturnInvalidArgument)
 {

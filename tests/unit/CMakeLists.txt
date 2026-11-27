@@ -43,6 +43,11 @@ target_link_libraries(
   GTest::gtest
 )
 
+if(WIN32)
+  target_compile_definitions(DsVeosCoSimTest PRIVATE NOMINMAX)
+  target_link_libraries(DsVeosCoSimTest PRIVATE WS2_32)
+endif()
+
 add_test(
   NAME
   DsVeosCoSimTest
